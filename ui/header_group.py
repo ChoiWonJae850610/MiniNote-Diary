@@ -4,12 +4,12 @@ from __future__ import annotations
 from PySide6.QtWidgets import (
     QGroupBox,
     QFormLayout,
-    QHBoxLayout,
     QWidget,
     QLabel,
     QLineEdit,
     QDateEdit,
     QSizePolicy,
+    QGridLayout,
 )
 from PySide6.QtCore import QDate, Qt, QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
@@ -37,8 +37,7 @@ class MoneyLineEdit(QLineEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        # 콤마가 들어간 상태도 허용([0-9,]*). formatting 시 setText가 막히지 않게.
+        # 콤마 포함 텍스트도 허용([0-9,]*) → formatting setText가 막히지 않게
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.setFixedHeight(26)
@@ -84,37 +83,33 @@ class HeaderGroup(QGroupBox):
 
         self.style_no = QLineEdit()
         self.factory = QLineEdit()
-
         for w in (self.style_no, self.factory):
             w.setFixedHeight(26)
 
-        # ✅ 매장(store) 삭제
-        # ✅ 원가 / 공임 / 로스 / 판매가 (가로 4등분)
+        # ✅ 원가/공임/로스/판매가: "필드 시작점"이 공장 필드 시작점과 동일하도록
+        # - 내부 라벨을 '필드 왼쪽에 붙이는 방식'을 버리고,
+        # - 동일 영역 안에서 라벨(윗줄) / 입력(아랫줄) 2행 그리드로 배치
+        # → 첫 번째 입력 박스의 x=0이 form-layout의 field-column 시작점과 일치
         price_row = QWidget()
-        h = QHBoxLayout(price_row)
-        h.setContentsMargins(0, 0, 0, 0)
-        h.setSpacing(10)
+        grid = QGridLayout(price_row)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(14)  # ✅ 사이 간격(원하면 여기만 조절)
+        grid.setVerticalSpacing(2)
 
         self.cost = MoneyLineEdit()
         self.labor = MoneyLineEdit()
         self.loss = MoneyLineEdit()
         self.sale_price = MoneyLineEdit()
 
-        def pack(label_text: str, editor: QLineEdit) -> QWidget:
-            w = QWidget()
-            hh = QHBoxLayout(w)
-            hh.setContentsMargins(0, 0, 0, 0)
-            hh.setSpacing(6)
-            lbl = QLabel(label_text)
-            lbl.setFixedWidth(40)  # 정렬용(원가/공임/로스/판매가)
-            hh.addWidget(lbl)
-            hh.addWidget(editor, 1)
-            return w
+        labels = ["원가", "공임", "로스", "판매가"]
+        edits = [self.cost, self.labor, self.loss, self.sale_price]
 
-        h.addWidget(pack("원가", self.cost), 1)
-        h.addWidget(pack("공임", self.labor), 1)
-        h.addWidget(pack("로스", self.loss), 1)
-        h.addWidget(pack("판매가", self.sale_price), 1)
+        for i, (t, e) in enumerate(zip(labels, edits)):
+            lbl = QLabel(t)
+            lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            grid.addWidget(lbl, 0, i)
+            grid.addWidget(e, 1, i)
+            grid.setColumnStretch(i, 1)  # ✅ 4등분 균등
 
         layout.addRow("날 짜", self.date)
         layout.addRow("제품명", self.style_no)

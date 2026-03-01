@@ -243,7 +243,6 @@ class MainWindow(QMainWindow):
         if self.current_image_path:
             return True
 
-        # ✅ store 제거, cost/labor/loss/sale_price 추가
         if (
             self.header.style_no.text().strip()
             or self.header.factory.text().strip()
@@ -275,6 +274,15 @@ class MainWindow(QMainWindow):
         finally:
             table.blockSignals(False)
 
+    def _reset_table_to_3_rows(self, table: QTableWidget):
+        """✅ 초기화 시 행추가 되었던 테이블을 '항상 3행'으로 되돌림"""
+        table.blockSignals(True)
+        try:
+            table.setRowCount(3)
+            table.clearContents()
+        finally:
+            table.blockSignals(False)
+
     def reset_work_order_form(self):
         self._suppress_dirty = True
         try:
@@ -289,8 +297,14 @@ class MainWindow(QMainWindow):
 
             self.header.date.setDate(QDate.currentDate())
 
-            self._clear_table_items(self.fabric.table)
-            self._clear_table_items(self.trims.table)
+            # ✅ 테이블은 3행으로 복구 + 내용 비우기
+            self._reset_table_to_3_rows(self.fabric.table)
+            self._reset_table_to_3_rows(self.trims.table)
+
+            # ✅ 아이템(None) 셀을 다시 채워 편집/정렬/델리게이트 동작 안정화
+            # (FabricTable/TrimsTable 내부 구현 그대로 사용)
+            self.fabric._init_cells()
+            self.trims._init_cells()
 
             self.image_preview.clear()
             self.image_preview.setText("이미지 업로드 영역")
