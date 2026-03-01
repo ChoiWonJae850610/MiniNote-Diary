@@ -1,3 +1,4 @@
+# ui/trims_table.py
 from __future__ import annotations
 
 import json
@@ -5,7 +6,7 @@ import os
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QHeaderView, QComboBox, QStyledItemDelegate, QLineEdit
+    QAbstractItemView, QHeaderView, QComboBox, QStyledItemDelegate, QLineEdit,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
@@ -61,30 +62,50 @@ class NumberDelegate(QStyledItemDelegate):
 
 
 class UnitComboDelegate(QStyledItemDelegate):
-    def __init__(self, units: list[str], parent=None):
+    """
+    단위 콤보
+    - 드롭다운 목록: label 표시
+    - 선택 후 셀 값: unit 저장/표시
+    """
+
+    def __init__(self, unit_items: list[dict], parent=None):
         super().__init__(parent)
-        self.units = units
+        self.unit_items = unit_items  # [{"unit": "...", "label": "..."}]
 
     def createEditor(self, parent, option, index):
         cb = QComboBox(parent)
         cb.setEditable(False)
-        cb.addItems(self.units)
+
+        for it in self.unit_items:
+            label = str(it.get("label", "")).strip()
+            unit = str(it.get("unit", "")).strip()
+            if label and unit:
+                cb.addItem(label, unit)
+
         cb.setMinimumWidth(140)
         try:
             cb.view().setMinimumWidth(280)
         except Exception:
             pass
+
         return cb
 
     def setEditorData(self, editor, index):
-        val = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
-        val = str(val)
-        i = editor.findText(val)
-        if i >= 0:
-            editor.setCurrentIndex(i)
+        unit = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
+        unit = str(unit).strip()
+
+        for i in range(editor.count()):
+            if str(editor.itemData(i)).strip() == unit:
+                editor.setCurrentIndex(i)
+                return
+
+        if editor.count() > 0:
+            editor.setCurrentIndex(0)
 
     def setModelData(self, editor, model, index):
-        model.setData(index, editor.currentText(), Qt.EditRole)
+        unit = editor.currentData()
+        unit = "" if unit is None else str(unit)
+        model.setData(index, unit, Qt.EditRole)
 
     def paint(self, painter, option, index):
         option.displayAlignment = Qt.AlignCenter
@@ -97,6 +118,8 @@ class TrimsTable(QWidget):
     컬럼: 거래처, 품목, 수량, 단위, 단가, 토탈
     """
 
+    VISIBLE_ROWS = 3
+
     COL_VENDOR = 0
     COL_ITEM = 1
     COL_QTY = 2
@@ -104,17 +127,14 @@ class TrimsTable(QWidget):
     COL_PRICE = 4
     COL_TOTAL = 5
 
-    # ===========================
-    # ✅ 사용자가 여기 숫자만 바꿔서 조정 가능
-    # ===========================
     COLUMN_WIDTHS_FIXED = {
-        COL_VENDOR: 130,  # 거래처
-        COL_QTY: 70,      # 수량
-        COL_UNIT: 95,     # 단위
-        COL_PRICE: 105,   # 단가
-        COL_TOTAL: 105,   # 토탈
+        COL_VENDOR: 130,
+        COL_QTY: 70,
+        COL_UNIT: 95,
+        COL_PRICE: 105,
+        COL_TOTAL: 105,
     }
-    STRETCH_COLUMN = COL_ITEM  # ✅ 품목이 남는 폭을 먹거나 부족하면 줄어드는 역할
+    STRETCH_COLUMN = COL_ITEM
 
     def __init__(self, title: str = "부자재 + 외주작업", parent=None):
         super().__init__(parent)
@@ -149,8 +169,9 @@ class TrimsTable(QWidget):
             | QAbstractItemView.EditKeyPressed
         )
 
-        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
         self.table.setShowGrid(True)
         self.table.setGridStyle(Qt.SolidLine)
         self.table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
@@ -161,8 +182,11 @@ class TrimsTable(QWidget):
 
         self._apply_header_resize_policy()
 
-        # ✅ 단위 콤보 - db/units.json 로드
-        self.unit_delegate = UnitComboDelegate(self._load_units(), self.table)
+        self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 26)
+        self._fix_table_height(self.VISIBLE_ROWS)
+
+        # ✅ 단위 콤보: db/units.json을 읽어서 (label 표시 / unit 저장)
+        self.unit_delegate = UnitComboDelegate(self._load_unit_items(), self.table)
         self.table.setItemDelegateForColumn(self.COL_UNIT, self.unit_delegate)
 
         self.table.setItemDelegateForColumn(self.COL_QTY, NumberDelegate(self.table))
@@ -180,13 +204,23 @@ class TrimsTable(QWidget):
     def _apply_header_resize_policy(self):
         hh = self.table.horizontalHeader()
         hh.setStretchLastSection(False)
+
         for c in range(self.table.columnCount()):
             hh.setSectionResizeMode(c, QHeaderView.Fixed)
+
         for c, w in self.COLUMN_WIDTHS_FIXED.items():
             self.table.setColumnWidth(c, w)
 
-        # ✅ 품목 stretch
         hh.setSectionResizeMode(self.STRETCH_COLUMN, QHeaderView.Stretch)
+
+    def _fix_table_height(self, visible_rows: int = 3):
+        vh = self.table.verticalHeader()
+        hh = self.table.horizontalHeader()
+        row_h = vh.defaultSectionSize() or 26
+        header_h = hh.sizeHint().height()
+        frame = self.table.frameWidth() * 2
+        target_h = header_h + (row_h * visible_rows) + frame + 2
+        self.table.setFixedHeight(target_h)
 
     def _init_cells(self):
         self.table.blockSignals(True)
@@ -207,36 +241,44 @@ class TrimsTable(QWidget):
         finally:
             self.table.blockSignals(False)
 
-    def _load_units(self) -> list[str]:
-        """
-        db/units.json의 units[].label을 콤보 항목으로 사용.
-        - 실패 시 안전 기본값 fallback
-        """
-        default_units = [
-            "EA (개)", "PCS (피스)", "SET (세트)", "PAIR (쌍)",
-            "MM (밀리미터)", "CM (센티미터)", "M (미터)", "YD (야드)",
-            "G (그램)", "KG (킬로그램)", "PACK (팩)", "BOX (박스)",
-            "JOB (작업 1건)",
+    def _load_unit_items(self) -> list[dict]:
+        default_items = [
+            {"unit": "EA", "label": "EA (개)"},
+            {"unit": "PCS", "label": "PCS (피스)"},
+            {"unit": "SET", "label": "SET (세트)"},
+            {"unit": "PAIR", "label": "PAIR (쌍)"},
+            {"unit": "PACK", "label": "PACK (팩)"},
+            {"unit": "BOX", "label": "BOX (박스)"},
+            {"unit": "JOB", "label": "JOB (작업 1건)"},
         ]
+
+        def _read_units(path: str) -> list[dict]:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            items: list[dict] = []
+            for u in (data.get("units") or []):
+                unit = str(u.get("unit", "")).strip()
+                label = str(u.get("label", "")).strip()
+                if unit and label:
+                    items.append({"unit": unit, "label": label})
+            return items
 
         try:
             project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-            units_path = os.path.join(project_root, "db", "units.json")
-            if not os.path.isfile(units_path):
-                return default_units
+            candidates = [
+                os.path.join(project_root, "db", "units.json"),
+                os.path.join(project_root, "db", "unit.json"),
+            ]
 
-            with open(units_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            for p in candidates:
+                if os.path.isfile(p):
+                    items = _read_units(p)
+                    if items:
+                        return items
 
-            labels: list[str] = []
-            for u in (data.get("units") or []):
-                label = (u.get("label") or "").strip()
-                if label:
-                    labels.append(label)
-
-            return labels or default_units
+            return default_items
         except Exception:
-            return default_units
+            return default_items
 
     def add_row(self):
         r = self.table.rowCount()
@@ -249,6 +291,7 @@ class TrimsTable(QWidget):
         r = self.table.currentRow()
         if r >= 0:
             self.table.removeRow(r)
+
         if self.table.rowCount() < 3:
             while self.table.rowCount() < 3:
                 self.table.insertRow(self.table.rowCount())
