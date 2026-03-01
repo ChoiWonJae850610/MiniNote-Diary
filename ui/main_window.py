@@ -1,8 +1,18 @@
+# ui/main_window.py
 import os
+
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QPushButton, QFileDialog, QMessageBox, QLabel, QStackedWidget,
-    QTableWidget
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QPushButton,
+    QFileDialog,
+    QMessageBox,
+    QLabel,
+    QStackedWidget,
+    QTableWidget,
 )
 from PySide6.QtCore import Qt, QDate
 
@@ -24,9 +34,7 @@ class MainWindow(QMainWindow):
 
         # ✅ maximize 제거 + resize 금지(고정 사이즈)
         self.setWindowFlags(
-            Qt.Window |
-            Qt.WindowMinimizeButtonHint |
-            Qt.WindowCloseButtonHint
+            Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint
         )
         self.menuBar().hide()
 
@@ -51,8 +59,8 @@ class MainWindow(QMainWindow):
         # ✅ 시작은 메뉴
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
-        # ✅ 강제 고정 사이즈(계산/sizeHint 전부 버림)
-        W, H = 1100, 720
+        # ✅ 강제 고정 사이즈 (테이블 높이 줄인 만큼 창도 줄임)
+        W, H = 1100, 600  # (기존 720)
         self.page_menu.setMinimumSize(W, H)
         self.page_work_order.setMinimumSize(W, H)
         self.resize(W, H)
@@ -127,6 +135,7 @@ class MainWindow(QMainWindow):
         page_layout.setSpacing(10)
 
         top_bar = QHBoxLayout()
+
         self.btn_back = QPushButton("← 뒤로가기")
         self.btn_back.setFixedHeight(30)
         self.btn_back.clicked.connect(self.on_back_clicked)
@@ -169,7 +178,7 @@ class MainWindow(QMainWindow):
         right_layout.setSpacing(8)
 
         self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(320)
+        self.image_preview.setMinimumHeight(260)  # (기존 320) 창 높이 줄인 만큼 균형 조정
 
         btn_row = QHBoxLayout()
         self.btn_upload = QPushButton("사진 업로드")
@@ -228,9 +237,15 @@ class MainWindow(QMainWindow):
             return True
         if self.current_image_path:
             return True
-        if self.header.style_no.text().strip() or self.header.factory.text().strip() or self.header.store.text().strip():
+        if (
+            self.header.style_no.text().strip()
+            or self.header.factory.text().strip()
+            or self.header.store.text().strip()
+        ):
             return True
-        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(self.trims.table):
+        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(
+            self.trims.table
+        ):
             return True
         return False
 
@@ -295,7 +310,6 @@ class MainWindow(QMainWindow):
 
     def collect_work_order_data(self) -> dict:
         header = self.header.get_data()
-
         fabric_cols = ["원단처", "원단이름", "요척", "단위", "단가", "토탈"]
         trims_cols = ["거래처", "품목", "수량", "단위", "단가", "토탈"]
 
@@ -348,8 +362,7 @@ class MainWindow(QMainWindow):
     # ===================== Image actions ======================
     def upload_image(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "이미지 선택", "",
-            "Images (*.png *.jpg *.jpeg *.bmp)"
+            self, "이미지 선택", "", "Images (*.png *.jpg *.jpeg *.bmp)"
         )
         if not path:
             return
