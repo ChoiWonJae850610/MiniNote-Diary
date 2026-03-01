@@ -33,7 +33,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("작업지시서 관리 시스템")
 
         # ✅ maximize 제거 + resize 금지(고정 사이즈)
-        self.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(
+            Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint
+        )
         self.menuBar().hide()
 
         self.is_dirty = False
@@ -212,9 +214,10 @@ class MainWindow(QMainWindow):
         self.header.style_no.textChanged.connect(self.mark_dirty)
         self.header.factory.textChanged.connect(self.mark_dirty)
 
-        # ✅ 매장(store) 삭제 -> 금액 3종 dirty 연결
+        # ✅ 금액 4종 dirty 연결 (원가/공임/로스/판매가)
         self.header.cost.textChanged.connect(self.mark_dirty)
         self.header.labor.textChanged.connect(self.mark_dirty)
+        self.header.loss.textChanged.connect(self.mark_dirty)
         self.header.sale_price.textChanged.connect(self.mark_dirty)
 
         self.header.date.dateChanged.connect(self.mark_dirty)
@@ -240,17 +243,20 @@ class MainWindow(QMainWindow):
         if self.current_image_path:
             return True
 
-        # ✅ store 제거, cost/labor/sale_price 추가
+        # ✅ store 제거, cost/labor/loss/sale_price 추가
         if (
             self.header.style_no.text().strip()
             or self.header.factory.text().strip()
             or self.header.cost.text().strip()
             or self.header.labor.text().strip()
+            or self.header.loss.text().strip()
             or self.header.sale_price.text().strip()
         ):
             return True
 
-        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(self.trims.table):
+        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(
+            self.trims.table
+        ):
             return True
         return False
 
@@ -275,9 +281,10 @@ class MainWindow(QMainWindow):
             self.header.style_no.clear()
             self.header.factory.clear()
 
-            # ✅ 금액 3종 초기화
+            # ✅ 금액 4종 초기화
             self.header.cost.clear()
             self.header.labor.clear()
+            self.header.loss.clear()
             self.header.sale_price.clear()
 
             self.header.date.setDate(QDate.currentDate())
