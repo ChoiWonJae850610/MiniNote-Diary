@@ -33,9 +33,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("작업지시서 관리 시스템")
 
         # ✅ maximize 제거 + resize 금지(고정 사이즈)
-        self.setWindowFlags(
-            Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint
-        )
+        self.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         self.menuBar().hide()
 
         self.is_dirty = False
@@ -59,8 +57,8 @@ class MainWindow(QMainWindow):
         # ✅ 시작은 메뉴
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
-        # ✅ 강제 고정 사이즈 (테이블 높이 줄인 만큼 창도 줄임)
-        W, H = 1100, 600  # (기존 720)
+        # ✅ 강제 고정 사이즈 (테이블 줄인 버전 기준)
+        W, H = 1100, 600
         self.page_menu.setMinimumSize(W, H)
         self.page_work_order.setMinimumSize(W, H)
         self.resize(W, H)
@@ -178,7 +176,7 @@ class MainWindow(QMainWindow):
         right_layout.setSpacing(8)
 
         self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(260)  # (기존 320) 창 높이 줄인 만큼 균형 조정
+        self.image_preview.setMinimumHeight(260)
 
         btn_row = QHBoxLayout()
         self.btn_upload = QPushButton("사진 업로드")
@@ -208,13 +206,17 @@ class MainWindow(QMainWindow):
 
         # ✅ 최초 진입 시 오늘 날짜
         self.header.date.setDate(QDate.currentDate())
-
         return page
 
     def _wire_dirty_signals(self):
         self.header.style_no.textChanged.connect(self.mark_dirty)
         self.header.factory.textChanged.connect(self.mark_dirty)
-        self.header.store.textChanged.connect(self.mark_dirty)
+
+        # ✅ 매장(store) 삭제 -> 금액 3종 dirty 연결
+        self.header.cost.textChanged.connect(self.mark_dirty)
+        self.header.labor.textChanged.connect(self.mark_dirty)
+        self.header.sale_price.textChanged.connect(self.mark_dirty)
+
         self.header.date.dateChanged.connect(self.mark_dirty)
         self.fabric.table.itemChanged.connect(self.mark_dirty)
         self.trims.table.itemChanged.connect(self.mark_dirty)
@@ -237,15 +239,18 @@ class MainWindow(QMainWindow):
             return True
         if self.current_image_path:
             return True
+
+        # ✅ store 제거, cost/labor/sale_price 추가
         if (
             self.header.style_no.text().strip()
             or self.header.factory.text().strip()
-            or self.header.store.text().strip()
+            or self.header.cost.text().strip()
+            or self.header.labor.text().strip()
+            or self.header.sale_price.text().strip()
         ):
             return True
-        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(
-            self.trims.table
-        ):
+
+        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(self.trims.table):
             return True
         return False
 
@@ -269,7 +274,12 @@ class MainWindow(QMainWindow):
         try:
             self.header.style_no.clear()
             self.header.factory.clear()
-            self.header.store.clear()
+
+            # ✅ 금액 3종 초기화
+            self.header.cost.clear()
+            self.header.labor.clear()
+            self.header.sale_price.clear()
+
             self.header.date.setDate(QDate.currentDate())
 
             self._clear_table_items(self.fabric.table)
