@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 
 
 def get_project_root() -> str:
-    # ui/ 기준 상위 폴더가 프로젝트 루트   입니다.
+    # ui/ 기준 상위 폴더가 프로젝트 루트
     return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
