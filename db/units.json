@@ -1,0 +1,71 @@
+{
+  "units": [
+  { "unit": "EA", "label": "EA (개)" },
+  { "unit": "PCS", "label": "PCS (피스)" },
+  { "unit": "SET", "label": "SET (세트)" },
+  { "unit": "PAIR", "label": "PAIR (쌍)" },
+  { "unit": "DZ", "label": "DZ (다스)" },
+  { "unit": "GROSS", "label": "GROSS (144개)" },
+  { "unit": "LOT", "label": "LOT (로트)" },
+  { "unit": "JOB", "label": "JOB (작업 1건)" },
+
+  { "unit": "MM", "label": "mm (밀리미터)" },
+  { "unit": "CM", "label": "cm (센티미터)" },
+  { "unit": "M", "label": "m (미터)" },
+  { "unit": "KM", "label": "km (킬로미터)" },
+  { "unit": "IN", "label": "in (인치)" },
+  { "unit": "FT", "label": "ft (피트)" },
+  { "unit": "YD", "label": "yd (야드)" },
+
+  { "unit": "M2", "label": "㎡ (제곱미터)" },
+  { "unit": "CM2", "label": "㎠ (제곱센티미터)" },
+  { "unit": "YD2", "label": "yd² (제곱야드)" },
+
+  { "unit": "G", "label": "g (그램)" },
+  { "unit": "KG", "label": "kg (킬로그램)" },
+  { "unit": "MG", "label": "mg (밀리그램)" },
+  { "unit": "OZ", "label": "oz (온스)" },
+  { "unit": "LB", "label": "lb (파운드)" },
+
+  { "unit": "GSM", "label": "GSM (g/㎡, 원단 중량)" },
+  { "unit": "OZ_YD2", "label": "oz/yd² (원단 중량)" },
+
+  { "unit": "DENIER", "label": "Denier (데니어)" },
+  { "unit": "TEX", "label": "Tex (실 굵기)" },
+  { "unit": "COUNT", "label": "Count (수, 실 굵기)" },
+
+  { "unit": "ROLL", "label": "ROLL (원단 롤)" },
+  { "unit": "BOLT", "label": "BOLT (원단 볼트)" },
+  { "unit": "CONE", "label": "CONE (실 콘)" },
+  { "unit": "SPOOL", "label": "SPOOL (실 스풀)" },
+  { "unit": "REEL", "label": "REEL (릴)" },
+
+  { "unit": "PACK", "label": "PACK (팩)" },
+  { "unit": "BAG", "label": "BAG (봉지)" },
+  { "unit": "BOX", "label": "BOX (박스)" },
+  { "unit": "CTN", "label": "CTN (카톤)" },
+  { "unit": "BUNDLE", "label": "BUNDLE (묶음)" },
+
+  { "unit": "HOUR", "label": "HR (시간)" },
+  { "unit": "DAY", "label": "DAY (일)" },
+
+  { "unit": "ZIP_CM", "label": "지퍼 길이 (cm)" },
+  { "unit": "BUTTON_MM", "label": "단추 직경 (mm)" },
+  { "unit": "ELASTIC_CM", "label": "고무밴드 길이 (cm)" },
+  { "unit": "TAPE_CM", "label": "테이프 길이 (cm)" },
+
+  { "unit": "SIZE_44", "label": "사이즈 44" },
+  { "unit": "SIZE_55", "label": "사이즈 55" },
+  { "unit": "SIZE_66", "label": "사이즈 66" },
+  { "unit": "SIZE_77", "label": "사이즈 77" },
+  { "unit": "SIZE_S", "label": "사이즈 S" },
+  { "unit": "SIZE_M", "label": "사이즈 M" },
+  { "unit": "SIZE_L", "label": "사이즈 L" },
+  { "unit": "SIZE_XL", "label": "사이즈 XL" },
+
+  { "unit": "PANEL", "label": "PANEL (패널 수량)" },
+  { "unit": "CUT", "label": "CUT (재단 수량)" },
+  { "unit": "YARD_PER_ROLL", "label": "YARD/ROLL" },
+  { "unit": "METER_PER_ROLL", "label": "METER/ROLL" }
+]
+}
