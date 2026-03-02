@@ -27,8 +27,6 @@ def _format_commas_from_digits(digits: str) -> str:
 
 
 class MoneyEdit(QLineEdit):
-    """콤마 표시용 (단가/총액)"""
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -55,8 +53,6 @@ class MoneyEdit(QLineEdit):
 
 
 class MaterialItemDialog(QDialog):
-    """원단/부자재 공용 입력 팝업: 거래처, 품목, 수량, 단위, 단가, 총액"""
-
     def __init__(self, title: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -128,7 +124,6 @@ class MaterialItemDialog(QDialog):
             self.total.setText("")
 
     def _on_ok(self):
-        # 최소 입력 검증: 품목 또는 거래처 중 하나는 있어야 의미가 있음
         if not (self.vendor.text().strip() or self.item.text().strip()):
             self.vendor.setFocus()
             return

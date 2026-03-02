@@ -2,7 +2,7 @@
 import os
 from typing import Dict, List, Optional
 
-from PySide6.QtCore import Qt, QDate
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -14,15 +14,16 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QLabel,
     QStackedWidget,
+    QDialog,
 )
 
-from ui.header_group import HeaderGroup
 from ui.image_preview import ImagePreview
 from services.storage import save_work_order
 from ui.unit_dialog import UnitDialog
 
+from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
-from ui.postit_widgets import BasicInfoPostIt, PostItStack
+from ui.postit_widgets import PostItBar
 
 
 class MainWindow(QMainWindow):
@@ -32,7 +33,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # ✅ 앱 타이틀 변경
         self.setWindowTitle("미니노트 다이어리")
         self.menuBar().hide()
 
@@ -40,9 +40,10 @@ class MainWindow(QMainWindow):
         self._suppress_dirty = False
         self.current_image_path: Optional[str] = None
 
-        # ✅ 테이블 대신 리스트로 관리
-        self.fabric_items: List[Dict[str, str]] = []
-        self.trim_items: List[Dict[str, str]] = []
+        # ✅ 테이블 대신 dict/list로 관리
+        self.header_data: Dict[str, str] = {}          # 기본정보
+        self.fabric_items: List[Dict[str, str]] = []   # 원단
+        self.trim_items: List[Dict[str, str]] = []     # 부자재
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -152,31 +153,33 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Horizontal)
         splitter.setHandleWidth(6)
 
-        # Left
+        # Left: 버튼만
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(10, 10, 10, 10)
         left_layout.setSpacing(12)
 
-        self.header = HeaderGroup()
-
-        # ✅ 테이블 대신 버튼 + 설명
+        self.btn_add_basic = QPushButton("+ 기본정보 추가/수정")
         self.btn_add_fabric = QPushButton("+ 원단 정보 추가")
         self.btn_add_trim = QPushButton("+ 부자재 정보 추가")
-        self.btn_add_fabric.setFixedHeight(36)
-        self.btn_add_trim.setFixedHeight(36)
 
-        hint = QLabel("원단/부자재는 추가 버튼을 눌러 팝업에서 입력합니다.\n입력된 항목은 오른쪽 이미지 아래 포스트잇으로 쌓입니다.")
+        for b in (self.btn_add_basic, self.btn_add_fabric, self.btn_add_trim):
+            b.setFixedHeight(38)
+
+        hint = QLabel(
+            "기본정보/원단/부자재는 버튼을 눌러 팝업에서 입력합니다.\n"
+            "입력된 내용은 오른쪽 이미지 아래 포스트잇에 붙습니다."
+        )
         hint.setStyleSheet("color: #666;")
         hint.setWordWrap(True)
 
-        left_layout.addWidget(self.header)
+        left_layout.addWidget(self.btn_add_basic)
         left_layout.addWidget(self.btn_add_fabric)
         left_layout.addWidget(self.btn_add_trim)
         left_layout.addWidget(hint)
         left_layout.addStretch(1)
 
-        # Right
+        # Right: 이미지 + 포스트잇 바
         right = QWidget()
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(10, 10, 10, 10)
@@ -184,11 +187,13 @@ class MainWindow(QMainWindow):
 
         btn_row = QHBoxLayout()
         btn_row.setSpacing(8)
+
         self.btn_upload = QPushButton("사진 업로드")
         self.btn_delete_image = QPushButton("사진 삭제")
         self.btn_delete_image.setEnabled(False)
         self.btn_upload.setFixedHeight(32)
         self.btn_delete_image.setFixedHeight(32)
+
         btn_row.addWidget(self.btn_upload)
         btn_row.addWidget(self.btn_delete_image)
         btn_row.addStretch(1)
@@ -196,22 +201,19 @@ class MainWindow(QMainWindow):
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
 
-        # ✅ 포스트잇 영역(1열)
-        self.postit_basic = BasicInfoPostIt()
-        self.postit_fabric_stack = PostItStack(kind="fabric")
-        self.postit_trim_stack = PostItStack(kind="trim")
+        # ✅ 이미지 틀 밖(아래)에 포스트잇 1열
+        self.postit_bar = PostItBar()
+        self.postit_bar.setMinimumHeight(200)
 
         right_layout.addLayout(btn_row)
         right_layout.addWidget(self.image_preview, 1)
-        right_layout.addWidget(self.postit_basic, 0)
-        right_layout.addWidget(self.postit_fabric_stack, 0)
-        right_layout.addWidget(self.postit_trim_stack, 0)
+        right_layout.addWidget(self.postit_bar, 0)
 
         splitter.addWidget(left)
         splitter.addWidget(right)
         splitter.setSizes([780, 500])
-        left.setMinimumWidth(720)
-        right.setMinimumWidth(420)
+        left.setMinimumWidth(520)
+        right.setMinimumWidth(520)
 
         page_layout.addLayout(top_bar)
         page_layout.addWidget(splitter, 1)
@@ -219,32 +221,17 @@ class MainWindow(QMainWindow):
         # signals
         self.btn_upload.clicked.connect(self.upload_image)
         self.btn_delete_image.clicked.connect(self.delete_image)
+
+        self.btn_add_basic.clicked.connect(self.on_add_basic_clicked)
         self.btn_add_fabric.clicked.connect(self.on_add_fabric_clicked)
         self.btn_add_trim.clicked.connect(self.on_add_trim_clicked)
 
-        self._wire_dirty_signals()
+        self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
+        self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
+        self.postit_bar.basic_edit_requested.connect(self.on_add_basic_clicked)
 
-        self.header.date.setDate(QDate.currentDate())
         self._refresh_postits()
-
-        # delete handlers from stacks
-        self.postit_fabric_stack.item_deleted.connect(self.on_fabric_deleted)
-        self.postit_trim_stack.item_deleted.connect(self.on_trim_deleted)
-
         return page
-
-    def _wire_dirty_signals(self):
-        self.header.style_no.textChanged.connect(self.mark_dirty)
-        self.header.factory.textChanged.connect(self.mark_dirty)
-        self.header.cost.textChanged.connect(self.mark_dirty)
-        self.header.labor.textChanged.connect(self.mark_dirty)
-        self.header.loss.textChanged.connect(self.mark_dirty)
-        self.header.sale_price.textChanged.connect(self.mark_dirty)
-        self.header.date.dateChanged.connect(self.on_header_changed)
-
-    def on_header_changed(self, *args):
-        self.mark_dirty()
-        self._refresh_postits()
 
     # ===================== Navigation ======================
     def go_work_order(self):
@@ -254,7 +241,7 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
     # ===================== Dirty/Reset ======================
-    def mark_dirty(self, *args):
+    def mark_dirty(self):
         if self._suppress_dirty:
             return
         self.is_dirty = True
@@ -264,35 +251,16 @@ class MainWindow(QMainWindow):
             return True
         if self.current_image_path:
             return True
-
-        # header
-        if (
-            self.header.style_no.text().strip()
-            or self.header.factory.text().strip()
-            or self.header.cost.text().strip()
-            or self.header.labor.text().strip()
-            or self.header.loss.text().strip()
-            or self.header.sale_price.text().strip()
-        ):
+        if self.header_data and any((v or "").strip() for v in self.header_data.values()):
             return True
-
-        # materials
         if self.fabric_items or self.trim_items:
             return True
-
         return False
 
     def reset_work_order_form(self):
         self._suppress_dirty = True
         try:
-            self.header.style_no.clear()
-            self.header.factory.clear()
-            self.header.cost.clear()
-            self.header.labor.clear()
-            self.header.loss.clear()
-            self.header.sale_price.clear()
-            self.header.date.setDate(QDate.currentDate())
-
+            self.header_data = {}
             self.fabric_items = []
             self.trim_items = []
 
@@ -308,27 +276,34 @@ class MainWindow(QMainWindow):
 
     # ===================== Post-its refresh ======================
     def _refresh_postits(self):
-        header = self.header.get_data()
-        self.postit_basic.set_header_data(header)
-        self.postit_fabric_stack.set_items(self.fabric_items)
-        self.postit_trim_stack.set_items(self.trim_items)
+        self.postit_bar.set_data(
+            header=self.header_data,
+            fabrics=self.fabric_items,
+            trims=self.trim_items,
+        )
 
-    # ===================== Materials add/delete ======================
+    # ===================== Basic/Fabric/Trim add/delete ======================
+    def on_add_basic_clicked(self):
+        dlg = BasicInfoDialog(initial=self.header_data, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        self.header_data = dlg.get_data()
+        self.mark_dirty()
+        self._refresh_postits()
+
     def on_add_fabric_clicked(self):
         dlg = MaterialItemDialog(title="원단 정보 추가", parent=self)
-        if dlg.exec() != dlg.Accepted:
+        if dlg.exec() != QDialog.Accepted:   # ✅ 버그 수정 포인트
             return
-        item = dlg.get_item()
-        self.fabric_items.append(item)
+        self.fabric_items.append(dlg.get_item())
         self.mark_dirty()
         self._refresh_postits()
 
     def on_add_trim_clicked(self):
         dlg = MaterialItemDialog(title="부자재 정보 추가", parent=self)
-        if dlg.exec() != dlg.Accepted:
+        if dlg.exec() != QDialog.Accepted:   # ✅ 버그 수정 포인트
             return
-        item = dlg.get_item()
-        self.trim_items.append(item)
+        self.trim_items.append(dlg.get_item())
         self.mark_dirty()
         self._refresh_postits()
 
@@ -363,16 +338,15 @@ class MainWindow(QMainWindow):
 
         clicked = box.clickedButton()
         if clicked == yes_btn:
-            # 현재 프로젝트는 임시저장을 실제로 저장하지 않음(기존 동작 유지)
+            # 기존 정책 유지(실제 임시저장 구현은 없음)
             self.go_menu()
         elif clicked == no_btn:
             self.reset_work_order_form()
             self.go_menu()
 
     def collect_work_order_data(self) -> dict:
-        header = self.header.get_data()
         return {
-            "header": header,
+            "header": self.header_data,
             "fabrics": self.fabric_items,
             "trims": self.trim_items,
             "image_attached": bool(self.current_image_path),
