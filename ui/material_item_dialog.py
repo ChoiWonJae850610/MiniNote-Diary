@@ -1,7 +1,8 @@
 # ui/material_item_dialog.py
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QRegularExpression
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QDialog,
     QFormLayout,
@@ -26,9 +27,15 @@ def _format_commas_from_digits(digits: str) -> str:
         return digits
 
 
-class MoneyEdit(QLineEdit):
+class CommaIntEdit(QLineEdit):
+    """
+    - 숫자만 입력 허용 (0-9, 콤마만)
+    - 입력 중 자동으로 3자리 콤마 포맷 적용
+    """
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.setFixedHeight(30)
         self._in_format = False
@@ -52,6 +59,11 @@ class MoneyEdit(QLineEdit):
         return _digits_only(self.text())
 
 
+class MoneyEdit(CommaIntEdit):
+    """단가/총액 입력용(콤마 + 숫자만)."""
+    pass
+
+
 class MaterialItemDialog(QDialog):
     def __init__(self, title: str, parent=None):
         super().__init__(parent)
@@ -71,16 +83,16 @@ class MaterialItemDialog(QDialog):
 
         self.vendor = QLineEdit()
         self.item = QLineEdit()
-        self.qty = QLineEdit()
+
+        # ✅ 요청: 수량/단가도 원가/공임처럼 콤마 + 숫자만
+        self.qty = CommaIntEdit()
         self.unit = QLineEdit()
         self.unit_price = MoneyEdit()
         self.total = MoneyEdit()
         self.total.setReadOnly(True)
 
-        for w in (self.vendor, self.item, self.qty, self.unit):
+        for w in (self.vendor, self.item, self.unit):
             w.setFixedHeight(30)
-
-        self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         form.addRow("거래처", self.vendor)
         form.addRow("품목", self.item)
@@ -91,6 +103,7 @@ class MaterialItemDialog(QDialog):
 
         root.addLayout(form)
 
+        # (기존 안내 문구는 팝업 내라서 유지)
         tip = QLabel("수량·단가를 입력하면 총액이 자동 계산됩니다.")
         tip.setStyleSheet("color:#666;")
         root.addWidget(tip)
@@ -112,7 +125,7 @@ class MaterialItemDialog(QDialog):
         self.unit_price.textChanged.connect(self._recalc_total)
 
     def _recalc_total(self):
-        q = _digits_only(self.qty.text())
+        q = self.qty.value_digits()
         p = self.unit_price.value_digits()
         if not q or not p:
             self.total.setText("")

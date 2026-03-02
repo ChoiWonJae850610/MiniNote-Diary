@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
 from ui.image_preview import ImagePreview
 from services.storage import save_work_order
 from ui.unit_dialog import UnitDialog
-
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar
@@ -31,7 +30,6 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("미니노트 다이어리")
         self.menuBar().hide()
 
@@ -59,7 +57,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.page_work_order)
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
-        # 화면을 전체적으로 줄임(요청: 이미지 중심 단일 화면)
+        # 이미지 중심 화면 느낌 (요청 반영)
         self.setMinimumSize(980, 720)
         self.resize(980, 720)
 
@@ -104,14 +102,15 @@ class MainWindow(QMainWindow):
         self.btn_unit_mgmt = QPushButton("단위 추가(관리)")
         self.btn_vendor_mgmt.setFixedSize(140, 32)
         self.btn_unit_mgmt.setFixedSize(140, 32)
+
         self.btn_vendor_mgmt.clicked.connect(self.on_vendor_mgmt_clicked)
         self.btn_unit_mgmt.clicked.connect(self.on_unit_mgmt_clicked)
 
         bottom_row.addWidget(self.btn_vendor_mgmt)
         bottom_row.addSpacing(8)
         bottom_row.addWidget(self.btn_unit_mgmt)
-        layout.addLayout(bottom_row)
 
+        layout.addLayout(bottom_row)
         return page
 
     def on_vendor_mgmt_clicked(self):
@@ -127,16 +126,17 @@ class MainWindow(QMainWindow):
     def _build_page_work_order(self) -> QWidget:
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(18, 18, 18, 18)
-        page_layout.setSpacing(12)
+        page_layout.setContentsMargins(12, 12, 12, 12)
+        page_layout.setSpacing(10)
 
-        # 1) 이미지 영역 "위" 버튼들: 뒤로가기/초기화/저장/사진업로드/사진삭제
+        # 상단 바: 왼쪽(뒤로/초기화/저장), 오른쪽(사진 업로드/삭제)
         top_bar = QHBoxLayout()
         top_bar.setSpacing(8)
 
         self.btn_back = QPushButton("← 뒤로가기")
         self.btn_reset = QPushButton("초기화")
         self.btn_save = QPushButton("저장")
+
         self.btn_upload = QPushButton("사진 업로드")
         self.btn_delete_image = QPushButton("사진 삭제")
         self.btn_delete_image.setEnabled(False)
@@ -153,16 +153,15 @@ class MainWindow(QMainWindow):
         top_bar.addWidget(self.btn_back)
         top_bar.addWidget(self.btn_reset)
         top_bar.addWidget(self.btn_save)
-        top_bar.addSpacing(10)
+        top_bar.addStretch(1)  # ✅ 오른쪽 상단 구석 정렬
         top_bar.addWidget(self.btn_upload)
         top_bar.addWidget(self.btn_delete_image)
-        top_bar.addStretch(1)
 
-        # 2) 이미지 영역
+        # 이미지 영역 (화면 대부분)
         self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(440)
+        self.image_preview.setMinimumHeight(520)
 
-        # 3) 이미지 영역 "아래" 버튼들: 기본/원단/부자재 추가
+        # 이미지 아래: 기본/원단/부자재 버튼 (요청 반영)
         bottom_btn_row = QHBoxLayout()
         bottom_btn_row.setSpacing(10)
 
@@ -182,14 +181,15 @@ class MainWindow(QMainWindow):
         bottom_btn_row.addWidget(self.btn_add_trim)
         bottom_btn_row.addStretch(1)
 
-        # 4) 포스트잇 바(기본/원단/부자재)
+        # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
+        self.postit_bar.setMaximumHeight(220)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.basic_edit_requested.connect(self.on_add_basic_clicked)
 
         page_layout.addLayout(top_bar)
-        page_layout.addWidget(self.image_preview, 1)
+        page_layout.addWidget(self.image_preview, 1)   # ✅ 이미지가 대부분 차지
         page_layout.addLayout(bottom_btn_row)
         page_layout.addWidget(self.postit_bar, 0)
 
@@ -226,12 +226,10 @@ class MainWindow(QMainWindow):
             self.header_data = {}
             self.fabric_items = []
             self.trim_items = []
-
             self.image_preview.clear()
             self.image_preview.setText("이미지 업로드 영역")
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
-
             self.is_dirty = False
             self._refresh_postits()
         finally:
@@ -306,6 +304,15 @@ class MainWindow(QMainWindow):
             self.reset_work_order_form()
             self.go_menu()
 
+    def _has_basic_info(self) -> bool:
+        return bool(self.header_data) and any((v or "").strip() for v in self.header_data.values())
+
+    def _has_fabric_info(self) -> bool:
+        return len(self.fabric_items) > 0
+
+    def _has_trim_info(self) -> bool:
+        return len(self.trim_items) > 0
+
     def collect_work_order_data(self) -> dict:
         return {
             "header": self.header_data,
@@ -315,6 +322,15 @@ class MainWindow(QMainWindow):
         }
 
     def on_save_clicked(self):
+        # ✅ 저장 조건: 기본정보/원단/부자재가 모두 있을 때만
+        if not (self._has_basic_info() and self._has_fabric_info() and self._has_trim_info()):
+            QMessageBox.warning(
+                self,
+                "저장 불가",
+                "기본정보 / 원단 정보 / 부자재 정보가 모두 입력된 경우에만 저장할 수 있습니다.",
+            )
+            return
+
         data = self.collect_work_order_data()
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -338,7 +354,10 @@ class MainWindow(QMainWindow):
     # ===================== Image actions ======================
     def upload_image(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "이미지 선택", "", "Images (*.png *.jpg *.jpeg *.bmp)"
+            self,
+            "이미지 선택",
+            "",
+            "Images (*.png *.jpg *.jpeg *.bmp)",
         )
         if not path:
             return
