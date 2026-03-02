@@ -5,8 +5,17 @@ import json
 import os
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QHeaderView, QComboBox, QStyledItemDelegate, QLineEdit,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QAbstractItemView,
+    QHeaderView,
+    QComboBox,
+    QStyledItemDelegate,
+    QLineEdit,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
@@ -70,7 +79,7 @@ class UnitComboDelegate(QStyledItemDelegate):
 
     def __init__(self, unit_items: list[dict], parent=None):
         super().__init__(parent)
-        self.unit_items = unit_items  # [{"unit": "...", "label": "..."}]
+        self.unit_items = unit_items
 
     def createEditor(self, parent, option, index):
         cb = QComboBox(parent)
@@ -87,7 +96,6 @@ class UnitComboDelegate(QStyledItemDelegate):
             cb.view().setMinimumWidth(280)
         except Exception:
             pass
-
         return cb
 
     def setEditorData(self, editor, index):
@@ -160,6 +168,10 @@ class TrimsTable(QWidget):
         self.table = QTableWidget(3, 6)
         self.table.setHorizontalHeaderLabels(["거래처", "품목", "수량", "단위", "단가", "토탈"])
 
+        # 테이블 미관 개선(줄무늬/그리드)
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(False)
+
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(
@@ -172,8 +184,6 @@ class TrimsTable(QWidget):
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.table.setShowGrid(True)
-        self.table.setGridStyle(Qt.SolidLine)
         self.table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
 
         vh = self.table.verticalHeader()
@@ -185,7 +195,7 @@ class TrimsTable(QWidget):
         self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 26)
         self._fix_table_height(self.VISIBLE_ROWS)
 
-        # ✅ 단위 콤보: db/units.json을 읽어서 (label 표시 / unit 저장)
+        # 단위 콤보: db/units.json (label 표시 / unit 저장)
         self.unit_delegate = UnitComboDelegate(self._load_unit_items(), self.table)
         self.table.setItemDelegateForColumn(self.COL_UNIT, self.unit_delegate)
 
@@ -255,6 +265,7 @@ class TrimsTable(QWidget):
         def _read_units(path: str) -> list[dict]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
             items: list[dict] = []
             for u in (data.get("units") or []):
                 unit = str(u.get("unit", "")).strip()

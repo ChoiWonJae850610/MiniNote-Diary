@@ -5,8 +5,17 @@ import json
 import os
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QHeaderView, QComboBox, QStyledItemDelegate, QLineEdit,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QAbstractItemView,
+    QHeaderView,
+    QComboBox,
+    QStyledItemDelegate,
+    QLineEdit,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
@@ -93,7 +102,6 @@ class UnitComboDelegate(QStyledItemDelegate):
             cb.view().setMinimumWidth(280)
         except Exception:
             pass
-
         return cb
 
     def setEditorData(self, editor, index):
@@ -101,24 +109,20 @@ class UnitComboDelegate(QStyledItemDelegate):
         unit = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         unit = str(unit).strip()
 
-        # userData(unit) 기준으로 찾기
         for i in range(editor.count()):
             if str(editor.itemData(i)).strip() == unit:
                 editor.setCurrentIndex(i)
                 return
 
-        # 매칭 실패 시 0번
         if editor.count() > 0:
             editor.setCurrentIndex(0)
 
     def setModelData(self, editor, model, index):
-        # 선택된 항목의 userData(unit)를 저장
         unit = editor.currentData()
         unit = "" if unit is None else str(unit)
         model.setData(index, unit, Qt.EditRole)
 
     def paint(self, painter, option, index):
-        # 셀에는 unit만 보이게
         option.displayAlignment = Qt.AlignCenter
         super().paint(painter, option, index)
 
@@ -129,7 +133,7 @@ class FabricTable(QWidget):
     컬럼: 원단처, 원단이름, 요척, 단위, 단가, 토탈
     """
 
-    VISIBLE_ROWS = 3  # 3줄만 보이게 고정
+    VISIBLE_ROWS = 3
 
     COL_VENDOR = 0
     COL_NAME = 1
@@ -139,11 +143,11 @@ class FabricTable(QWidget):
     COL_TOTAL = 5
 
     COLUMN_WIDTHS_FIXED = {
-        COL_VENDOR: 130,  # 원단처
-        COL_REQ: 70,      # 요척
-        COL_UNIT: 95,     # 단위
-        COL_PRICE: 105,   # 단가
-        COL_TOTAL: 105,   # 토탈
+        COL_VENDOR: 130,
+        COL_REQ: 70,
+        COL_UNIT: 95,
+        COL_PRICE: 105,
+        COL_TOTAL: 105,
     }
     STRETCH_COLUMN = COL_NAME
 
@@ -171,6 +175,11 @@ class FabricTable(QWidget):
         self.table = QTableWidget(3, 6)
         self.table.setHorizontalHeaderLabels(["원단처", "원단이름", "요척", "단위", "단가", "토탈"])
 
+        # 테이블 미관 개선(줄무늬/그리드)
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(False)
+
+        # 셀 단위 선택 + 클릭 즉시 편집
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(
@@ -180,11 +189,10 @@ class FabricTable(QWidget):
             | QAbstractItemView.EditKeyPressed
         )
 
+        # 스크롤: 세로는 항상 표시, 가로는 Off (Stretch로 해결)
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        self.table.setShowGrid(True)
-        self.table.setGridStyle(Qt.SolidLine)
         self.table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
 
         vh = self.table.verticalHeader()
@@ -193,13 +201,17 @@ class FabricTable(QWidget):
 
         self._apply_header_resize_policy()
 
+        # 스크롤바가 1줄(행높이)씩 움직이게
         self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 26)
+
+        # 3줄만 보이도록 높이 고정
         self._fix_table_height(self.VISIBLE_ROWS)
 
-        # ✅ 단위 콤보: db/units.json을 읽어서 (label 표시 / unit 저장)
+        # 단위 콤보: db/units.json (label 표시 / unit 저장)
         self.unit_delegate = UnitComboDelegate(self._load_unit_items(), self.table)
         self.table.setItemDelegateForColumn(self.COL_UNIT, self.unit_delegate)
 
+        # 숫자/금액 delegate
         self.table.setItemDelegateForColumn(self.COL_REQ, NumberDelegate(self.table))
         self.table.setItemDelegateForColumn(self.COL_PRICE, MoneyDelegate(self.table))
         self.table.setItemDelegateForColumn(self.COL_TOTAL, MoneyDelegate(self.table))
@@ -274,6 +286,7 @@ class FabricTable(QWidget):
         def _read_units(path: str) -> list[dict]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
             items: list[dict] = []
             for u in (data.get("units") or []):
                 unit = str(u.get("unit", "")).strip()
@@ -286,7 +299,7 @@ class FabricTable(QWidget):
             project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
             candidates = [
                 os.path.join(project_root, "db", "units.json"),
-                os.path.join(project_root, "db", "unit.json"),  # (사용자 요청 대비) repo에는 보통 없음
+                os.path.join(project_root, "db", "unit.json"),
             ]
 
             for p in candidates:

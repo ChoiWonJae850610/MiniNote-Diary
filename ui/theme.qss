@@ -1,0 +1,88 @@
+/* ui/theme.qss */
+
+/* 기본 폰트/색 */
+* {
+    font-family: "Pretendard", "Noto Sans KR", "Segoe UI";
+    font-size: 12px;
+}
+
+QWidget {
+    background: #F6F7FB;
+    color: #1F2328;
+}
+
+/* 입력 위젯 */
+QLineEdit, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox {
+    background: #FFFFFF;
+    border: 1px solid #D7DBE7;
+    border-radius: 10px;
+    padding: 6px 10px;
+    min-height: 28px;
+}
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+    border: 1px solid #6C8CFF;
+}
+
+/* 버튼 */
+QPushButton {
+    background: #FFFFFF;
+    border: 1px solid #D7DBE7;
+    border-radius: 12px;
+    padding: 6px 12px;
+    min-height: 30px;
+}
+QPushButton:hover {
+    background: #F0F3FF;
+    border: 1px solid #B9C6FF;
+}
+QPushButton:pressed {
+    background: #E6ECFF;
+}
+QPushButton:disabled {
+    color: #9AA4B2;
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+}
+
+/* 테이블 */
+QTableWidget, QTableView {
+    background: #FFFFFF;
+    border: 1px solid #E3E6EF;
+    border-radius: 12px;
+
+    alternate-background-color: #FAFBFF;  /* 줄무늬 */
+    selection-background-color: #DCE6FF;
+    selection-color: #1F2328;
+}
+
+QHeaderView::section {
+    background: #F3F5FB;
+    color: #2B313A;
+    padding: 8px 10px;
+    border: 0px;
+    border-bottom: 1px solid #E3E6EF;
+    font-weight: 600;
+}
+
+QTableView::item {
+    padding: 6px 10px;
+    border: 0px;
+}
+
+/* 스크롤바(선택) */
+QScrollBar:vertical {
+    width: 10px;
+    background: transparent;
+    margin: 6px 2px 6px 2px;
+}
+QScrollBar::handle:vertical {
+    background: #C9D2F2;
+    border-radius: 5px;
+    min-height: 30px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #AEBBEB;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
