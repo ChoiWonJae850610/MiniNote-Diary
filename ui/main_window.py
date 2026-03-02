@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QSplitter,
     QPushButton,
     QFileDialog,
     QMessageBox,
@@ -40,10 +39,10 @@ class MainWindow(QMainWindow):
         self._suppress_dirty = False
         self.current_image_path: Optional[str] = None
 
-        # ✅ 테이블 대신 dict/list로 관리
-        self.header_data: Dict[str, str] = {}          # 기본정보
-        self.fabric_items: List[Dict[str, str]] = []   # 원단
-        self.trim_items: List[Dict[str, str]] = []     # 부자재
+        # 기본정보/원단/부자재는 모두 팝업 입력 → dict/list로 관리
+        self.header_data: Dict[str, str] = {}
+        self.fabric_items: List[Dict[str, str]] = []
+        self.trim_items: List[Dict[str, str]] = []
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -60,8 +59,9 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.page_work_order)
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
-        self.setMinimumSize(1280, 820)
-        self.resize(1280, 820)
+        # 화면을 전체적으로 줄임(요청: 이미지 중심 단일 화면)
+        self.setMinimumSize(980, 720)
+        self.resize(980, 720)
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
@@ -130,105 +130,68 @@ class MainWindow(QMainWindow):
         page_layout.setContentsMargins(18, 18, 18, 18)
         page_layout.setSpacing(12)
 
-        # Top bar
+        # 1) 이미지 영역 "위" 버튼들: 뒤로가기/초기화/저장/사진업로드/사진삭제
         top_bar = QHBoxLayout()
         top_bar.setSpacing(8)
 
         self.btn_back = QPushButton("← 뒤로가기")
         self.btn_reset = QPushButton("초기화")
         self.btn_save = QPushButton("저장")
+        self.btn_upload = QPushButton("사진 업로드")
+        self.btn_delete_image = QPushButton("사진 삭제")
+        self.btn_delete_image.setEnabled(False)
 
-        for b in (self.btn_back, self.btn_reset, self.btn_save):
+        for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
             b.setFixedHeight(32)
 
         self.btn_back.clicked.connect(self.on_back_clicked)
         self.btn_reset.clicked.connect(self.on_reset_clicked)
         self.btn_save.clicked.connect(self.on_save_clicked)
+        self.btn_upload.clicked.connect(self.upload_image)
+        self.btn_delete_image.clicked.connect(self.delete_image)
 
         top_bar.addWidget(self.btn_back)
         top_bar.addWidget(self.btn_reset)
         top_bar.addWidget(self.btn_save)
+        top_bar.addSpacing(10)
+        top_bar.addWidget(self.btn_upload)
+        top_bar.addWidget(self.btn_delete_image)
         top_bar.addStretch(1)
 
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.setHandleWidth(6)
+        # 2) 이미지 영역
+        self.image_preview = ImagePreview()
+        self.image_preview.setMinimumHeight(440)
 
-        # Left: 버튼만
-        left = QWidget()
-        left_layout = QVBoxLayout(left)
-        left_layout.setContentsMargins(10, 10, 10, 10)
-        left_layout.setSpacing(12)
+        # 3) 이미지 영역 "아래" 버튼들: 기본/원단/부자재 추가
+        bottom_btn_row = QHBoxLayout()
+        bottom_btn_row.setSpacing(10)
 
-        self.btn_add_basic = QPushButton("+ 기본정보 추가/수정")
-        self.btn_add_fabric = QPushButton("+ 원단 정보 추가")
-        self.btn_add_trim = QPushButton("+ 부자재 정보 추가")
+        self.btn_add_basic = QPushButton("기본정보 추가/수정")
+        self.btn_add_fabric = QPushButton("원단정보 추가")
+        self.btn_add_trim = QPushButton("부자재정보 추가")
 
         for b in (self.btn_add_basic, self.btn_add_fabric, self.btn_add_trim):
-            b.setFixedHeight(38)
-
-        hint = QLabel(
-            "기본정보/원단/부자재는 버튼을 눌러 팝업에서 입력합니다.\n"
-            "입력된 내용은 오른쪽 이미지 아래 포스트잇에 붙습니다."
-        )
-        hint.setStyleSheet("color: #666;")
-        hint.setWordWrap(True)
-
-        left_layout.addWidget(self.btn_add_basic)
-        left_layout.addWidget(self.btn_add_fabric)
-        left_layout.addWidget(self.btn_add_trim)
-        left_layout.addWidget(hint)
-        left_layout.addStretch(1)
-
-        # Right: 이미지 + 포스트잇 바
-        right = QWidget()
-        right_layout = QVBoxLayout(right)
-        right_layout.setContentsMargins(10, 10, 10, 10)
-        right_layout.setSpacing(10)
-
-        btn_row = QHBoxLayout()
-        btn_row.setSpacing(8)
-
-        self.btn_upload = QPushButton("사진 업로드")
-        self.btn_delete_image = QPushButton("사진 삭제")
-        self.btn_delete_image.setEnabled(False)
-        self.btn_upload.setFixedHeight(32)
-        self.btn_delete_image.setFixedHeight(32)
-
-        btn_row.addWidget(self.btn_upload)
-        btn_row.addWidget(self.btn_delete_image)
-        btn_row.addStretch(1)
-
-        self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(520)
-
-        # ✅ 이미지 틀 밖(아래)에 포스트잇 1열
-        self.postit_bar = PostItBar()
-        self.postit_bar.setMinimumHeight(200)
-
-        right_layout.addLayout(btn_row)
-        right_layout.addWidget(self.image_preview, 1)
-        right_layout.addWidget(self.postit_bar, 0)
-
-        splitter.addWidget(left)
-        splitter.addWidget(right)
-        splitter.setSizes([780, 500])
-        left.setMinimumWidth(520)
-        right.setMinimumWidth(520)
-
-        page_layout.addLayout(top_bar)
-        page_layout.addWidget(splitter, 1)
-
-        # signals
-        self.btn_upload.clicked.connect(self.upload_image)
-        self.btn_delete_image.clicked.connect(self.delete_image)
+            b.setFixedHeight(36)
 
         self.btn_add_basic.clicked.connect(self.on_add_basic_clicked)
         self.btn_add_fabric.clicked.connect(self.on_add_fabric_clicked)
         self.btn_add_trim.clicked.connect(self.on_add_trim_clicked)
 
+        bottom_btn_row.addWidget(self.btn_add_basic)
+        bottom_btn_row.addWidget(self.btn_add_fabric)
+        bottom_btn_row.addWidget(self.btn_add_trim)
+        bottom_btn_row.addStretch(1)
+
+        # 4) 포스트잇 바(기본/원단/부자재)
+        self.postit_bar = PostItBar()
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.basic_edit_requested.connect(self.on_add_basic_clicked)
+
+        page_layout.addLayout(top_bar)
+        page_layout.addWidget(self.image_preview, 1)
+        page_layout.addLayout(bottom_btn_row)
+        page_layout.addWidget(self.postit_bar, 0)
 
         self._refresh_postits()
         return page
@@ -293,7 +256,7 @@ class MainWindow(QMainWindow):
 
     def on_add_fabric_clicked(self):
         dlg = MaterialItemDialog(title="원단 정보 추가", parent=self)
-        if dlg.exec() != QDialog.Accepted:   # ✅ 버그 수정 포인트
+        if dlg.exec() != QDialog.Accepted:
             return
         self.fabric_items.append(dlg.get_item())
         self.mark_dirty()
@@ -301,7 +264,7 @@ class MainWindow(QMainWindow):
 
     def on_add_trim_clicked(self):
         dlg = MaterialItemDialog(title="부자재 정보 추가", parent=self)
-        if dlg.exec() != QDialog.Accepted:   # ✅ 버그 수정 포인트
+        if dlg.exec() != QDialog.Accepted:
             return
         self.trim_items.append(dlg.get_item())
         self.mark_dirty()
@@ -338,7 +301,6 @@ class MainWindow(QMainWindow):
 
         clicked = box.clickedButton()
         if clicked == yes_btn:
-            # 기존 정책 유지(실제 임시저장 구현은 없음)
             self.go_menu()
         elif clicked == no_btn:
             self.reset_work_order_form()

@@ -1,3 +1,4 @@
+# services/storage.py  (전체 교체 권장: 원문 유지 + pick_vendor_name만 개선)
 import base64
 import hashlib
 import json
@@ -8,7 +9,6 @@ from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
 
 _WINDOWS_INVALID = r'<>:"/\\|?*'
 
@@ -28,7 +28,6 @@ def _sanitize_filename_part(s: str, default: str = "UNKNOWN", max_len: int = 60)
 
 
 def _canonical_json_bytes(obj: Any) -> bytes:
-    # 로드/해시/암호화를 위해 canonical 형태로 직렬화
     s = json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return s.encode("utf-8")
 
@@ -51,16 +50,21 @@ def make_base_filename(date_str: str, style_no: str, vendor_name: str) -> str:
 
 
 def pick_vendor_name(data: Dict[str, Any]) -> str:
-    # ✅ trims → fabrics 순으로 "거래처"를 찾는다(키 통일)
+    # trims: "거래처"
     trims = data.get("trims", [])
     for row in trims:
         v = (row.get("거래처") or "").strip()
         if v:
             return v
 
+    # fabrics: "거래처" 우선, 구버전 "원단처" fallback
     fabrics = data.get("fabrics", [])
     for row in fabrics:
         v = (row.get("거래처") or "").strip()
+        if v:
+            return v
+    for row in fabrics:
+        v = (row.get("원단처") or "").strip()
         if v:
             return v
 
@@ -72,11 +76,6 @@ def _key_path(db_dir: str) -> str:
 
 
 def get_or_create_key(db_dir: str) -> bytes:
-    """
-    AES-256 key (32 bytes)
-    - 현재는 db/.key 파일에 저장 (메모장으로 봐도 의미 없는 base64)
-    - 추후 보안을 올리려면 Windows DPAPI로 보호하는 방식으로 변경 권장
-    """
     kp = _key_path(db_dir)
     if os.path.isfile(kp):
         with open(kp, "rb") as f:
@@ -90,11 +89,10 @@ def get_or_create_key(db_dir: str) -> bytes:
 
 
 def encrypt_data(db_dir: str, data: Dict[str, Any]) -> Dict[str, Any]:
-    """반환: JSON에 저장할 암호화 payload (평문 데이터 없음)"""
     key = get_or_create_key(db_dir)
     aes = AESGCM(key)
     plaintext = _canonical_json_bytes(data)
-    nonce = os.urandom(12)  # AESGCM nonce 12 bytes 권장
+    nonce = os.urandom(12)
     ciphertext = aes.encrypt(nonce, plaintext, associated_data=None)
 
     return {
@@ -103,13 +101,11 @@ def encrypt_data(db_dir: str, data: Dict[str, Any]) -> Dict[str, Any]:
             "nonce_b64": base64.b64encode(nonce).decode("utf-8"),
             "ciphertext_b64": base64.b64encode(ciphertext).decode("utf-8"),
         },
-        # 무결성/검증 용도(평문 SHA256)
         "sha256_plain": sha256_bytes(plaintext),
     }
 
 
 def decrypt_payload(db_dir: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """추후 로드 구현 시 사용 (복호화)"""
     key = get_or_create_key(db_dir)
     aes = AESGCM(key)
     enc = payload["enc"]
@@ -119,7 +115,6 @@ def decrypt_payload(db_dir: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     plaintext = aes.decrypt(nonce, ciphertext, associated_data=None)
     data = json.loads(plaintext.decode("utf-8"))
 
-    # 검증
     expected = payload.get("sha256_plain", "")
     actual = sha256_bytes(_canonical_json_bytes(data))
     if expected and expected != actual:
@@ -132,11 +127,6 @@ def save_work_order(
     data: Dict[str, Any],
     image_src_path: Optional[str] = None,
 ) -> Tuple[str, Optional[str], str]:
-    """
-    Returns: (json_path, image_path_or_None, sha256_plain)
-
-    JSON 파일에는 평문이 저장되지 않고 enc(ciphertext)만 저장됨.
-    """
     db_dir = ensure_db_dir(base_dir)
 
     header = data.get("header", {})
@@ -156,7 +146,6 @@ def save_work_order(
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
-    # 이미지 복사(있으면)
     image_dst_path = None
     if image_src_path and os.path.isfile(image_src_path):
         _, ext = os.path.splitext(image_src_path)
