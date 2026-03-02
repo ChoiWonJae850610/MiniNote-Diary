@@ -19,7 +19,7 @@ def _sanitize_filename_part(s: str, default: str = "UNKNOWN", max_len: int = 60)
         s = default
     s = re.sub(f"[{re.escape(_WINDOWS_INVALID)}]", "_", s)
     s = re.sub(r"\s+", " ", s).strip()
-    s = s.rstrip(". ").strip()
+    s = s.rstrip(".\n ").strip()
     if not s:
         s = default
     if len(s) > max_len:
@@ -51,16 +51,19 @@ def make_base_filename(date_str: str, style_no: str, vendor_name: str) -> str:
 
 
 def pick_vendor_name(data: Dict[str, Any]) -> str:
+    # ✅ trims → fabrics 순으로 "거래처"를 찾는다(키 통일)
     trims = data.get("trims", [])
     for row in trims:
         v = (row.get("거래처") or "").strip()
         if v:
             return v
+
     fabrics = data.get("fabrics", [])
     for row in fabrics:
-        v = (row.get("원단처") or "").strip()
+        v = (row.get("거래처") or "").strip()
         if v:
             return v
+
     return "NO_VENDOR"
 
 
@@ -87,15 +90,11 @@ def get_or_create_key(db_dir: str) -> bytes:
 
 
 def encrypt_data(db_dir: str, data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    반환: JSON에 저장할 암호화 payload (평문 데이터 없음)
-    """
+    """반환: JSON에 저장할 암호화 payload (평문 데이터 없음)"""
     key = get_or_create_key(db_dir)
     aes = AESGCM(key)
-
     plaintext = _canonical_json_bytes(data)
     nonce = os.urandom(12)  # AESGCM nonce 12 bytes 권장
-
     ciphertext = aes.encrypt(nonce, plaintext, associated_data=None)
 
     return {
@@ -110,16 +109,13 @@ def encrypt_data(db_dir: str, data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def decrypt_payload(db_dir: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    추후 로드 구현 시 사용 (복호화)
-    """
+    """추후 로드 구현 시 사용 (복호화)"""
     key = get_or_create_key(db_dir)
     aes = AESGCM(key)
-
     enc = payload["enc"]
+
     nonce = base64.b64decode(enc["nonce_b64"])
     ciphertext = base64.b64decode(enc["ciphertext_b64"])
-
     plaintext = aes.decrypt(nonce, ciphertext, associated_data=None)
     data = json.loads(plaintext.decode("utf-8"))
 
@@ -128,7 +124,6 @@ def decrypt_payload(db_dir: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     actual = sha256_bytes(_canonical_json_bytes(data))
     if expected and expected != actual:
         raise ValueError("무결성 검증 실패: 파일이 변조되었을 수 있습니다.")
-
     return data
 
 
@@ -139,6 +134,7 @@ def save_work_order(
 ) -> Tuple[str, Optional[str], str]:
     """
     Returns: (json_path, image_path_or_None, sha256_plain)
+
     JSON 파일에는 평문이 저장되지 않고 enc(ciphertext)만 저장됨.
     """
     db_dir = ensure_db_dir(base_dir)
@@ -146,12 +142,10 @@ def save_work_order(
     header = data.get("header", {})
     date_str = str(header.get("date", "") or "")
     style_no = str(header.get("style_no", "") or "")
-
     vendor_name = pick_vendor_name(data)
     base_name = make_base_filename(date_str, style_no, vendor_name)
 
     enc_payload = encrypt_data(db_dir, data)
-
     payload = {
         "version": 1,
         "saved_at": datetime.now().isoformat(timespec="seconds"),
