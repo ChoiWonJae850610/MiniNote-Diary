@@ -7,7 +7,6 @@ import os
 from PySide6.QtWidgets import (
     QGroupBox,
     QVBoxLayout,
-    QHBoxLayout,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -16,6 +15,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QStyledItemDelegate,
     QLineEdit,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
@@ -71,12 +71,6 @@ class NumberDelegate(QStyledItemDelegate):
 
 
 class UnitComboDelegate(QStyledItemDelegate):
-    """
-    단위 콤보
-    - 드롭다운 목록: label 표시
-    - 선택 후 셀 값: unit 저장/표시
-    """
-
     def __init__(self, unit_items: list[dict], parent=None):
         super().__init__(parent)
         self.unit_items = unit_items
@@ -106,7 +100,6 @@ class UnitComboDelegate(QStyledItemDelegate):
             if str(editor.itemData(i)).strip() == unit:
                 editor.setCurrentIndex(i)
                 return
-
         if editor.count() > 0:
             editor.setCurrentIndex(0)
 
@@ -121,12 +114,7 @@ class UnitComboDelegate(QStyledItemDelegate):
 
 
 class TrimsTable(QGroupBox):
-    """
-    부자재 + 외주작업
-    컬럼: 거래처, 품목, 수량, 단위, 단가, 토탈
-    """
-
-    VISIBLE_ROWS = 5
+    VISIBLE_ROWS = 3
 
     COL_VENDOR = 0
     COL_ITEM = 1
@@ -146,26 +134,11 @@ class TrimsTable(QGroupBox):
 
     def __init__(self, title: str = "부자재 + 외주작업", parent=None):
         super().__init__(title, parent)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(8)
-
-        top = QHBoxLayout()
-        top.setContentsMargins(0, 0, 0, 0)
-        top.setSpacing(6)
-
-        self.btn_add = QPushButton("+")
-        self.btn_del = QPushButton("-")
-        for b in (self.btn_add, self.btn_del):
-            b.setFixedSize(34, 30)
-
-        self.btn_add.setToolTip("행 추가")
-        self.btn_del.setToolTip("선택 행 삭제")
-
-        top.addStretch(1)
-        top.addWidget(self.btn_add)
-        top.addWidget(self.btn_del)
 
         self.table = QTableWidget(3, 6)
         self.table.setHorizontalHeaderLabels(["거래처", "품목", "수량", "단위", "단가", "토탈"])
@@ -173,18 +146,12 @@ class TrimsTable(QGroupBox):
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
 
-        # ✅ 행 단위 선택
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-
-        # ✅ 클릭은 선택만, 편집은 더블클릭/키 입력으로
-        self.table.setEditTriggers(
-            QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed
-        )
+        self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
 
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
         self.table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
 
         vh = self.table.verticalHeader()
@@ -205,11 +172,44 @@ class TrimsTable(QGroupBox):
 
         self._init_cells()
 
-        layout.addLayout(top)
         layout.addWidget(self.table)
+
+        self.btn_add = QPushButton("+", self)
+        self.btn_del = QPushButton("-", self)
+        for b in (self.btn_add, self.btn_del):
+            b.setFixedSize(34, 30)
+            b.raise_()
+
+        self.btn_add.setToolTip("행 추가")
+        self.btn_del.setToolTip("선택 행 삭제")
 
         self.btn_add.clicked.connect(self.add_row)
         self.btn_del.clicked.connect(self.delete_selected_row)
+
+        self._sync_group_height()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_buttons()
+
+    def _position_buttons(self):
+        margin_right = 12
+        gap = 6
+        y = 18
+
+        bw = self.btn_add.width()
+        x_del = self.width() - margin_right - bw
+        x_add = x_del - gap - bw
+
+        self.btn_add.move(x_add, y)
+        self.btn_del.move(x_del, y)
+
+    def _sync_group_height(self):
+        title_h = 28
+        top_bottom_margins = 14 + 12
+        spacing = 8
+        h = title_h + top_bottom_margins + spacing + self.table.height()
+        self.setFixedHeight(h)
 
     def _apply_header_resize_policy(self):
         hh = self.table.horizontalHeader()
@@ -223,7 +223,7 @@ class TrimsTable(QGroupBox):
 
         hh.setSectionResizeMode(self.STRETCH_COLUMN, QHeaderView.Stretch)
 
-    def _fix_table_height(self, visible_rows: int = 5):
+    def _fix_table_height(self, visible_rows: int = 3):
         vh = self.table.verticalHeader()
         hh = self.table.horizontalHeader()
         row_h = vh.defaultSectionSize() or 28
@@ -292,8 +292,6 @@ class TrimsTable(QGroupBox):
         r = self.table.rowCount()
         self.table.insertRow(r)
         self._init_cells()
-        self.table.setCurrentCell(r, 0)
-        self.table.editItem(self.table.item(r, 0))
 
     def delete_selected_row(self):
         r = self.table.currentRow()

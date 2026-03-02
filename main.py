@@ -8,7 +8,6 @@ from ui.main_window import MainWindow
 
 
 def apply_theme(app: QApplication) -> None:
-    """Fusion 스타일 + ui/theme.qss 로드(있을 때만)"""
     app.setStyle("Fusion")
 
     base_dir = os.path.abspath(os.path.dirname(__file__))

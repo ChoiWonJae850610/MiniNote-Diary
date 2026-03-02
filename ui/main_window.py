@@ -50,13 +50,11 @@ class MainWindow(QMainWindow):
 
         self.stack.addWidget(self.page_menu)
         self.stack.addWidget(self.page_work_order)
-
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
-        # ✅ 화면 요소들이 잘리기 쉬워서 기본/최소 크기를 상향
-        W, H = 1280, 820
-        self.setMinimumSize(W, H)
-        self.resize(W, H)
+        # ✅ 화면이 잘리지 않도록 기본/최소 크기 상향 + 리사이즈 가능
+        self.setMinimumSize(1280, 820)
+        self.resize(1280, 820)
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
@@ -99,6 +97,7 @@ class MainWindow(QMainWindow):
         self.btn_unit_mgmt = QPushButton("단위 추가(관리)")
         self.btn_vendor_mgmt.setFixedSize(140, 32)
         self.btn_unit_mgmt.setFixedSize(140, 32)
+
         self.btn_vendor_mgmt.clicked.connect(self.on_vendor_mgmt_clicked)
         self.btn_unit_mgmt.clicked.connect(self.on_unit_mgmt_clicked)
 
@@ -159,6 +158,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.header)
         left_layout.addWidget(self.fabric)
         left_layout.addWidget(self.trims)
+        left_layout.addStretch(1)
 
         # Right
         right = QWidget()
@@ -180,7 +180,7 @@ class MainWindow(QMainWindow):
         btn_row.addStretch(1)
 
         self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(520)
+        self.image_preview.setMinimumHeight(560)
 
         right_layout.addLayout(btn_row)
         right_layout.addWidget(self.image_preview, 1)
@@ -188,10 +188,9 @@ class MainWindow(QMainWindow):
         splitter.addWidget(left)
         splitter.addWidget(right)
 
-        # ✅ 기본 분할 비율(왼쪽 넓게)
-        splitter.setSizes([820, 420])
-        left.setMinimumWidth(760)
-        right.setMinimumWidth(360)
+        splitter.setSizes([860, 420])
+        left.setMinimumWidth(780)
+        right.setMinimumWidth(380)
 
         page_layout.addLayout(top_bar)
         page_layout.addWidget(splitter, 1)
@@ -201,9 +200,7 @@ class MainWindow(QMainWindow):
 
         self._wire_dirty_signals()
 
-        # 최초 진입 시 오늘 날짜
         self.header.date.setDate(QDate.currentDate())
-
         return page
 
     def _wire_dirty_signals(self):
@@ -237,6 +234,7 @@ class MainWindow(QMainWindow):
             return True
         if self.current_image_path:
             return True
+
         if (
             self.header.style_no.text().strip()
             or self.header.factory.text().strip()
@@ -247,10 +245,9 @@ class MainWindow(QMainWindow):
         ):
             return True
 
-        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(
-            self.trims.table
-        ):
+        if self._table_has_any_text(self.fabric.table) or self._table_has_any_text(self.trims.table):
             return True
+
         return False
 
     def _table_has_any_text(self, table: QTableWidget) -> bool:
@@ -262,7 +259,6 @@ class MainWindow(QMainWindow):
         return False
 
     def _reset_table_to_3_rows(self, table: QTableWidget):
-        """초기화 시 테이블을 항상 3행으로 되돌림"""
         table.blockSignals(True)
         try:
             table.setRowCount(3)

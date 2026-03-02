@@ -29,17 +29,9 @@ def _format_commas_from_digits(digits: str) -> str:
 
 
 class MoneyLineEdit(QLineEdit):
-    """
-    - 숫자만 입력(붙여넣기 포함) -> digits만 유지
-    - 표시: 천단위 콤마
-    - text()는 콤마 포함, value_digits()는 콤마 제거 digits
-    """
-
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setValidator(
-            QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self)
-        )
+        self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.setFixedHeight(30)
 
@@ -49,10 +41,8 @@ class MoneyLineEdit(QLineEdit):
     def _on_text_changed(self, text: str):
         if self._in_format:
             return
-
         digits = _digits_only(text)
         formatted = _format_commas_from_digits(digits)
-
         if formatted == text:
             return
 
@@ -72,7 +62,7 @@ class HeaderGroup(QGroupBox):
         super().__init__("제품 정보")
 
         layout = QFormLayout(self)
-        layout.setVerticalSpacing(8)
+        layout.setVerticalSpacing(10)
         layout.setHorizontalSpacing(12)
         layout.setContentsMargins(12, 14, 12, 12)
 
@@ -87,36 +77,49 @@ class HeaderGroup(QGroupBox):
         for w in (self.style_no, self.factory):
             w.setFixedHeight(30)
 
-        # 원가/공임/로스/판매가: 2행 그리드(라벨/입력)
+        # ✅ 원가/공임/로스/판매가: 한 줄에 (라벨+필드) x4
         price_row = QWidget()
         grid = QGridLayout(price_row)
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(16)
-        grid.setVerticalSpacing(4)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(0)
 
         self.cost = MoneyLineEdit()
         self.labor = MoneyLineEdit()
         self.loss = MoneyLineEdit()
         self.sale_price = MoneyLineEdit()
 
-        labels = ["원가", "공임", "로스", "판매가"]
-        edits = [self.cost, self.labor, self.loss, self.sale_price]
+        # 필드 폭을 줄여서 4개가 한 줄에 들어가게
+        for e in (self.cost, self.labor, self.loss, self.sale_price):
+            e.setMinimumWidth(90)
+            e.setMaximumWidth(140)
 
-        for i, (t, e) in enumerate(zip(labels, edits)):
-            lbl = QLabel(t)
+        pairs = [
+            ("원가", self.cost),
+            ("공임", self.labor),
+            ("로스", self.loss),
+            ("판매가", self.sale_price),
+        ]
+
+        col = 0
+        for label_text, edit in pairs:
+            lbl = QLabel(label_text)
             lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            grid.addWidget(lbl, 0, i)
-            grid.addWidget(e, 1, i)
-            grid.setColumnStretch(i, 1)
+
+            grid.addWidget(lbl, 0, col)
+            grid.addWidget(edit, 0, col + 1)
+
+            grid.setColumnStretch(col, 0)
+            grid.setColumnStretch(col + 1, 1)
+            col += 2
 
         layout.addRow("날 짜", self.date)
         layout.addRow("제품명", self.style_no)
         layout.addRow("공 장", self.factory)
         layout.addRow("", price_row)
 
-        # ✅ 고정 높이 해제 + 최소 높이만 보장
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        self.setMinimumHeight(190)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.setMinimumHeight(180)
 
     def get_data(self):
         return {
