@@ -37,10 +37,11 @@ class MoneyLineEdit(QLineEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # 콤마 포함 텍스트도 허용([0-9,]*) → formatting setText가 막히지 않게
-        self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
+        self.setValidator(
+            QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self)
+        )
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.setFixedHeight(26)
+        self.setFixedHeight(30)
 
         self._in_format = False
         self.textChanged.connect(self._on_text_changed)
@@ -71,30 +72,27 @@ class HeaderGroup(QGroupBox):
         super().__init__("제품 정보")
 
         layout = QFormLayout(self)
-        layout.setVerticalSpacing(6)
-        layout.setHorizontalSpacing(10)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setVerticalSpacing(8)
+        layout.setHorizontalSpacing(12)
+        layout.setContentsMargins(12, 14, 12, 12)
 
         self.date = QDateEdit()
         self.date.setCalendarPopup(True)
         self.date.setDisplayFormat("yyyy-MM-dd")
-        self.date.setFixedHeight(26)
+        self.date.setFixedHeight(30)
         self.date.setDate(QDate.currentDate())
 
         self.style_no = QLineEdit()
         self.factory = QLineEdit()
         for w in (self.style_no, self.factory):
-            w.setFixedHeight(26)
+            w.setFixedHeight(30)
 
-        # ✅ 원가/공임/로스/판매가: "필드 시작점"이 공장 필드 시작점과 동일하도록
-        # - 내부 라벨을 '필드 왼쪽에 붙이는 방식'을 버리고,
-        # - 동일 영역 안에서 라벨(윗줄) / 입력(아랫줄) 2행 그리드로 배치
-        # → 첫 번째 입력 박스의 x=0이 form-layout의 field-column 시작점과 일치
+        # 원가/공임/로스/판매가: 2행 그리드(라벨/입력)
         price_row = QWidget()
         grid = QGridLayout(price_row)
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(14)  # ✅ 사이 간격(원하면 여기만 조절)
-        grid.setVerticalSpacing(2)
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(4)
 
         self.cost = MoneyLineEdit()
         self.labor = MoneyLineEdit()
@@ -109,28 +107,26 @@ class HeaderGroup(QGroupBox):
             lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             grid.addWidget(lbl, 0, i)
             grid.addWidget(e, 1, i)
-            grid.setColumnStretch(i, 1)  # ✅ 4등분 균등
+            grid.setColumnStretch(i, 1)
 
         layout.addRow("날 짜", self.date)
         layout.addRow("제품명", self.style_no)
         layout.addRow("공 장", self.factory)
         layout.addRow("", price_row)
 
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        # ✅ 고정 높이 해제 + 최소 높이만 보장
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        self.setMinimumHeight(190)
 
     def get_data(self):
         return {
             "date": self.date.date().toString("yyyy-MM-dd"),
             "style_no": self.style_no.text(),
             "factory": self.factory.text(),
-
-            # 표시(콤마 포함)
             "cost_display": self.cost.text(),
             "labor_display": self.labor.text(),
             "loss_display": self.loss.text(),
             "sale_price_display": self.sale_price.text(),
-
-            # 저장/계산용(콤마 제거 digits)
             "cost": self.cost.value_digits(),
             "labor": self.labor.value_digits(),
             "loss": self.loss.value_digits(),

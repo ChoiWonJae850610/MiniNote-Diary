@@ -1,6 +1,5 @@
 /* ui/theme.qss */
 
-/* 기본 폰트/색 */
 * {
     font-family: "Pretendard", "Noto Sans KR", "Segoe UI";
     font-size: 12px;
@@ -11,13 +10,30 @@ QWidget {
     color: #1F2328;
 }
 
+/* GroupBox */
+QGroupBox {
+    border: 1px solid #E3E6EF;
+    border-radius: 14px;
+    margin-top: 12px;
+    padding: 12px;
+    background: #FFFFFF;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2B313A;
+}
+
 /* 입력 위젯 */
 QLineEdit, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox {
     background: #FFFFFF;
     border: 1px solid #D7DBE7;
     border-radius: 10px;
     padding: 6px 10px;
-    min-height: 28px;
+    min-height: 30px;
 }
 QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {
     border: 1px solid #6C8CFF;
@@ -50,7 +66,7 @@ QTableWidget, QTableView {
     border: 1px solid #E3E6EF;
     border-radius: 12px;
 
-    alternate-background-color: #FAFBFF;  /* 줄무늬 */
+    alternate-background-color: #FAFBFF;
     selection-background-color: #DCE6FF;
     selection-color: #1F2328;
 }
@@ -69,7 +85,7 @@ QTableView::item {
     border: 0px;
 }
 
-/* 스크롤바(선택) */
+/* 스크롤바 */
 QScrollBar:vertical {
     width: 10px;
     background: transparent;

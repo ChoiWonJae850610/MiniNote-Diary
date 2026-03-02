@@ -5,7 +5,7 @@ import json
 import os
 
 from PySide6.QtWidgets import (
-    QWidget,
+    QGroupBox,
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
@@ -120,13 +120,13 @@ class UnitComboDelegate(QStyledItemDelegate):
         super().paint(painter, option, index)
 
 
-class TrimsTable(QWidget):
+class TrimsTable(QGroupBox):
     """
     부자재 + 외주작업
     컬럼: 거래처, 품목, 수량, 단위, 단가, 토탈
     """
 
-    VISIBLE_ROWS = 3
+    VISIBLE_ROWS = 5
 
     COL_VENDOR = 0
     COL_ITEM = 1
@@ -136,49 +136,50 @@ class TrimsTable(QWidget):
     COL_TOTAL = 5
 
     COLUMN_WIDTHS_FIXED = {
-        COL_VENDOR: 130,
-        COL_QTY: 70,
-        COL_UNIT: 95,
-        COL_PRICE: 105,
-        COL_TOTAL: 105,
+        COL_VENDOR: 150,
+        COL_QTY: 80,
+        COL_UNIT: 90,
+        COL_PRICE: 110,
+        COL_TOTAL: 110,
     }
     STRETCH_COLUMN = COL_ITEM
 
     def __init__(self, title: str = "부자재 + 외주작업", parent=None):
-        super().__init__(parent)
-        self.title = title
+        super().__init__(title, parent)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setContentsMargins(12, 14, 12, 12)
+        layout.setSpacing(8)
 
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
-        top.setSpacing(8)
+        top.setSpacing(6)
 
-        self.btn_add = QPushButton("행 추가")
-        self.btn_del = QPushButton("선택 삭제")
-        self.btn_add.setFixedHeight(26)
-        self.btn_del.setFixedHeight(26)
+        self.btn_add = QPushButton("+")
+        self.btn_del = QPushButton("-")
+        for b in (self.btn_add, self.btn_del):
+            b.setFixedSize(34, 30)
 
+        self.btn_add.setToolTip("행 추가")
+        self.btn_del.setToolTip("선택 행 삭제")
+
+        top.addStretch(1)
         top.addWidget(self.btn_add)
         top.addWidget(self.btn_del)
-        top.addStretch(1)
 
         self.table = QTableWidget(3, 6)
         self.table.setHorizontalHeaderLabels(["거래처", "품목", "수량", "단위", "단가", "토탈"])
 
-        # 테이블 미관 개선(줄무늬/그리드)
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
 
-        self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
+        # ✅ 행 단위 선택
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        # ✅ 클릭은 선택만, 편집은 더블클릭/키 입력으로
         self.table.setEditTriggers(
-            QAbstractItemView.CurrentChanged
-            | QAbstractItemView.SelectedClicked
-            | QAbstractItemView.DoubleClicked
-            | QAbstractItemView.EditKeyPressed
+            QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed
         )
 
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -188,14 +189,13 @@ class TrimsTable(QWidget):
 
         vh = self.table.verticalHeader()
         vh.setVisible(True)
-        vh.setDefaultSectionSize(26)
+        vh.setDefaultSectionSize(28)
 
         self._apply_header_resize_policy()
 
-        self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 26)
+        self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 28)
         self._fix_table_height(self.VISIBLE_ROWS)
 
-        # 단위 콤보: db/units.json (label 표시 / unit 저장)
         self.unit_delegate = UnitComboDelegate(self._load_unit_items(), self.table)
         self.table.setItemDelegateForColumn(self.COL_UNIT, self.unit_delegate)
 
@@ -223,13 +223,13 @@ class TrimsTable(QWidget):
 
         hh.setSectionResizeMode(self.STRETCH_COLUMN, QHeaderView.Stretch)
 
-    def _fix_table_height(self, visible_rows: int = 3):
+    def _fix_table_height(self, visible_rows: int = 5):
         vh = self.table.verticalHeader()
         hh = self.table.horizontalHeader()
-        row_h = vh.defaultSectionSize() or 26
+        row_h = vh.defaultSectionSize() or 28
         header_h = hh.sizeHint().height()
         frame = self.table.frameWidth() * 2
-        target_h = header_h + (row_h * visible_rows) + frame + 2
+        target_h = header_h + (row_h * visible_rows) + frame + 4
         self.table.setFixedHeight(target_h)
 
     def _init_cells(self):
@@ -265,7 +265,6 @@ class TrimsTable(QWidget):
         def _read_units(path: str) -> list[dict]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-
             items: list[dict] = []
             for u in (data.get("units") or []):
                 unit = str(u.get("unit", "")).strip()
@@ -280,13 +279,11 @@ class TrimsTable(QWidget):
                 os.path.join(project_root, "db", "units.json"),
                 os.path.join(project_root, "db", "unit.json"),
             ]
-
             for p in candidates:
                 if os.path.isfile(p):
                     items = _read_units(p)
                     if items:
                         return items
-
             return default_items
         except Exception:
             return default_items

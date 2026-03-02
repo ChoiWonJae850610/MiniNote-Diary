@@ -5,7 +5,7 @@ import json
 import os
 
 from PySide6.QtWidgets import (
-    QWidget,
+    QGroupBox,
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
@@ -89,14 +89,12 @@ class UnitComboDelegate(QStyledItemDelegate):
         cb = QComboBox(parent)
         cb.setEditable(False)
 
-        # label을 보여주고, userData에 unit을 저장
         for it in self.unit_items:
             label = str(it.get("label", "")).strip()
             unit = str(it.get("unit", "")).strip()
             if label and unit:
                 cb.addItem(label, unit)
 
-        # 콤보 자체/팝업 폭
         cb.setMinimumWidth(140)
         try:
             cb.view().setMinimumWidth(280)
@@ -105,7 +103,6 @@ class UnitComboDelegate(QStyledItemDelegate):
         return cb
 
     def setEditorData(self, editor, index):
-        # 셀에는 unit이 저장되어 있으므로 unit으로 매칭
         unit = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         unit = str(unit).strip()
 
@@ -127,13 +124,13 @@ class UnitComboDelegate(QStyledItemDelegate):
         super().paint(painter, option, index)
 
 
-class FabricTable(QWidget):
+class FabricTable(QGroupBox):
     """
     원단 테이블
     컬럼: 원단처, 원단이름, 요척, 단위, 단가, 토탈
     """
 
-    VISIBLE_ROWS = 3
+    VISIBLE_ROWS = 5
 
     COL_VENDOR = 0
     COL_NAME = 1
@@ -143,53 +140,55 @@ class FabricTable(QWidget):
     COL_TOTAL = 5
 
     COLUMN_WIDTHS_FIXED = {
-        COL_VENDOR: 130,
-        COL_REQ: 70,
-        COL_UNIT: 95,
-        COL_PRICE: 105,
-        COL_TOTAL: 105,
+        COL_VENDOR: 150,
+        COL_REQ: 80,
+        COL_UNIT: 90,
+        COL_PRICE: 110,
+        COL_TOTAL: 110,
     }
     STRETCH_COLUMN = COL_NAME
 
     def __init__(self, title: str = "원단", parent=None):
-        super().__init__(parent)
-        self.title = title
+        super().__init__(title, parent)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setContentsMargins(12, 14, 12, 12)
+        layout.setSpacing(8)
 
+        # 상단 버튼(+ / -)
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
-        top.setSpacing(8)
+        top.setSpacing(6)
 
-        self.btn_add = QPushButton("행 추가")
-        self.btn_del = QPushButton("선택 삭제")
-        self.btn_add.setFixedHeight(26)
-        self.btn_del.setFixedHeight(26)
+        self.btn_add = QPushButton("+")
+        self.btn_del = QPushButton("-")
+        for b in (self.btn_add, self.btn_del):
+            b.setFixedSize(34, 30)
 
+        self.btn_add.setToolTip("행 추가")
+        self.btn_del.setToolTip("선택 행 삭제")
+
+        top.addStretch(1)
         top.addWidget(self.btn_add)
         top.addWidget(self.btn_del)
-        top.addStretch(1)
 
         self.table = QTableWidget(3, 6)
         self.table.setHorizontalHeaderLabels(["원단처", "원단이름", "요척", "단위", "단가", "토탈"])
 
-        # 테이블 미관 개선(줄무늬/그리드)
+        # 보기/선택 UX
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
 
-        # 셀 단위 선택 + 클릭 즉시 편집
-        self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
+        # ✅ 행 단위 선택
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        # ✅ 클릭은 선택만, 편집은 더블클릭/키 입력으로
         self.table.setEditTriggers(
-            QAbstractItemView.CurrentChanged
-            | QAbstractItemView.SelectedClicked
-            | QAbstractItemView.DoubleClicked
-            | QAbstractItemView.EditKeyPressed
+            QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed
         )
 
-        # 스크롤: 세로는 항상 표시, 가로는 Off (Stretch로 해결)
+        # 스크롤
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
@@ -197,17 +196,14 @@ class FabricTable(QWidget):
 
         vh = self.table.verticalHeader()
         vh.setVisible(True)
-        vh.setDefaultSectionSize(26)
+        vh.setDefaultSectionSize(28)
 
         self._apply_header_resize_policy()
 
-        # 스크롤바가 1줄(행높이)씩 움직이게
-        self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 26)
-
-        # 3줄만 보이도록 높이 고정
+        self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 28)
         self._fix_table_height(self.VISIBLE_ROWS)
 
-        # 단위 콤보: db/units.json (label 표시 / unit 저장)
+        # 단위 콤보
         self.unit_delegate = UnitComboDelegate(self._load_unit_items(), self.table)
         self.table.setItemDelegateForColumn(self.COL_UNIT, self.unit_delegate)
 
@@ -236,13 +232,13 @@ class FabricTable(QWidget):
 
         hh.setSectionResizeMode(self.STRETCH_COLUMN, QHeaderView.Stretch)
 
-    def _fix_table_height(self, visible_rows: int = 3):
+    def _fix_table_height(self, visible_rows: int = 5):
         vh = self.table.verticalHeader()
         hh = self.table.horizontalHeader()
-        row_h = vh.defaultSectionSize() or 26
+        row_h = vh.defaultSectionSize() or 28
         header_h = hh.sizeHint().height()
         frame = self.table.frameWidth() * 2
-        target_h = header_h + (row_h * visible_rows) + frame + 2
+        target_h = header_h + (row_h * visible_rows) + frame + 4
         self.table.setFixedHeight(target_h)
 
     def _init_cells(self):
@@ -265,10 +261,6 @@ class FabricTable(QWidget):
             self.table.blockSignals(False)
 
     def _load_unit_items(self) -> list[dict]:
-        """
-        db/units.json(또는 db/unit.json)에서 units[].(unit,label)을 읽어 반환.
-        - 실패 시 기본값 fallback
-        """
         default_items = [
             {"unit": "EA", "label": "EA (개)"},
             {"unit": "PCS", "label": "PCS (피스)"},
@@ -286,7 +278,6 @@ class FabricTable(QWidget):
         def _read_units(path: str) -> list[dict]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-
             items: list[dict] = []
             for u in (data.get("units") or []):
                 unit = str(u.get("unit", "")).strip()
@@ -301,13 +292,11 @@ class FabricTable(QWidget):
                 os.path.join(project_root, "db", "units.json"),
                 os.path.join(project_root, "db", "unit.json"),
             ]
-
             for p in candidates:
                 if os.path.isfile(p):
                     items = _read_units(p)
                     if items:
                         return items
-
             return default_items
         except Exception:
             return default_items

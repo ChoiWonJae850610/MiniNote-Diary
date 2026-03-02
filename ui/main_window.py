@@ -31,11 +31,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("작업지시서 관리 시스템")
-
-        # ✅ maximize 제거 + resize 금지(고정 사이즈)
-        self.setWindowFlags(
-            Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint
-        )
         self.menuBar().hide()
 
         self.is_dirty = False
@@ -56,15 +51,12 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.page_menu)
         self.stack.addWidget(self.page_work_order)
 
-        # ✅ 시작은 메뉴
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
-        # ✅ 강제 고정 사이즈 (테이블 줄인 버전 기준)
-        W, H = 1100, 600
-        self.page_menu.setMinimumSize(W, H)
-        self.page_work_order.setMinimumSize(W, H)
+        # ✅ 화면 요소들이 잘리기 쉬워서 기본/최소 크기를 상향
+        W, H = 1280, 820
+        self.setMinimumSize(W, H)
         self.resize(W, H)
-        self.setFixedSize(W, H)
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
@@ -107,7 +99,6 @@ class MainWindow(QMainWindow):
         self.btn_unit_mgmt = QPushButton("단위 추가(관리)")
         self.btn_vendor_mgmt.setFixedSize(140, 32)
         self.btn_unit_mgmt.setFixedSize(140, 32)
-
         self.btn_vendor_mgmt.clicked.connect(self.on_vendor_mgmt_clicked)
         self.btn_unit_mgmt.clicked.connect(self.on_unit_mgmt_clicked)
 
@@ -131,21 +122,20 @@ class MainWindow(QMainWindow):
     def _build_page_work_order(self) -> QWidget:
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(16, 16, 16, 16)
-        page_layout.setSpacing(10)
+        page_layout.setContentsMargins(18, 18, 18, 18)
+        page_layout.setSpacing(12)
 
         top_bar = QHBoxLayout()
+        top_bar.setSpacing(8)
 
         self.btn_back = QPushButton("← 뒤로가기")
-        self.btn_back.setFixedHeight(30)
-        self.btn_back.clicked.connect(self.on_back_clicked)
-
         self.btn_reset = QPushButton("초기화")
-        self.btn_reset.setFixedHeight(30)
-        self.btn_reset.clicked.connect(self.on_reset_clicked)
-
         self.btn_save = QPushButton("저장")
-        self.btn_save.setFixedHeight(30)
+        for b in (self.btn_back, self.btn_reset, self.btn_save):
+            b.setFixedHeight(32)
+
+        self.btn_back.clicked.connect(self.on_back_clicked)
+        self.btn_reset.clicked.connect(self.on_reset_clicked)
         self.btn_save.clicked.connect(self.on_save_clicked)
 
         top_bar.addWidget(self.btn_back)
@@ -160,7 +150,7 @@ class MainWindow(QMainWindow):
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(10, 10, 10, 10)
-        left_layout.setSpacing(10)
+        left_layout.setSpacing(12)
 
         self.header = HeaderGroup()
         self.fabric = FabricTable("원단")
@@ -168,35 +158,40 @@ class MainWindow(QMainWindow):
 
         left_layout.addWidget(self.header)
         left_layout.addWidget(self.fabric)
-        left_layout.addSpacing(10)
         left_layout.addWidget(self.trims)
 
         # Right
         right = QWidget()
         right_layout = QVBoxLayout(right)
         right_layout.setContentsMargins(10, 10, 10, 10)
-        right_layout.setSpacing(8)
-
-        self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(260)
+        right_layout.setSpacing(10)
 
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
+
         self.btn_upload = QPushButton("사진 업로드")
         self.btn_delete_image = QPushButton("사진 삭제")
         self.btn_delete_image.setEnabled(False)
-        self.btn_upload.setFixedHeight(28)
-        self.btn_delete_image.setFixedHeight(28)
+        self.btn_upload.setFixedHeight(32)
+        self.btn_delete_image.setFixedHeight(32)
 
         btn_row.addWidget(self.btn_upload)
         btn_row.addWidget(self.btn_delete_image)
         btn_row.addStretch(1)
+
+        self.image_preview = ImagePreview()
+        self.image_preview.setMinimumHeight(520)
 
         right_layout.addLayout(btn_row)
         right_layout.addWidget(self.image_preview, 1)
 
         splitter.addWidget(left)
         splitter.addWidget(right)
-        splitter.setSizes([660, 360])
+
+        # ✅ 기본 분할 비율(왼쪽 넓게)
+        splitter.setSizes([820, 420])
+        left.setMinimumWidth(760)
+        right.setMinimumWidth(360)
 
         page_layout.addLayout(top_bar)
         page_layout.addWidget(splitter, 1)
@@ -206,15 +201,15 @@ class MainWindow(QMainWindow):
 
         self._wire_dirty_signals()
 
-        # ✅ 최초 진입 시 오늘 날짜
+        # 최초 진입 시 오늘 날짜
         self.header.date.setDate(QDate.currentDate())
+
         return page
 
     def _wire_dirty_signals(self):
         self.header.style_no.textChanged.connect(self.mark_dirty)
         self.header.factory.textChanged.connect(self.mark_dirty)
 
-        # ✅ 금액 4종 dirty 연결 (원가/공임/로스/판매가)
         self.header.cost.textChanged.connect(self.mark_dirty)
         self.header.labor.textChanged.connect(self.mark_dirty)
         self.header.loss.textChanged.connect(self.mark_dirty)
@@ -242,7 +237,6 @@ class MainWindow(QMainWindow):
             return True
         if self.current_image_path:
             return True
-
         if (
             self.header.style_no.text().strip()
             or self.header.factory.text().strip()
@@ -267,15 +261,8 @@ class MainWindow(QMainWindow):
                     return True
         return False
 
-    def _clear_table_items(self, table: QTableWidget):
-        table.blockSignals(True)
-        try:
-            table.clearContents()
-        finally:
-            table.blockSignals(False)
-
     def _reset_table_to_3_rows(self, table: QTableWidget):
-        """✅ 초기화 시 행추가 되었던 테이블을 '항상 3행'으로 되돌림"""
+        """초기화 시 테이블을 항상 3행으로 되돌림"""
         table.blockSignals(True)
         try:
             table.setRowCount(3)
@@ -289,7 +276,6 @@ class MainWindow(QMainWindow):
             self.header.style_no.clear()
             self.header.factory.clear()
 
-            # ✅ 금액 4종 초기화
             self.header.cost.clear()
             self.header.labor.clear()
             self.header.loss.clear()
@@ -297,12 +283,9 @@ class MainWindow(QMainWindow):
 
             self.header.date.setDate(QDate.currentDate())
 
-            # ✅ 테이블은 3행으로 복구 + 내용 비우기
             self._reset_table_to_3_rows(self.fabric.table)
             self._reset_table_to_3_rows(self.trims.table)
 
-            # ✅ 아이템(None) 셀을 다시 채워 편집/정렬/델리게이트 동작 안정화
-            # (FabricTable/TrimsTable 내부 구현 그대로 사용)
             self.fabric._init_cells()
             self.trims._init_cells()
 
@@ -341,6 +324,7 @@ class MainWindow(QMainWindow):
 
     def collect_work_order_data(self) -> dict:
         header = self.header.get_data()
+
         fabric_cols = ["원단처", "원단이름", "요척", "단위", "단가", "토탈"]
         trims_cols = ["거래처", "품목", "수량", "단위", "단가", "토탈"]
 
