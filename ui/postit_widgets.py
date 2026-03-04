@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from PySide6.QtCore import Qt, QRectF, Signal, QSize
-from PySide6.QtGui import QColor, QPainter, QPen, QFont
+from PySide6.QtGui import QColor, QPainter, QPen, QFont, QFontMetrics
 from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout
 
 
@@ -25,7 +25,7 @@ def _border(kind: str) -> QColor:
 
 
 def _krw(v: str) -> str:
-    """원화 표시: '\' 대신 '원' 접미사."""
+    """원화 표기: '원' 접미사."""
     v = (v or "").strip()
     if not v:
         return ""
@@ -38,8 +38,8 @@ def _safe(v: str) -> str:
     return (v or "").strip()
 
 
-def _hi(p: QPainter, x: int, y: int, w: int, h: int, color: QColor, radius: int = 7, alpha: int = 105):
-    """형광펜 같은 하이라이트 (반투명 배경)"""
+def _hi_rect(p: QPainter, x: int, y: int, w: int, h: int, color: QColor, radius: int = 8, alpha: int = 150):
+    """형광펜 하이라이트(반투명 배경)."""
     c = QColor(color)
     c.setAlpha(alpha)
     p.setPen(Qt.NoPen)
@@ -47,14 +47,34 @@ def _hi(p: QPainter, x: int, y: int, w: int, h: int, color: QColor, radius: int 
     p.drawRoundedRect(QRectF(x, y, w, h), radius, radius)
 
 
-# ===== 강조 색상 규칙 (요청 반영)
-# - 기본정보: 날짜 / 제품명 / 판매가
-# - 원단/부자재: 총액
-# - 판매가 + (원단/부자재)총액 = 같은 색
-# - 날짜, 제품명은 서로 다른 색
-H_DATE = QColor("#A7F3D0")      # 민트
-H_PRODUCT = QColor("#BFDBFE")   # 연파랑
-H_MONEY = QColor("#FDE68A")     # 연노랑 (판매가/총액 공통)
+def _hi_text(p: QPainter, x: int, baseline_y: int, text: str, font: QFont, color: QColor, pad_x: int = 10):
+    """
+    요청 반영:
+    - 한 줄 전체가 아니라 "글씨가 있는 길이까지만" 하이라이트.
+    - baseline_y 기준으로 폰트 metrics로 박스 높이/위치 계산.
+    """
+    if not text:
+        return
+
+    fm = QFontMetrics(font)
+    text_w = fm.horizontalAdvance(text)
+    box_h = fm.height() + 6
+
+    # baseline_y -> box_y: ascent를 이용해 텍스트 위쪽으로 올림
+    box_y = baseline_y - fm.ascent() - 3
+    box_x = x - 6
+    box_w = text_w + pad_x
+
+    _hi_rect(p, box_x, box_y, box_w, box_h, color)
+
+
+# ===== 강조 색상(요청 반영: 더 밝고 톡톡 튀는 형광 느낌)
+# - 날짜: 형광 라임
+# - 제품명: 형광 시안/블루
+# - 판매가/총액(같은색): 형광 핫핑크(레드 계열)
+H_DATE = QColor("#7CFF65")     # neon lime
+H_PRODUCT = QColor("#4DD9FF")  # neon cyan
+H_MONEY = QColor("#FF4D6D")    # neon hot pink/red
 
 
 class BasicInfoPostIt(QWidget):
@@ -123,7 +143,7 @@ class BasicInfoPostIt(QWidget):
         sale = _safe(self.header.get("sale_price_display", ""))
 
         x = 20
-        y = 32
+        y = 34
         w = self.width() - 40
 
         # ===== Fonts
@@ -139,78 +159,86 @@ class BasicInfoPostIt(QWidget):
         f_big.setPointSize(11)
         f_big.setBold(True)
 
-        # ===== Top lines (날짜/제품명만 강조)
-        # 날짜 (강조)
-        _hi(p, x, y - 16, min(230, w), 22, H_DATE)
+        # ===== Top lines (하이라이트는 텍스트 길이만)
+        # 날짜
+        line1 = f"날짜: {date}"
+        _hi_text(p, x, y, line1, f_top, H_DATE)
         p.setFont(f_top)
         p.setPen(QColor("#1F1F1F"))
-        p.drawText(x + 6, y, f"날짜: {date}")
+        p.drawText(x, y, line1)
         y += 22
 
-        # 제품명 (강조)
-        _hi(p, x, y - 16, min(280, w), 22, H_PRODUCT)
+        # 제품명
+        line2 = f"제품명: {style_no}"
+        _hi_text(p, x, y, line2, f_top, H_PRODUCT)
         p.setFont(f_top)
         p.setPen(QColor("#1F1F1F"))
-        p.drawText(x + 6, y, f"제품명: {style_no}")
+        p.drawText(x, y, line2)
         y += 22
 
-        # 공장 (강조 없음)
+        # 공장(하이라이트 없음)
         p.setFont(f_top)
         p.setPen(QColor("#2A2A2A"))
         p.drawText(x, y, f"공장: {factory}")
-        y += 16
+        y += 18
 
-        # ===== Money block (테이블 느낌 최소화: 강조는 '판매가'만)
+        # ===== Money block (테이블 느낌 최소화: 판매가만 하이라이트)
         col_gap = 10
         col_w = int((w - col_gap) / 2)
-        row_h = 26
         rx = x + col_w + col_gap
 
-        # row1: 원가 / 공임 (강조 없음)
-        y += 12
+        # row1: 원가 / 공임
+        y += 10
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(x + 6, y, "원가")
+        p.drawText(x, y, "원가")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(x + 58, y + 1, _krw(cost))
+        p.drawText(x + 52, y + 1, _krw(cost))
 
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(rx + 6, y, "공임")
+        p.drawText(rx, y, "공임")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(rx + 58, y + 1, _krw(labor))
-        y += row_h
+        p.drawText(rx + 52, y + 1, _krw(labor))
+        y += 26
 
-        # row2: 로스 / 판매가 (판매가만 강조 + 판매가/총액 공통색)
+        # row2: 로스 / 판매가 (판매가만 텍스트 길이만큼 하이라이트)
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(x + 6, y, "로스")
+        p.drawText(x, y, "로스")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(x + 58, y + 1, _krw(loss))
+        p.drawText(x + 52, y + 1, _krw(loss))
 
-        # 판매가 강조 (오른쪽 칸만 하이라이트)
-        _hi(p, rx, y - 16, col_w, 22, H_MONEY)
+        sale_label = "판매가"
+        sale_value = _krw(sale)
+        # 판매가 라벨+값을 한 덩어리로 하이라이트 (텍스트 길이만)
+        sale_line = f"{sale_label}  {sale_value}".strip()
+        _hi_text(p, rx, y, sale_line, f_big, H_MONEY, pad_x=14)
+
+        # 실제 출력은 라벨/값 분리해서 기존 레이아웃 유지
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(rx + 6, y, "판매가")
+        p.drawText(rx, y, sale_label)
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(rx + 58, y + 1, _krw(sale))
+        p.drawText(rx + 52, y + 1, sale_value)
 
 
 class PostItCard(QWidget):
-    """원단/부자재 1장. hover 시 X 표시 → 삭제"""
+    """원단/부자재 1장. 클릭하면 앞으로(활성화). hover 시 X 표시 → 삭제"""
 
     delete_clicked = Signal(int)
+    selected = Signal(int)
 
     def __init__(self, kind: str, index: int, data: Dict[str, str], parent=None):
         super().__init__(parent)
         self.kind = kind
         self.index = index
         self.data = data
+        self.is_active = False
         self.setMouseTracking(True)
         self.setMinimumHeight(135)
 
@@ -224,6 +252,15 @@ class PostItCard(QWidget):
             "QToolButton:hover{background:rgba(0,0,0,0.22);}"
         )
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
+
+    def set_active(self, active: bool):
+        self.is_active = active
+        self.update()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.selected.emit(self.index)
+        super().mousePressEvent(event)
 
     def enterEvent(self, event):
         self.btn_delete.setVisible(True)
@@ -245,7 +282,13 @@ class PostItCard(QWidget):
         bd = _border(self.kind)
         r = QRectF(8, 8, self.width() - 16, self.height() - 16)
 
-        p.setPen(QPen(bd, 2))
+        # 활성 카드면 테두리 더 진하고 두껍게(선택된 느낌)
+        if self.is_active:
+            pen = QPen(QColor(bd).darker(140), 3)
+        else:
+            pen = QPen(bd, 2)
+
+        p.setPen(pen)
         p.setBrush(bg)
         p.drawRoundedRect(r, 14, 14)
 
@@ -278,7 +321,7 @@ class PostItCard(QWidget):
         p.drawText(x, y, vendor)
         y += 20
         p.drawText(x, y, item)
-        y += 16
+        y += 18
 
         # 수량/단가 (강조 없음)
         p.setFont(f_small)
@@ -296,23 +339,24 @@ class PostItCard(QWidget):
         p.setPen(QColor("#111"))
         p.drawText(x + 50, y + 1, _krw(price))
 
-        # 총액만 강조 (판매가와 같은 색)
-        # 오른쪽 하단 영역에 크게
-        box_w = int(w * 0.52)
-        bx = x + (w - box_w)
-        by = y - 16
-        _hi(p, bx, by, box_w, 24, H_MONEY)
+        # 총액만 하이라이트 (판매가와 같은 색, 텍스트 길이만)
+        total_line = f"총액  {_krw(total)}".strip()
+        # 오른쪽 하단쪽으로 배치
+        by = y
+        bx = x + int(w * 0.50)
+        p.setFont(f_big)
+        _hi_text(p, bx, by + 1, total_line, f_big, H_MONEY, pad_x=16)
 
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(bx + 6, y, "총액")
+        p.drawText(bx, by, "총액")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(bx + 44, y + 1, _krw(total))
+        p.drawText(bx + 44, by + 1, _krw(total))
 
 
 class PostItStack(QWidget):
-    """여러 장을 겹쳐 스택처럼 보이게"""
+    """여러 장을 겹쳐 스택처럼 보이게. 클릭으로 앞으로 가져오기."""
 
     item_deleted = Signal(int)
 
@@ -322,6 +366,7 @@ class PostItStack(QWidget):
         self.title = title
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
+        self.active_index: int = -1
         self.setMinimumHeight(170)
 
     def sizeHint(self) -> QSize:
@@ -329,6 +374,12 @@ class PostItStack(QWidget):
 
     def set_items(self, items: List[Dict[str, str]]):
         self.items = list(items or [])
+        # 새로 세팅될 때, 활성 인덱스는 가능한 범위로 보정
+        if not self.items:
+            self.active_index = -1
+        else:
+            if self.active_index < 0 or self.active_index >= len(self.items):
+                self.active_index = len(self.items) - 1  # 기본은 최신(맨 위) 카드
         self._rebuild()
 
     def _rebuild(self):
@@ -340,11 +391,26 @@ class PostItStack(QWidget):
         for idx, it in enumerate(self.items):
             card = PostItCard(self.kind, idx, it, parent=self)
             card.delete_clicked.connect(self.item_deleted.emit)
+            card.selected.connect(self.set_active_card)
             card.show()
             self.cards.append(card)
 
         self._layout_cards()
+        self._apply_active_state()
         self.update()
+
+    def set_active_card(self, idx: int):
+        if idx < 0 or idx >= len(self.cards):
+            return
+        self.active_index = idx
+        self._apply_active_state()
+        # 활성 카드가 앞으로 오도록 raise
+        self.cards[idx].raise_()
+        self.update()
+
+    def _apply_active_state(self):
+        for i, c in enumerate(self.cards):
+            c.set_active(i == self.active_index)
 
     def resizeEvent(self, event):
         self._layout_cards()
@@ -355,7 +421,7 @@ class PostItStack(QWidget):
         card_w = max(280, min(330, base_w - 20))
         card_h = 135
         x0 = int((base_w - card_w) / 2)
-        y0 = 10  # ✅ 위의 "원단정보/부자재정보" 라벨 제거했으니 더 위로 올림
+        y0 = 10  # 라벨 제거했으니 위로
         dx = 10
         dy = 16
 
@@ -364,11 +430,15 @@ class PostItStack(QWidget):
             card.move(x0 + dx * i, y0 + dy * i)
             card.raise_()
 
+        # 활성 카드가 있으면 마지막에 한 번 더 raise해서 확실히 맨 위로
+        if 0 <= self.active_index < len(self.cards):
+            self.cards[self.active_index].raise_()
+
         total_h = y0 + card_h + dy * max(0, (len(self.cards) - 1)) + 14
         self.setMinimumHeight(max(155, total_h))
 
     def paintEvent(self, event):
-        # ✅ 요청: 포스트잇 위 "원단정보/부자재정보" 라벨 제거
+        # 포스트잇 위 "원단정보/부자재정보" 라벨 제거
         return
 
 
