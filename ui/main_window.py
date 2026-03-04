@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
 from ui.image_preview import ImagePreview
 from services.storage import save_work_order
 from ui.unit_dialog import UnitDialog
-from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt
 class _ChangeNoteDialog(QDialog):
@@ -240,6 +239,7 @@ class MainWindow(QMainWindow):
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.basic_edit_requested.connect(self.on_add_basic_clicked)
+        self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
         page_layout.addLayout(top_bar)
         page_layout.addWidget(center_row, 1)   # ✅ 이미지(좌) + 수정사항(우)
@@ -305,14 +305,21 @@ class MainWindow(QMainWindow):
 
     # ===================== Basic/Fabric/Trim add/delete ======================
     def on_add_basic_clicked(self):
-        dlg = BasicInfoDialog(initial=self.header_data, parent=self)
-        if dlg.exec() != QDialog.Accepted:
+        # 기본정보는 포스트잇에서 바로 인라인 편집
+        try:
+            self.postit_bar.basic_postit.style_no.setReadOnly(False)
+            self.postit_bar.basic_postit.style_no.setFocus()
+            self.postit_bar.basic_postit.style_no.selectAll()
+        except Exception:
+            pass
+    def on_basic_postit_changed(self, patch: dict):
+        """기본정보 포스트잇 인라인 편집 결과를 header_data에 반영."""
+        if not isinstance(self.header_data, dict):
+            self.header_data = {}
+        if not isinstance(patch, dict):
             return
-        new_data = dlg.get_data()
-        # 수정사항(change_note)은 기본정보 입력/수정으로 삭제되지 않도록 유지
-        if isinstance(self.header_data, dict) and self.header_data.get('change_note'):
-            new_data['change_note'] = self.header_data.get('change_note', '')
-        self.header_data = new_data
+        # merge
+        self.header_data.update(patch)
         self.mark_dirty()
         self._refresh_postits()
 

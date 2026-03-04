@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from PySide6.QtCore import Qt, QRectF, Signal, QSize
-from PySide6.QtGui import QColor, QPainter, QPen, QFont, QFontMetrics
-from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout
+from PySide6.QtCore import Qt, QRectF, Signal, QSize, QDate, QRegularExpression, QPoint
+from PySide6.QtGui import QColor, QPainter, QPen, QFont, QFontMetrics, QRegularExpressionValidator, QIcon
+from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QCalendarWidget, QGraphicsDropShadowEffect
 
 
 def _color(kind: str) -> QColor:
@@ -77,355 +77,357 @@ H_PRODUCT = QColor("#4DD9FF")  # neon cyan
 H_MONEY = QColor("#FF4D6D")    # neon hot pink/red
 
 
-class BasicInfoPostIt(QWidget):
-    """기본정보 요약 1장 (없으면 숨김)"""
+class _InlineCalendarPopup(QDialog):
+    datePicked = Signal(QDate)
 
+    def __init__(self, initial: QDate, parent=None):
+        super().__init__(parent, Qt.Popup)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(0)
+
+        self.calendar = QCalendarWidget(self)
+        self.calendar.setGridVisible(True)
+        self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
+        if initial and initial.isValid():
+            self.calendar.setSelectedDate(initial)
+        root.addWidget(self.calendar)
+
+        self.calendar.activated.connect(self._on_activated)
+
+    def _on_activated(self, d: QDate):
+        if d and d.isValid():
+            self.datePicked.emit(d)
+        self.close()
+
+
+def _digits_only(s: str) -> str:
+    return "".join(ch for ch in (s or "") if ch.isdigit())
+
+
+def _format_commas_from_digits(digits: str) -> str:
+    if not digits:
+        return ""
+    try:
+        return f"{int(digits):,}"
+    except Exception:
+        return digits
+
+
+class _MoneyLineEdit(QLineEdit):
+    """숫자/콤마 입력 + 자동 콤마 포맷."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrame(False)
+        self.setReadOnly(True)
+        self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
+        self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self._in_format = False
+        self.textChanged.connect(self._on_text_changed)
+
+    def _on_text_changed(self, text: str):
+        if self._in_format:
+            return
+        digits = _digits_only(text)
+        formatted = _format_commas_from_digits(digits)
+        if formatted == text:
+            return
+        self._in_format = True
+        try:
+            self.setText(formatted)
+            self.setCursorPosition(len(formatted))
+        finally:
+            self._in_format = False
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if self.isReadOnly():
+            self.setReadOnly(False)
+            self.setFocus(Qt.MouseFocusReason)
+            self.selectAll()
+
+    def focusOutEvent(self, event):
+        if not self.isReadOnly():
+            self.setReadOnly(True)
+        super().focusOutEvent(event)
+
+    def value_digits(self) -> str:
+        return _digits_only(self.text())
+
+
+class _ClickToEditLineEdit(QLineEdit):
+    """기본은 readOnly. 클릭하면 편집, Enter/포커스 아웃 시 저장(=editingFinished)."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrame(False)
+        self.setReadOnly(True)
+        self.setCursor(Qt.IBeamCursor)
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if self.isReadOnly():
+            self.setReadOnly(False)
+            self.setFocus(Qt.MouseFocusReason)
+            self.selectAll()
+
+    def focusOutEvent(self, event):
+        # 편집 종료 시 readOnly로 복귀
+        if not self.isReadOnly():
+            self.setReadOnly(True)
+        super().focusOutEvent(event)
+
+
+class BasicInfoPostIt(QWidget):
     edit_requested = Signal()
+    """기본정보 포스트잇 (인라인 편집)"""
+
+    data_changed = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.kind = "basic"
         self.header: Dict[str, str] = {}
-        self.setMinimumHeight(160)
+        self._loading = False
+        self._date_value = QDate.currentDate()
 
-        self.btn_edit = QToolButton(self)
-        self.btn_edit.setText("편집")
-        self.btn_edit.setCursor(Qt.PointingHandCursor)
-        self.btn_edit.setStyleSheet(
-            "QToolButton{border:none;background:rgba(0,0,0,0.10);padding:4px 8px;border-radius:10px;}"
-            "QToolButton:hover{background:rgba(0,0,0,0.18);}"
+        self.setMinimumHeight(175)
+        self.setObjectName("BasicInfoPostIt")
+        self.setStyleSheet(
+            "#BasicInfoPostIt{background:%s;border:1px solid %s;border-radius:12px;}"
+            % (_color("basic").name(), _border("basic").name())
         )
-        self.btn_edit.clicked.connect(self.edit_requested.emit)
-        self.btn_edit.hide()
-        self.setMouseTracking(True)
+        # 포스트잇 느낌: 약한 그림자
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(20)
+        shadow.setOffset(0, 4)
+        shadow.setColor(Qt.black)
+        self.setGraphicsEffect(shadow)
+
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(12, 12, 12, 12)
+        outer.setSpacing(8)
+
+        # 상단: 제목
+        top = QHBoxLayout()
+        top.setContentsMargins(0, 0, 0, 0)
+        top.setSpacing(6)
+        title = QLabel("기본정보", self)
+        title.setStyleSheet("QLabel{font-weight:700;}")
+        top.addWidget(title)
+        top.addStretch(1)
+
+        outer.addLayout(top)
+
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(8)
+        grid.setVerticalSpacing(6)
+
+        # 날짜 (표시 라벨 + 달력 버튼)
+        lbl_date = QLabel("날짜:", self)
+        lbl_date.setStyleSheet("QLabel{font-weight:600;}")
+        self.date_text = QLabel(self)
+        self.date_text.setMinimumHeight(28)
+        self.date_text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+        self.date_text.setStyleSheet(
+            "QLabel{color:#111;background:rgba(255,255,255,0.55);border:1px solid rgba(0,0,0,0.22);border-radius:8px;padding:3px 8px;}"
+        )
+
+        self.btn_calendar = QToolButton(self)
+        self.btn_calendar.setFixedSize(26, 26)
+        self.btn_calendar.setToolTip("날짜 변경")
+        self.btn_calendar.setCursor(Qt.PointingHandCursor)
+        self.btn_calendar.setAutoRaise(True)
+        self.btn_calendar.setStyleSheet("QToolButton{border:none;background:transparent;}QToolButton:hover{background:rgba(0,0,0,0.08);border-radius:6px;}")
+        icon = QIcon.fromTheme("x-office-calendar")
+        if icon.isNull():
+            icon = QIcon.fromTheme("view-calendar")
+        if not icon.isNull():
+            self.btn_calendar.setIcon(icon)
+            self.btn_calendar.setIconSize(QSize(16, 16))
+            self.btn_calendar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        else:
+            self.btn_calendar.setText("📅")
+        self.btn_calendar.clicked.connect(self._open_calendar_popup)
+
+        date_row = QHBoxLayout()
+        date_row.setContentsMargins(0, 0, 0, 0)
+        date_row.setSpacing(6)
+        date_row.addWidget(self.date_text, 1)
+        date_row.addWidget(self.btn_calendar)
+
+        date_wrap = QWidget(self)
+        date_wrap.setLayout(date_row)
+
+        grid.addWidget(lbl_date, 0, 0)
+        grid.addWidget(date_wrap, 0, 1, 1, 3)
+
+        # 제품명 / 공장 (클릭해서 편집)
+        self.style_no = _ClickToEditLineEdit(self)
+        self.factory = _ClickToEditLineEdit(self)
+        for w in (self.style_no, self.factory):
+            w.setMinimumHeight(24)
+            w.setStyleSheet("QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}QLineEdit[readOnly=\"true\"]{background:transparent;color:#111;}QLineEdit:focus{background:rgba(255,255,255,0.65);border:1px solid rgba(0,0,0,0.25);border-radius:6px;padding:3px 6px;}")
+
+        lbl_style = QLabel("제품명:", self)
+        lbl_style.setStyleSheet("QLabel{font-weight:600;}")
+        lbl_factory = QLabel("공장:", self)
+        lbl_factory.setStyleSheet("QLabel{font-weight:600;}")
+
+        grid.addWidget(lbl_style, 1, 0)
+        grid.addWidget(self.style_no, 1, 1, 1, 3)
+        grid.addWidget(lbl_factory, 2, 0)
+        grid.addWidget(self.factory, 2, 1, 1, 3)
+
+        # 금액 (원가/공임/로스/판매가)
+        self.cost = _MoneyLineEdit(self)
+        self.labor = _MoneyLineEdit(self)
+        self.loss = _MoneyLineEdit(self)
+        self.sale_price = _MoneyLineEdit(self)
+        for w in (self.cost, self.labor, self.loss, self.sale_price):
+            w.setMinimumHeight(24)
+            w.setStyleSheet("QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}QLineEdit[readOnly=\"true\"]{background:transparent;color:#111;}QLineEdit:focus{background:rgba(255,255,255,0.65);border:1px solid rgba(0,0,0,0.25);border-radius:6px;padding:3px 6px;}")
+
+        grid.addWidget(QLabel("원가:", self), 3, 0)
+        grid.addWidget(self.cost, 3, 1)
+        grid.addWidget(QLabel("공임:", self), 3, 2)
+        grid.addWidget(self.labor, 3, 3)
+
+        grid.addWidget(QLabel("로스:", self), 4, 0)
+        grid.addWidget(self.loss, 4, 1)
+        grid.addWidget(QLabel("판매가:", self), 4, 2)
+        grid.addWidget(self.sale_price, 4, 3)
+
+        outer.addLayout(grid)
+
+        # 이벤트 연결
+        self.style_no.editingFinished.connect(self._commit_text_fields)
+        self.factory.editingFinished.connect(self._commit_text_fields)
+
+        self.cost.textChanged.connect(self._sync_sale_price_from_parts)
+        self.labor.textChanged.connect(self._sync_sale_price_from_parts)
+        self.loss.textChanged.connect(self._sync_sale_price_from_parts)
+
+        self.cost.editingFinished.connect(self._commit_money_fields)
+        self.labor.editingFinished.connect(self._commit_money_fields)
+        self.loss.editingFinished.connect(self._commit_money_fields)
+        self.sale_price.editingFinished.connect(self._commit_money_fields)
+
+        self.setVisible(False)
 
     def sizeHint(self) -> QSize:
-        return QSize(330, 175)
+        return QSize(360, 190)
 
     def set_header_data(self, header: Dict[str, str]):
-        self.header = header or {}
-        # '수정사항(change_note)'은 기본정보 포스트잇 표시/판단에서 제외
-        basic_keys = [
-            "date",
-            "style_no",
-            "factory",
-            "cost_display",
-            "labor_display",
-            "loss_display",
-            "sale_price_display",
-            "cost",
-            "labor",
-            "loss",
-            "sale_price",
-        ]
-        has = any((self.header.get(k, "") or "").strip() for k in basic_keys)
-        self.setVisible(has)
-        self.update()
+        self._loading = True
+        try:
+            self.header = header or {}
 
-    def enterEvent(self, e):
-        self.btn_edit.setVisible(True)
-        super().enterEvent(e)
+            # 날짜
+            d = QDate.fromString(self.header.get("date", ""), "yyyy-MM-dd")
+            if not d.isValid():
+                d = QDate.currentDate()
+            self._date_value = d
+            self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
 
-    def leaveEvent(self, e):
-        self.btn_edit.setVisible(False)
-        super().leaveEvent(e)
+            # 텍스트
+            self.style_no.setText(self.header.get("style_no", "") or "")
+            self.factory.setText(self.header.get("factory", "") or "")
 
-    def resizeEvent(self, e):
-        self.btn_edit.move(self.width() - 60, 10)
-        super().resizeEvent(e)
+            # 금액(표시값 우선)
+            self.cost.setText(self.header.get("cost_display", "") or "")
+            self.labor.setText(self.header.get("labor_display", "") or "")
+            self.loss.setText(self.header.get("loss_display", "") or "")
+            self.sale_price.setText(self.header.get("sale_price_display", "") or "")
 
-    def paintEvent(self, event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing, True)
+            # visibility: change_note 제외
+            basic_keys = [
+                "date", "style_no", "factory",
+                "cost_display", "labor_display", "loss_display", "sale_price_display",
+                "cost", "labor", "loss", "sale_price",
+            ]
+            has = any((self.header.get(k, "") or "").strip() for k in basic_keys)
+            self.setVisible(True)
+        finally:
+            self._loading = False
 
-        bg = _color(self.kind)
-        bd = _border(self.kind)
-        r = QRectF(8, 8, self.width() - 16, self.height() - 16)
+    def _open_calendar_popup(self):
+        popup = _InlineCalendarPopup(self._date_value, self)
+        popup.datePicked.connect(self._set_date)
 
-        p.setPen(QPen(bd, 2))
-        p.setBrush(bg)
-        p.drawRoundedRect(r, 14, 14)
+        # date field 아래에 띄우기 (화면 밖이면 위로)
+        anchor = self.date_text
+        global_pos = anchor.mapToGlobal(QPoint(0, anchor.height()))
+        popup.adjustSize()
 
-        # ===== data
-        date = _safe(self.header.get("date", ""))
-        style_no = _safe(self.header.get("style_no", ""))
-        factory = _safe(self.header.get("factory", ""))
+        screen = self.screen()
+        if screen:
+            geo = screen.availableGeometry()
+            x = max(geo.left(), min(global_pos.x(), geo.right() - popup.width()))
+            y = global_pos.y()
+            if y + popup.height() > geo.bottom():
+                y = anchor.mapToGlobal(QPoint(0, 0)).y() - popup.height()
+            popup.move(x, y)
 
-        cost = _safe(self.header.get("cost_display", ""))
-        labor = _safe(self.header.get("labor_display", ""))
-        loss = _safe(self.header.get("loss_display", ""))
-        sale = _safe(self.header.get("sale_price_display", ""))
+        popup.show()
 
-        x = 20
-        y = 34
-        w = self.width() - 40
+    def _set_date(self, d: QDate):
+        if not d or not d.isValid():
+            return
+        self._date_value = d
+        self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
+        self.header["date"] = self._date_value.toString("yyyy-MM-dd")
+        if not self._loading:
+            self.data_changed.emit({"date": self.header["date"]})
 
-        # ===== Fonts
-        f_top = QFont()
-        f_top.setPointSize(10)
-        f_top.setBold(True)
+    def _commit_text_fields(self):
+        if self._loading:
+            return
+        self.header["style_no"] = (self.style_no.text() or "").strip()
+        self.header["factory"] = (self.factory.text() or "").strip()
+        self.data_changed.emit({"style_no": self.header["style_no"], "factory": self.header["factory"]})
 
-        f_small = QFont()
-        f_small.setPointSize(9)
-        f_small.setBold(False)
+    def _sync_sale_price_from_parts(self):
+        if self._loading:
+            return
+        # 원가/공임/로스가 모두 비면 강제로 판매가를 비우지 않음
+        if not self.cost.value_digits() and not self.labor.value_digits() and not self.loss.value_digits():
+            return
+        total = 0
+        for w in (self.cost, self.labor, self.loss):
+            digits = w.value_digits()
+            total += int(digits) if digits else 0
+        self.sale_price.blockSignals(True)
+        try:
+            self.sale_price.setText(f"{total:,}" if total else "")
+        finally:
+            self.sale_price.blockSignals(False)
 
-        f_big = QFont()
-        f_big.setPointSize(11)
-        f_big.setBold(True)
+    def _commit_money_fields(self):
+        if self._loading:
+            return
+        # display
+        self.header["cost_display"] = self.cost.text()
+        self.header["labor_display"] = self.labor.text()
+        self.header["loss_display"] = self.loss.text()
+        self.header["sale_price_display"] = self.sale_price.text()
+        # digits
+        self.header["cost"] = self.cost.value_digits()
+        self.header["labor"] = self.labor.value_digits()
+        self.header["loss"] = self.loss.value_digits()
+        self.header["sale_price"] = self.sale_price.value_digits()
 
-        # ===== Top lines (하이라이트는 텍스트 길이만)
-        # 날짜
-        line1 = f"날짜: {date}"
-        _hi_text(p, x, y, line1, f_top, H_DATE)
-        p.setFont(f_top)
-        p.setPen(QColor("#1F1F1F"))
-        p.drawText(x, y, line1)
-        y += 22
-
-        # 제품명
-        line2 = f"제품명: {style_no}"
-        _hi_text(p, x, y, line2, f_top, H_PRODUCT)
-        p.setFont(f_top)
-        p.setPen(QColor("#1F1F1F"))
-        p.drawText(x, y, line2)
-        y += 22
-
-        # 공장(하이라이트 없음)
-        p.setFont(f_top)
-        p.setPen(QColor("#2A2A2A"))
-        p.drawText(x, y, f"공장: {factory}")
-        y += 18
-
-        # ===== Money block (테이블 느낌 최소화: 판매가만 하이라이트)
-        col_gap = 10
-        col_w = int((w - col_gap) / 2)
-        rx = x + col_w + col_gap
-
-        # row1: 원가 / 공임
-        y += 10
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(x, y, "원가")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(x + 52, y + 1, _krw(cost))
-
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(rx, y, "공임")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(rx + 52, y + 1, _krw(labor))
-        y += 26
-
-        # row2: 로스 / 판매가 (판매가만 텍스트 길이만큼 하이라이트)
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(x, y, "로스")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(x + 52, y + 1, _krw(loss))
-
-        sale_label = "판매가"
-        sale_value = _krw(sale)
-        # 판매가 라벨+값을 한 덩어리로 하이라이트 (텍스트 길이만)
-        sale_line = f"{sale_label}  {sale_value}".strip()
-        _hi_text(p, rx, y, sale_line, f_big, H_MONEY, pad_x=14)
-
-        # 실제 출력은 라벨/값 분리해서 기존 레이아웃 유지
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(rx, y, sale_label)
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(rx + 52, y + 1, sale_value)
-
-
-class ChangeNotePostIt(QWidget):
-    """수정사항 메모 1장 (없으면 숨김)"""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.kind = "note"
-        self.title = "수정사항"
-        self.text = ""
-        self.setMinimumHeight(220)
-
-    def sizeHint(self) -> QSize:
-        return QSize(320, 260)
-
-    def set_text(self, text: str):
-        self.text = (text or "").strip()
-        self.setVisible(bool(self.text))
-        self.update()
-
-    def paintEvent(self, event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing, True)
-
-        w = self.width()
-        h = self.height()
-
-        # Light green note color (distinct from other cards)
-        bg = QColor("#DFF6E3")
-        border = QColor("#A5D6A7")
-
-        p.setPen(QPen(border, 2))
-        p.setBrush(bg)
-        p.drawRoundedRect(QRectF(0.5, 0.5, w - 1, h - 1), 14, 14)
-
-        pad = 14
-        y = pad
-
-        # Title
-        title_font = QFont(self.font())
-        title_font.setPointSize(title_font.pointSize() + 1)
-        title_font.setBold(True)
-        p.setFont(title_font)
-        p.setPen(QColor("#1B5E20"))
-        p.drawText(QRectF(pad, y, w - pad * 2, 26), Qt.AlignLeft | Qt.AlignVCenter, self.title)
-        y += 30
-
-        # Body text
-        body_font = QFont(self.font())
-        body_font.setPointSize(max(9, body_font.pointSize() - 1))
-        p.setFont(body_font)
-        p.setPen(QColor("#2E2E2E"))
-
-        text_rect = QRectF(pad, y, w - pad * 2, h - y - pad)
-        if self.text:
-            p.drawText(text_rect, Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, self.text)
-        else:
-            p.setPen(QColor("#6A6A6A"))
-            p.drawText(text_rect, Qt.AlignLeft | Qt.AlignTop, "수정사항이 없습니다.")
-
-
-class PostItCard(QWidget):
-    """원단/부자재 1장. 클릭하면 앞으로(활성화). hover 시 X 표시 → 삭제"""
-
-    delete_clicked = Signal(int)
-    selected = Signal(int)
-
-    def __init__(self, kind: str, index: int, data: Dict[str, str], parent=None):
-        super().__init__(parent)
-        self.kind = kind
-        self.index = index
-        self.data = data
-        self.is_active = False
-        self.setMouseTracking(True)
-        self.setMinimumHeight(135)
-
-        self.btn_delete = QToolButton(self)
-        self.btn_delete.setText("×")
-        self.btn_delete.setCursor(Qt.PointingHandCursor)
-        self.btn_delete.setVisible(False)
-        self.btn_delete.setFixedSize(20, 20)
-        self.btn_delete.setStyleSheet(
-            "QToolButton{border:none;border-radius:10px;background:rgba(0,0,0,0.12);font-weight:bold;}"
-            "QToolButton:hover{background:rgba(0,0,0,0.22);}"
-        )
-        self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
-
-    def set_active(self, active: bool):
-        self.is_active = active
-        self.update()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.selected.emit(self.index)
-        super().mousePressEvent(event)
-
-    def enterEvent(self, event):
-        self.btn_delete.setVisible(True)
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self.btn_delete.setVisible(False)
-        super().leaveEvent(event)
-
-    def resizeEvent(self, event):
-        self.btn_delete.move(self.width() - 28, 10)
-        super().resizeEvent(event)
-
-    def paintEvent(self, event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing, True)
-
-        bg = _color(self.kind)
-        bd = _border(self.kind)
-        r = QRectF(8, 8, self.width() - 16, self.height() - 16)
-
-        # 활성 카드면 테두리 더 진하고 두껍게(선택된 느낌)
-        if self.is_active:
-            pen = QPen(QColor(bd).darker(140), 3)
-        else:
-            pen = QPen(bd, 2)
-
-        p.setPen(pen)
-        p.setBrush(bg)
-        p.drawRoundedRect(r, 14, 14)
-
-        vendor = _safe(self.data.get("거래처", ""))
-        item = _safe(self.data.get("품목", ""))
-        qty = _safe(self.data.get("수량", ""))
-        unit = _safe(self.data.get("단위", ""))
-        price = _safe(self.data.get("단가", ""))
-        total = _safe(self.data.get("총액", ""))
-
-        x = 18
-        y = 32
-        w = self.width() - 36
-
-        f_head = QFont()
-        f_head.setPointSize(11)
-        f_head.setBold(True)
-
-        f_small = QFont()
-        f_small.setPointSize(9)
-        f_small.setBold(False)
-
-        f_big = QFont()
-        f_big.setPointSize(11)
-        f_big.setBold(True)
-
-        # 거래처/품목
-        p.setFont(f_head)
-        p.setPen(QColor("#1F1F1F"))
-        p.drawText(x, y, vendor)
-        y += 20
-        p.drawText(x, y, item)
-        y += 18
-
-        # 수량/단가 (강조 없음)
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(x, y, "수량")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(x + 50, y + 1, f"{qty} {unit}".strip())
-        y += 22
-
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(x, y, "단가")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(x + 50, y + 1, _krw(price))
-
-        # 총액만 하이라이트 (판매가와 같은 색, 텍스트 길이만)
-        total_line = f"총액  {_krw(total)}".strip()
-        # 오른쪽 하단쪽으로 배치
-        by = y
-        bx = x + int(w * 0.50)
-        p.setFont(f_big)
-        _hi_text(p, bx, by + 1, total_line, f_big, H_MONEY, pad_x=16)
-
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(bx, by, "총액")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(bx + 44, by + 1, _krw(total))
+        self.data_changed.emit({
+            "cost_display": self.header["cost_display"],
+            "labor_display": self.header["labor_display"],
+            "loss_display": self.header["loss_display"],
+            "sale_price_display": self.header["sale_price_display"],
+            "cost": self.header["cost"],
+            "labor": self.header["labor"],
+            "loss": self.header["loss"],
+            "sale_price": self.header["sale_price"],
+        })
 
 
 class PostItStack(QWidget):
@@ -521,6 +523,7 @@ class PostItBar(QWidget):
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
     basic_edit_requested = Signal()
+    basic_data_changed = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -531,6 +534,7 @@ class PostItBar(QWidget):
 
         self.basic = BasicInfoPostIt()
         self.basic.edit_requested.connect(self.basic_edit_requested.emit)
+        self.basic.data_changed.connect(self.basic_data_changed.emit)
 
         self.fabric = PostItStack(kind="fabric", title="원단정보")
         self.trim = PostItStack(kind="trim", title="부자재정보")
@@ -548,3 +552,47 @@ class PostItBar(QWidget):
         self.basic.set_header_data(header or {})
         self.fabric.set_items(fabrics or [])
         self.trim.set_items(trims or [])
+class ChangeNotePostIt(QWidget):
+    """수정사항 메모 포스트잇(내용 없으면 숨김)."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._text = ""
+        self.setMinimumHeight(220)
+
+        self._title = QLabel("수정사항", self)
+        self._title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+        self._body = QLabel("", self)
+        self._body.setWordWrap(True)
+        self._body.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(10, 10, 10, 10)
+        lay.setSpacing(6)
+        lay.addWidget(self._title)
+        lay.addWidget(self._body, 1)
+
+        # 포스트잇 느낌 스타일
+        self.setStyleSheet(
+            "ChangeNotePostIt {"
+            "  background: #fff4a3;"
+            "  border: 1px solid #d8c86a;"
+            "  border-radius: 10px;"
+            "}"
+            "QLabel {"
+            "  color: #222;"
+            "}"
+        )
+        self._title.setStyleSheet("QLabel { font-weight: 600; }")
+        self._body.setStyleSheet("QLabel { color: #333; }")
+
+        self.setVisible(False)
+
+    def set_text(self, text: str):
+        self._text = (text or "").strip()
+        self._body.setText(self._text)
+        self.setVisible(bool(self._text))
+
+    def text(self) -> str:
+        return self._text
