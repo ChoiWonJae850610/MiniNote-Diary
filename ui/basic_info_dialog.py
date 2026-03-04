@@ -119,12 +119,12 @@ class BasicInfoDialog(QDialog):
             initial_date = QDate.currentDate()
         self._date_value = initial_date
 
-        self.date_text = QLineEdit(self)
-        self.date_text.setReadOnly(True)
-        self.date_text.setFixedHeight(30)
+        self.date_text = QLabel(self)
+        self.date_text.setMinimumHeight(24)
         self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
+        self.date_text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
         # 'yyyy-MM-dd' 길이(10자) 기준으로 과하게 넓지 않게
-        self.date_text.setFixedWidth(120)
+        self.date_text.setFixedWidth(100)
 
         self.btn_calendar = QToolButton(self)
         self.btn_calendar.setFixedSize(34, 30)
@@ -225,6 +225,7 @@ class BasicInfoDialog(QDialog):
             if d and d.isValid():
                 self._date_value = d
                 self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
+        self.date_text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
 
     def _sync_sale_price(self):
         total = (
