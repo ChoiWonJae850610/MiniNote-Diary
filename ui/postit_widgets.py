@@ -10,7 +10,7 @@ try:
 except Exception:  # QtSvg might be unavailable
     QSvgRenderer = None
 from PySide6.QtCore import QByteArray
-from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QCalendarWidget, QGraphicsDropShadowEffect, QSizePolicy
+from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QCalendarWidget, QGraphicsDropShadowEffect, QPlainTextEdit, QSizePolicy
 
 
 def _color(kind: str) -> QColor:
@@ -188,6 +188,8 @@ class _MoneyLineEdit(QLineEdit):
 
 class _ClickToEditLineEdit(QLineEdit):
     """기본은 readOnly. 클릭하면 편집, Enter/포커스 아웃 시 저장(=editingFinished)."""
+
+    committed = Signal(str)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFrame(False)
@@ -207,6 +209,15 @@ class _ClickToEditLineEdit(QLineEdit):
             self.setReadOnly(True)
         super().focusOutEvent(event)
 
+    def keyPressEvent(self, event):
+        # Enter/Return -> commit
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            if not self.isReadOnly():
+                self.setReadOnly(True)
+                self.committed.emit(self.text().strip())
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
 class BasicInfoPostIt(QWidget):
     edit_requested = Signal()
@@ -467,10 +478,188 @@ class BasicInfoPostIt(QWidget):
         })
 
 
+
+class PostItCard(QWidget):
+    """원단/부자재 1장: 인라인 편집 가능."""
+
+    delete_clicked = Signal(int)
+    selected = Signal(int)
+    data_changed = Signal(int, dict)   # (index, patch)
+    item_created = Signal(dict)        # placeholder -> real item
+
+    def __init__(self, kind: str, index: int, data: Dict[str, str], placeholder: bool = False, parent=None):
+        super().__init__(parent)
+        self.kind = kind
+        self.index = index
+        self.data = dict(data or {})
+        self.is_active = False
+        self.is_placeholder = placeholder
+
+        self.setMouseTracking(True)
+        self.setMinimumHeight(135)
+
+        # paper style + shadow
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(18)
+        shadow.setOffset(0, 6)
+        shadow.setColor(QColor(0, 0, 0, 60))
+        self.setGraphicsEffect(shadow)
+
+        self._bg = _color(kind)
+        self._bd = _border(kind)
+
+        # delete button
+        self.btn_delete = QToolButton(self)
+        self.btn_delete.setText("×")
+        self.btn_delete.setCursor(Qt.PointingHandCursor)
+        self.btn_delete.setVisible(False)
+        self.btn_delete.setFixedSize(20, 20)
+        self.btn_delete.setStyleSheet(
+            "QToolButton{border:none;border-radius:10px;background:rgba(0,0,0,0.12);font-weight:bold;}"
+            "QToolButton:hover{background:rgba(0,0,0,0.22);}"
+        )
+        self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
+
+        # content layout
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(14, 14, 14, 14)
+        lay.setSpacing(6)
+
+        self.vendor = _ClickToEditLineEdit(self)
+        self.vendor.setPlaceholderText("거래처")
+        self.vendor.setText(_safe(self.data.get("거래처", "")))
+
+        self.item = _ClickToEditLineEdit(self)
+        self.item.setPlaceholderText("품목")
+        self.item.setText(_safe(self.data.get("품목", "")))
+
+        row = QGridLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setHorizontalSpacing(8)
+        row.setVerticalSpacing(6)
+
+        self.qty = _ClickToEditLineEdit(self)
+        self.qty.setPlaceholderText("수량")
+        self.qty.setText(_safe(self.data.get("수량", "")))
+        self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+
+        self.unit = _ClickToEditLineEdit(self)
+        self.unit.setPlaceholderText("단위")
+        self.unit.setText(_safe(self.data.get("단위", "")))
+
+        self.price = _MoneyLineEdit(self)
+        self.price.setPlaceholderText("단가")
+        self.price.setText(_safe(self.data.get("단가", "")))
+
+        self.total = _MoneyLineEdit(self)
+        self.total.setPlaceholderText("총액")
+        self.total.setText(_safe(self.data.get("총액", "")))
+
+        row.addWidget(QLabel("수량", self), 0, 0)
+        row.addWidget(self.qty, 0, 1)
+        row.addWidget(self.unit, 0, 2)
+
+        row.addWidget(QLabel("단가", self), 1, 0)
+        row.addWidget(self.price, 1, 1, 1, 2)
+
+        row.addWidget(QLabel("총액", self), 2, 0)
+        row.addWidget(self.total, 2, 1, 1, 2)
+
+        lay.addWidget(self.vendor)
+        lay.addWidget(self.item)
+        lay.addLayout(row)
+
+        # style to look like post-it (not textbox)
+        for w in (self.vendor, self.item, self.qty, self.unit, self.price, self.total):
+            w.setStyleSheet(
+                'QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;} '
+                'QLineEdit[readOnly="true"]{background:transparent;color:#111;} '
+                'QLineEdit:focus{background:rgba(255,255,255,0.65);border:1px solid rgba(0,0,0,0.25);'
+                'border-radius:6px;padding:3px 6px;}'
+            )
+
+        # placeholder visual hint
+        if self.is_placeholder:
+            self.vendor.setPlaceholderText("클릭해서 원단/부자재 입력")
+            self.item.setPlaceholderText("")
+            self.btn_delete.setEnabled(False)
+
+        # signals
+        self.vendor.committed.connect(lambda v: self._commit_field("거래처", v))
+        self.item.committed.connect(lambda v: self._commit_field("품목", v))
+        self.qty.committed.connect(lambda v: self._commit_field("수량", v))
+        self.unit.committed.connect(lambda v: self._commit_field("단위", v))
+        self.price.textChanged.connect(lambda _t: self._commit_money("단가", self.price.text()))
+        self.total.textChanged.connect(lambda _t: self._commit_money("총액", self.total.text()))
+
+        self._apply_placeholder_delete()
+
+    def _apply_placeholder_delete(self):
+        if self.is_placeholder:
+            self.btn_delete.setVisible(False)
+
+    def set_active(self, active: bool):
+        self.is_active = active
+        self.update()
+
+    def _commit_money(self, key: str, display: str):
+        # only emit on user edits; MoneyLineEdit will normalize
+        self._commit_field(key, display)
+
+    def _commit_field(self, key: str, value: str):
+        value = (value or "").strip()
+        self.data[key] = value
+
+        # If placeholder and user started typing something, create real item
+        if self.is_placeholder and any((self.data.get(k, "") or "").strip() for k in ["거래처", "품목", "수량", "단위", "단가", "총액"]):
+            self.is_placeholder = False
+            self.item_created.emit(dict(self.data))
+            return
+
+        self.data_changed.emit(self.index, {key: value})
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.selected.emit(self.index)
+        super().mousePressEvent(event)
+
+    def enterEvent(self, event):
+        if not self.is_placeholder:
+            self.btn_delete.setVisible(True)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.btn_delete.setVisible(False)
+        super().leaveEvent(event)
+
+    def resizeEvent(self, event):
+        self.btn_delete.move(self.width() - 28, 10)
+        super().resizeEvent(event)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing, True)
+
+        bg = QColor(self._bg)
+        bd = QColor(self._bd)
+
+        # Slight paper tint gradient
+        r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
+        if self.is_active:
+            pen = QPen(QColor(bd).darker(140), 3)
+        else:
+            pen = QPen(bd, 2)
+        p.setPen(pen)
+        p.setBrush(bg)
+        p.drawRoundedRect(r, 16, 16)
+
+
 class PostItStack(QWidget):
     """여러 장을 겹쳐 스택처럼 보이게. 클릭으로 앞으로 가져오기."""
 
     item_deleted = Signal(int)
+    item_changed = Signal(int, dict)
+    item_created = Signal(dict)
 
     def __init__(self, kind: str, title: str, parent=None):
         super().__init__(parent)
@@ -486,6 +675,11 @@ class PostItStack(QWidget):
 
     def set_items(self, items: List[Dict[str, str]]):
         self.items = list(items or [])
+        self._placeholder = False
+        if not self.items:
+            self.items = [{}]
+            self.active_index = 0
+            self._placeholder = True
         # 새로 세팅될 때, 활성 인덱스는 가능한 범위로 보정
         if not self.items:
             self.active_index = -1
@@ -501,9 +695,11 @@ class PostItStack(QWidget):
         self.cards = []
 
         for idx, it in enumerate(self.items):
-            card = PostItCard(self.kind, idx, it, parent=self)
-            card.delete_clicked.connect(self.item_deleted.emit)
+            card = PostItCard(self.kind, idx, it, placeholder=getattr(self, '_placeholder', False) and idx == 0, parent=self)
+            card.delete_clicked.connect(self._on_delete_clicked)
             card.selected.connect(self.set_active_card)
+            card.data_changed.connect(self.item_changed.emit)
+            card.item_created.connect(self._on_item_created)
             card.show()
             self.cards.append(card)
 
@@ -523,6 +719,18 @@ class PostItStack(QWidget):
     def _apply_active_state(self):
         for i, c in enumerate(self.cards):
             c.set_active(i == self.active_index)
+
+    
+    def _on_delete_clicked(self, idx: int):
+        # placeholder는 삭제 불가
+        if getattr(self, '_placeholder', False):
+            return
+        self.item_deleted.emit(idx)
+
+    def _on_item_created(self, data: Dict[str, str]):
+        # placeholder에서 실제 아이템 생성
+        self._placeholder = False
+        self.item_created.emit(data)
 
     def resizeEvent(self, event):
         self._layout_cards()
@@ -559,6 +767,10 @@ class PostItBar(QWidget):
 
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
+    fabric_item_changed = Signal(int, dict)
+    trim_item_changed = Signal(int, dict)
+    fabric_item_created = Signal(dict)
+    trim_item_created = Signal(dict)
     basic_edit_requested = Signal()
     basic_data_changed = Signal(dict)
 
@@ -578,58 +790,74 @@ class PostItBar(QWidget):
 
         self.fabric.item_deleted.connect(self.fabric_deleted.emit)
         self.trim.item_deleted.connect(self.trim_deleted.emit)
+        self.fabric.item_changed.connect(self.fabric_item_changed.emit)
+        self.trim.item_changed.connect(self.trim_item_changed.emit)
+        self.fabric.item_created.connect(self.fabric_item_created.emit)
+        self.trim.item_created.connect(self.trim_item_created.emit)
 
         layout.addWidget(self.basic, 1)
         layout.addWidget(self.fabric, 1)
         layout.addWidget(self.trim, 1)
 
-        self.basic.setVisible(False)
 
     def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]]):
         self.basic.set_header_data(header or {})
         self.fabric.set_items(fabrics or [])
         self.trim.set_items(trims or [])
+
 class ChangeNotePostIt(QWidget):
-    """수정사항 메모 포스트잇(내용 없으면 숨김)."""
+    """수정사항 메모 포스트잇: 항상 자리 차지 + 인라인 편집."""
+
+    text_changed = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._text = ""
+        self._block = False
         self.setMinimumHeight(220)
 
-        self._title = QLabel("수정사항", self)
-        self._title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(18)
+        shadow.setOffset(0, 6)
+        shadow.setColor(QColor(0, 0, 0, 60))
+        self.setGraphicsEffect(shadow)
 
-        self._body = QLabel("", self)
-        self._body.setWordWrap(True)
-        self._body.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(10, 10, 10, 10)
-        lay.setSpacing(6)
-        lay.addWidget(self._title)
-        lay.addWidget(self._body, 1)
-
-        # 포스트잇 느낌 스타일
         self.setStyleSheet(
             "ChangeNotePostIt {"
-            "  background: #fff4a3;"
-            "  border: 1px solid #d8c86a;"
-            "  border-radius: 10px;"
+            "  background: #DFF6E3;"
+            "  border: 1px solid #A5D6A7;"
+            "  border-radius: 16px;"
             "}"
-            "QLabel {"
-            "  color: #222;"
-            "}"
+            "QLabel { color:#1B5E20; font-weight:600; }"
         )
-        self._title.setStyleSheet("QLabel { font-weight: 600; }")
-        self._body.setStyleSheet("QLabel { color: #333; }")
 
-        self.setVisible(False)
+        title = QLabel("수정사항", self)
+        self.editor = QPlainTextEdit(self)
+        self.editor.setPlaceholderText("클릭해서 수정사항을 입력하세요")
+        self.editor.setTabChangesFocus(True)
+        self.editor.setStyleSheet(
+            "QPlainTextEdit{background:transparent;border:none;color:#222;font-size:12px;}"
+            "QPlainTextEdit:focus{background:rgba(255,255,255,0.55);border:1px solid rgba(0,0,0,0.18);border-radius:10px;padding:6px;}"
+        )
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(14, 14, 14, 14)
+        lay.setSpacing(8)
+        lay.addWidget(title)
+        lay.addWidget(self.editor, 1)
+
+        self.editor.textChanged.connect(self._on_text_changed)
+
+    def _on_text_changed(self):
+        if self._block:
+            return
+        self.text_changed.emit(self.text())
 
     def set_text(self, text: str):
-        self._text = (text or "").strip()
-        self._body.setText(self._text)
-        self.setVisible(bool(self._text))
+        self._block = True
+        try:
+            self.editor.setPlainText(text or "")
+        finally:
+            self._block = False
 
     def text(self) -> str:
-        return self._text
+        return self.editor.toPlainText().rstrip()

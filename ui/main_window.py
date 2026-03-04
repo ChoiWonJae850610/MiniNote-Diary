@@ -200,6 +200,7 @@ class MainWindow(QMainWindow):
         self.image_preview.setMinimumHeight(520)
 
         self.change_note_postit = ChangeNotePostIt()
+        self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.change_note_postit.setVisible(False)
 
         center_row = QWidget()
@@ -236,6 +237,11 @@ class MainWindow(QMainWindow):
 
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
+        self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
+        self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
+        self.postit_bar.trim_item_changed.connect(self.on_trim_postit_changed)
+        self.postit_bar.fabric_item_created.connect(self.on_fabric_postit_created)
+        self.postit_bar.trim_item_created.connect(self.on_trim_postit_created)
         self.postit_bar.setMaximumHeight(220)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
@@ -302,6 +308,7 @@ class MainWindow(QMainWindow):
         )
         if hasattr(self, "change_note_postit"):
             note = (self.header_data or {}).get("change_note", "")
+            # editor 내용 동기화(내부에서 signal block)
             self.change_note_postit.set_text(note)
 
     # ===================== Basic/Fabric/Trim add/delete ======================
@@ -324,7 +331,54 @@ class MainWindow(QMainWindow):
         self.mark_dirty()
         self._refresh_postits()
 
-    
+
+    def on_trim_postit_created(self, data: dict):
+        if not isinstance(data, dict):
+            return
+        self.trim_items.append(data)
+        self.mark_dirty()
+        self._refresh_postits()
+
+
+
+    def on_fabric_postit_created(self, data: dict):
+        if not isinstance(data, dict):
+            return
+        self.fabric_items.append(data)
+        self.mark_dirty()
+        self._refresh_postits()
+
+
+    def on_trim_postit_changed(self, idx: int, patch: dict):
+        if not isinstance(patch, dict):
+            return
+        if idx < 0 or idx >= len(self.trim_items):
+            return
+        self.trim_items[idx].update(patch)
+        self.mark_dirty()
+        self._refresh_postits()
+
+
+    def on_fabric_postit_changed(self, idx: int, patch: dict):
+        if not isinstance(patch, dict):
+            return
+        if idx < 0 or idx >= len(self.fabric_items):
+            return
+        self.fabric_items[idx].update(patch)
+        self.mark_dirty()
+        self._refresh_postits()
+
+
+
+    def on_change_note_changed(self, text: str):
+        if not isinstance(self.header_data, dict):
+            self.header_data = {}
+        self.header_data["change_note"] = (text or "").rstrip()
+        self.mark_dirty()
+        # 포스트잇 자체는 이미 편집 중이므로 refresh는 최소화
+        # self._refresh_postits()
+
+
     def on_change_note_clicked(self):
         current = (self.header_data or {}).get("change_note", "")
         dlg = _ChangeNoteDialog(initial_text=current, parent=self)
