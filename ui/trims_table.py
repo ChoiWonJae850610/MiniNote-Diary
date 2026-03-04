@@ -4,21 +4,21 @@ from __future__ import annotations
 import json
 import os
 
+from PySide6.QtCore import Qt, QEvent
+from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
     QGroupBox,
-    QVBoxLayout,
+    QHeaderView,
+    QLineEdit,
     QPushButton,
+    QSizePolicy,
+    QStyledItemDelegate,
     QTableWidget,
     QTableWidgetItem,
-    QAbstractItemView,
-    QHeaderView,
-    QComboBox,
-    QStyledItemDelegate,
-    QLineEdit,
-    QSizePolicy,
+    QVBoxLayout,
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIntValidator
 
 
 def _digits_only(s: str) -> str:
@@ -36,36 +36,36 @@ def _format_commas(s: str) -> str:
 
 
 class MoneyDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, option, index):  # noqa: N802
         editor = QLineEdit(parent)
         editor.setValidator(QIntValidator(0, 2_147_483_647, editor))
         editor.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         return editor
 
-    def setEditorData(self, editor, index):
+    def setEditorData(self, editor, index):  # noqa: N802
         text = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         editor.setText(_digits_only(str(text)))
 
-    def setModelData(self, editor, model, index):
+    def setModelData(self, editor, model, index):  # noqa: N802
         raw = _digits_only(editor.text())
         model.setData(index, raw, Qt.EditRole)
 
-    def displayText(self, value, locale):
+    def displayText(self, value, locale):  # noqa: N802
         return _format_commas(str(value))
 
 
 class NumberDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, option, index):  # noqa: N802
         editor = QLineEdit(parent)
         editor.setValidator(QIntValidator(0, 2_147_483_647, editor))
         editor.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         return editor
 
-    def setEditorData(self, editor, index):
+    def setEditorData(self, editor, index):  # noqa: N802
         text = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         editor.setText(_digits_only(str(text)))
 
-    def setModelData(self, editor, model, index):
+    def setModelData(self, editor, model, index):  # noqa: N802
         raw = _digits_only(editor.text())
         model.setData(index, raw, Qt.EditRole)
 
@@ -75,9 +75,13 @@ class UnitComboDelegate(QStyledItemDelegate):
         super().__init__(parent)
         self.unit_items = unit_items
 
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, option, index):  # noqa: N802
         cb = QComboBox(parent)
         cb.setEditable(False)
+        cb.setInsertPolicy(QComboBox.NoInsert)
+
+        # 빈 값 1개 (삭제용)
+        cb.addItem("", "")
 
         for it in self.unit_items:
             label = str(it.get("label", "")).strip()
@@ -90,9 +94,18 @@ class UnitComboDelegate(QStyledItemDelegate):
             cb.view().setMinimumWidth(280)
         except Exception:
             pass
+
+        cb.installEventFilter(self)
         return cb
 
-    def setEditorData(self, editor, index):
+    def eventFilter(self, obj, event):  # noqa: N802
+        if isinstance(obj, QComboBox) and event.type() == QEvent.KeyPress:
+            if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+                obj.setCurrentIndex(0)
+                return True
+        return super().eventFilter(obj, event)
+
+    def setEditorData(self, editor, index):  # noqa: N802
         unit = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         unit = str(unit).strip()
 
@@ -100,15 +113,14 @@ class UnitComboDelegate(QStyledItemDelegate):
             if str(editor.itemData(i)).strip() == unit:
                 editor.setCurrentIndex(i)
                 return
-        if editor.count() > 0:
-            editor.setCurrentIndex(0)
+        editor.setCurrentIndex(0)
 
-    def setModelData(self, editor, model, index):
+    def setModelData(self, editor, model, index):  # noqa: N802
         unit = editor.currentData()
         unit = "" if unit is None else str(unit)
         model.setData(index, unit, Qt.EditRole)
 
-    def paint(self, painter, option, index):
+    def paint(self, painter, option, index):  # noqa: N802
         option.displayAlignment = Qt.AlignCenter
         super().paint(painter, option, index)
 
@@ -140,9 +152,8 @@ class TrimsTable(QGroupBox):
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(8)
 
-        self.table = QTableWidget(3, 6)
+        self.table = QTableWidget(3, 6, self)
         self.table.setHorizontalHeaderLabels(["거래처", "품목", "수량", "단위", "단가", "토탈"])
-
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
 
@@ -159,19 +170,17 @@ class TrimsTable(QGroupBox):
         vh.setDefaultSectionSize(28)
 
         self._apply_header_resize_policy()
-
         self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 28)
+
         self._fix_table_height(self.VISIBLE_ROWS)
 
         self.unit_delegate = UnitComboDelegate(self._load_unit_items(), self.table)
         self.table.setItemDelegateForColumn(self.COL_UNIT, self.unit_delegate)
-
         self.table.setItemDelegateForColumn(self.COL_QTY, NumberDelegate(self.table))
         self.table.setItemDelegateForColumn(self.COL_PRICE, MoneyDelegate(self.table))
         self.table.setItemDelegateForColumn(self.COL_TOTAL, MoneyDelegate(self.table))
 
         self._init_cells()
-
         layout.addWidget(self.table)
 
         self.btn_add = QPushButton("+", self)
@@ -179,16 +188,14 @@ class TrimsTable(QGroupBox):
         for b in (self.btn_add, self.btn_del):
             b.setFixedSize(34, 30)
             b.raise_()
-
         self.btn_add.setToolTip("행 추가")
         self.btn_del.setToolTip("선택 행 삭제")
-
         self.btn_add.clicked.connect(self.add_row)
         self.btn_del.clicked.connect(self.delete_selected_row)
 
         self._sync_group_height()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event):  # noqa: N802
         super().resizeEvent(event)
         self._position_buttons()
 
@@ -196,11 +203,9 @@ class TrimsTable(QGroupBox):
         margin_right = 12
         gap = 6
         y = 18
-
         bw = self.btn_add.width()
         x_del = self.width() - margin_right - bw
         x_add = x_del - gap - bw
-
         self.btn_add.move(x_add, y)
         self.btn_del.move(x_del, y)
 
@@ -214,13 +219,10 @@ class TrimsTable(QGroupBox):
     def _apply_header_resize_policy(self):
         hh = self.table.horizontalHeader()
         hh.setStretchLastSection(False)
-
         for c in range(self.table.columnCount()):
             hh.setSectionResizeMode(c, QHeaderView.Fixed)
-
         for c, w in self.COLUMN_WIDTHS_FIXED.items():
             self.table.setColumnWidth(c, w)
-
         hh.setSectionResizeMode(self.STRETCH_COLUMN, QHeaderView.Stretch)
 
     def _fix_table_height(self, visible_rows: int = 3):

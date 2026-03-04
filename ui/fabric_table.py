@@ -4,21 +4,21 @@ from __future__ import annotations
 import json
 import os
 
+from PySide6.QtCore import Qt, QEvent
+from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
     QGroupBox,
-    QVBoxLayout,
+    QHeaderView,
+    QLineEdit,
     QPushButton,
+    QSizePolicy,
+    QStyledItemDelegate,
     QTableWidget,
     QTableWidgetItem,
-    QAbstractItemView,
-    QHeaderView,
-    QComboBox,
-    QStyledItemDelegate,
-    QLineEdit,
-    QSizePolicy,
+    QVBoxLayout,
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIntValidator
 
 
 def _digits_only(s: str) -> str:
@@ -36,53 +36,57 @@ def _format_commas(s: str) -> str:
 
 
 class MoneyDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, option, index):  # noqa: N802
         editor = QLineEdit(parent)
         editor.setValidator(QIntValidator(0, 2_147_483_647, editor))
         editor.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         return editor
 
-    def setEditorData(self, editor, index):
+    def setEditorData(self, editor, index):  # noqa: N802
         text = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         editor.setText(_digits_only(str(text)))
 
-    def setModelData(self, editor, model, index):
+    def setModelData(self, editor, model, index):  # noqa: N802
         raw = _digits_only(editor.text())
         model.setData(index, raw, Qt.EditRole)
 
-    def displayText(self, value, locale):
+    def displayText(self, value, locale):  # noqa: N802
         return _format_commas(str(value))
 
 
 class NumberDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, option, index):  # noqa: N802
         editor = QLineEdit(parent)
         editor.setValidator(QIntValidator(0, 2_147_483_647, editor))
         editor.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         return editor
 
-    def setEditorData(self, editor, index):
+    def setEditorData(self, editor, index):  # noqa: N802
         text = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         editor.setText(_digits_only(str(text)))
 
-    def setModelData(self, editor, model, index):
+    def setModelData(self, editor, model, index):  # noqa: N802
         raw = _digits_only(editor.text())
         model.setData(index, raw, Qt.EditRole)
 
 
 class UnitComboDelegate(QStyledItemDelegate):
-    """
-    - 드롭다운: label
+    """- 드롭다운: label
     - 셀 값: unit
+    - Delete/Backspace: 빈 값으로 초기화
     """
 
     def __init__(self, unit_items: list[dict], parent=None):
         super().__init__(parent)
         self.unit_items = unit_items
 
-    def createEditor(self, parent, option, index):
+    def createEditor(self, parent, option, index):  # noqa: N802
         cb = QComboBox(parent)
         cb.setEditable(False)
+        cb.setInsertPolicy(QComboBox.NoInsert)
+
+        # 빈 값 1개 (삭제용)
+        cb.addItem("", "")
 
         for it in self.unit_items:
             label = str(it.get("label", "")).strip()
@@ -95,9 +99,18 @@ class UnitComboDelegate(QStyledItemDelegate):
             cb.view().setMinimumWidth(280)
         except Exception:
             pass
+
+        cb.installEventFilter(self)
         return cb
 
-    def setEditorData(self, editor, index):
+    def eventFilter(self, obj, event):  # noqa: N802
+        if isinstance(obj, QComboBox) and event.type() == QEvent.KeyPress:
+            if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+                obj.setCurrentIndex(0)
+                return True
+        return super().eventFilter(obj, event)
+
+    def setEditorData(self, editor, index):  # noqa: N802
         unit = index.data(Qt.EditRole) or index.data(Qt.DisplayRole) or ""
         unit = str(unit).strip()
 
@@ -105,23 +118,21 @@ class UnitComboDelegate(QStyledItemDelegate):
             if str(editor.itemData(i)).strip() == unit:
                 editor.setCurrentIndex(i)
                 return
-        if editor.count() > 0:
-            editor.setCurrentIndex(0)
 
-    def setModelData(self, editor, model, index):
+        editor.setCurrentIndex(0)
+
+    def setModelData(self, editor, model, index):  # noqa: N802
         unit = editor.currentData()
         unit = "" if unit is None else str(unit)
         model.setData(index, unit, Qt.EditRole)
 
-    def paint(self, painter, option, index):
+    def paint(self, painter, option, index):  # noqa: N802
         option.displayAlignment = Qt.AlignCenter
         super().paint(painter, option, index)
 
 
 class FabricTable(QGroupBox):
-    """
-    원단 테이블
-    """
+    """원단 테이블"""
 
     VISIBLE_ROWS = 3
 
@@ -144,25 +155,25 @@ class FabricTable(QGroupBox):
     def __init__(self, title: str = "원단", parent=None):
         super().__init__(title, parent)
 
-        # ✅ 그룹박스가 불필요하게 늘어나면서(빨간 동그라미) 빈 공간 생기는 걸 방지
+        # 그룹박스가 불필요하게 늘어나면서 빈 공간 생기는 걸 방지
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(8)
 
-        self.table = QTableWidget(3, 6)
+        self.table = QTableWidget(3, 6, self)
         self.table.setHorizontalHeaderLabels(["원단처", "원단이름", "요척", "단위", "단가", "토탈"])
 
         # 보기
         self.table.setAlternatingRowColors(True)
         self.table.setShowGrid(False)
 
-        # ✅ 행 선택
+        # 행 선택
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
 
-        # ✅ 클릭=선택 / 더블클릭 or 키 입력=편집
+        # 클릭=선택 / 더블클릭 or 키 입력=편집
         self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
 
         self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -174,10 +185,9 @@ class FabricTable(QGroupBox):
         vh.setDefaultSectionSize(28)
 
         self._apply_header_resize_policy()
-
         self.table.verticalScrollBar().setSingleStep(vh.defaultSectionSize() or 28)
 
-        # ✅ “빨간 동그라미(빈 행 영역)” 없게: 정확히 VISIBLE_ROWS 만큼만 보이게
+        # 정확히 VISIBLE_ROWS 만큼만 보이게
         self._fix_table_height(self.VISIBLE_ROWS)
 
         # delegate
@@ -188,37 +198,31 @@ class FabricTable(QGroupBox):
         self.table.setItemDelegateForColumn(self.COL_TOTAL, MoneyDelegate(self.table))
 
         self._init_cells()
-
         layout.addWidget(self.table)
 
-        # ✅ 버튼을 레이아웃에 넣지 않고 “절대 위치”로 배치(검은 동그라미 여백 제거)
+        # 버튼 절대 위치
         self.btn_add = QPushButton("+", self)
         self.btn_del = QPushButton("-", self)
         for b in (self.btn_add, self.btn_del):
             b.setFixedSize(34, 30)
             b.raise_()
-
         self.btn_add.setToolTip("행 추가")
         self.btn_del.setToolTip("선택 행 삭제")
-
         self.btn_add.clicked.connect(self.add_row)
         self.btn_del.clicked.connect(self.delete_selected_row)
 
-        # 그룹박스 높이도 테이블+여백에 맞춰 고정
         self._sync_group_height()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event):  # noqa: N802
         super().resizeEvent(event)
         self._position_buttons()
 
     def _position_buttons(self):
-        # 그룹박스 타이틀 라인 우측에 붙이기(레이아웃 공간 소모 없음)
         margin_right = 12
         gap = 6
-        y = 18  # 타이틀 영역 높이 고려(테마에 따라 미세 조정 가능)
+        y = 18  # 타이틀 영역 높이 고려
 
         bw = self.btn_add.width()
-        bh = self.btn_add.height()
         x_del = self.width() - margin_right - bw
         x_add = x_del - gap - bw
 
@@ -226,8 +230,6 @@ class FabricTable(QGroupBox):
         self.btn_del.move(x_del, y)
 
     def _sync_group_height(self):
-        # QGroupBox 자체가 늘어나서 생기는 빈 공간 방지: content 기준으로 고정
-        # title 영역 + margins + table height
         title_h = 28
         top_bottom_margins = 14 + 12
         spacing = 8
@@ -237,13 +239,10 @@ class FabricTable(QGroupBox):
     def _apply_header_resize_policy(self):
         hh = self.table.horizontalHeader()
         hh.setStretchLastSection(False)
-
         for c in range(self.table.columnCount()):
             hh.setSectionResizeMode(c, QHeaderView.Fixed)
-
         for c, w in self.COLUMN_WIDTHS_FIXED.items():
             self.table.setColumnWidth(c, w)
-
         hh.setSectionResizeMode(self.STRETCH_COLUMN, QHeaderView.Stretch)
 
     def _fix_table_height(self, visible_rows: int = 3):
@@ -319,7 +318,6 @@ class FabricTable(QGroupBox):
         r = self.table.rowCount()
         self.table.insertRow(r)
         self._init_cells()
-        # 높이는 고정(3줄만 표시) + 스크롤로 더 보이게 유지
 
     def delete_selected_row(self):
         r = self.table.currentRow()
