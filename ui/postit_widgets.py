@@ -104,7 +104,21 @@ class BasicInfoPostIt(QWidget):
 
     def set_header_data(self, header: Dict[str, str]):
         self.header = header or {}
-        has = any((v or "").strip() for v in self.header.values())
+        # '수정사항(change_note)'은 기본정보 포스트잇 표시/판단에서 제외
+        basic_keys = [
+            "date",
+            "style_no",
+            "factory",
+            "cost_display",
+            "labor_display",
+            "loss_display",
+            "sale_price_display",
+            "cost",
+            "labor",
+            "loss",
+            "sale_price",
+        ]
+        has = any((self.header.get(k, "") or "").strip() for k in basic_keys)
         self.setVisible(has)
         self.update()
 

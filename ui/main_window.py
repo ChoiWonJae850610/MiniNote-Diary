@@ -279,8 +279,12 @@ class MainWindow(QMainWindow):
             self.header_data = {}
             self.fabric_items = []
             self.trim_items = []
-            self.image_preview.clear()
-            self.image_preview.setText("이미지 업로드 영역")
+            # 이미지도 완전히 초기화 (pixmap 포함)
+            if hasattr(self.image_preview, "clear_image"):
+                self.image_preview.clear_image()
+            else:
+                self.image_preview.clear()
+                self.image_preview.setText("이미지 업로드 영역")
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
             self.is_dirty = False
@@ -304,7 +308,11 @@ class MainWindow(QMainWindow):
         dlg = BasicInfoDialog(initial=self.header_data, parent=self)
         if dlg.exec() != QDialog.Accepted:
             return
-        self.header_data = dlg.get_data()
+        new_data = dlg.get_data()
+        # 수정사항(change_note)은 기본정보 입력/수정으로 삭제되지 않도록 유지
+        if isinstance(self.header_data, dict) and self.header_data.get('change_note'):
+            new_data['change_note'] = self.header_data.get('change_note', '')
+        self.header_data = new_data
         self.mark_dirty()
         self._refresh_postits()
 
@@ -440,8 +448,11 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "오류", str(e))
 
     def delete_image(self):
-        self.image_preview.clear()
-        self.image_preview.setText("이미지 업로드 영역")
+        if hasattr(self.image_preview, "clear_image"):
+            self.image_preview.clear_image()
+        else:
+            self.image_preview.clear()
+            self.image_preview.setText("이미지 업로드 영역")
         self.current_image_path = None
         self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
