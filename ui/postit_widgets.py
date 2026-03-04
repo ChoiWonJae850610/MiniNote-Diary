@@ -24,28 +24,37 @@ def _border(kind: str) -> QColor:
     return QColor("#C0A6FF")
 
 
-def _won(v: str) -> str:
-    """원화 표시: 사용자가 요청한 '\' 단위."""
+def _krw(v: str) -> str:
+    """원화 표시: '\' 대신 '원' 접미사."""
     v = (v or "").strip()
     if not v:
         return ""
-    # 이미 사용자가 \를 넣는 경우 중복 방지
-    if v.startswith("\\"):
+    if v.endswith("원"):
         return v
-    return f"\\{v}"
+    return f"{v}원"
 
 
 def _safe(v: str) -> str:
     return (v or "").strip()
 
 
-def _hi(p: QPainter, x: int, y: int, w: int, h: int, color: QColor, radius: int = 6):
-    """형광펜 같은 하이라이트 (반투명)"""
+def _hi(p: QPainter, x: int, y: int, w: int, h: int, color: QColor, radius: int = 7, alpha: int = 105):
+    """형광펜 같은 하이라이트 (반투명 배경)"""
     c = QColor(color)
-    c.setAlpha(90)
+    c.setAlpha(alpha)
     p.setPen(Qt.NoPen)
     p.setBrush(c)
     p.drawRoundedRect(QRectF(x, y, w, h), radius, radius)
+
+
+# ===== 강조 색상 규칙 (요청 반영)
+# - 기본정보: 날짜 / 제품명 / 판매가
+# - 원단/부자재: 총액
+# - 판매가 + (원단/부자재)총액 = 같은 색
+# - 날짜, 제품명은 서로 다른 색
+H_DATE = QColor("#A7F3D0")      # 민트
+H_PRODUCT = QColor("#BFDBFE")   # 연파랑
+H_MONEY = QColor("#FDE68A")     # 연노랑 (판매가/총액 공통)
 
 
 class BasicInfoPostIt(QWidget):
@@ -114,25 +123,14 @@ class BasicInfoPostIt(QWidget):
         sale = _safe(self.header.get("sale_price_display", ""))
 
         x = 20
-        y = 30
+        y = 32
         w = self.width() - 40
 
-        # ===== top 3 lines (읽기 쉬운 고정 구조)
-        f_label = QFont()
-        f_label.setPointSize(10)
-        f_label.setBold(True)
+        # ===== Fonts
+        f_top = QFont()
+        f_top.setPointSize(10)
+        f_top.setBold(True)
 
-        p.setPen(QPen(QColor("#2A2A2A"), 1))
-        p.setFont(f_label)
-        p.drawText(x, y, f"날짜: {date}")
-        y += 20
-        p.drawText(x, y, f"제품명: {style_no}")
-        y += 20
-        p.drawText(x, y, f"공장: {factory}")
-        y += 12
-
-        # ===== money block (형광펜 느낌 + 굵은 값)
-        # 라벨은 작게, 값은 크게/굵게
         f_small = QFont()
         f_small.setPointSize(9)
         f_small.setBold(False)
@@ -141,54 +139,70 @@ class BasicInfoPostIt(QWidget):
         f_big.setPointSize(11)
         f_big.setBold(True)
 
-        # 2열 배치
+        # ===== Top lines (날짜/제품명만 강조)
+        # 날짜 (강조)
+        _hi(p, x, y - 16, min(230, w), 22, H_DATE)
+        p.setFont(f_top)
+        p.setPen(QColor("#1F1F1F"))
+        p.drawText(x + 6, y, f"날짜: {date}")
+        y += 22
+
+        # 제품명 (강조)
+        _hi(p, x, y - 16, min(280, w), 22, H_PRODUCT)
+        p.setFont(f_top)
+        p.setPen(QColor("#1F1F1F"))
+        p.drawText(x + 6, y, f"제품명: {style_no}")
+        y += 22
+
+        # 공장 (강조 없음)
+        p.setFont(f_top)
+        p.setPen(QColor("#2A2A2A"))
+        p.drawText(x, y, f"공장: {factory}")
+        y += 16
+
+        # ===== Money block (테이블 느낌 최소화: 강조는 '판매가'만)
         col_gap = 10
         col_w = int((w - col_gap) / 2)
         row_h = 26
+        rx = x + col_w + col_gap
 
-        # row1: 원가 / 공임
-        y += 8
-        _hi(p, x, y - 18, w, row_h + 8, QColor("#FFF08A"))  # 노랑 형광펜 느낌
-
-        # left cell
+        # row1: 원가 / 공임 (강조 없음)
+        y += 12
         p.setFont(f_small)
         p.setPen(QColor("#444"))
         p.drawText(x + 6, y, "원가")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(x + 58, y + 1, _won(cost))
+        p.drawText(x + 58, y + 1, _krw(cost))
 
-        # right cell
-        rx = x + col_w + col_gap
         p.setFont(f_small)
         p.setPen(QColor("#444"))
         p.drawText(rx + 6, y, "공임")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(rx + 58, y + 1, _won(labor))
-
+        p.drawText(rx + 58, y + 1, _krw(labor))
         y += row_h
 
-        # row2: 로스 / 판매가 (판매가 강조 색감 조금 다르게)
-        _hi(p, x, y - 18, w, row_h + 8, QColor("#CFFFD6"))  # 연두 형광펜 느낌
-
+        # row2: 로스 / 판매가 (판매가만 강조 + 판매가/총액 공통색)
         p.setFont(f_small)
         p.setPen(QColor("#444"))
         p.drawText(x + 6, y, "로스")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(x + 58, y + 1, _won(loss))
+        p.drawText(x + 58, y + 1, _krw(loss))
 
+        # 판매가 강조 (오른쪽 칸만 하이라이트)
+        _hi(p, rx, y - 16, col_w, 22, H_MONEY)
         p.setFont(f_small)
         p.setPen(QColor("#444"))
         p.drawText(rx + 6, y, "판매가")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(rx + 58, y + 1, _won(sale))
+        p.drawText(rx + 58, y + 1, _krw(sale))
 
 
 class PostItCard(QWidget):
-    """원단/부자재 1장(회전 없음). hover 시 X 표시 → 삭제"""
+    """원단/부자재 1장. hover 시 X 표시 → 삭제"""
 
     delete_clicked = Signal(int)
 
@@ -246,19 +260,10 @@ class PostItCard(QWidget):
         y = 32
         w = self.width() - 36
 
-        # 거래처/품목: 크게, 눈에 띄게
         f_head = QFont()
         f_head.setPointSize(11)
         f_head.setBold(True)
 
-        p.setFont(f_head)
-        p.setPen(QColor("#1F1F1F"))
-        p.drawText(x, y, f"{vendor}")
-        y += 20
-        p.drawText(x, y, f"{item}")
-        y += 10
-
-        # 아래 정보 블록: 수량/단가/총액
         f_small = QFont()
         f_small.setPointSize(9)
         f_small.setBold(False)
@@ -267,37 +272,47 @@ class PostItCard(QWidget):
         f_big.setPointSize(11)
         f_big.setBold(True)
 
-        # 수량 강조 (연노랑 형광펜)
-        y += 10
-        _hi(p, x, y - 16, w, 24, QColor("#FFF08A"))
-        p.setFont(f_small)
-        p.setPen(QColor("#444"))
-        p.drawText(x + 6, y, "수량")
-        p.setFont(f_big)
-        p.setPen(QColor("#111"))
-        p.drawText(x + 56, y + 1, f"{qty} {unit}".strip())
+        # 거래처/품목
+        p.setFont(f_head)
+        p.setPen(QColor("#1F1F1F"))
+        p.drawText(x, y, vendor)
+        y += 20
+        p.drawText(x, y, item)
+        y += 16
 
-        # 단가/총액: 총액은 더 강조 (연두 형광펜)
-        y += 26
-        _hi(p, x, y - 16, w, 24, QColor("#CFFFD6"))
+        # 수량/단가 (강조 없음)
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(x + 6, y, "단가")
+        p.drawText(x, y, "수량")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(x + 56, y + 1, _won(price))
+        p.drawText(x + 50, y + 1, f"{qty} {unit}".strip())
+        y += 22
 
-        # 총액 (더 오른쪽에 배치 + 굵게)
         p.setFont(f_small)
         p.setPen(QColor("#444"))
-        p.drawText(x + int(w * 0.52), y, "총액")
+        p.drawText(x, y, "단가")
         p.setFont(f_big)
         p.setPen(QColor("#111"))
-        p.drawText(x + int(w * 0.52) + 46, y + 1, _won(total))
+        p.drawText(x + 50, y + 1, _krw(price))
+
+        # 총액만 강조 (판매가와 같은 색)
+        # 오른쪽 하단 영역에 크게
+        box_w = int(w * 0.52)
+        bx = x + (w - box_w)
+        by = y - 16
+        _hi(p, bx, by, box_w, 24, H_MONEY)
+
+        p.setFont(f_small)
+        p.setPen(QColor("#444"))
+        p.drawText(bx + 6, y, "총액")
+        p.setFont(f_big)
+        p.setPen(QColor("#111"))
+        p.drawText(bx + 44, y + 1, _krw(total))
 
 
 class PostItStack(QWidget):
-    """여러 장을 겹쳐 스택처럼 보이게(회전 없음)"""
+    """여러 장을 겹쳐 스택처럼 보이게"""
 
     item_deleted = Signal(int)
 
@@ -340,7 +355,7 @@ class PostItStack(QWidget):
         card_w = max(280, min(330, base_w - 20))
         card_h = 135
         x0 = int((base_w - card_w) / 2)
-        y0 = 26
+        y0 = 10  # ✅ 위의 "원단정보/부자재정보" 라벨 제거했으니 더 위로 올림
         dx = 10
         dy = 16
 
@@ -353,16 +368,8 @@ class PostItStack(QWidget):
         self.setMinimumHeight(max(155, total_h))
 
     def paintEvent(self, event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing, True)
-
-        # 제목만 표시 (✅ "(없음)" 제거)
-        p.setPen(QPen(QColor("#555"), 1))
-        f = QFont()
-        f.setPointSize(10)
-        f.setBold(True)
-        p.setFont(f)
-        p.drawText(8, 18, f"{self.title}")
+        # ✅ 요청: 포스트잇 위 "원단정보/부자재정보" 라벨 제거
+        return
 
 
 class PostItBar(QWidget):
