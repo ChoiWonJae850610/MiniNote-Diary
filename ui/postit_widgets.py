@@ -4,8 +4,13 @@ from __future__ import annotations
 from typing import Dict, List
 
 from PySide6.QtCore import Qt, QRectF, Signal, QSize, QDate, QRegularExpression, QPoint
-from PySide6.QtGui import QColor, QPainter, QPen, QFont, QFontMetrics, QRegularExpressionValidator, QIcon
-from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QCalendarWidget, QGraphicsDropShadowEffect
+from PySide6.QtGui import QColor, QPainter, QPen, QFont, QFontMetrics, QRegularExpressionValidator, QIcon, QPixmap
+try:
+    from PySide6.QtSvg import QSvgRenderer
+except Exception:  # QtSvg might be unavailable
+    QSvgRenderer = None
+from PySide6.QtCore import QByteArray
+from PySide6.QtWidgets import QWidget, QToolButton, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QCalendarWidget, QGraphicsDropShadowEffect, QSizePolicy
 
 
 def _color(kind: str) -> QColor:
@@ -75,6 +80,32 @@ def _hi_text(p: QPainter, x: int, baseline_y: int, text: str, font: QFont, color
 H_DATE = QColor("#7CFF65")     # neon lime
 H_PRODUCT = QColor("#4DD9FF")  # neon cyan
 H_MONEY = QColor("#FF4D6D")    # neon hot pink/red
+
+CALENDAR_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+<rect x="3" y="4" width="18" height="17" rx="2" stroke="#222" stroke-width="1.6"/>
+<path d="M8 2v4M16 2v4" stroke="#222" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M3 9h18" stroke="#222" stroke-width="1.6"/>
+<rect x="7" y="12" width="3" height="3" rx="0.6" fill="#222"/>
+<rect x="12" y="12" width="3" height="3" rx="0.6" fill="#222" opacity="0.55"/>
+<rect x="17" y="12" width="0" height="0" fill="none"/>
+</svg>"""
+
+def _calendar_icon(size: int = 16) -> QIcon:
+    # Prefer SVG rendering if QtSvg is available, else fall back to theme icon.
+    if QSvgRenderer is not None:
+        data = QByteArray(CALENDAR_SVG.encode("utf-8"))
+        renderer = QSvgRenderer(data)
+        pm = QPixmap(size, size)
+        pm.fill(Qt.transparent)
+        p = QPainter(pm)
+        renderer.render(p)
+        p.end()
+        return QIcon(pm)
+    icon = QIcon.fromTheme("x-office-calendar")
+    if icon.isNull():
+        icon = QIcon.fromTheme("view-calendar")
+    return icon
+
 
 
 class _InlineCalendarPopup(QDialog):
@@ -198,10 +229,15 @@ class BasicInfoPostIt(QWidget):
         )
         # 포스트잇 느낌: 약한 그림자
         shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(20)
-        shadow.setOffset(0, 4)
-        shadow.setColor(Qt.black)
+        shadow.setBlurRadius(18)
+        shadow.setOffset(0, 6)
+        shadow.setColor(QColor(0, 0, 0, 60))
         self.setGraphicsEffect(shadow)
+        # paper-like look
+        self.setStyleSheet(
+            'QWidget#BasicInfoPostIt{background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #FFF7C4, stop:1 #FFEFA3);'
+            'border: 1px solid rgba(0,0,0,0.18); border-radius: 16px;}'
+        )
 
 
         outer = QVBoxLayout(self)
@@ -248,7 +284,8 @@ class BasicInfoPostIt(QWidget):
             self.btn_calendar.setIconSize(QSize(16, 16))
             self.btn_calendar.setToolButtonStyle(Qt.ToolButtonIconOnly)
         else:
-            self.btn_calendar.setText("📅")
+            self.btn_calendar.setIcon(_calendar_icon(16))
+        self.btn_calendar.setIconSize(QSize(16,16))
         self.btn_calendar.clicked.connect(self._open_calendar_popup)
 
         date_row = QHBoxLayout()
