@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Dict
 
-from PySide6.QtCore import Qt, QDate, QRegularExpression, QSize
-from PySide6.QtGui import QRegularExpressionValidator, QIcon
+from PySide6.QtCore import Qt, QDate, QRegularExpression, QSize, QPoint, Signal
+from PySide6.QtGui import QRegularExpressionValidator, QIcon, QGuiApplication
 from PySide6.QtWidgets import (
     QCalendarWidget,
     QDialog,
@@ -66,34 +66,32 @@ class MoneyLineEdit(QLineEdit):
 
 
 class _CalendarPopup(QDialog):
+    datePicked = Signal(QDate)
+
     def __init__(self, initial: QDate, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("날짜 선택")
-        self.setModal(True)
+        super().__init__(parent, Qt.Popup)
+        # Popup: no title bar, closes on outside click / Esc by default.
+        self.setObjectName("CalendarPopup")
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(10, 10, 10, 10)
-        root.setSpacing(8)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(0)
 
         self.calendar = QCalendarWidget(self)
         self.calendar.setGridVisible(True)
         if initial and initial.isValid():
             self.calendar.setSelectedDate(initial)
+
+        # Keep it compact
+        self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
         root.addWidget(self.calendar)
 
-        btn_row = QHBoxLayout()
-        btn_row.addStretch(1)
-        btn_cancel = QPushButton("취소", self)
-        btn_ok = QPushButton("확인", self)
-        btn_cancel.setFixedHeight(32)
-        btn_ok.setFixedHeight(32)
-        btn_row.addWidget(btn_cancel)
-        btn_row.addWidget(btn_ok)
-        root.addLayout(btn_row)
+        self.calendar.activated.connect(self._on_activated)
 
-        btn_cancel.clicked.connect(self.reject)
-        btn_ok.clicked.connect(self.accept)
-        self.calendar.activated.connect(lambda _d: self.accept())
+    def _on_activated(self, d: QDate):
+        if d and d.isValid():
+            self.datePicked.emit(d)
+        self.close()
 
 
 class BasicInfoDialog(QDialog):
@@ -119,25 +117,58 @@ class BasicInfoDialog(QDialog):
             initial_date = QDate.currentDate()
         self._date_value = initial_date
 
+
         self.date_text = QLabel(self)
-        self.date_text.setMinimumHeight(24)
+        self.date_text.setMinimumHeight(30)
         self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
-        self.date_text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+        # Field-like look (label, not editable)
+        self.date_text.setStyleSheet(
+            "QLabel {"
+            "  color: #666;"
+            "  background: #f3f3f3;"
+            "  border: 1px solid #c8c8c8;"
+            "  border-radius: 6px;"
+            "  padding: 4px 8px;"
+            "}"
+        )
         # 'yyyy-MM-dd' 길이(10자) 기준으로 과하게 넓지 않게
-        self.date_text.setFixedWidth(100)
+        self.date_text.setFixedWidth(110)
 
         self.btn_calendar = QToolButton(self)
-        self.btn_calendar.setFixedSize(34, 30)
+        self.btn_calendar.setFixedSize(30, 30)
         self.btn_calendar.setToolTip("달력 열기")
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
+        self.btn_calendar.setAutoRaise(True)
 
-        # 가능한 경우 시스템 아이콘(달력) 사용, 없으면 텍스트로 대체
+        # Icon-only calendar button (fallback: text if icon theme missing)
         icon = QIcon.fromTheme("x-office-calendar")
         if icon.isNull():
-            self.btn_calendar.setText("📅")
-        else:
+            icon = QIcon.fromTheme("view-calendar")
+        if icon.isNull():
+            icon = QIcon.fromTheme("office-calendar")
+
+        if not icon.isNull():
             self.btn_calendar.setIcon(icon)
             self.btn_calendar.setIconSize(QSize(18, 18))
+            self.btn_calendar.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        else:
+            # Fallback (some Windows setups may not provide theme icons)
+            self.btn_calendar.setText("📅")
+
+        # Subtle border so it reads as a button even with auto-raise
+        self.btn_calendar.setStyleSheet(
+            "QToolButton {"
+            "  border: 1px solid #c8c8c8;"
+            "  border-radius: 6px;"
+            "  background: #f7f7f7;"
+            "}"
+            "QToolButton:hover {"
+            "  background: #eeeeee;"
+            "}"
+            "QToolButton:pressed {"
+            "  background: #e6e6e6;"
+            "}"
+        )
 
         self.btn_calendar.clicked.connect(self._open_calendar)
 
@@ -219,13 +250,47 @@ class BasicInfoDialog(QDialog):
         self._sync_sale_price()
 
     def _open_calendar(self):
-        dlg = _CalendarPopup(self._date_value, self)
-        if dlg.exec() == QDialog.Accepted:
-            d = dlg.calendar.selectedDate()
+        # Close existing popup if open
+        if getattr(self, "_calendar_popup", None) is not None:
+            try:
+                self._calendar_popup.close()
+            except Exception:
+                pass
+            self._calendar_popup = None
+
+        popup = _CalendarPopup(self._date_value, self)
+        self._calendar_popup = popup
+
+        def _apply_date(d: QDate):
             if d and d.isValid():
                 self._date_value = d
                 self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
-        self.date_text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+
+        popup.datePicked.connect(_apply_date)
+
+        # Position popup right below the date row (label/button)
+        anchor = self.date_text
+        global_pos = anchor.mapToGlobal(QPoint(0, anchor.height() + 2))
+
+        screen = QGuiApplication.screenAt(global_pos) or QGuiApplication.primaryScreen()
+        avail = screen.availableGeometry() if screen else None
+
+        popup.adjustSize()
+        w = popup.width()
+        h = popup.height()
+
+        x = global_pos.x()
+        y = global_pos.y()
+
+        if avail is not None:
+            if x + w > avail.right():
+                x = max(avail.left(), avail.right() - w)
+            if y + h > avail.bottom():
+                # If not enough space below, show above
+                y = max(avail.top(), anchor.mapToGlobal(QPoint(0, 0)).y() - h - 2)
+
+        popup.move(x, y)
+        popup.show()
 
     def _sync_sale_price(self):
         total = (
