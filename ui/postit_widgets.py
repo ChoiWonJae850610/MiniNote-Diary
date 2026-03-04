@@ -227,6 +227,65 @@ class BasicInfoPostIt(QWidget):
         p.drawText(rx + 52, y + 1, sale_value)
 
 
+class ChangeNotePostIt(QWidget):
+    """수정사항 메모 1장 (없으면 숨김)"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.kind = "note"
+        self.title = "수정사항"
+        self.text = ""
+        self.setMinimumHeight(220)
+
+    def sizeHint(self) -> QSize:
+        return QSize(320, 260)
+
+    def set_text(self, text: str):
+        self.text = (text or "").strip()
+        self.setVisible(bool(self.text))
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing, True)
+
+        w = self.width()
+        h = self.height()
+
+        # Light green note color (distinct from other cards)
+        bg = QColor("#DFF6E3")
+        border = QColor("#A5D6A7")
+
+        p.setPen(QPen(border, 2))
+        p.setBrush(bg)
+        p.drawRoundedRect(QRectF(0.5, 0.5, w - 1, h - 1), 14, 14)
+
+        pad = 14
+        y = pad
+
+        # Title
+        title_font = QFont(self.font())
+        title_font.setPointSize(title_font.pointSize() + 1)
+        title_font.setBold(True)
+        p.setFont(title_font)
+        p.setPen(QColor("#1B5E20"))
+        p.drawText(QRectF(pad, y, w - pad * 2, 26), Qt.AlignLeft | Qt.AlignVCenter, self.title)
+        y += 30
+
+        # Body text
+        body_font = QFont(self.font())
+        body_font.setPointSize(max(9, body_font.pointSize() - 1))
+        p.setFont(body_font)
+        p.setPen(QColor("#2E2E2E"))
+
+        text_rect = QRectF(pad, y, w - pad * 2, h - y - pad)
+        if self.text:
+            p.drawText(text_rect, Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, self.text)
+        else:
+            p.setPen(QColor("#6A6A6A"))
+            p.drawText(text_rect, Qt.AlignLeft | Qt.AlignTop, "수정사항이 없습니다.")
+
+
 class PostItCard(QWidget):
     """원단/부자재 1장. 클릭하면 앞으로(활성화). hover 시 X 표시 → 삭제"""
 

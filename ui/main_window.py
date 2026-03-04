@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QStackedWidget,
     QDialog,
+    QTextEdit,
+    QStyle,
 )
 
 from ui.image_preview import ImagePreview
@@ -21,7 +23,38 @@ from services.storage import save_work_order
 from ui.unit_dialog import UnitDialog
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
-from ui.postit_widgets import PostItBar
+from ui.postit_widgets import PostItBar, ChangeNotePostIt
+class _ChangeNoteDialog(QDialog):
+    def __init__(self, initial_text: str = "", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("수정사항")
+        self.setModal(True)
+        self.setMinimumSize(520, 360)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        self.edit = QTextEdit(self)
+        self.edit.setPlainText(initial_text or "")
+        self.edit.setPlaceholderText("수정사항을 입력하세요.")
+        layout.addWidget(self.edit, 1)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+        btn_cancel = QPushButton("취소", self)
+        btn_ok = QPushButton("확인", self)
+        btn_cancel.setFixedHeight(34)
+        btn_ok.setFixedHeight(34)
+        btn_cancel.clicked.connect(self.reject)
+        btn_ok.clicked.connect(self.accept)
+        btn_row.addWidget(btn_cancel)
+        btn_row.addWidget(btn_ok)
+        layout.addLayout(btn_row)
+
+    def get_text(self) -> str:
+        return self.edit.toPlainText().strip()
+
 
 
 class MainWindow(QMainWindow):
@@ -133,7 +166,7 @@ class MainWindow(QMainWindow):
         top_bar = QHBoxLayout()
         top_bar.setSpacing(8)
 
-        self.btn_back = QPushButton("← 뒤로가기")
+        self.btn_back = QPushButton("")
         self.btn_reset = QPushButton("초기화")
         self.btn_save = QPushButton("저장")
 
@@ -143,6 +176,12 @@ class MainWindow(QMainWindow):
 
         for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
             b.setFixedHeight(32)
+
+        # 뒤로가기: 아이콘-only 버튼
+        self.btn_back.setFixedWidth(44)
+        back_icon = self.style().standardIcon(QStyle.SP_ArrowBack)
+        self.btn_back.setIcon(back_icon)
+        self.btn_back.setToolTip("뒤로가기")
 
         self.btn_back.clicked.connect(self.on_back_clicked)
         self.btn_reset.clicked.connect(self.on_reset_clicked)
@@ -157,26 +196,40 @@ class MainWindow(QMainWindow):
         top_bar.addWidget(self.btn_upload)
         top_bar.addWidget(self.btn_delete_image)
 
-        # 이미지 영역 (화면 대부분)
+        # 이미지 영역(왼쪽) + 수정사항 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
+
+        self.change_note_postit = ChangeNotePostIt()
+        self.change_note_postit.setVisible(False)
+
+        center_row = QWidget()
+        center_layout = QHBoxLayout(center_row)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(12)
+
+        center_layout.addWidget(self.image_preview, 3)
+        center_layout.addWidget(self.change_note_postit, 1)
 
         # 이미지 아래: 기본/원단/부자재 버튼 (요청 반영)
         bottom_btn_row = QHBoxLayout()
         bottom_btn_row.setSpacing(10)
 
         self.btn_add_basic = QPushButton("기본정보 추가/수정")
+        self.btn_change_note = QPushButton("수정사항")
         self.btn_add_fabric = QPushButton("원단정보 추가")
         self.btn_add_trim = QPushButton("부자재정보 추가")
 
-        for b in (self.btn_add_basic, self.btn_add_fabric, self.btn_add_trim):
+        for b in (self.btn_add_basic, self.btn_change_note, self.btn_add_fabric, self.btn_add_trim):
             b.setFixedHeight(36)
 
         self.btn_add_basic.clicked.connect(self.on_add_basic_clicked)
+        self.btn_change_note.clicked.connect(self.on_change_note_clicked)
         self.btn_add_fabric.clicked.connect(self.on_add_fabric_clicked)
         self.btn_add_trim.clicked.connect(self.on_add_trim_clicked)
 
         bottom_btn_row.addWidget(self.btn_add_basic)
+        bottom_btn_row.addWidget(self.btn_change_note)
         bottom_btn_row.addWidget(self.btn_add_fabric)
         bottom_btn_row.addWidget(self.btn_add_trim)
         bottom_btn_row.addStretch(1)
@@ -189,7 +242,7 @@ class MainWindow(QMainWindow):
         self.postit_bar.basic_edit_requested.connect(self.on_add_basic_clicked)
 
         page_layout.addLayout(top_bar)
-        page_layout.addWidget(self.image_preview, 1)   # ✅ 이미지가 대부분 차지
+        page_layout.addWidget(center_row, 1)   # ✅ 이미지(좌) + 수정사항(우)
         page_layout.addLayout(bottom_btn_row)
         page_layout.addWidget(self.postit_bar, 0)
 
@@ -242,6 +295,9 @@ class MainWindow(QMainWindow):
             fabrics=self.fabric_items,
             trims=self.trim_items,
         )
+        if hasattr(self, "change_note_postit"):
+            note = (self.header_data or {}).get("change_note", "")
+            self.change_note_postit.set_text(note)
 
     # ===================== Basic/Fabric/Trim add/delete ======================
     def on_add_basic_clicked(self):
@@ -249,6 +305,20 @@ class MainWindow(QMainWindow):
         if dlg.exec() != QDialog.Accepted:
             return
         self.header_data = dlg.get_data()
+        self.mark_dirty()
+        self._refresh_postits()
+
+    
+    def on_change_note_clicked(self):
+        current = (self.header_data or {}).get("change_note", "")
+        dlg = _ChangeNoteDialog(initial_text=current, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        text = dlg.get_text()
+        if text:
+            self.header_data["change_note"] = text
+        else:
+            self.header_data.pop("change_note", None)
         self.mark_dirty()
         self._refresh_postits()
 
