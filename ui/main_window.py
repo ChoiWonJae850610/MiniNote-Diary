@@ -72,8 +72,8 @@ class MainWindow(QMainWindow):
 
         # 기본정보/원단/부자재는 모두 팝업 입력 → dict/list로 관리
         self.header_data: Dict[str, str] = {}
-        self.fabric_items: List[Dict[str, str]] = []
-        self.trim_items: List[Dict[str, str]] = []
+        self.fabric_items: List[Dict[str, str]] = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+        self.trim_items: List[Dict[str, str]] = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -257,8 +257,8 @@ class MainWindow(QMainWindow):
         self._suppress_dirty = True
         try:
             self.header_data = {}
-            self.fabric_items = []
-            self.trim_items = []
+            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
             self.image_preview.clear()
             self.image_preview.setText("이미지 업로드 영역")
             self.current_image_path = None
@@ -398,7 +398,7 @@ class MainWindow(QMainWindow):
         if not isinstance(patch, dict) or idx < 0:
             return
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = []
+            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         while len(self.fabric_items) <= idx:
             self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         self.fabric_items[idx].update(patch)
@@ -408,7 +408,7 @@ class MainWindow(QMainWindow):
         if not isinstance(patch, dict) or idx < 0:
             return
         if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = []
+            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         while len(self.trim_items) <= idx:
             self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         self.trim_items[idx].update(patch)
@@ -447,7 +447,7 @@ class MainWindow(QMainWindow):
     # ===================== Add fabric/trim cards ======================
     def on_add_fabric_clicked(self):
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = []
+            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         self.fabric_items = list(self.fabric_items)
         self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         try:
@@ -459,7 +459,7 @@ class MainWindow(QMainWindow):
 
     def on_add_trim_clicked(self):
         if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = []
+            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         self.trim_items = list(self.trim_items)
         self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         try:

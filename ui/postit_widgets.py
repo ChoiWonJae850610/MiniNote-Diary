@@ -102,20 +102,35 @@ def _make_down_icon(size: int = 12) -> QIcon:
 
 
 def _load_units() -> List[Tuple[str, str]]:
+    """Load units from db/units.json.
+
+    Expected format:
+      {"units": [{"unit": "EA", "label": "EA (개)"}, ...]}
+    """
     try:
         base = Path(__file__).resolve().parent.parent  # repo root
         path = base / "db" / "units.json"
         if not path.exists():
             return []
         data = json.loads(path.read_text(encoding="utf-8"))
+
+        if isinstance(data, dict):
+            units = data.get("units", [])
+        elif isinstance(data, list):
+            # legacy format
+            units = data
+        else:
+            units = []
+
         out: List[Tuple[str, str]] = []
-        if isinstance(data, list):
-            for it in data:
-                if isinstance(it, dict):
-                    unit = str(it.get("unit", "") or "").strip()
-                    label = str(it.get("label", "") or "").strip()
-                    if unit or label:
-                        out.append((unit, label or unit))
+        if isinstance(units, list):
+            for it in units:
+                if not isinstance(it, dict):
+                    continue
+                unit = str(it.get("unit", "") or "").strip()
+                label = str(it.get("label", "") or "").strip()
+                if unit or label:
+                    out.append((unit, label or unit))
         return out
     except Exception:
         return []
@@ -675,14 +690,28 @@ class PostItCard(_PostItCardBase):
     def _recalc_total(self):
         if self._block_total:
             return
+
         qty_digits = _digits_only(self.qty.text())
         price_digits = _digits_only(self.price.text())
-        qty = int(qty_digits) if qty_digits else 1
-        price = int(price_digits) if price_digits else 1
-        total = qty * price
+
+        # 빈칸이면 총액도 빈칸이어야 함
+        if not qty_digits or not price_digits:
+            self._block_total = True
+            try:
+                self.total.setText("")
+            finally:
+                self._block_total = False
+            self._commit("총액", "")
+            return
+
+        try:
+            total = int(qty_digits) * int(price_digits)
+        except Exception:
+            total = 0
+
         self._block_total = True
         try:
-            self.total.setText(_format_commas(str(total)) if total else "")
+            self.total.setText(_format_commas(str(total)))
         finally:
             self._block_total = False
         self._commit("총액", self.total.text())
