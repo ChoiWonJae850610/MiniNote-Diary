@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
         self._suppress_dirty = True
         try:
             self.header_data = {}
+            self.header_data["change_note"] = ""
             self.fabric_items = []
             self.trim_items = []
             # 이미지도 완전히 초기화 (pixmap 포함)
@@ -291,6 +292,11 @@ class MainWindow(QMainWindow):
             self.btn_delete_image.setEnabled(False)
             self.is_dirty = False
             self._refresh_postits()
+            if hasattr(self, "change_note_postit"):
+                try:
+                    self.change_note_postit.set_text("")
+                except Exception:
+                    pass
         finally:
             self._suppress_dirty = False
 
@@ -320,6 +326,7 @@ class MainWindow(QMainWindow):
         """기본정보 포스트잇 인라인 편집 결과를 header_data에 반영."""
         if not isinstance(self.header_data, dict):
             self.header_data = {}
+            self.header_data["change_note"] = ""
         if not isinstance(patch, dict):
             return
         # merge
@@ -355,29 +362,18 @@ class MainWindow(QMainWindow):
         self._refresh_postits()
 
 
+
     def on_fabric_postit_changed(self, idx: int, patch: dict):
         if not isinstance(patch, dict):
             return
-        if idx < 0 or idx >= len(self.fabric_items):
+        if idx < 0:
             return
+        # ensure list length
+        if not hasattr(self, "fabric_items") or self.fabric_items is None:
+            self.fabric_items = []
+        while len(self.fabric_items) <= idx:
+            self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         self.fabric_items[idx].update(patch)
-        self.mark_dirty()
-        self._refresh_postits()
-        if not isinstance(self.header_data, dict):
-            self.header_data = {}
-        self.header_data["change_note"] = (text or "").rstrip()
-        self.mark_dirty()
-        # 포스트잇 자체는 이미 편집 중이므로 refresh는 최소화
-        # self._refresh_postits()
-        current = (self.header_data or {}).get("change_note", "")
-        dlg = _ChangeNoteDialog(initial_text=current, parent=self)
-        if dlg.exec() != QDialog.Accepted:
-            return
-        text = dlg.get_text()
-        if text:
-            self.header_data["change_note"] = text
-        else:
-            self.header_data.pop("change_note", None)
         self.mark_dirty()
         self._refresh_postits()
 
@@ -402,12 +398,22 @@ class MainWindow(QMainWindow):
             del self.fabric_items[idx]
             self.mark_dirty()
             self._refresh_postits()
+            if hasattr(self, "change_note_postit"):
+                try:
+                    self.change_note_postit.set_text("")
+                except Exception:
+                    pass
 
     def on_trim_deleted(self, idx: int):
         if 0 <= idx < len(self.trim_items):
             del self.trim_items[idx]
             self.mark_dirty()
             self._refresh_postits()
+            if hasattr(self, "change_note_postit"):
+                try:
+                    self.change_note_postit.set_text("")
+                except Exception:
+                    pass
 
     # ===================== Back/Reset/Save ======================
     def on_reset_clicked(self):
@@ -547,22 +553,3 @@ def on_trim_postit_created(self, data: dict):
     self.trim_items.append(data)
     self.mark_dirty()
     self._refresh_postits()
-
-    def on_fabric_postit_changed(self, idx, patch):
-        fabrics = list(getattr(self, 'fabrics', []) or [])
-        while len(fabrics) <= idx:
-            fabrics.append({"거래처":"","품목":"","수량":"","단위":"","단가":"","총액":""})
-        fabrics[idx].update(patch or {})
-        setattr(self, 'fabrics', fabrics)
-        self._refresh_postits()
-        self.mark_dirty()
-
-
-    def on_trim_postit_changed(self, idx, patch):
-        trims = list(getattr(self, 'trims', []) or [])
-        while len(trims) <= idx:
-            trims.append({"거래처":"","품목":"","수량":"","단위":"","단가":"","총액":""})
-        trims[idx].update(patch or {})
-        setattr(self, 'trims', trims)
-        self._refresh_postits()
-        self.mark_dirty()
