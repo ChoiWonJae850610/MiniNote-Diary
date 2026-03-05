@@ -8,7 +8,6 @@ from PySide6.QtGui import (
     QColor,
     QPainter,
     QPen,
-    QFont,
     QFontMetrics,
     QRegularExpressionValidator,
     QIcon,
@@ -29,6 +28,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+# Optional QtSvg (for calendar SVG icon)
 try:
     from PySide6.QtSvg import QSvgRenderer  # type: ignore
     from PySide6.QtCore import QByteArray
@@ -43,13 +43,8 @@ CARD_RADIUS = 16
 SHADOW_BLUR = 18
 SHADOW_OFFSET_Y = 6
 
-# highlight accents
-H_DATE = QColor("#7CFF65")     # neon lime
-H_PRODUCT = QColor("#4DD9FF")  # neon cyan
-H_MONEY = QColor("#FF4D6D")    # neon hot pink/red
 
-# card base colors
-def _card_bg(kind: str) -> QColor:
+def _bg(kind: str) -> QColor:
     if kind == "basic":
         return QColor("#FFF4A3")
     if kind == "fabric":
@@ -61,7 +56,7 @@ def _card_bg(kind: str) -> QColor:
     return QColor("#FFF4A3")
 
 
-def _card_border(kind: str) -> QColor:
+def _bd(kind: str) -> QColor:
     if kind == "basic":
         return QColor("#D8C86A")
     if kind == "fabric":
@@ -73,15 +68,11 @@ def _card_border(kind: str) -> QColor:
     return QColor("#D8C86A")
 
 
-def _safe(v: str) -> str:
-    return (v or "").strip()
-
-
 def _digits_only(s: str) -> str:
     return "".join(ch for ch in (s or "") if ch.isdigit())
 
 
-def _format_commas_from_digits(digits: str) -> str:
+def _format_commas(digits: str) -> str:
     if not digits:
         return ""
     try:
@@ -90,8 +81,8 @@ def _format_commas_from_digits(digits: str) -> str:
         return digits
 
 
-def _safe_int_from_digits(digits: str) -> int:
-    d = _digits_only(digits)
+def _int_from_any(s: str) -> int:
+    d = _digits_only(s)
     return int(d) if d else 0
 
 
@@ -105,7 +96,6 @@ CALENDAR_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
 
 
 def _calendar_icon(size: int = 16) -> QIcon:
-    # Prefer SVG rendering if QtSvg is available, else fall back to theme icon.
     if QSvgRenderer is not None and QByteArray is not None:
         data = QByteArray(CALENDAR_SVG.encode("utf-8"))
         renderer = QSvgRenderer(data)
@@ -119,12 +109,10 @@ def _calendar_icon(size: int = 16) -> QIcon:
     icon = QIcon.fromTheme("x-office-calendar")
     if icon.isNull():
         icon = QIcon.fromTheme("view-calendar")
-    if icon.isNull():
-        icon = QIcon.fromTheme("office-calendar")
     return icon
 
 
-# ---------- Small popup calendar ----------
+# ---------- Popup calendar ----------
 class _InlineCalendarPopup(QDialog):
     datePicked = Signal(QDate)
 
@@ -139,7 +127,6 @@ class _InlineCalendarPopup(QDialog):
         if initial and initial.isValid():
             cal.setSelectedDate(initial)
         root.addWidget(cal)
-
         cal.activated.connect(self._on_activated)
         self._cal = cal
 
@@ -156,24 +143,24 @@ class _MoneyLineEdit(QLineEdit):
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.setFixedHeight(FIELD_H)
-        self._in_format = False
-        self.textChanged.connect(self._on_text_changed)
+        self._fmt = False
+        self.textChanged.connect(self._on_text)
 
-    def _on_text_changed(self, text: str):
-        if self._in_format:
+    def _on_text(self, t: str):
+        if self._fmt:
             return
-        digits = _digits_only(text)
-        formatted = _format_commas_from_digits(digits)
-        if formatted == text:
+        digits = _digits_only(t)
+        formatted = _format_commas(digits)
+        if formatted == t:
             return
-        self._in_format = True
+        self._fmt = True
         try:
             self.setText(formatted)
             self.setCursorPosition(len(formatted))
         finally:
-            self._in_format = False
+            self._fmt = False
 
-    def value_digits(self) -> str:
+    def digits(self) -> str:
         return _digits_only(self.text())
 
 
@@ -182,75 +169,71 @@ class _ClickToEditLineEdit(QLineEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(FIELD_H)
         self.setReadOnly(True)
-        self._block = False
+        self.setFixedHeight(FIELD_H)
+        self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.setTextMargins(0, 0, 0, 0)
+        self._apply_style(editing=False)
 
-        # default: looks like label
-        self._apply_readonly_style(True)
-
-    def _apply_readonly_style(self, ro: bool):
-        if ro:
+    def _apply_style(self, editing: bool):
+        if not editing:
             self.setStyleSheet(
-                'QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}'
-                'QLineEdit:hover{background:rgba(255,255,255,0.18);border-radius:6px;}'
+                "QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}"
+                "QLineEdit:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
             )
         else:
+            # IMPORTANT: focus padding fixed to keep perceived height identical
             self.setStyleSheet(
-                'QLineEdit{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);'
-                'border-radius:8px;padding:3px 8px;color:#111;}'
+                "QLineEdit{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
+                "border-radius:8px;padding:0 2px;color:#111;}"
             )
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            if self.isReadOnly():
-                self.setReadOnly(False)
-                self._apply_readonly_style(False)
-                self.setFocus()
-                self.selectAll()
+        if event.button() == Qt.LeftButton and self.isReadOnly():
+            self.setReadOnly(False)
+            self._apply_style(editing=True)
+            self.setFocus()
+            self.selectAll()
         super().mousePressEvent(event)
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
-        self._commit_and_lock()
+        self._commit_lock()
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            self._commit_and_lock()
+            self._commit_lock()
             event.accept()
             return
         if event.key() == Qt.Key_Escape:
-            # cancel edit (just lock)
             self.setReadOnly(True)
-            self._apply_readonly_style(True)
+            self._apply_style(editing=False)
             event.accept()
             return
         super().keyPressEvent(event)
 
-    def _commit_and_lock(self):
-        if self._block:
-            return
+    def _commit_lock(self):
         if not self.isReadOnly():
             self.setReadOnly(True)
-            self._apply_readonly_style(True)
+            self._apply_style(editing=False)
             self.committed.emit(self.text())
 
     def set_text_silent(self, text: str):
-        self._block = True
+        old = self.blockSignals(True)
         try:
-            self.setText(text)
+            self.setText(text or "")
         finally:
-            self._block = False
+            self.blockSignals(old)
 
 
-# ---------- Base card widget ----------
+# ---------- Base card ----------
 class _PostItCardBase(QWidget):
     def __init__(self, kind: str, parent=None):
         super().__init__(parent)
         self.kind = kind
-        self._bg = _card_bg(kind)
-        self._bd = _card_border(kind)
         self._active = False
+        self._bg = _bg(kind)
+        self._bd = _bd(kind)
 
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(SHADOW_BLUR)
@@ -267,7 +250,6 @@ class _PostItCardBase(QWidget):
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing, True)
-
         r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
 
         pen = QPen(self._bd, 2)
@@ -279,9 +261,9 @@ class _PostItCardBase(QWidget):
         p.drawRoundedRect(r, CARD_RADIUS, CARD_RADIUS)
 
 
-# ---------- Basic info (yellow) ----------
+# ---------- Basic info ----------
 class BasicInfoPostIt(_PostItCardBase):
-    edit_requested = Signal()     # compatibility (unused)
+    edit_requested = Signal()  # compatibility
     data_changed = Signal(dict)
 
     def __init__(self, parent=None):
@@ -308,6 +290,7 @@ class BasicInfoPostIt(_PostItCardBase):
         lbl_date.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
         date_row.addWidget(lbl_date)
 
+        self._date_value = QDate.currentDate()
         self.date_text = QLabel(self)
         self.date_text.setFixedHeight(FIELD_H)
         self.date_text.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -316,6 +299,7 @@ class BasicInfoPostIt(_PostItCardBase):
             "border-radius:8px;padding:0 8px;color:#111;}"
         )
         self.date_text.setMinimumWidth(118)
+        self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
 
         self.btn_calendar = QToolButton(self)
         self.btn_calendar.setIcon(_calendar_icon(16))
@@ -332,7 +316,7 @@ class BasicInfoPostIt(_PostItCardBase):
         date_row.addWidget(self.btn_calendar)
         root.addLayout(date_row)
 
-        # simple text fields
+        # text fields
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(8)
@@ -347,16 +331,14 @@ class BasicInfoPostIt(_PostItCardBase):
             return l
 
         self.style_no = _ClickToEditLineEdit(self)
-        self.style_no.setPlaceholderText("")
         self.factory = _ClickToEditLineEdit(self)
-        self.factory.setPlaceholderText("")
 
-        # auto width for style_no
+        # product width auto
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._style_no_min = 140
         self._style_no_max = 320
-        self.style_no.textChanged.connect(self._adjust_style_no_width)
-        self._adjust_style_no_width(self.style_no.text())
+        self.style_no.textChanged.connect(self._adjust_style_width)
+        self._adjust_style_width(self.style_no.text())
 
         grid.addWidget(mk_label("제품명:"), 0, 0)
         grid.addWidget(self.style_no, 0, 1)
@@ -365,7 +347,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
         root.addLayout(grid)
 
-        # money grid (2x2)
+        # money grid
         mg = QGridLayout()
         mg.setContentsMargins(0, 0, 0, 0)
         mg.setHorizontalSpacing(8)
@@ -384,13 +366,13 @@ class BasicInfoPostIt(_PostItCardBase):
         self.loss = _MoneyLineEdit(self)
         self.sale_price = _MoneyLineEdit(self)
 
-        # Make them look "postit-like" (not heavy field)
+        # money fields should also look like post-it fields
         for w in (self.cost, self.labor, self.loss, self.sale_price):
             w.setStyleSheet(
                 "QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}"
                 "QLineEdit:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
                 "QLineEdit:focus{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
-                "border-radius:8px;padding:3px 8px;}"
+                "border-radius:8px;padding:0 2px;}"
             )
 
         mg.addWidget(mk_money_label("원가:"), 0, 0)
@@ -405,25 +387,19 @@ class BasicInfoPostIt(_PostItCardBase):
 
         root.addLayout(mg)
 
-        # sync: cost+labor+loss -> sale_price (on change)
+        # sync total -> sale
         self.cost.textChanged.connect(self._sync_sale_price)
         self.labor.textChanged.connect(self._sync_sale_price)
         self.loss.textChanged.connect(self._sync_sale_price)
 
-        # commit signals for header_data
-        self.style_no.committed.connect(lambda v: self._emit_patch({"style_no": _safe(v)}))
-        self.factory.committed.connect(lambda v: self._emit_patch({"factory": _safe(v)}))
+        # commit signals
+        self.style_no.committed.connect(lambda v: self._emit_patch({"style_no": v.strip()}))
+        self.factory.committed.connect(lambda v: self._emit_patch({"factory": v.strip()}))
 
-        self.cost.textChanged.connect(lambda _t: self._emit_money_patch())
-        self.labor.textChanged.connect(lambda _t: self._emit_money_patch())
-        self.loss.textChanged.connect(lambda _t: self._emit_money_patch())
-        self.sale_price.textChanged.connect(lambda _t: self._emit_money_patch())
+        for w in (self.cost, self.labor, self.loss, self.sale_price):
+            w.textChanged.connect(lambda _t: self._emit_money_patch())
 
-        # init date
-        self._date_value = QDate.currentDate()
-        self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
-
-    def _adjust_style_no_width(self, text: str):
+    def _adjust_style_width(self, text: str):
         fm = QFontMetrics(self.style_no.font())
         w = fm.horizontalAdvance(text or "") + 28
         w = max(self._style_no_min, min(self._style_no_max, w))
@@ -432,58 +408,53 @@ class BasicInfoPostIt(_PostItCardBase):
     def set_header_data(self, header: Dict[str, str]):
         header = header or {}
 
-        # date
         d = QDate.fromString(header.get("date", ""), "yyyy-MM-dd")
         if not d.isValid():
             d = QDate.currentDate()
         self._date_value = d
         self.date_text.setText(d.toString("yyyy-MM-dd"))
 
-        # text
         self.style_no.set_text_silent(header.get("style_no", ""))
         self.factory.set_text_silent(header.get("factory", ""))
+        self._adjust_style_width(self.style_no.text())
 
-        # money (display fields preferred)
         self.cost.setText(header.get("cost_display", header.get("cost", "")) or "")
         self.labor.setText(header.get("labor_display", header.get("labor", "")) or "")
         self.loss.setText(header.get("loss_display", header.get("loss", "")) or "")
         self.sale_price.setText(header.get("sale_price_display", header.get("sale_price", "")) or "")
 
-        self._adjust_style_no_width(self.style_no.text())
-
     def _emit_patch(self, patch: dict):
-        if "date" not in patch:
-            patch["date"] = self._date_value.toString("yyyy-MM-dd")
+        patch = dict(patch or {})
+        patch["date"] = self._date_value.toString("yyyy-MM-dd")
+        patch["style_no"] = self.style_no.text()
+        patch["factory"] = self.factory.text()
         self.data_changed.emit(patch)
 
     def _emit_money_patch(self):
         patch = {
+            "date": self._date_value.toString("yyyy-MM-dd"),
+            "style_no": self.style_no.text(),
+            "factory": self.factory.text(),
             "cost_display": self.cost.text(),
             "labor_display": self.labor.text(),
             "loss_display": self.loss.text(),
             "sale_price_display": self.sale_price.text(),
-            "cost": self.cost.value_digits(),
-            "labor": self.labor.value_digits(),
-            "loss": self.loss.value_digits(),
-            "sale_price": self.sale_price.value_digits(),
-            "date": self._date_value.toString("yyyy-MM-dd"),
-            "style_no": self.style_no.text(),
-            "factory": self.factory.text(),
+            "cost": self.cost.digits(),
+            "labor": self.labor.digits(),
+            "loss": self.loss.digits(),
+            "sale_price": self.sale_price.digits(),
         }
         self.data_changed.emit(patch)
 
     def _sync_sale_price(self):
-        # always override when any of the 3 changes
-        total = _safe_int_from_digits(self.cost.text()) + _safe_int_from_digits(self.labor.text()) + _safe_int_from_digits(self.loss.text())
-        self.sale_price.setText(_format_commas_from_digits(str(total)))
+        total = _int_from_any(self.cost.text()) + _int_from_any(self.labor.text()) + _int_from_any(self.loss.text())
+        self.sale_price.setText(_format_commas(str(total)))
 
     def _open_calendar(self):
         popup = _InlineCalendarPopup(self._date_value, parent=self)
         popup.datePicked.connect(self._on_date_picked)
 
-        # position below date row
         anchor = self.btn_calendar.mapToGlobal(QPoint(0, self.btn_calendar.height() + 4))
-        # keep on screen
         screen = self.screen().availableGeometry() if self.screen() else None
         if screen:
             popup.adjustSize()
@@ -502,7 +473,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self._emit_patch({"date": d.toString("yyyy-MM-dd")})
 
 
-# ---------- Change note (green) ----------
+# ---------- Change note ----------
 class ChangeNotePostIt(_PostItCardBase):
     text_changed = Signal(str)
 
@@ -516,21 +487,20 @@ class ChangeNotePostIt(_PostItCardBase):
         root.setSpacing(8)
 
         title = QLabel("수정사항", self)
-        title.setStyleSheet("QLabel{font-weight:700;color:#1B5E20;}")
+        title.setStyleSheet("QLabel{font-weight:700;color:#1B5E20;background:transparent;}")
         root.addWidget(title)
 
         self.editor = QPlainTextEdit(self)
-        self.editor.setPlaceholderText("클릭해서 수정사항을 입력하세요")
+        self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(
             "QPlainTextEdit{background:transparent;border:none;color:#222;font-size:12px;}"
             "QPlainTextEdit:focus{background:rgba(255,255,255,0.55);border:1px solid rgba(0,0,0,0.18);"
             "border-radius:12px;padding:8px;}"
         )
         root.addWidget(self.editor, 1)
+        self.editor.textChanged.connect(self._on_text)
 
-        self.editor.textChanged.connect(self._on_text_changed)
-
-    def _on_text_changed(self):
+    def _on_text(self):
         if self._block:
             return
         self.text_changed.emit(self.text())
@@ -550,10 +520,10 @@ class ChangeNotePostIt(_PostItCardBase):
 class PostItCard(_PostItCardBase):
     delete_clicked = Signal(int)
     selected = Signal(int)
-    data_changed = Signal(int, dict)   # index, patch
-    item_created = Signal(dict)        # placeholder -> new item dict
+    data_changed = Signal(int, dict)
+    item_created = Signal(dict)
 
-    def __init__(self, kind: str, index: int, data: Dict[str, str], placeholder: bool = False, parent=None):
+    def __init__(self, kind: str, index: int, data: Dict[str, str], placeholder: bool, parent=None):
         super().__init__(kind=kind, parent=parent)
         self.index = index
         self.data = dict(data or {})
@@ -563,7 +533,6 @@ class PostItCard(_PostItCardBase):
         root.setContentsMargins(14, 14, 14, 14)
         root.setSpacing(8)
 
-        # delete button (top-right)
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
         self.btn_delete.setCursor(Qt.PointingHandCursor)
@@ -575,16 +544,13 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
         self.btn_delete.setVisible(not self.is_placeholder)
 
-        # placeholder label
         self.placeholder_label = QLabel("클릭해서 원단/부자재 입력", self)
-        self.placeholder_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.placeholder_label.setStyleSheet("QLabel{color:rgba(0,0,0,0.55);font-weight:600;}")
+        self.placeholder_label.setStyleSheet("QLabel{color:rgba(0,0,0,0.55);font-weight:600;background:transparent;}")
 
-        # editable fields
         self.vendor = _ClickToEditLineEdit(self)
-        self.vendor.setPlaceholderText("거래처")
         self.item = _ClickToEditLineEdit(self)
-        self.item.setPlaceholderText("품목")
+        self.vendor.set_text_silent(self.data.get("거래처", ""))
+        self.item.set_text_silent(self.data.get("품목", ""))
 
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
@@ -593,27 +559,16 @@ class PostItCard(_PostItCardBase):
 
         def mk_lbl(t: str) -> QLabel:
             l = QLabel(t, self)
-            l.setStyleSheet("QLabel{font-weight:600;color:#222;}")
+            l.setFixedHeight(FIELD_H)
+            l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            l.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
             return l
 
         self.qty = _ClickToEditLineEdit(self)
-        self.qty.setPlaceholderText("")
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-
         self.unit = _ClickToEditLineEdit(self)
-        self.unit.setPlaceholderText("")
-
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
-
-        # Make money edits postit-like
-        for w in (self.price, self.total):
-            w.setStyleSheet(
-                "QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}"
-                "QLineEdit:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
-                "QLineEdit:focus{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
-                "border-radius:8px;padding:3px 8px;}"
-            )
 
         grid.addWidget(mk_lbl("수량"), 0, 0)
         grid.addWidget(self.qty, 0, 1)
@@ -634,23 +589,17 @@ class PostItCard(_PostItCardBase):
         root.addWidget(self.item)
         root.addWidget(self._grid_widget)
 
-        # data fill
-        self.vendor.set_text_silent(_safe(self.data.get("거래처", "")))
-        self.item.set_text_silent(_safe(self.data.get("품목", "")))
-        self.qty.set_text_silent(_safe(self.data.get("수량", "")))
-        self.unit.set_text_silent(_safe(self.data.get("단위", "")))
-        self.price.setText(_safe(self.data.get("단가", "")))
-        self.total.setText(_safe(self.data.get("총액", "")))
+        self.qty.set_text_silent(self.data.get("수량", ""))
+        self.unit.set_text_silent(self.data.get("단위", ""))
+        self.price.setText(self.data.get("단가", ""))
+        self.total.setText(self.data.get("총액", ""))
 
-        # placeholder mode
         self._apply_placeholder_mode(self.is_placeholder)
 
-        # connections
         self.vendor.committed.connect(lambda v: self._commit_field("거래처", v))
         self.item.committed.connect(lambda v: self._commit_field("품목", v))
         self.qty.committed.connect(lambda v: self._commit_field("수량", v))
         self.unit.committed.connect(lambda v: self._commit_field("단위", v))
-
         self.price.textChanged.connect(lambda _t: self._commit_field("단가", self.price.text()))
         self.total.textChanged.connect(lambda _t: self._commit_field("총액", self.total.text()))
 
@@ -661,18 +610,15 @@ class PostItCard(_PostItCardBase):
         self.item.setVisible(not placeholder)
         self._grid_widget.setVisible(not placeholder)
         self.placeholder_label.setVisible(True)
-        if placeholder:
-            self.placeholder_label.setText("클릭해서 원단/부자재 입력")
-        else:
-            self.placeholder_label.setText("")
+        self.placeholder_label.setText("클릭해서 원단/부자재 입력" if placeholder else "")
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.selected.emit(self.index)
-            # If placeholder: activate first field to start creating
             if self.is_placeholder:
                 self._apply_placeholder_mode(False)
                 self.vendor.setReadOnly(False)
+                self.vendor._apply_style(editing=True)
                 self.vendor.setFocus()
         super().mousePressEvent(event)
 
@@ -684,40 +630,32 @@ class PostItCard(_PostItCardBase):
         value = (value or "").strip()
         self.data[key] = value
 
-        # If this was placeholder-origin, create when any value is entered
-        if (self.index < 0) or ("__placeholder__" in self.data):
-            pass
+        # If this card originated as placeholder, create when any value exists
+        if self.index >= 0 and self.index == 10**9:
+            pass  # never used
 
-        if self.is_placeholder:
-            # When placeholder was clicked, we turned it off; create if something exists
-            if any((self.data.get(k, "") or "").strip() for k in ["거래처", "품목", "수량", "단위", "단가", "총액"]):
-                self.item_created.emit(dict(self.data))
-                return
-
-        self.data_changed.emit(self.index, {key: value})
+        # If this card was the placeholder card (index == len(items) in stack), treat as create
+        # We'll let stack decide; here we infer by "index == -1" not used, so stack will connect item_created only on placeholder card.
+        if self.index >= 0:
+            self.data_changed.emit(self.index, {key: value})
 
 
-# ---------- Stack (fabric/trim) ----------
+# ---------- Stack ----------
 class PostItStack(QWidget):
     item_deleted = Signal(int)
     item_changed = Signal(int, dict)
     item_created = Signal(dict)
 
-    def __init__(self, kind: str, title: str, parent=None):
+    def __init__(self, kind: str, parent=None):
         super().__init__(parent)
         self.kind = kind
-        self.title = title
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
-        self.active_index: int = -1
+        self.active_index = -1
         self.setMinimumHeight(175)
-
-    def sizeHint(self) -> QSize:
-        return QSize(330, 175)
 
     def set_items(self, items: List[Dict[str, str]]):
         self.items = list(items or [])
-        # always include a placeholder card at the end for quick add
         self._rebuild()
 
     def _rebuild(self):
@@ -726,7 +664,6 @@ class PostItStack(QWidget):
             c.deleteLater()
         self.cards = []
 
-        # create cards for items
         for idx, it in enumerate(self.items):
             card = PostItCard(self.kind, idx, it, placeholder=False, parent=self)
             card.delete_clicked.connect(self.item_deleted.emit)
@@ -735,36 +672,50 @@ class PostItStack(QWidget):
             card.show()
             self.cards.append(card)
 
-        # placeholder card (index == len(items))
+        # placeholder card at end
         ph = PostItCard(self.kind, len(self.items), {}, placeholder=True, parent=self)
         ph.selected.connect(self.set_active_card)
-        ph.item_created.connect(self._on_item_created)
+        ph.vendor.committed.connect(lambda v: self._placeholder_committed())
+        ph.item.committed.connect(lambda v: self._placeholder_committed())
+        ph.qty.committed.connect(lambda v: self._placeholder_committed())
+        ph.unit.committed.connect(lambda v: self._placeholder_committed())
+        ph.price.textChanged.connect(lambda _t: self._placeholder_committed())
+        ph.total.textChanged.connect(lambda _t: self._placeholder_committed())
         ph.show()
         self.cards.append(ph)
 
-        # active index
         if self.items:
-            if self.active_index < 0 or self.active_index >= len(self.items):
-                self.active_index = len(self.items) - 1
+            self.active_index = len(self.items) - 1
         else:
-            self.active_index = len(self.cards) - 1  # placeholder
+            self.active_index = len(self.cards) - 1
 
         self._layout_cards()
-        self._apply_active_state()
-        self.update()
+        self._apply_active()
 
-    def _on_item_created(self, data: Dict[str, str]):
-        self.item_created.emit(data)
+    def _placeholder_committed(self):
+        # last card is placeholder; if any text exists, create a new item
+        if not self.cards:
+            return
+        ph = self.cards[-1]
+        data = {
+            "거래처": ph.vendor.text().strip(),
+            "품목": ph.item.text().strip(),
+            "수량": ph.qty.text().strip(),
+            "단위": ph.unit.text().strip(),
+            "단가": ph.price.text().strip(),
+            "총액": ph.total.text().strip(),
+        }
+        if any(v for v in data.values()):
+            self.item_created.emit(data)
 
     def set_active_card(self, idx: int):
         if idx < 0 or idx >= len(self.cards):
             return
         self.active_index = idx
-        self._apply_active_state()
+        self._apply_active()
         self.cards[idx].raise_()
-        self.update()
 
-    def _apply_active_state(self):
+    def _apply_active(self):
         for i, c in enumerate(self.cards):
             c.set_active(i == self.active_index)
 
@@ -792,12 +743,8 @@ class PostItStack(QWidget):
         total_h = y0 + card_h + dy * max(0, (len(self.cards) - 1)) + 14
         self.setMinimumHeight(max(175, total_h))
 
-    def paintEvent(self, event):
-        # no extra title painting (kept clean)
-        return
 
-
-# ---------- Bar (basic + fabric + trim) ----------
+# ---------- Bar ----------
 class PostItBar(QWidget):
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
@@ -821,8 +768,8 @@ class PostItBar(QWidget):
         self.basic.edit_requested.connect(self.basic_edit_requested.emit)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
 
-        self.fabric = PostItStack(kind="fabric", title="원단정보", parent=self)
-        self.trim = PostItStack(kind="trim", title="부자재정보", parent=self)
+        self.fabric = PostItStack(kind="fabric", parent=self)
+        self.trim = PostItStack(kind="trim", parent=self)
 
         self.fabric.item_deleted.connect(self.fabric_deleted.emit)
         self.trim.item_deleted.connect(self.trim_deleted.emit)
