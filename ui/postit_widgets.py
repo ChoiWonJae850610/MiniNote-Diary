@@ -518,23 +518,22 @@ class ChangeNotePostIt(_PostItCardBase):
 
 # ---------- Fabric/Trim card ----------
 
+
 class PostItCard(_PostItCardBase):
     delete_clicked = Signal(int)
     selected = Signal(int)
     data_changed = Signal(int, dict)
-    new_item_changed = Signal(dict)   # for "new item" card
 
-    def __init__(self, kind: str, index: int, data: Dict[str, str], is_new_card: bool, parent=None):
+    def __init__(self, kind: str, index: int, data: Dict[str, str], is_new_card: bool = False, parent=None):
         super().__init__(kind=kind, parent=parent)
         self.index = index
         self.data = dict(data or {})
-        self.is_new_card = is_new_card
 
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 14, 14, 14)
         root.setSpacing(8)
 
-        # delete button (top-right) - hide for new card
+        # delete button (top-right)
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
         self.btn_delete.setCursor(Qt.PointingHandCursor)
@@ -544,7 +543,7 @@ class PostItCard(_PostItCardBase):
             "QToolButton:hover{background:rgba(0,0,0,0.22);}"
         )
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
-        self.btn_delete.setVisible(not self.is_new_card)
+        self.btn_delete.setVisible(True)
 
         # vendor/item rows (match basic style with labels)
         vi = QGridLayout()
@@ -590,7 +589,6 @@ class PostItCard(_PostItCardBase):
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
 
-        # match money style to basic
         for w in (self.price, self.total):
             w.setStyleSheet(
                 "QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}"
@@ -640,17 +638,13 @@ class PostItCard(_PostItCardBase):
     def _commit(self, key: str, value: str):
         value = (value or "").strip()
         self.data[key] = value
-        if self.is_new_card:
-            self.new_item_changed.emit(dict(self.data))
-            return
         self.data_changed.emit(self.index, {key: value})
-
 
 
 class PostItStack(QWidget):
     item_deleted = Signal(int)
     item_changed = Signal(int, dict)
-    item_created = Signal(dict)
+    item_created = Signal(dict)  # kept for compatibility; not used
 
     def __init__(self, kind: str, parent=None):
         super().__init__(parent)
@@ -658,7 +652,6 @@ class PostItStack(QWidget):
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
         self.active_index = -1
-        self._emitting_create = False
         self.setMinimumHeight(175)
 
     def set_items(self, items: List[Dict[str, str]]):
@@ -671,44 +664,31 @@ class PostItStack(QWidget):
             c.deleteLater()
         self.cards = []
 
-        # existing items
-        for idx, it in enumerate(self.items):
-            card = PostItCard(self.kind, idx, it, is_new_card=False, parent=self)
-            card.delete_clicked.connect(self.item_deleted.emit)
-            card.selected.connect(self.set_active_card)
-            card.data_changed.connect(self.item_changed.emit)
-            card.show()
-            self.cards.append(card)
-
-        # new item card (always visible, no 안내문)
-        new_card = PostItCard(self.kind, len(self.items), {}, is_new_card=True, parent=self)
-        new_card.selected.connect(self.set_active_card)
-        new_card.new_item_changed.connect(self._on_new_item_changed)
-        new_card.show()
-        self.cards.append(new_card)
+        # Show existing items. If empty, show one editable card (index 0) but do not auto-create.
+        if self.items:
+            for idx, it in enumerate(self.items):
+                card = PostItCard(self.kind, idx, it, is_new_card=False, parent=self)
+                card.delete_clicked.connect(self.item_deleted.emit)
+                card.selected.connect(self.set_active_card)
+                card.data_changed.connect(self.item_changed.emit)
+                card.show()
+                self.cards.append(card)
+        else:
+            empty = PostItCard(self.kind, 0, {}, is_new_card=False, parent=self)
+            # delete not meaningful when there is no stored item; hide delete button
+            try:
+                empty.btn_delete.setVisible(False)
+            except Exception:
+                pass
+            empty.selected.connect(self.set_active_card)
+            # Emit item_changed for index 0 so MainWindow can decide how to handle (it should already ignore out of range)
+            empty.data_changed.connect(self.item_changed.emit)
+            empty.show()
+            self.cards.append(empty)
 
         self.active_index = max(0, len(self.cards) - 1)
         self._layout_cards()
         self._apply_active()
-
-    def _on_new_item_changed(self, data: Dict[str, str]):
-        if self._emitting_create:
-            return
-        payload = {
-            "거래처": (data.get("거래처") or "").strip(),
-            "품목": (data.get("품목") or "").strip(),
-            "수량": (data.get("수량") or "").strip(),
-            "단위": (data.get("단위") or "").strip(),
-            "단가": (data.get("단가") or "").strip(),
-            "총액": (data.get("총액") or "").strip(),
-        }
-        if not any(payload.values()):
-            return
-        self._emitting_create = True
-        try:
-            self.item_created.emit(payload)
-        finally:
-            self._emitting_create = False
 
     def set_active_card(self, idx: int):
         if idx < 0 or idx >= len(self.cards):

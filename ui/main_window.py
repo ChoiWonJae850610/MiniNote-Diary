@@ -200,8 +200,6 @@ class MainWindow(QMainWindow):
         self.image_preview.setMinimumHeight(520)
 
         self.change_note_postit = ChangeNotePostIt()
-        self.change_note_postit.text_changed.connect(self.on_change_note_changed)
-        self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         
 
         center_row = QWidget()
@@ -218,20 +216,17 @@ class MainWindow(QMainWindow):
 
         self.btn_add_basic = QPushButton("기본정보 추가/수정")
         self.btn_add_basic.hide()
-        self.btn_change_note = QPushButton("수정사항")
         self.btn_add_fabric = QPushButton("원단정보 추가")
         self.btn_add_trim = QPushButton("부자재정보 추가")
 
-        for b in (self.btn_add_basic, self.btn_change_note, self.btn_add_fabric, self.btn_add_trim):
+        for b in (self.btn_add_basic, self.btn_add_fabric, self.btn_add_trim):
             b.setFixedHeight(36)
 
         # self.btn_add_basic.clicked.connect(self.on_add_basic_clicked)  # removed
-        self.btn_change_note.clicked.connect(self.on_change_note_clicked)
         self.btn_add_fabric.clicked.connect(self.on_add_fabric_clicked)
         self.btn_add_trim.clicked.connect(self.on_add_trim_clicked)
 
         bottom_btn_row# .addWidget(self.btn_add_basic)  # removed: inline edit only
-        bottom_btn_row.addWidget(self.btn_change_note)
         bottom_btn_row.addWidget(self.btn_add_fabric)
         bottom_btn_row.addWidget(self.btn_add_trim)
         bottom_btn_row.addStretch(1)
@@ -369,19 +364,12 @@ class MainWindow(QMainWindow):
         self.fabric_items[idx].update(patch)
         self.mark_dirty()
         self._refresh_postits()
-
-
-
-    def on_change_note_changed(self, text: str):
         if not isinstance(self.header_data, dict):
             self.header_data = {}
         self.header_data["change_note"] = (text or "").rstrip()
         self.mark_dirty()
         # 포스트잇 자체는 이미 편집 중이므로 refresh는 최소화
         # self._refresh_postits()
-
-
-    def on_change_note_clicked(self):
         current = (self.header_data or {}).get("change_note", "")
         dlg = _ChangeNoteDialog(initial_text=current, parent=self)
         if dlg.exec() != QDialog.Accepted:
@@ -520,12 +508,6 @@ class MainWindow(QMainWindow):
         self.current_image_path = None
         self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
-
-def on_change_note_changed(self, text: str):
-    if not isinstance(self.header_data, dict):
-        self.header_data = {}
-    self.header_data["change_note"] = (text or "").rstrip()
-    self.mark_dirty()
 
 def on_basic_postit_changed(self, patch: dict):
     if not isinstance(self.header_data, dict):
