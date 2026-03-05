@@ -293,7 +293,7 @@ class BasicInfoPostIt(_PostItCardBase):
         root.setSpacing(10)
 
         title = QLabel("기본정보", self)
-        title.setStyleSheet("QLabel{font-weight:700;color:#222;}")
+        title.setStyleSheet("QLabel{font-weight:700;color:#222;background:transparent;}")
         root.addWidget(title)
 
         # date row
@@ -303,7 +303,9 @@ class BasicInfoPostIt(_PostItCardBase):
 
         lbl_date = QLabel("날짜:", self)
         lbl_date.setFixedWidth(44)
-        lbl_date.setStyleSheet("QLabel{font-weight:600;color:#222;}")
+        lbl_date.setFixedHeight(FIELD_H)
+        lbl_date.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        lbl_date.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
         date_row.addWidget(lbl_date)
 
         self.date_text = QLabel(self)
@@ -334,18 +336,20 @@ class BasicInfoPostIt(_PostItCardBase):
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(8)
-        grid.setVerticalSpacing(8)
+        grid.setVerticalSpacing(6)
 
         def mk_label(t: str) -> QLabel:
             l = QLabel(t, self)
             l.setFixedWidth(44)
-            l.setStyleSheet("QLabel{font-weight:600;color:#222;}")
+            l.setFixedHeight(FIELD_H)
+            l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            l.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
             return l
 
         self.style_no = _ClickToEditLineEdit(self)
-        self.style_no.setPlaceholderText("클릭해서 입력")
+        self.style_no.setPlaceholderText("")
         self.factory = _ClickToEditLineEdit(self)
-        self.factory.setPlaceholderText("클릭해서 입력")
+        self.factory.setPlaceholderText("")
 
         # auto width for style_no
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -365,12 +369,14 @@ class BasicInfoPostIt(_PostItCardBase):
         mg = QGridLayout()
         mg.setContentsMargins(0, 0, 0, 0)
         mg.setHorizontalSpacing(8)
-        mg.setVerticalSpacing(8)
+        mg.setVerticalSpacing(6)
 
         def mk_money_label(t: str) -> QLabel:
             l = QLabel(t, self)
             l.setFixedWidth(44)
-            l.setStyleSheet("QLabel{font-weight:600;color:#222;}")
+            l.setFixedHeight(FIELD_H)
+            l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            l.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
             return l
 
         self.cost = _MoneyLineEdit(self)
@@ -583,7 +589,7 @@ class PostItCard(_PostItCardBase):
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(8)
+        grid.setVerticalSpacing(6)
 
         def mk_lbl(t: str) -> QLabel:
             l = QLabel(t, self)

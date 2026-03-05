@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         self.change_note_postit = ChangeNotePostIt()
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
-        self.change_note_postit.setVisible(False)
+        
 
         center_row = QWidget()
         center_layout = QHBoxLayout(center_row)
