@@ -517,22 +517,24 @@ class ChangeNotePostIt(_PostItCardBase):
 
 
 # ---------- Fabric/Trim card ----------
+
 class PostItCard(_PostItCardBase):
     delete_clicked = Signal(int)
     selected = Signal(int)
     data_changed = Signal(int, dict)
-    item_created = Signal(dict)
+    new_item_changed = Signal(dict)   # for "new item" card
 
-    def __init__(self, kind: str, index: int, data: Dict[str, str], placeholder: bool, parent=None):
+    def __init__(self, kind: str, index: int, data: Dict[str, str], is_new_card: bool, parent=None):
         super().__init__(kind=kind, parent=parent)
         self.index = index
         self.data = dict(data or {})
-        self.is_placeholder = placeholder
+        self.is_new_card = is_new_card
 
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 14, 14, 14)
         root.setSpacing(8)
 
+        # delete button (top-right) - hide for new card
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
         self.btn_delete.setCursor(Qt.PointingHandCursor)
@@ -542,22 +544,39 @@ class PostItCard(_PostItCardBase):
             "QToolButton:hover{background:rgba(0,0,0,0.22);}"
         )
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
-        self.btn_delete.setVisible(not self.is_placeholder)
+        self.btn_delete.setVisible(not self.is_new_card)
 
-        self.placeholder_label = QLabel("클릭해서 원단/부자재 입력", self)
-        self.placeholder_label.setStyleSheet("QLabel{color:rgba(0,0,0,0.55);font-weight:600;background:transparent;}")
+        # vendor/item rows (match basic style with labels)
+        vi = QGridLayout()
+        vi.setContentsMargins(0, 0, 0, 0)
+        vi.setHorizontalSpacing(8)
+        vi.setVerticalSpacing(6)
+
+        def mk_lbl(t: str) -> QLabel:
+            l = QLabel(t, self)
+            l.setFixedWidth(44)
+            l.setFixedHeight(FIELD_H)
+            l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            l.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
+            return l
 
         self.vendor = _ClickToEditLineEdit(self)
         self.item = _ClickToEditLineEdit(self)
-        self.vendor.set_text_silent(self.data.get("거래처", ""))
-        self.item.set_text_silent(self.data.get("품목", ""))
 
+        vi.addWidget(mk_lbl("거래처:"), 0, 0)
+        vi.addWidget(self.vendor, 0, 1)
+        vi.addWidget(mk_lbl("품목:"), 1, 0)
+        vi.addWidget(self.item, 1, 1)
+
+        root.addLayout(vi)
+
+        # qty/unit/price/total grid
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(10)
         grid.setVerticalSpacing(6)
 
-        def mk_lbl(t: str) -> QLabel:
+        def mk_lbl2(t: str) -> QLabel:
             l = QLabel(t, self)
             l.setFixedHeight(FIELD_H)
             l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -567,80 +586,67 @@ class PostItCard(_PostItCardBase):
         self.qty = _ClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.unit = _ClickToEditLineEdit(self)
+
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
 
-        grid.addWidget(mk_lbl("수량"), 0, 0)
+        # match money style to basic
+        for w in (self.price, self.total):
+            w.setStyleSheet(
+                "QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}"
+                "QLineEdit:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
+                "QLineEdit:focus{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
+                "border-radius:8px;padding:0 2px;}"
+            )
+
+        grid.addWidget(mk_lbl2("수량"), 0, 0)
         grid.addWidget(self.qty, 0, 1)
-        grid.addWidget(mk_lbl("단위"), 0, 2)
+        grid.addWidget(mk_lbl2("단위"), 0, 2)
         grid.addWidget(self.unit, 0, 3)
 
-        grid.addWidget(mk_lbl("단가"), 1, 0)
+        grid.addWidget(mk_lbl2("단가"), 1, 0)
         grid.addWidget(self.price, 1, 1, 1, 3)
 
-        grid.addWidget(mk_lbl("총액"), 2, 0)
+        grid.addWidget(mk_lbl2("총액"), 2, 0)
         grid.addWidget(self.total, 2, 1, 1, 3)
 
-        self._grid_widget = QWidget(self)
-        self._grid_widget.setLayout(grid)
+        root.addLayout(grid)
 
-        root.addWidget(self.placeholder_label)
-        root.addWidget(self.vendor)
-        root.addWidget(self.item)
-        root.addWidget(self._grid_widget)
-
+        # fill initial data
+        self.vendor.set_text_silent(self.data.get("거래처", ""))
+        self.item.set_text_silent(self.data.get("품목", ""))
         self.qty.set_text_silent(self.data.get("수량", ""))
         self.unit.set_text_silent(self.data.get("단위", ""))
         self.price.setText(self.data.get("단가", ""))
         self.total.setText(self.data.get("총액", ""))
 
-        self._apply_placeholder_mode(self.is_placeholder)
-
-        self.vendor.committed.connect(lambda v: self._commit_field("거래처", v))
-        self.item.committed.connect(lambda v: self._commit_field("품목", v))
-        self.qty.committed.connect(lambda v: self._commit_field("수량", v))
-        self.unit.committed.connect(lambda v: self._commit_field("단위", v))
-        self.price.textChanged.connect(lambda _t: self._commit_field("단가", self.price.text()))
-        self.total.textChanged.connect(lambda _t: self._commit_field("총액", self.total.text()))
-
-    def _apply_placeholder_mode(self, placeholder: bool):
-        self.is_placeholder = placeholder
-        self.btn_delete.setVisible(not placeholder)
-        self.vendor.setVisible(not placeholder)
-        self.item.setVisible(not placeholder)
-        self._grid_widget.setVisible(not placeholder)
-        self.placeholder_label.setVisible(True)
-        self.placeholder_label.setText("클릭해서 원단/부자재 입력" if placeholder else "")
+        # connections
+        self.vendor.committed.connect(lambda v: self._commit("거래처", v))
+        self.item.committed.connect(lambda v: self._commit("품목", v))
+        self.qty.committed.connect(lambda v: self._commit("수량", v))
+        self.unit.committed.connect(lambda v: self._commit("단위", v))
+        self.price.textChanged.connect(lambda _t: self._commit("단가", self.price.text()))
+        self.total.textChanged.connect(lambda _t: self._commit("총액", self.total.text()))
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.selected.emit(self.index)
-            if self.is_placeholder:
-                self._apply_placeholder_mode(False)
-                self.vendor.setReadOnly(False)
-                self.vendor._apply_style(editing=True)
-                self.vendor.setFocus()
         super().mousePressEvent(event)
 
     def resizeEvent(self, event):
         self.btn_delete.move(self.width() - 28, 10)
         super().resizeEvent(event)
 
-    def _commit_field(self, key: str, value: str):
+    def _commit(self, key: str, value: str):
         value = (value or "").strip()
         self.data[key] = value
-
-        # If this card originated as placeholder, create when any value exists
-        if self.index >= 0 and self.index == 10**9:
-            pass  # never used
-
-        # If this card was the placeholder card (index == len(items) in stack), treat as create
-        # We'll let stack decide; here we infer by "index == -1" not used, so stack will connect item_created only on placeholder card.
-        if self.index >= 0:
-            self.data_changed.emit(self.index, {key: value})
+        if self.is_new_card:
+            self.new_item_changed.emit(dict(self.data))
+            return
+        self.data_changed.emit(self.index, {key: value})
 
 
-# ---------- Stack ----------
+
 class PostItStack(QWidget):
     item_deleted = Signal(int)
     item_changed = Signal(int, dict)
@@ -652,6 +658,7 @@ class PostItStack(QWidget):
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
         self.active_index = -1
+        self._emitting_create = False
         self.setMinimumHeight(175)
 
     def set_items(self, items: List[Dict[str, str]]):
@@ -664,49 +671,44 @@ class PostItStack(QWidget):
             c.deleteLater()
         self.cards = []
 
+        # existing items
         for idx, it in enumerate(self.items):
-            card = PostItCard(self.kind, idx, it, placeholder=False, parent=self)
+            card = PostItCard(self.kind, idx, it, is_new_card=False, parent=self)
             card.delete_clicked.connect(self.item_deleted.emit)
             card.selected.connect(self.set_active_card)
             card.data_changed.connect(self.item_changed.emit)
             card.show()
             self.cards.append(card)
 
-        # placeholder card at end
-        ph = PostItCard(self.kind, len(self.items), {}, placeholder=True, parent=self)
-        ph.selected.connect(self.set_active_card)
-        ph.vendor.committed.connect(lambda v: self._placeholder_committed())
-        ph.item.committed.connect(lambda v: self._placeholder_committed())
-        ph.qty.committed.connect(lambda v: self._placeholder_committed())
-        ph.unit.committed.connect(lambda v: self._placeholder_committed())
-        ph.price.textChanged.connect(lambda _t: self._placeholder_committed())
-        ph.total.textChanged.connect(lambda _t: self._placeholder_committed())
-        ph.show()
-        self.cards.append(ph)
+        # new item card (always visible, no 안내문)
+        new_card = PostItCard(self.kind, len(self.items), {}, is_new_card=True, parent=self)
+        new_card.selected.connect(self.set_active_card)
+        new_card.new_item_changed.connect(self._on_new_item_changed)
+        new_card.show()
+        self.cards.append(new_card)
 
-        if self.items:
-            self.active_index = len(self.items) - 1
-        else:
-            self.active_index = len(self.cards) - 1
-
+        self.active_index = max(0, len(self.cards) - 1)
         self._layout_cards()
         self._apply_active()
 
-    def _placeholder_committed(self):
-        # last card is placeholder; if any text exists, create a new item
-        if not self.cards:
+    def _on_new_item_changed(self, data: Dict[str, str]):
+        if self._emitting_create:
             return
-        ph = self.cards[-1]
-        data = {
-            "거래처": ph.vendor.text().strip(),
-            "품목": ph.item.text().strip(),
-            "수량": ph.qty.text().strip(),
-            "단위": ph.unit.text().strip(),
-            "단가": ph.price.text().strip(),
-            "총액": ph.total.text().strip(),
+        payload = {
+            "거래처": (data.get("거래처") or "").strip(),
+            "품목": (data.get("품목") or "").strip(),
+            "수량": (data.get("수량") or "").strip(),
+            "단위": (data.get("단위") or "").strip(),
+            "단가": (data.get("단가") or "").strip(),
+            "총액": (data.get("총액") or "").strip(),
         }
-        if any(v for v in data.values()):
-            self.item_created.emit(data)
+        if not any(payload.values()):
+            return
+        self._emitting_create = True
+        try:
+            self.item_created.emit(payload)
+        finally:
+            self._emitting_create = False
 
     def set_active_card(self, idx: int):
         if idx < 0 or idx >= len(self.cards):
@@ -726,7 +728,7 @@ class PostItStack(QWidget):
     def _layout_cards(self):
         base_w = self.width()
         card_w = max(280, min(340, base_w - 20))
-        card_h = 150
+        card_h = 170
         x0 = int((base_w - card_w) / 2)
         y0 = 10
         dx = 10
@@ -744,7 +746,6 @@ class PostItStack(QWidget):
         self.setMinimumHeight(max(175, total_h))
 
 
-# ---------- Bar ----------
 class PostItBar(QWidget):
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
