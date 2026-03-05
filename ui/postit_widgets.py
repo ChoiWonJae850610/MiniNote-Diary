@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Dict, List
+import json
 
 from PySide6.QtCore import Qt, QRectF, Signal, QSize, QDate, QPoint, QRegularExpression
 from PySide6.QtGui import (
@@ -110,6 +111,29 @@ def _calendar_icon(size: int = 16) -> QIcon:
     if icon.isNull():
         icon = QIcon.fromTheme("view-calendar")
     return icon
+
+
+
+def _load_units() -> List[tuple[str, str]]:
+    """Load units from db/units.json. Returns list of (unit, label)."""
+    try:
+        from pathlib import Path as _Path
+        base = _Path(__file__).resolve().parents[1]  # repo root
+        path = base / "db" / "units.json"
+        if not path.exists():
+            return []
+        data = json.loads(path.read_text(encoding="utf-8"))
+        out: List[tuple[str, str]] = []
+        if isinstance(data, list):
+            for it in data:
+                if isinstance(it, dict):
+                    u = str(it.get("unit", "") or "")
+                    lb = str(it.get("label", "") or "")
+                    if u or lb:
+                        out.append((u, lb or u))
+        return out
+    except Exception:
+        return []
 
 
 # ---------- Popup calendar ----------
@@ -516,18 +540,16 @@ class ChangeNotePostIt(_PostItCardBase):
         return self.editor.toPlainText().rstrip()
 
 
-# ---------- Fabric/Trim card ----------
-
-
 class PostItCard(_PostItCardBase):
     delete_clicked = Signal(int)
     selected = Signal(int)
     data_changed = Signal(int, dict)
 
-    def __init__(self, kind: str, index: int, data: Dict[str, str], is_new_card: bool = False, parent=None):
+    def __init__(self, kind: str, index: int, data: Dict[str, str], parent=None):
         super().__init__(kind=kind, parent=parent)
         self.index = index
         self.data = dict(data or {})
+        self._block_total = False
 
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 14, 14, 14)
@@ -543,9 +565,8 @@ class PostItCard(_PostItCardBase):
             "QToolButton:hover{background:rgba(0,0,0,0.22);}"
         )
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
-        self.btn_delete.setVisible(True)
 
-        # vendor/item rows (match basic style with labels)
+        # vendor/item rows (basic-like labels)
         vi = QGridLayout()
         vi.setContentsMargins(0, 0, 0, 0)
         vi.setHorizontalSpacing(8)
@@ -561,15 +582,16 @@ class PostItCard(_PostItCardBase):
 
         self.vendor = _ClickToEditLineEdit(self)
         self.item = _ClickToEditLineEdit(self)
+        self.vendor.set_text_silent(self.data.get("거래처", ""))
+        self.item.set_text_silent(self.data.get("품목", ""))
 
         vi.addWidget(mk_lbl("거래처:"), 0, 0)
         vi.addWidget(self.vendor, 0, 1)
         vi.addWidget(mk_lbl("품목:"), 1, 0)
         vi.addWidget(self.item, 1, 1)
-
         root.addLayout(vi)
 
-        # qty/unit/price/total grid
+        # qty/unit/price/total
         grid = QGridLayout()
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(10)
@@ -584,7 +606,24 @@ class PostItCard(_PostItCardBase):
 
         self.qty = _ClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.unit = _ClickToEditLineEdit(self)
+        self.qty.set_text_silent(self.data.get("수량", ""))
+
+        # unit "combo-like" button + hidden value storage in line edit look
+        self.unit_btn = QToolButton(self)
+        self.unit_btn.setCursor(Qt.PointingHandCursor)
+        self.unit_btn.setFixedHeight(FIELD_H)
+        self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.unit_btn.setStyleSheet(
+            "QToolButton{background:transparent;border:none;color:#111;padding:0 2px;text-align:left;}"
+            "QToolButton:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
+            "QToolButton:focus{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
+            "border-radius:8px;padding:0 2px;}"
+        )
+        self._unit_value = (self.data.get("단위") or "").strip()
+        self._unit_label = self._unit_value or ""
+        self._units = _load_units()
+        self._apply_unit_button_text()
+        self.unit_btn.clicked.connect(self._open_unit_menu)
 
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
@@ -597,10 +636,13 @@ class PostItCard(_PostItCardBase):
                 "border-radius:8px;padding:0 2px;}"
             )
 
+        self.price.setText(self.data.get("단가", ""))
+        self.total.setText(self.data.get("총액", ""))
+
         grid.addWidget(mk_lbl2("수량"), 0, 0)
         grid.addWidget(self.qty, 0, 1)
         grid.addWidget(mk_lbl2("단위"), 0, 2)
-        grid.addWidget(self.unit, 0, 3)
+        grid.addWidget(self.unit_btn, 0, 3)
 
         grid.addWidget(mk_lbl2("단가"), 1, 0)
         grid.addWidget(self.price, 1, 1, 1, 3)
@@ -610,120 +652,149 @@ class PostItCard(_PostItCardBase):
 
         root.addLayout(grid)
 
-        # fill initial data
-        self.vendor.set_text_silent(self.data.get("거래처", ""))
-        self.item.set_text_silent(self.data.get("품목", ""))
-        self.qty.set_text_silent(self.data.get("수량", ""))
-        self.unit.set_text_silent(self.data.get("단위", ""))
-        self.price.setText(self.data.get("단가", ""))
-        self.total.setText(self.data.get("총액", ""))
-
         # connections
         self.vendor.committed.connect(lambda v: self._commit("거래처", v))
         self.item.committed.connect(lambda v: self._commit("품목", v))
-        self.qty.committed.connect(lambda v: self._commit("수량", v))
-        self.unit.committed.connect(lambda v: self._commit("단위", v))
-        self.price.textChanged.connect(lambda _t: self._commit("단가", self.price.text()))
+        self.qty.committed.connect(lambda v: self._on_qty_committed(v))
+        self.price.textChanged.connect(lambda _t: self._on_price_changed())
         self.total.textChanged.connect(lambda _t: self._commit("총액", self.total.text()))
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.selected.emit(self.index)
-        super().mousePressEvent(event)
+    def _open_unit_menu(self):
+        from PySide6.QtWidgets import QMenu  # local import
 
-    def resizeEvent(self, event):
-        self.btn_delete.move(self.width() - 28, 10)
-        super().resizeEvent(event)
+        menu = QMenu(self)
+        # empty option
+        a0 = menu.addAction("")
+        a0.triggered.connect(lambda: self._set_unit("", ""))
 
-    def _commit(self, key: str, value: str):
-        value = (value or "").strip()
-        self.data[key] = value
-        self.data_changed.emit(self.index, {key: value})
+        for unit, label in self._units:
+            act = menu.addAction(label)
+            act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
+
+        menu.exec(self.unit_btn.mapToGlobal(QPoint(0, self.unit_btn.height() + 4)))
+
+    def _apply_unit_button_text(self):
+        self.unit_btn.setText(self._unit_label or "")
+
+    def _set_unit(self, unit: str, label: str):
+        self._unit_value = unit or ""
+        self._unit_label = label or ""
+        self._apply_unit_button_text()
+        self._commit("단위", self._unit_value)
+
 
 
 class PostItStack(QWidget):
     item_deleted = Signal(int)
     item_changed = Signal(int, dict)
-    item_created = Signal(dict)  # kept for compatibility; not used
+    item_added = Signal()  # request add
 
     def __init__(self, kind: str, parent=None):
         super().__init__(parent)
         self.kind = kind
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
-        self.active_index = -1
-        self.setMinimumHeight(175)
+        self.active_index = 0
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(6)
+
+        self.index_row = QHBoxLayout()
+        self.index_row.setContentsMargins(0, 0, 0, 0)
+        self.index_row.setSpacing(6)
+        root.addLayout(self.index_row)
+
+        from PySide6.QtWidgets import QStackedLayout
+        self.stack = QStackedLayout()
+        self.stack.setContentsMargins(0, 0, 0, 0)
+        root.addLayout(self.stack)
+
+        self._rebuild_index_buttons()
 
     def set_items(self, items: List[Dict[str, str]]):
-        self.items = list(items or [])
+        items = list(items or [])
+        # Always show at least one card so it is visible from the start.
+        if not items:
+            items = [{
+                "거래처": "", "품목": "", "수량": "", "단위": "", "단가": "", "총액": ""
+            }]
+        self.items = items
+        if self.active_index >= len(self.items):
+            self.active_index = max(0, len(self.items) - 1)
         self._rebuild()
 
     def _rebuild(self):
-        for c in self.cards:
-            c.setParent(None)
-            c.deleteLater()
+        while self.stack.count():
+            w = self.stack.widget(0)
+            self.stack.removeWidget(w)
+            w.setParent(None)
+            w.deleteLater()
         self.cards = []
 
-        # Show existing items. If empty, show one editable card (index 0) but do not auto-create.
-        if self.items:
-            for idx, it in enumerate(self.items):
-                card = PostItCard(self.kind, idx, it, is_new_card=False, parent=self)
-                card.delete_clicked.connect(self.item_deleted.emit)
-                card.selected.connect(self.set_active_card)
-                card.data_changed.connect(self.item_changed.emit)
-                card.show()
-                self.cards.append(card)
-        else:
-            empty = PostItCard(self.kind, 0, {}, is_new_card=False, parent=self)
-            # delete not meaningful when there is no stored item; hide delete button
-            try:
-                empty.btn_delete.setVisible(False)
-            except Exception:
-                pass
-            empty.selected.connect(self.set_active_card)
-            # Emit item_changed for index 0 so MainWindow can decide how to handle (it should already ignore out of range)
-            empty.data_changed.connect(self.item_changed.emit)
-            empty.show()
-            self.cards.append(empty)
+        for idx, it in enumerate(self.items):
+            card = PostItCard(self.kind, idx, it, parent=self)
+            card.delete_clicked.connect(self.item_deleted.emit)
+            card.selected.connect(self.set_active_card)
+            card.data_changed.connect(self.item_changed.emit)
+            if len(self.items) == 1:
+                card.btn_delete.setVisible(False)
+            self.stack.addWidget(card)
+            self.cards.append(card)
 
-        self.active_index = max(0, len(self.cards) - 1)
-        self._layout_cards()
+        self.stack.setCurrentIndex(self.active_index)
+        self._rebuild_index_buttons()
         self._apply_active()
+
+    def _rebuild_index_buttons(self):
+        while self.index_row.count():
+            it = self.index_row.takeAt(0)
+            w = it.widget()
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
+
+        def mk_btn(txt: str, is_active=False) -> QToolButton:
+            b = QToolButton(self)
+            b.setText(txt)
+            b.setCursor(Qt.PointingHandCursor)
+            b.setFixedSize(24, 24)
+            if is_active:
+                b.setStyleSheet(
+                    "QToolButton{border:2px solid rgba(0,0,0,0.32);border-radius:8px;"
+                    "background:rgba(255,255,255,0.78);font-weight:800;}"
+                    "QToolButton:hover{background:rgba(255,255,255,0.90);}"
+                )
+            else:
+                b.setStyleSheet(
+                    "QToolButton{border:1px solid rgba(0,0,0,0.18);border-radius:8px;"
+                    "background:rgba(255,255,255,0.55);font-weight:700;}"
+                    "QToolButton:hover{background:rgba(255,255,255,0.78);}"
+                )
+            return b
+
+        for i in range(len(self.items)):
+            b = mk_btn(str(i + 1), is_active=(i == self.active_index))
+            b.clicked.connect(lambda _=False, idx=i: self.set_active_card(idx))
+            self.index_row.addWidget(b)
+
+        b_plus = mk_btn("+", is_active=False)
+        b_plus.clicked.connect(self.item_added.emit)
+        self.index_row.addWidget(b_plus)
+        self.index_row.addStretch(1)
 
     def set_active_card(self, idx: int):
-        if idx < 0 or idx >= len(self.cards):
+        if idx < 0 or idx >= len(self.items):
             return
         self.active_index = idx
+        if self.stack.count():
+            self.stack.setCurrentIndex(idx)
         self._apply_active()
-        self.cards[idx].raise_()
+        self._rebuild_index_buttons()
 
     def _apply_active(self):
         for i, c in enumerate(self.cards):
             c.set_active(i == self.active_index)
-
-    def resizeEvent(self, event):
-        self._layout_cards()
-        super().resizeEvent(event)
-
-    def _layout_cards(self):
-        base_w = self.width()
-        card_w = max(280, min(340, base_w - 20))
-        card_h = 170
-        x0 = int((base_w - card_w) / 2)
-        y0 = 10
-        dx = 10
-        dy = 16
-
-        for i, card in enumerate(self.cards):
-            card.setFixedSize(card_w, card_h)
-            card.move(x0 + dx * i, y0 + dy * i)
-            card.raise_()
-
-        if 0 <= self.active_index < len(self.cards):
-            self.cards[self.active_index].raise_()
-
-        total_h = y0 + card_h + dy * max(0, (len(self.cards) - 1)) + 14
-        self.setMinimumHeight(max(175, total_h))
 
 
 class PostItBar(QWidget):
@@ -732,21 +803,19 @@ class PostItBar(QWidget):
 
     fabric_item_changed = Signal(int, dict)
     trim_item_changed = Signal(int, dict)
-    fabric_item_created = Signal(dict)
-    trim_item_created = Signal(dict)
+    fabric_item_added = Signal()
+    trim_item_added = Signal()
 
-    basic_edit_requested = Signal()  # compatibility
     basic_data_changed = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(10)
 
         self.basic = BasicInfoPostIt(self)
-        self.basic.edit_requested.connect(self.basic_edit_requested.emit)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
 
         self.fabric = PostItStack(kind="fabric", parent=self)
@@ -758,14 +827,14 @@ class PostItBar(QWidget):
         self.fabric.item_changed.connect(self.fabric_item_changed.emit)
         self.trim.item_changed.connect(self.trim_item_changed.emit)
 
-        self.fabric.item_created.connect(self.fabric_item_created.emit)
-        self.trim.item_created.connect(self.trim_item_created.emit)
+        self.fabric.item_added.connect(self.fabric_item_added.emit)
+        self.trim.item_added.connect(self.trim_item_added.emit)
 
-        layout.addWidget(self.basic, 1)
-        layout.addWidget(self.fabric, 1)
-        layout.addWidget(self.trim, 1)
+        layout.addWidget(self.basic,1)
+        layout.addWidget(self.fabric,1)
+        layout.addWidget(self.trim,1)
 
-    def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]]):
+    def set_data(self, header, fabrics, trims):
         self.basic.set_header_data(header or {})
         self.fabric.set_items(fabrics or [])
         self.trim.set_items(trims or [])

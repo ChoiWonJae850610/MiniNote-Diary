@@ -236,12 +236,11 @@ class MainWindow(QMainWindow):
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
         self.postit_bar.trim_item_changed.connect(self.on_trim_postit_changed)
-        self.postit_bar.fabric_item_created.connect(self.on_fabric_postit_created)
-        self.postit_bar.trim_item_created.connect(self.on_trim_postit_created)
+        self.postit_bar.fabric_item_added.connect(self.on_add_fabric_clicked)
+        self.postit_bar.trim_item_added.connect(self.on_add_trim_clicked)
         self.postit_bar.setMaximumHeight(220)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
-        self.postit_bar.basic_edit_requested.connect(self.on_add_basic_clicked)
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
         page_layout.addLayout(top_bar)
@@ -548,3 +547,22 @@ def on_trim_postit_created(self, data: dict):
     self.trim_items.append(data)
     self.mark_dirty()
     self._refresh_postits()
+
+    def on_fabric_postit_changed(self, idx, patch):
+        fabrics = list(getattr(self, 'fabrics', []) or [])
+        while len(fabrics) <= idx:
+            fabrics.append({"거래처":"","품목":"","수량":"","단위":"","단가":"","총액":""})
+        fabrics[idx].update(patch or {})
+        setattr(self, 'fabrics', fabrics)
+        self._refresh_postits()
+        self.mark_dirty()
+
+
+    def on_trim_postit_changed(self, idx, patch):
+        trims = list(getattr(self, 'trims', []) or [])
+        while len(trims) <= idx:
+            trims.append({"거래처":"","품목":"","수량":"","단위":"","단가":"","총액":""})
+        trims[idx].update(patch or {})
+        setattr(self, 'trims', trims)
+        self._refresh_postits()
+        self.mark_dirty()
