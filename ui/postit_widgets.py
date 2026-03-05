@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate
+from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate, QElapsedTimer, QTimer
 from PySide6.QtGui import QColor, QFontMetrics, QIcon, QPainter, QPen, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QWidget,
@@ -531,6 +531,8 @@ class PostItCard(_PostItCardBase):
         self._units = _load_units()
         self._unit_value = (self.data.get("단위") or "").strip()
         self._unit_label = self._label_for_unit(self._unit_value)
+        self._created_timer = QElapsedTimer()
+        self._created_timer.start()
 
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 14, 14, 14)
@@ -598,7 +600,23 @@ class PostItCard(_PostItCardBase):
             "QToolButton:focus{background:rgba(255,255,255,0.70);border-color:rgba(0,0,0,0.22);}"
         )
         self._apply_unit_button_text()
-        self.unit_btn.clicked.connect(self._open_unit_menu)
+        # Build a persistent unit menu and let QToolButton handle popup positioning.
+        self._unit_menu = QMenu(self)
+        self._unit_actions: Dict[str, object] = {}
+        for unit, label in self._units:
+            act = self._unit_menu.addAction(label)
+            act.setCheckable(True)
+            act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
+            self._unit_actions[unit] = act
+        self._unit_menu.aboutToShow.connect(self._sync_unit_menu_checks)
+
+        self.unit_btn.setMenu(self._unit_menu)
+        self.unit_btn.setPopupMode(QToolButton.InstantPopup)
+
+        # Prevent "click-through" immediately after cards are rebuilt/added.
+        # When the stack rebuilds on '+' click, the mouse-release can land on the new unit button and open its menu.
+        self.unit_btn.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        QTimer.singleShot(450, lambda: self.unit_btn.setAttribute(Qt.WA_TransparentForMouseEvents, False))
 
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
@@ -640,9 +658,25 @@ class PostItCard(_PostItCardBase):
     def _apply_unit_button_text(self):
         self.unit_btn.setText(self._unit_label or "")
 
+    
+    def _sync_unit_menu_checks(self):
+        current = (self._unit_value or "").strip()
+        for u, act in self._unit_actions.items():
+            try:
+                act.setChecked(bool(current) and u == current)
+            except Exception:
+                pass
+
     def _open_unit_menu(self):
+        # Prevent accidental menu popups triggered by focus/mouse-release during rebuild right after adding a card
+        try:
+            if hasattr(self, "_created_timer") and self._created_timer.isValid() and self._created_timer.elapsed() < 250:
+                return
+        except Exception:
+            pass
+
         menu = QMenu(self)
-        a0 = menu.addAction("")
+        a0 = menu.addAction("(비움)")
         a0.triggered.connect(lambda: self._set_unit("", ""))
         if not self._units:
             hint = menu.addAction("(단위 목록 없음)")
@@ -756,26 +790,35 @@ class PostItStack(QWidget):
         self._rebuild()
 
     def _rebuild(self):
-        while self.stack.count():
-            w = self.stack.widget(0)
-            self.stack.removeWidget(w)
-            w.setParent(None)
-            w.deleteLater()
-        self.cards = []
+        self.setUpdatesEnabled(False)
+        try:
+            while self.stack.count():
+                w = self.stack.widget(0)
+                self.stack.removeWidget(w)
+                w.setParent(None)
+                w.deleteLater()
+            self.cards = []
 
-        for idx, it in enumerate(self.items):
-            card = PostItCard(self.kind, idx, it, parent=self)
-            card.delete_clicked.connect(self.item_deleted.emit)
-            card.selected.connect(self.set_active_card)
-            card.data_changed.connect(self.item_changed.emit)
-            if len(self.items) == 1:
-                card.btn_delete.setVisible(False)
-            self.stack.addWidget(card)
-            self.cards.append(card)
+            for idx, it in enumerate(self.items):
+                card = PostItCard(self.kind, idx, it, parent=self)
+                card.delete_clicked.connect(self.item_deleted.emit)
+                card.selected.connect(self.set_active_card)
+                card.data_changed.connect(self.item_changed.emit)
+                if len(self.items) == 1:
+                    card.btn_delete.setVisible(False)
+                self.stack.addWidget(card)
+                self.cards.append(card)
 
-        self.stack.setCurrentIndex(self.active_index)
-        self._rebuild_index_buttons()
-        self._apply_active()
+            self.stack.setCurrentIndex(self.active_index)
+            self._rebuild_index_buttons()
+            self._apply_active()
+        finally:
+            self.setUpdatesEnabled(True)
+            # Swallow any pending mouse release after a rebuild to prevent "click-through"
+            # to newly created child widgets (e.g., unit menu button).
+            self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            QTimer.singleShot(160, lambda: self.setAttribute(Qt.WA_TransparentForMouseEvents, False))
+            self.update()
 
     def _rebuild_index_buttons(self):
         while self.index_row.count():
@@ -790,6 +833,7 @@ class PostItStack(QWidget):
             b.setText(txt)
             b.setCursor(Qt.PointingHandCursor)
             b.setFixedSize(24, 24)
+            b.setFocusPolicy(Qt.NoFocus)
             if active:
                 b.setStyleSheet(
                     "QToolButton{border:2px solid rgba(0,0,0,0.32);border-radius:8px;"
