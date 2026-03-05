@@ -1,84 +1,24 @@
 {
   "units": [
-    {
-      "unit": "EA",
-      "label": "EA (개)"
-    },
-    {
-      "unit": "PCS",
-      "label": "PCS (피스)"
-    },
-    {
-      "unit": "SET",
-      "label": "SET (세트)"
-    },
-    {
-      "unit": "PAIR",
-      "label": "PAIR (쌍)"
-    },
-    {
-      "unit": "DZ",
-      "label": "DZ (다스)"
-    },
-    {
-      "unit": "GROSS",
-      "label": "GROSS (144개)"
-    },
-    {
-      "unit": "LOT",
-      "label": "LOT (로트)"
-    },
-    {
-      "unit": "JOB",
-      "label": "JOB (작업 1건)"
-    },
-    {
-      "unit": "MM",
-      "label": "mm (밀리미터)"
-    },
-    {
-      "unit": "CM",
-      "label": "cm (센티미터)"
-    },
-    {
-      "unit": "M",
-      "label": "m (미터)"
-    },
-    {
-      "unit": "KM",
-      "label": "km (킬로미터)"
-    },
-    {
-      "unit": "IN",
-      "label": "in (인치)"
-    },
-    {
-      "unit": "FT",
-      "label": "ft (피트)"
-    },
-    {
-      "unit": "YD",
-      "label": "yd (야드)"
-    },
-    {
-      "unit": "M2",
-      "label": "㎡ (제곱미터)"
-    },
-    {
-      "unit": "CM2",
-      "label": "㎠ (제곱센티미터)"
-    },
-    {
-      "unit": "YD2",
-      "label": "yd² (제곱야드)"
-    },
-    {
-      "unit": "G",
-      "label": "g (그램)"
-    },
-    {
-      "unit": "KG",
-      "label": "kg (킬로그램)"
-    }
+    { "unit": "EA", "label": "EA (개)" },
+    { "unit": "PCS", "label": "PCS (피스)" },
+    { "unit": "SET", "label": "SET (세트)" },
+    { "unit": "PR", "label": "PR (쌍)" },
+    { "unit": "PK", "label": "PK (팩)" },
+    { "unit": "BOX", "label": "BOX (박스)" },
+    { "unit": "BUNDLE", "label": "BUNDLE (묶음)" },
+    { "unit": "ROLL", "label": "ROLL (롤)" },
+    { "unit": "BOLT", "label": "BOLT (원단롤)" },
+    { "unit": "CUT", "label": "CUT (컷)" },
+    { "unit": "PC", "label": "PC (조각)" },
+    { "unit": "M", "label": "M (미터)" },
+    { "unit": "YD", "label": "YD (야드)" },
+    { "unit": "CM", "label": "CM (센티미터)" },
+    { "unit": "MM", "label": "MM (밀리미터)" },
+    { "unit": "G", "label": "G (그램)" },
+    { "unit": "KG", "label": "KG (킬로그램)" },
+    { "unit": "CONE", "label": "CONE (실콘)" },
+    { "unit": "SPOOL", "label": "SPOOL (실보빈)" },
+    { "unit": "DOZEN", "label": "DOZEN (12개)" }
   ]
 }
