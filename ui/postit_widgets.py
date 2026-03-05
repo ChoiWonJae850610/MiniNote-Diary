@@ -87,9 +87,23 @@ def _make_calendar_icon(size: int = 16) -> QIcon:
     return QIcon(pm)
 
 
+def _make_down_icon(size: int = 12) -> QIcon:
+    pm = QPixmap(size, size)
+    pm.fill(Qt.transparent)
+    p = QPainter(pm)
+    p.setRenderHint(QPainter.Antialiasing, True)
+    pen = QPen(QColor("#222"), 2)
+    p.setPen(pen)
+    # v shape
+    p.drawLine(2, 4, size // 2, size - 4)
+    p.drawLine(size // 2, size - 4, size - 2, 4)
+    p.end()
+    return QIcon(pm)
+
+
 def _load_units() -> List[Tuple[str, str]]:
     try:
-        base = Path(__file__).resolve().parents[1]  # repo root
+        base = Path(__file__).resolve().parent.parent  # repo root
         path = base / "db" / "units.json"
         if not path.exists():
             return []
@@ -170,17 +184,17 @@ class _ClickToEditLineEdit(QLineEdit):
         self._apply_style(editing=False)
 
     def _apply_style(self, editing: bool):
+        # Keep border/padding consistent to avoid layout jitter when toggling edit mode.
         if not editing:
             self.setStyleSheet(
-                "QLineEdit{background:transparent;border:none;color:#111;padding:0 2px;}"
-                "QLineEdit:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
+                "QLineEdit{background:transparent;border:1px solid transparent;color:#111;padding:0 6px;}"
+                "QLineEdit:hover{background:rgba(255,255,255,0.18);border-color:rgba(0,0,0,0.10);border-radius:8px;}"
             )
         else:
             self.setStyleSheet(
                 "QLineEdit{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
-                "border-radius:8px;padding:0 2px;color:#111;}"
+                "border-radius:8px;padding:0 6px;color:#111;}"
             )
-
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.isReadOnly():
             self.setReadOnly(False)
@@ -217,6 +231,24 @@ class _ClickToEditLineEdit(QLineEdit):
             self.setText(text or "")
         finally:
             self.blockSignals(old)
+
+
+class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
+    """Click-to-edit integer-only field (no commas)."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setValidator(QRegularExpressionValidator(r"[0-9]*", self))
+        self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+
+    def _commit_lock(self):
+        if not self.isReadOnly():
+            # keep digits only
+            digits = _digits_only(self.text())
+            self.set_text_silent(digits)
+            self.setReadOnly(True)
+            self._apply_style(editing=False)
+            self.committed.emit(digits)
+
 
 
 # ---------- base card ----------
@@ -533,19 +565,22 @@ class PostItCard(_PostItCardBase):
             l.setStyleSheet("QLabel{font-weight:600;color:#222;background:transparent;}")
             return l
 
-        self.qty = _ClickToEditLineEdit(self)
+        self.qty = _QtyClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.qty.set_text_silent(self.data.get("수량", ""))
 
         self.unit_btn = QToolButton(self)
+        self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.unit_btn.setIcon(_make_down_icon(12))
+        self.unit_btn.setIconSize(QSize(12, 12))
         self.unit_btn.setCursor(Qt.PointingHandCursor)
         self.unit_btn.setFixedHeight(FIELD_H)
         self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.unit_btn.setStyleSheet(
-            "QToolButton{background:transparent;border:none;color:#111;padding:0 2px;text-align:left;}"
-            "QToolButton:hover{background:rgba(255,255,255,0.18);border-radius:6px;}"
-            "QToolButton:focus{background:rgba(255,255,255,0.70);border:1px solid rgba(0,0,0,0.22);"
-            "border-radius:8px;padding:0 2px;}"
+            "QToolButton{background:transparent;border:1px solid transparent;color:#111;padding:0 6px;text-align:left;border-radius:8px;}"
+            "QToolButton:hover{background:rgba(255,255,255,0.18);border-color:rgba(0,0,0,0.10);}"
+            "QToolButton:pressed{background:rgba(255,255,255,0.28);}"
+            "QToolButton:focus{background:rgba(255,255,255,0.70);border-color:rgba(0,0,0,0.22);}"
         )
         self._apply_unit_button_text()
         self.unit_btn.clicked.connect(self._open_unit_menu)
@@ -577,8 +612,9 @@ class PostItCard(_PostItCardBase):
         self.vendor.committed.connect(lambda v: self._commit("거래처", v))
         self.item.committed.connect(lambda v: self._commit("품목", v))
         self.qty.committed.connect(lambda v: self._on_qty_committed(v))
+        self.qty.textChanged.connect(lambda _t: self._recalc_total())
         self.price.textChanged.connect(lambda _t: self._on_price_changed())
-        self.total.textChanged.connect(lambda _t: self._commit("총액", self.total.text()))
+        self.total.textChanged.connect(lambda _t: (None if self._block_total else self._commit("총액", self.total.text())))
 
     def _label_for_unit(self, unit: str) -> str:
         for u, lb in self._units:
@@ -588,22 +624,17 @@ class PostItCard(_PostItCardBase):
 
     def _apply_unit_button_text(self):
         self.unit_btn.setText(self._unit_label or "")
+
     def _open_unit_menu(self):
-        # Reload units each time (units.json may change while app is running)
-        try:
-            self._units = _load_units()
-        except Exception:
-            self._units = []
         menu = QMenu(self)
         a0 = menu.addAction("")
         a0.triggered.connect(lambda: self._set_unit("", ""))
         if not self._units:
-            na = menu.addAction("(단위 없음)")
-            na.setEnabled(False)
-        else:
-            for unit, label in self._units:
-                act = menu.addAction(label)
-                act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
+            hint = menu.addAction("(단위 목록 없음)")
+            hint.setEnabled(False)
+        for unit, label in self._units:
+            act = menu.addAction(label)
+            act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
         menu.exec(self.unit_btn.mapToGlobal(QPoint(0, self.unit_btn.height() + 4)))
 
     def _set_unit(self, unit: str, label: str):
@@ -644,8 +675,10 @@ class PostItCard(_PostItCardBase):
     def _recalc_total(self):
         if self._block_total:
             return
-        qty = _int_from_any(self.qty.text())
-        price = _int_from_any(self.price.text())
+        qty_digits = _digits_only(self.qty.text())
+        price_digits = _digits_only(self.price.text())
+        qty = int(qty_digits) if qty_digits else 1
+        price = int(price_digits) if price_digits else 1
         total = qty * price
         self._block_total = True
         try:
