@@ -201,6 +201,7 @@ class MainWindow(QMainWindow):
 
         self.change_note_postit = ChangeNotePostIt()
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
+        self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.change_note_postit.setVisible(False)
 
         center_row = QWidget()
@@ -313,13 +314,14 @@ class MainWindow(QMainWindow):
 
     # ===================== Basic/Fabric/Trim add/delete ======================
     def on_add_basic_clicked(self):
-        # 기본정보는 포스트잇에서 바로 인라인 편집
+        # 기본정보는 포스트잇에서 인라인 편집
         try:
-            self.postit_bar.basic_postit.style_no.setReadOnly(False)
-            self.postit_bar.basic_postit.style_no.setFocus()
-            self.postit_bar.basic_postit.style_no.selectAll()
+            self.postit_bar.basic.style_no.setReadOnly(False)
+            self.postit_bar.basic.style_no.setFocus()
+            self.postit_bar.basic.style_no.selectAll()
         except Exception:
             pass
+
     def on_basic_postit_changed(self, patch: dict):
         """기본정보 포스트잇 인라인 편집 결과를 header_data에 반영."""
         if not isinstance(self.header_data, dict):
@@ -518,3 +520,49 @@ class MainWindow(QMainWindow):
         self.current_image_path = None
         self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
+
+def on_change_note_changed(self, text: str):
+    if not isinstance(self.header_data, dict):
+        self.header_data = {}
+    self.header_data["change_note"] = (text or "").rstrip()
+    self.mark_dirty()
+
+def on_basic_postit_changed(self, patch: dict):
+    if not isinstance(self.header_data, dict):
+        self.header_data = {}
+    if isinstance(patch, dict):
+        self.header_data.update(patch)
+        self.mark_dirty()
+        self._refresh_postits()
+
+def on_fabric_postit_changed(self, idx: int, patch: dict):
+    if not isinstance(patch, dict):
+        return
+    if idx < 0 or idx >= len(self.fabric_items):
+        return
+    self.fabric_items[idx].update(patch)
+    self.mark_dirty()
+    self._refresh_postits()
+
+def on_trim_postit_changed(self, idx: int, patch: dict):
+    if not isinstance(patch, dict):
+        return
+    if idx < 0 or idx >= len(self.trim_items):
+        return
+    self.trim_items[idx].update(patch)
+    self.mark_dirty()
+    self._refresh_postits()
+
+def on_fabric_postit_created(self, data: dict):
+    if not isinstance(data, dict):
+        return
+    self.fabric_items.append(data)
+    self.mark_dirty()
+    self._refresh_postits()
+
+def on_trim_postit_created(self, data: dict):
+    if not isinstance(data, dict):
+        return
+    self.trim_items.append(data)
+    self.mark_dirty()
+    self._refresh_postits()
