@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from ui.image_preview import ImagePreview
 from services.storage import save_work_order
 from ui.unit_dialog import UnitDialog
+from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt
 class _ChangeNoteDialog(QDialog):
@@ -200,7 +201,8 @@ class MainWindow(QMainWindow):
         self.image_preview.setMinimumHeight(520)
 
         self.change_note_postit = ChangeNotePostIt()
-        
+        self.change_note_postit.text_changed.connect(self.on_change_note_changed)
+        self.change_note_postit.setVisible(True)
 
         center_row = QWidget()
         center_layout = QHBoxLayout(center_row)
@@ -209,43 +211,19 @@ class MainWindow(QMainWindow):
 
         center_layout.addWidget(self.image_preview, 3)
         center_layout.addWidget(self.change_note_postit, 1)
-
-        # 이미지 아래: 기본/원단/부자재 버튼 (요청 반영)
-        bottom_btn_row = QHBoxLayout()
-        bottom_btn_row.setSpacing(10)
-
-        self.btn_add_basic = QPushButton("기본정보 추가/수정")
-        self.btn_add_basic.hide()
-        self.btn_add_fabric = QPushButton("원단정보 추가")
-        self.btn_add_trim = QPushButton("부자재정보 추가")
-
-        for b in (self.btn_add_basic, self.btn_add_fabric, self.btn_add_trim):
-            b.setFixedHeight(36)
-
-        # self.btn_add_basic.clicked.connect(self.on_add_basic_clicked)  # removed
-        self.btn_add_fabric.clicked.connect(self.on_add_fabric_clicked)
-        self.btn_add_trim.clicked.connect(self.on_add_trim_clicked)
-
-        bottom_btn_row# .addWidget(self.btn_add_basic)  # removed: inline edit only
-        bottom_btn_row.addWidget(self.btn_add_fabric)
-        bottom_btn_row.addWidget(self.btn_add_trim)
-        bottom_btn_row.addStretch(1)
-
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
-        self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
+        self.postit_bar.setMaximumHeight(220)
+        self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
+        self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
         self.postit_bar.trim_item_changed.connect(self.on_trim_postit_changed)
         self.postit_bar.fabric_item_added.connect(self.on_add_fabric_clicked)
         self.postit_bar.trim_item_added.connect(self.on_add_trim_clicked)
-        self.postit_bar.setMaximumHeight(220)
-        self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
-        self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
         page_layout.addLayout(top_bar)
-        page_layout.addWidget(center_row, 1)   # ✅ 이미지(좌) + 수정사항(우)
-        page_layout.addLayout(bottom_btn_row)
+        page_layout.addWidget(center_row, 1)
         page_layout.addWidget(self.postit_bar, 0)
 
         self._refresh_postits()
@@ -279,24 +257,18 @@ class MainWindow(QMainWindow):
         self._suppress_dirty = True
         try:
             self.header_data = {}
-            self.header_data["change_note"] = ""
             self.fabric_items = []
             self.trim_items = []
-            # 이미지도 완전히 초기화 (pixmap 포함)
-            if hasattr(self.image_preview, "clear_image"):
-                self.image_preview.clear_image()
-            else:
-                self.image_preview.clear()
-                self.image_preview.setText("이미지 업로드 영역")
+            self.image_preview.clear()
+            self.image_preview.setText("이미지 업로드 영역")
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
             self.is_dirty = False
             self._refresh_postits()
-            if hasattr(self, "change_note_postit"):
-                try:
-                    self.change_note_postit.set_text("")
-                except Exception:
-                    pass
+            try:
+                self.change_note_postit.set_text("")
+            except Exception:
+                pass
         finally:
             self._suppress_dirty = False
 
@@ -309,111 +281,30 @@ class MainWindow(QMainWindow):
         )
         if hasattr(self, "change_note_postit"):
             note = (self.header_data or {}).get("change_note", "")
-            # editor 내용 동기화(내부에서 signal block)
             self.change_note_postit.set_text(note)
 
     # ===================== Basic/Fabric/Trim add/delete ======================
     def on_add_basic_clicked(self):
-        # 기본정보는 포스트잇에서 인라인 편집
-        try:
-            self.postit_bar.basic.style_no.setReadOnly(False)
-            self.postit_bar.basic.style_no.setFocus()
-            self.postit_bar.basic.style_no.selectAll()
-        except Exception:
-            pass
-
-    def on_basic_postit_changed(self, patch: dict):
-        """기본정보 포스트잇 인라인 편집 결과를 header_data에 반영."""
-        if not isinstance(self.header_data, dict):
-            self.header_data = {}
-            self.header_data["change_note"] = ""
-        if not isinstance(patch, dict):
-            return
-        # merge
-        self.header_data.update(patch)
-        self.mark_dirty()
-        self._refresh_postits()
-
-
-    def on_trim_postit_created(self, data: dict):
-        if not isinstance(data, dict):
-            return
-        self.trim_items.append(data)
-        self.mark_dirty()
-        self._refresh_postits()
-
-
-
-    def on_fabric_postit_created(self, data: dict):
-        if not isinstance(data, dict):
-            return
-        self.fabric_items.append(data)
-        self.mark_dirty()
-        self._refresh_postits()
-
-
-    def on_trim_postit_changed(self, idx: int, patch: dict):
-        if not isinstance(patch, dict):
-            return
-        if idx < 0 or idx >= len(self.trim_items):
-            return
-        self.trim_items[idx].update(patch)
-        self.mark_dirty()
-        self._refresh_postits()
-
-
-
-    def on_fabric_postit_changed(self, idx: int, patch: dict):
-        if not isinstance(patch, dict):
-            return
-        if idx < 0:
-            return
-        # ensure list length
-        if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = []
-        while len(self.fabric_items) <= idx:
-            self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
-        self.fabric_items[idx].update(patch)
-        self.mark_dirty()
-        self._refresh_postits()
-
-    def on_add_fabric_clicked(self):
-        dlg = MaterialItemDialog(title="원단 정보 추가", parent=self)
+        dlg = BasicInfoDialog(initial=self.header_data, parent=self)
         if dlg.exec() != QDialog.Accepted:
             return
-        self.fabric_items.append(dlg.get_item())
+        self.header_data = dlg.get_data()
         self.mark_dirty()
         self._refresh_postits()
 
-    def on_add_trim_clicked(self):
-        dlg = MaterialItemDialog(title="부자재 정보 추가", parent=self)
-        if dlg.exec() != QDialog.Accepted:
-            return
-        self.trim_items.append(dlg.get_item())
-        self.mark_dirty()
-        self._refresh_postits()
+
 
     def on_fabric_deleted(self, idx: int):
         if 0 <= idx < len(self.fabric_items):
             del self.fabric_items[idx]
             self.mark_dirty()
             self._refresh_postits()
-            if hasattr(self, "change_note_postit"):
-                try:
-                    self.change_note_postit.set_text("")
-                except Exception:
-                    pass
 
     def on_trim_deleted(self, idx: int):
         if 0 <= idx < len(self.trim_items):
             del self.trim_items[idx]
             self.mark_dirty()
             self._refresh_postits()
-            if hasattr(self, "change_note_postit"):
-                try:
-                    self.change_note_postit.set_text("")
-                except Exception:
-                    pass
 
     # ===================== Back/Reset/Save ======================
     def on_reset_clicked(self):
@@ -486,6 +377,43 @@ class MainWindow(QMainWindow):
             msg += f"\n이미지: {image_path}"
         QMessageBox.information(self, "저장", msg)
 
+    
+
+    # ===================== Inline post-it handlers ======================
+    def on_basic_postit_changed(self, data: dict):
+        if not isinstance(data, dict):
+            return
+        if not isinstance(self.header_data, dict):
+            self.header_data = {}
+        self.header_data.update(data)
+        self.mark_dirty()
+
+    def on_change_note_changed(self, text: str):
+        if not isinstance(self.header_data, dict):
+            self.header_data = {}
+        self.header_data["change_note"] = (text or "").rstrip()
+        self.mark_dirty()
+
+    def on_fabric_postit_changed(self, idx: int, patch: dict):
+        if not isinstance(patch, dict) or idx < 0:
+            return
+        if not hasattr(self, "fabric_items") or self.fabric_items is None:
+            self.fabric_items = []
+        while len(self.fabric_items) <= idx:
+            self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+        self.fabric_items[idx].update(patch)
+        self.mark_dirty()
+
+    def on_trim_postit_changed(self, idx: int, patch: dict):
+        if not isinstance(patch, dict) or idx < 0:
+            return
+        if not hasattr(self, "trim_items") or self.trim_items is None:
+            self.trim_items = []
+        while len(self.trim_items) <= idx:
+            self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+        self.trim_items[idx].update(patch)
+        self.mark_dirty()
+
     # ===================== Image actions ======================
     def upload_image(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -499,57 +427,45 @@ class MainWindow(QMainWindow):
         try:
             self.image_preview.set_image(path)
             self.current_image_path = path
-            self.btn_delete_image.setEnabled(True)
+            if hasattr(self, "btn_delete_image"):
+                self.btn_delete_image.setEnabled(True)
             self.mark_dirty()
         except Exception as e:
             QMessageBox.warning(self, "오류", str(e))
 
     def delete_image(self):
-        if hasattr(self.image_preview, "clear_image"):
-            self.image_preview.clear_image()
-        else:
+        try:
             self.image_preview.clear()
             self.image_preview.setText("이미지 업로드 영역")
+        except Exception:
+            pass
         self.current_image_path = None
-        self.btn_delete_image.setEnabled(False)
+        if hasattr(self, "btn_delete_image"):
+            self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
 
-def on_basic_postit_changed(self, patch: dict):
-    if not isinstance(self.header_data, dict):
-        self.header_data = {}
-    if isinstance(patch, dict):
-        self.header_data.update(patch)
+    # ===================== Add fabric/trim cards ======================
+    def on_add_fabric_clicked(self):
+        if not hasattr(self, "fabric_items") or self.fabric_items is None:
+            self.fabric_items = []
+        self.fabric_items = list(self.fabric_items)
+        self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+        try:
+            self._refresh_postits()
+            self.postit_bar.fabric.set_active_card(len(self.fabric_items) - 1)
+        except Exception:
+            pass
         self.mark_dirty()
-        self._refresh_postits()
 
-def on_fabric_postit_changed(self, idx: int, patch: dict):
-    if not isinstance(patch, dict):
-        return
-    if idx < 0 or idx >= len(self.fabric_items):
-        return
-    self.fabric_items[idx].update(patch)
-    self.mark_dirty()
-    self._refresh_postits()
+    def on_add_trim_clicked(self):
+        if not hasattr(self, "trim_items") or self.trim_items is None:
+            self.trim_items = []
+        self.trim_items = list(self.trim_items)
+        self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+        try:
+            self._refresh_postits()
+            self.postit_bar.trim.set_active_card(len(self.trim_items) - 1)
+        except Exception:
+            pass
+        self.mark_dirty()
 
-def on_trim_postit_changed(self, idx: int, patch: dict):
-    if not isinstance(patch, dict):
-        return
-    if idx < 0 or idx >= len(self.trim_items):
-        return
-    self.trim_items[idx].update(patch)
-    self.mark_dirty()
-    self._refresh_postits()
-
-def on_fabric_postit_created(self, data: dict):
-    if not isinstance(data, dict):
-        return
-    self.fabric_items.append(data)
-    self.mark_dirty()
-    self._refresh_postits()
-
-def on_trim_postit_created(self, data: dict):
-    if not isinstance(data, dict):
-        return
-    self.trim_items.append(data)
-    self.mark_dirty()
-    self._refresh_postits()

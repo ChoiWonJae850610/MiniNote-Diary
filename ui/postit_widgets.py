@@ -588,14 +588,22 @@ class PostItCard(_PostItCardBase):
 
     def _apply_unit_button_text(self):
         self.unit_btn.setText(self._unit_label or "")
-
     def _open_unit_menu(self):
+        # Reload units each time (units.json may change while app is running)
+        try:
+            self._units = _load_units()
+        except Exception:
+            self._units = []
         menu = QMenu(self)
         a0 = menu.addAction("")
         a0.triggered.connect(lambda: self._set_unit("", ""))
-        for unit, label in self._units:
-            act = menu.addAction(label)
-            act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
+        if not self._units:
+            na = menu.addAction("(단위 없음)")
+            na.setEnabled(False)
+        else:
+            for unit, label in self._units:
+                act = menu.addAction(label)
+                act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
         menu.exec(self.unit_btn.mapToGlobal(QPoint(0, self.unit_btn.height() + 4)))
 
     def _set_unit(self, unit: str, label: str):
