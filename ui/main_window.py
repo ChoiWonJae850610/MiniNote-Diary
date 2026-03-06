@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Optional
 
 from PySide6.QtCore import Qt, QSize, QEvent
+from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
@@ -32,6 +33,29 @@ from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt
 from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
+
+
+def _make_image_outline_icon(size: int = 16) -> QIcon:
+    pix = QPixmap(size, size)
+    pix.fill(Qt.transparent)
+
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing, True)
+    pen = QPen(QColor(THEME.color_icon), 1.8)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+
+    inset = 2.0
+    frame_w = size - inset * 2
+    frame_h = size - inset * 2
+    p.drawRoundedRect(inset, inset, frame_w, frame_h, 2.2, 2.2)
+    p.drawEllipse(size * 0.63, size * 0.34, size * 0.14, size * 0.14)
+    p.drawLine(size * 0.25, size * 0.73, size * 0.45, size * 0.50)
+    p.drawLine(size * 0.45, size * 0.50, size * 0.57, size * 0.61)
+    p.drawLine(size * 0.57, size * 0.61, size * 0.77, size * 0.39)
+    p.end()
+    return QIcon(pix)
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
         super().__init__(parent)
@@ -209,7 +233,7 @@ class MainWindow(QMainWindow):
         self.btn_save = QPushButton("✓")
         self.btn_save.setObjectName("iconPrimary")
 
-        self.btn_upload = QPushButton("🖼")
+        self.btn_upload = QPushButton("")
         self.btn_upload.setObjectName("iconAction")
         self.btn_delete_image = QPushButton("")
         self.btn_delete_image.setObjectName("iconDanger")
@@ -237,6 +261,8 @@ class MainWindow(QMainWindow):
         self.btn_back.setToolTip("뒤로가기")
         self.btn_reset.setToolTip("초기화")
         self.btn_save.setToolTip("저장")
+        self.btn_upload.setIcon(_make_image_outline_icon(THEME.icon_size_md))
+        self.btn_upload.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
         self.btn_upload.setToolTip("사진 업로드")
 
         delete_icon = self.style().standardIcon(QStyle.SP_TrashIcon)
@@ -347,24 +373,14 @@ class MainWindow(QMainWindow):
         self.is_dirty = True
 
     def has_any_data(self) -> bool:
-        # 실제 입력된 데이터가 있는지 확인 (초기 기본 행은 무시)
         if self.is_dirty:
             return True
         if self.current_image_path:
             return True
-
         if self.header_data and any((v or "").strip() for v in self.header_data.values()):
             return True
-
-        def has_real_items(items):
-            for row in items:
-                if any((str(v).strip() for v in row.values())):
-                    return True
-            return False
-
-        if has_real_items(self.fabric_items) or has_real_items(self.trim_items):
+        if self.fabric_items or self.trim_items:
             return True
-
         return False
 
     def reset_work_order_form(self):
