@@ -307,15 +307,13 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(320, 175))
+        self.setMinimumSize(QSize(320, 198))
+        self.setMaximumHeight(198)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 14, 14, 14)
-        root.setSpacing(10)
-
-        title = QLabel("기본정보", self)
-        title.setStyleSheet("QLabel{font-weight:700;color:#5A4B40;background:transparent;font-size:13px;}")
-        root.addWidget(title)
+        root.setContentsMargins(14, 12, 14, 10)
+        root.setSpacing(8)
 
         # date row
         date_row = QHBoxLayout()
@@ -384,7 +382,8 @@ class BasicInfoPostIt(_PostItCardBase):
 
         mg = QGridLayout()
         mg.setHorizontalSpacing(8)
-        mg.setVerticalSpacing(6)
+        mg.setVerticalSpacing(5)
+        mg.setContentsMargins(0, 2, 0, 0)
 
         self.cost = _MoneyLineEdit(self)
         self.labor = _MoneyLineEdit(self)
@@ -489,7 +488,7 @@ class ChangeNotePostIt(_PostItCardBase):
         root.setContentsMargins(14, 14, 14, 18)
         root.setSpacing(10)
 
-        title = QLabel("수정사항", self)
+        title = QLabel("메모", self)
         title.setStyleSheet("QLabel{font-weight:700;color:#567159;background:transparent;font-size:13px;}")
         root.addWidget(title)
 
@@ -536,7 +535,7 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = False
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 14, 14, 16)
+        root.setContentsMargins(14, 16, 14, 12)
         root.setSpacing(8)
 
         self.btn_delete = QToolButton(self)
@@ -661,8 +660,8 @@ class PostItCard(_PostItCardBase):
         self.price.textChanged.connect(lambda _t: self._on_price_changed())
         self.total.textChanged.connect(lambda _t: (None if self._block_total else self._commit("총액", self.total.text())))
 
-        self.setMinimumSize(QSize(320, 200))
-        self.setMaximumHeight(200)
+        self.setMinimumSize(QSize(320, 198))
+        self.setMaximumHeight(198)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def _label_for_unit(self, unit: str) -> str:
@@ -1022,6 +1021,20 @@ class PostItBar(QWidget):
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
 
+        self.basic_wrap = QWidget(self)
+        basic_wrap_lay = QVBoxLayout(self.basic_wrap)
+        basic_wrap_lay.setContentsMargins(0, 0, 0, 0)
+        basic_wrap_lay.setSpacing(6)
+
+        self.basic_title = QLabel("기본정보", self.basic_wrap)
+        self.basic_title.setFixedHeight(24)
+        self.basic_title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.basic_title.setStyleSheet(
+            "QLabel{font-weight:700;color:#5A4B40;background:transparent;font-size:13px;padding-left:6px;}"
+        )
+        basic_wrap_lay.addWidget(self.basic_title)
+        basic_wrap_lay.addWidget(self.basic, 1)
+
         self.fabric = PostItStack("fabric", self)
         self.trim = PostItStack("trim", self)
 
@@ -1034,7 +1047,7 @@ class PostItBar(QWidget):
         self.fabric.item_added.connect(self.fabric_item_added.emit)
         self.trim.item_added.connect(self.trim_item_added.emit)
 
-        lay.addWidget(self.basic, 1)
+        lay.addWidget(self.basic_wrap, 1)
         lay.addWidget(self.fabric, 1)
         lay.addWidget(self.trim, 1)
 

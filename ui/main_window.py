@@ -27,7 +27,7 @@ from ui.postit_widgets import PostItBar, ChangeNotePostIt
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
         super().__init__(parent)
-        self.setWindowTitle("수정사항")
+        self.setWindowTitle("메모")
         self.setModal(True)
         self.setMinimumSize(520, 360)
 
@@ -37,7 +37,7 @@ class _ChangeNoteDialog(QDialog):
 
         self.edit = QTextEdit(self)
         self.edit.setPlainText(initial_text or "")
-        self.edit.setPlaceholderText("수정사항을 입력하세요.")
+        self.edit.setPlaceholderText("메모를 입력하세요.")
         layout.addWidget(self.edit, 1)
 
         btn_row = QHBoxLayout()
@@ -98,18 +98,18 @@ class MainWindow(QMainWindow):
     def _apply_diary_theme(self):
         self.setStyleSheet("""
             QMainWindow, QWidget {
-                background: #F7F2EA;
+                background: #FFFFFF;
                 color: #4B4036;
                 font-size: 12px;
             }
             QWidget#workOrderPage {
-                background: #F7F2EA;
+                background: #FFFFFF;
             }
             QLabel {
                 color: #4B4036;
             }
             QPushButton {
-                background: #FFF9F1;
+                background: #FFFCF8;
                 color: #5A4B40;
                 border: 1px solid #DCCBBB;
                 border-radius: 14px;
@@ -117,14 +117,14 @@ class MainWindow(QMainWindow):
                 font-weight: 600;
             }
             QPushButton:hover {
-                background: #FFF4E6;
+                background: #FFF7EF;
                 border-color: #CDB9A6;
             }
             QPushButton:pressed {
-                background: #F3E4D4;
+                background: #F6ECE1;
             }
             QPushButton:disabled {
-                background: #EEE7DE;
+                background: #F4F1EC;
                 color: #A39587;
                 border-color: #E1D7CC;
             }
@@ -133,23 +133,23 @@ class MainWindow(QMainWindow):
                 max-width: 44px;
                 border-radius: 16px;
                 padding: 0;
-                background: #FFF9F1;
+                background: #FFFCF8;
             }
             QPushButton#primaryAction {
-                background: #EEDCCB;
+                background: #F2E3D3;
                 border-color: #D4BBA5;
                 color: #5E4A3C;
             }
             QPushButton#primaryAction:hover {
-                background: #E7D1BD;
+                background: #ECD9C7;
             }
             QPushButton#dangerSoft {
-                background: #F5F0EB;
+                background: #F7F4F0;
                 color: #9B8674;
             }
             QWidget#imageShell {
-                background: #F3ECE4;
-                border: 1px solid #E2D6C9;
+                background: #FBFBFA;
+                border: 1px solid #E8E1D9;
                 border-radius: 22px;
             }
             QWidget#noteShell {
@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
         # 이미지 영역(왼쪽) + 수정사항 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
-        self.image_preview.setStyleSheet("background: transparent; border: none; color: #8F7F72;")
+        self.image_preview.setStyleSheet("background: transparent; border: none; color: #9D9084;")
 
         self.image_shell = QWidget()
         self.image_shell.setObjectName("imageShell")
@@ -289,7 +289,7 @@ class MainWindow(QMainWindow):
         center_layout.addWidget(self.change_note_postit, 1)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
-        self.postit_bar.setMaximumHeight(220)
+        self.postit_bar.setMaximumHeight(232)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
