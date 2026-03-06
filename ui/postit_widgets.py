@@ -211,6 +211,17 @@ class _MoneyLineEdit(QLineEdit):
     def digits(self) -> str:
         return _digits_only(self.text())
 
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            _move_focus(self)
+            event.accept()
+            return
+        if event.key() == Qt.Key_Backtab:
+            _move_focus(self, backward=True)
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
 
 class _ClickToEditLineEdit(QLineEdit):
     committed = Signal(str)
@@ -244,11 +255,18 @@ class _ClickToEditLineEdit(QLineEdit):
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
             self._commit_lock()
+            _move_focus(self)
+            event.accept()
+            return
+        if event.key() == Qt.Key_Backtab:
+            self._commit_lock()
+            _move_focus(self, backward=True)
             event.accept()
             return
         if event.key() == Qt.Key_Escape:
             self.setReadOnly(True)
             self._apply_style(editing=False)
+            self.clearFocus()
             event.accept()
             return
         super().keyPressEvent(event)
@@ -427,6 +445,12 @@ class BasicInfoPostIt(_PostItCardBase):
         for w in (self.cost, self.labor, self.loss, self.sale_price):
             w.textChanged.connect(lambda _t: self._emit_all())
 
+        self.setTabOrder(self.style_no, self.factory)
+        self.setTabOrder(self.factory, self.cost)
+        self.setTabOrder(self.cost, self.labor)
+        self.setTabOrder(self.labor, self.loss)
+        self.setTabOrder(self.loss, self.sale_price)
+
     def _adjust_style_width(self, text: str):
         fm = QFontMetrics(self.style_no.font())
         w = fm.horizontalAdvance(text or "") + 28
@@ -487,6 +511,7 @@ class BasicInfoPostIt(_PostItCardBase):
 # ---------- change note ----------
 class ChangeNotePostIt(_PostItCardBase):
     text_changed = Signal(str)
+    save_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__("change", parent=parent)
@@ -500,6 +525,7 @@ class ChangeNotePostIt(_PostItCardBase):
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())
+        self.editor.installEventFilter(self)
         root.addWidget(self.editor, 1)
         self.editor.textChanged.connect(self._on_text)
 
@@ -517,6 +543,14 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def text(self) -> str:
         return self.editor.toPlainText().rstrip()
+
+    def eventFilter(self, obj, event):
+        if obj is self.editor and event.type() == QEvent.KeyPress:
+            if event.key() in (Qt.Key_Return, Qt.Key_Enter) and event.modifiers() & Qt.ControlModifier:
+                self.save_requested.emit()
+                event.accept()
+                return True
+        return super().eventFilter(obj, event)
 
 
 # ---------- fabric/trim card ----------
@@ -643,6 +677,12 @@ class PostItCard(_PostItCardBase):
         self.qty.textChanged.connect(lambda _t: self._recalc_total())
         self.price.textChanged.connect(lambda _t: self._on_price_changed())
         self.total.textChanged.connect(lambda _t: (None if self._block_total else self._commit("총액", self.total.text())))
+
+        self.setTabOrder(self.vendor, self.item)
+        self.setTabOrder(self.item, self.qty)
+        self.setTabOrder(self.qty, self.unit_btn)
+        self.setTabOrder(self.unit_btn, self.price)
+        self.setTabOrder(self.price, self.total)
 
         self.setMinimumSize(QSize(320, 198))
         self.setMaximumHeight(198)

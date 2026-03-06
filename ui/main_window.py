@@ -2,8 +2,8 @@
 import os
 from typing import Dict, List, Optional
 
-from PySide6.QtCore import Qt, QSize, QEvent
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtCore import Qt, QSize, QEvent, QTimer
+from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
@@ -95,12 +95,16 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("미니노트 다이어리")
+        self._base_window_title = "미니노트 다이어리"
+        self.setWindowTitle(self._base_window_title)
         self.menuBar().hide()
 
         self.is_dirty = False
         self._suppress_dirty = False
         self.current_image_path: Optional[str] = None
+        self._feedback_timer = QTimer(self)
+        self._feedback_timer.setSingleShot(True)
+        self._feedback_timer.timeout.connect(self._clear_feedback)
 
         # 기본정보/원단/부자재는 모두 팝업 입력 → dict/list로 관리
         self.header_data: Dict[str, str] = {}
@@ -297,6 +301,15 @@ class MainWindow(QMainWindow):
         image_controls_layout.addWidget(self.btn_upload)
         image_controls_layout.addWidget(self.btn_delete_image)
 
+        self.feedback_label = QLabel("", self)
+        self.feedback_label.setVisible(False)
+        self.feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.feedback_label.setStyleSheet(
+            "QLabel{background:rgba(245,246,248,0.98);"
+            "border:1px solid rgba(98,107,119,0.16);"
+            "border-radius:9px;padding:4px 10px;color:#364152;font-weight:600;}"
+        )
+
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
@@ -311,6 +324,7 @@ class MainWindow(QMainWindow):
 
         self.change_note_postit = ChangeNotePostIt()
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
+        self.change_note_postit.save_requested.connect(self.on_save_clicked)
         self.change_note_postit.setVisible(True)
 
         self.change_note_title = SectionTitleBadge(
@@ -351,10 +365,34 @@ class MainWindow(QMainWindow):
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
         page_layout.addWidget(center_row, 1)
+        page_layout.addWidget(self.feedback_label, 0)
         page_layout.addWidget(self.postit_bar, 0)
 
+        self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), page)
+        self.shortcut_save.activated.connect(self.on_save_clicked)
+        self.shortcut_save_alt = QShortcut(QKeySequence("Ctrl+Return"), page)
+        self.shortcut_save_alt.activated.connect(self.on_save_clicked)
+
         self._refresh_postits()
+        self._update_window_title()
         return page
+
+
+    def _update_window_title(self):
+        suffix = " *" if self.is_dirty else ""
+        self.setWindowTitle(f"{self._base_window_title}{suffix}")
+
+    def _show_feedback(self, message: str, timeout_ms: int = 2200):
+        if not hasattr(self, "feedback_label"):
+            return
+        self.feedback_label.setText(message)
+        self.feedback_label.setVisible(True)
+        self._feedback_timer.start(timeout_ms)
+
+    def _clear_feedback(self):
+        if hasattr(self, "feedback_label"):
+            self.feedback_label.clear()
+            self.feedback_label.setVisible(False)
 
     # ===================== Navigation ======================
     def go_work_order(self):
@@ -367,7 +405,11 @@ class MainWindow(QMainWindow):
     def mark_dirty(self):
         if self._suppress_dirty:
             return
+        was_dirty = self.is_dirty
         self.is_dirty = True
+        self._update_window_title()
+        if not was_dirty:
+            self._show_feedback("수정됨")
 
     def has_any_data(self) -> bool:
         if self.is_dirty:
@@ -398,6 +440,8 @@ class MainWindow(QMainWindow):
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
             self.is_dirty = False
+            self._update_window_title()
+            self._clear_feedback()
             self._refresh_postits()
             try:
                 self.change_note_postit.set_text("")
@@ -509,6 +553,7 @@ class MainWindow(QMainWindow):
         msg = f"저장 완료\n\nJSON: {json_path}\nSHA256(평문): {sha256_plain}"
         if image_path:
             msg += f"\n이미지: {image_path}"
+        self._show_feedback("저장되었습니다.")
         QMessageBox.information(self, "저장", msg)
 
     
@@ -564,6 +609,7 @@ class MainWindow(QMainWindow):
             if hasattr(self, "btn_delete_image"):
                 self.btn_delete_image.setEnabled(True)
             self.mark_dirty()
+            self._show_feedback("이미지 첨부됨")
         except Exception as e:
             QMessageBox.warning(self, "오류", str(e))
 
@@ -577,6 +623,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "btn_delete_image"):
             self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
+        self._show_feedback("이미지 제거됨")
 
     # ===================== Add fabric/trim cards ======================
     def on_add_fabric_clicked(self):
