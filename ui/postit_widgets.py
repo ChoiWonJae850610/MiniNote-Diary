@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate
+from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate, QEvent
 from PySide6.QtGui import QColor, QFontMetrics, QIcon, QPainter, QPen, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QWidget,
@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 # ---------- constants ----------
 FIELD_H = 26
 CARD_RADIUS = 16
+MAX_POSTIT_CARDS = 9
 
 
 def _digits_only(s: str) -> str:
@@ -532,6 +533,7 @@ class PostItCard(_PostItCardBase):
         self._units = _load_units()
         self._unit_value = (self.data.get("단위") or "").strip()
         self._unit_label = self._label_for_unit(self._unit_value)
+        self._suppress_unit_menu_once = False
 
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 14, 14, 14)
@@ -620,6 +622,7 @@ class PostItCard(_PostItCardBase):
         self._unit_menu.aboutToShow.connect(self._sync_unit_menu_checks)
         self.unit_btn.setMenu(self._unit_menu)
         self.unit_btn.setPopupMode(QToolButton.InstantPopup)
+        self.unit_btn.installEventFilter(self)
 
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
@@ -651,6 +654,10 @@ class PostItCard(_PostItCardBase):
         self.qty.textChanged.connect(lambda _t: self._recalc_total())
         self.price.textChanged.connect(lambda _t: self._on_price_changed())
         self.total.textChanged.connect(lambda _t: (None if self._block_total else self._commit("총액", self.total.text())))
+
+        self.setMinimumSize(QSize(320, 175))
+        self.setMaximumHeight(175)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def _label_for_unit(self, unit: str) -> str:
         for u, lb in self._units:
@@ -690,6 +697,17 @@ class PostItCard(_PostItCardBase):
         if event.button() == Qt.LeftButton:
             self.selected.emit(self.index)
         super().mousePressEvent(event)
+
+    def eventFilter(self, obj, event):
+        if obj is self.unit_btn and self._suppress_unit_menu_once:
+            if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick):
+                self._suppress_unit_menu_once = False
+                event.accept()
+                return True
+        return super().eventFilter(obj, event)
+
+    def suppress_unit_menu_once(self):
+        self._suppress_unit_menu_once = True
 
     def resizeEvent(self, event):
         self.btn_delete.move(self.width() - 28, 10)
@@ -778,7 +796,10 @@ class PostItStack(QWidget):
         self.kind = kind
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
+        self.index_buttons: List[QToolButton] = []
+        self.plus_button: QToolButton | None = None
         self.active_index = 0
+        self._suppress_next_new_card_menu = False
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -861,6 +882,9 @@ class PostItStack(QWidget):
 
     def _append_card(self, it: Dict[str, str], idx: int):
         card = self._create_card(idx, it)
+        if self._suppress_next_new_card_menu:
+            card.suppress_unit_menu_once()
+            self._suppress_next_new_card_menu = False
         self.stack.addWidget(card)
         self.cards.append(card)
         self._apply_active()
@@ -894,6 +918,27 @@ class PostItStack(QWidget):
         self._rebuild_index_buttons()
         self._apply_active()
 
+    def _button_style(self, active: bool) -> str:
+        if active:
+            return (
+                "QToolButton{border:2px solid rgba(0,0,0,0.32);border-radius:8px;"
+                "background:rgba(255,255,255,0.78);font-weight:800;}"
+                "QToolButton:hover{background:rgba(255,255,255,0.90);}"
+            )
+        return (
+            "QToolButton{border:1px solid rgba(0,0,0,0.18);border-radius:8px;"
+            "background:rgba(255,255,255,0.55);font-weight:700;}"
+            "QToolButton:hover{background:rgba(255,255,255,0.78);}"
+        )
+
+    def _make_index_button(self, txt: str) -> QToolButton:
+        b = QToolButton(self)
+        b.setText(txt)
+        b.setCursor(Qt.PointingHandCursor)
+        b.setFixedSize(24, 24)
+        b.setFocusPolicy(Qt.NoFocus)
+        return b
+
     def _rebuild_index_buttons(self):
         while self.index_row.count():
             it = self.index_row.takeAt(0)
@@ -902,44 +947,39 @@ class PostItStack(QWidget):
                 w.setParent(None)
                 w.deleteLater()
 
-        def mk_btn(txt: str, active: bool) -> QToolButton:
-            b = QToolButton(self)
-            b.setText(txt)
-            b.setCursor(Qt.PointingHandCursor)
-            b.setFixedSize(24, 24)
-            b.setFocusPolicy(Qt.NoFocus)
-            if active:
-                b.setStyleSheet(
-                    "QToolButton{border:2px solid rgba(0,0,0,0.32);border-radius:8px;"
-                    "background:rgba(255,255,255,0.78);font-weight:800;}"
-                    "QToolButton:hover{background:rgba(255,255,255,0.90);}"
-                )
-            else:
-                b.setStyleSheet(
-                    "QToolButton{border:1px solid rgba(0,0,0,0.18);border-radius:8px;"
-                    "background:rgba(255,255,255,0.55);font-weight:700;}"
-                    "QToolButton:hover{background:rgba(255,255,255,0.78);}"
-                )
-            return b
-
+        self.index_buttons = []
         for i in range(len(self.items)):
-            b = mk_btn(str(i + 1), active=(i == self.active_index))
+            b = self._make_index_button(str(i + 1))
             b.clicked.connect(lambda _=False, idx=i: self.set_active_card(idx))
+            self.index_buttons.append(b)
             self.index_row.addWidget(b)
 
-        b_plus = QToolButton(self)
-        b_plus.setText("+")
-        b_plus.setCursor(Qt.PointingHandCursor)
-        b_plus.setFixedSize(24, 24)
-        b_plus.setFocusPolicy(Qt.NoFocus)
-        b_plus.setStyleSheet(
-            "QToolButton{border:1px solid rgba(0,0,0,0.18);border-radius:8px;"
-            "background:rgba(255,255,255,0.55);font-weight:700;}"
-            "QToolButton:hover{background:rgba(255,255,255,0.78);}"
-        )
-        b_plus.clicked.connect(self.item_added.emit)
-        self.index_row.addWidget(b_plus)
+        self.plus_button = self._make_index_button('+')
+        self.plus_button.clicked.connect(self._on_add_clicked)
+        self.index_row.addWidget(self.plus_button)
         self.index_row.addStretch(1)
+        self._update_index_button_states()
+
+    def _update_index_button_states(self):
+        for i, b in enumerate(self.index_buttons):
+            b.setStyleSheet(self._button_style(i == self.active_index))
+        if self.plus_button is not None:
+            enabled = len(self.items) < MAX_POSTIT_CARDS
+            self.plus_button.setEnabled(enabled)
+            if enabled:
+                self.plus_button.setStyleSheet(self._button_style(False))
+            else:
+                self.plus_button.setStyleSheet(
+                    "QToolButton{border:1px solid rgba(0,0,0,0.10);border-radius:8px;"
+                    "background:rgba(255,255,255,0.25);color:rgba(0,0,0,0.35);font-weight:700;}"
+                )
+
+    def _on_add_clicked(self):
+        if len(self.items) >= MAX_POSTIT_CARDS:
+            return
+        self._suppress_next_new_card_menu = True
+        self.item_added.emit()
+
 
     def set_active_card(self, idx: int):
         if idx < 0 or idx >= len(self.items):
@@ -947,11 +987,12 @@ class PostItStack(QWidget):
         self.active_index = idx
         self.stack.setCurrentIndex(idx)
         self._apply_active()
-        self._rebuild_index_buttons()
+        self._update_index_button_states()
 
     def _apply_active(self):
         for i, c in enumerate(self.cards):
             c.set_active(i == self.active_index)
+        self._update_index_button_states()
 
 
 class PostItBar(QWidget):

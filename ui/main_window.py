@@ -449,6 +449,8 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
             self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         self.fabric_items = list(self.fabric_items)
+        if len(self.fabric_items) >= 9:
+            return
         self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         try:
             self._refresh_postits()
@@ -461,6 +463,8 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "trim_items") or self.trim_items is None:
             self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         self.trim_items = list(self.trim_items)
+        if len(self.trim_items) >= 9:
+            return
         self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         try:
             self._refresh_postits()
