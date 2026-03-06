@@ -189,6 +189,20 @@ def title_label_style(font_px: int | None = None, color: str | None = None, padd
     )
 
 
+def title_badge_style(font_px: int | None = None, color: str | None = None,
+                      border_color: str | None = None, background: str | None = None,
+                      horizontal_padding: int = 12) -> str:
+    t = THEME
+    return (
+        f"QLabel{{font-weight:700;color:{color or t.color_text_soft};"
+        f"background:{background or t.color_window};"
+        f"border:1px solid {border_color or t.color_border_hover};"
+        f"border-radius:{t.control_radius + 4}px;"
+        f"font-size:{font_px or t.section_title_font_px}px;"
+        f"padding:2px {horizontal_padding}px;}}"
+    )
+
+
 def field_label_style() -> str:
     t = THEME
     return f"QLabel{{font-weight:600;color:{t.color_text_soft};background:transparent;}}"

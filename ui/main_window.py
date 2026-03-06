@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from PySide6.QtCore import Qt, QSize, QEvent
 from PySide6.QtWidgets import (
+    QSizePolicy,
     QApplication,
     QMainWindow,
     QWidget,
@@ -30,7 +31,7 @@ from ui.unit_dialog import UnitDialog
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt
-from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style
+from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
         super().__init__(parent)
@@ -286,6 +287,21 @@ class MainWindow(QMainWindow):
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.change_note_postit.setVisible(True)
 
+        self.change_note_wrap = QWidget()
+        change_note_wrap_layout = QVBoxLayout(self.change_note_wrap)
+        change_note_wrap_layout.setContentsMargins(0, 0, 0, 0)
+        change_note_wrap_layout.setSpacing(6)
+
+        self.change_note_title = QLabel("메모", self.change_note_wrap)
+        self.change_note_title.setFixedHeight(28)
+        self.change_note_title.setAlignment(Qt.AlignCenter)
+        self.change_note_title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.change_note_title.setStyleSheet(
+            title_badge_style(color=THEME.color_change_title, border_color=THEME.color_change_border)
+        )
+        change_note_wrap_layout.addWidget(self.change_note_title, 0, Qt.AlignLeft)
+        change_note_wrap_layout.addWidget(self.change_note_postit, 1)
+
         center_row = QWidget()
         center_layout = QGridLayout(center_row)
         center_layout.setContentsMargins(0, 0, 0, 0)
@@ -298,7 +314,7 @@ class MainWindow(QMainWindow):
 
         center_layout.addWidget(left_controls, 0, 0, 1, 1)
         center_layout.addWidget(image_controls, 0, 1, 1, 1)
-        center_layout.addWidget(self.change_note_postit, 0, 2, 2, 1)
+        center_layout.addWidget(self.change_note_wrap, 0, 2, 2, 1)
         center_layout.addWidget(self.image_shell, 1, 0, 1, 2)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()

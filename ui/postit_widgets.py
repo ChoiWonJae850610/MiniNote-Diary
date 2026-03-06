@@ -39,7 +39,7 @@ from ui.theme import (
     menu_style,
     plain_text_edit_style,
     read_only_line_edit_style,
-    title_label_style,
+    title_badge_style,
     tool_button_style,
     unit_button_style,
 )
@@ -466,12 +466,8 @@ class ChangeNotePostIt(_PostItCardBase):
         self._block = False
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 14, 14, 18)
-        root.setSpacing(10)
-
-        title = QLabel("메모", self)
-        title.setStyleSheet(title_label_style(color=THEME.color_change_title))
-        root.addWidget(title)
+        root.setContentsMargins(14, 12, 14, 14)
+        root.setSpacing(0)
 
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")
@@ -976,10 +972,11 @@ class PostItBar(QWidget):
         basic_wrap_lay.setSpacing(6)
 
         self.basic_title = QLabel("기본정보", self.basic_wrap)
-        self.basic_title.setFixedHeight(24)
-        self.basic_title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.basic_title.setStyleSheet(title_label_style(padding_left=6))
-        basic_wrap_lay.addWidget(self.basic_title)
+        self.basic_title.setFixedHeight(28)
+        self.basic_title.setAlignment(Qt.AlignCenter)
+        self.basic_title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.basic_title.setStyleSheet(title_badge_style())
+        basic_wrap_lay.addWidget(self.basic_title, 0, Qt.AlignLeft)
         basic_wrap_lay.addWidget(self.basic, 1)
 
         self.fabric = PostItStack("fabric", self)
