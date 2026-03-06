@@ -2,7 +2,7 @@
 import os
 from typing import Dict, List, Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -148,6 +148,29 @@ class MainWindow(QMainWindow):
                 background: #F7F4F0;
                 color: #9B8674;
             }
+            QPushButton#iconAction {
+                min-width: 38px;
+                max-width: 38px;
+                min-height: 38px;
+                max-height: 38px;
+                border-radius: 14px;
+                padding: 0;
+                background: #FFFCF8;
+            }
+            QPushButton#iconPrimary {
+                min-width: 38px;
+                max-width: 38px;
+                min-height: 38px;
+                max-height: 38px;
+                border-radius: 14px;
+                padding: 0;
+                background: #F2E3D3;
+                border-color: #D4BBA5;
+                color: #5E4A3C;
+            }
+            QPushButton#iconPrimary:hover {
+                background: #ECD9C7;
+            }
             QWidget#imageShell {
                 background: #FBFBFA;
                 border: 1px solid #E8E1D9;
@@ -228,29 +251,53 @@ class MainWindow(QMainWindow):
         page_layout.setContentsMargins(12, 12, 12, 12)
         page_layout.setSpacing(10)
 
-        # 상단 바: 왼쪽(뒤로/초기화/저장), 오른쪽(사진 업로드/삭제)
+        # 상단 바: 왼쪽(뒤로/초기화/저장)
         top_bar = QHBoxLayout()
         top_bar.setSpacing(8)
 
         self.btn_back = QPushButton("")
         self.btn_back.setObjectName("navButton")
-        self.btn_reset = QPushButton("초기화")
-        self.btn_save = QPushButton("저장")
-        self.btn_save.setObjectName("primaryAction")
+        self.btn_reset = QPushButton("")
+        self.btn_reset.setObjectName("iconAction")
+        self.btn_save = QPushButton("")
+        self.btn_save.setObjectName("iconPrimary")
 
-        self.btn_upload = QPushButton("사진 업로드")
-        self.btn_delete_image = QPushButton("사진 삭제")
+        self.btn_upload = QPushButton("")
+        self.btn_upload.setObjectName("iconAction")
+        self.btn_delete_image = QPushButton("")
         self.btn_delete_image.setObjectName("dangerSoft")
         self.btn_delete_image.setEnabled(False)
 
-        for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
-            b.setFixedHeight(32)
+        for b in (self.btn_back, self.btn_reset, self.btn_save):
+            b.setFixedHeight(38)
 
-        # 뒤로가기: 아이콘-only 버튼
+        for b in (self.btn_upload, self.btn_delete_image):
+            b.setFixedSize(38, 38)
+            b.setObjectName("iconAction" if b is self.btn_upload else "dangerSoft")
+            b.setStyleSheet((b.styleSheet() or "") + "QPushButton{padding:0;border-radius:14px;}" )
+
+        # 아이콘 버튼
         self.btn_back.setFixedWidth(44)
-        back_icon = self.style().standardIcon(QStyle.SP_ArrowBack)
-        self.btn_back.setIcon(back_icon)
+        self.btn_back.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
         self.btn_back.setToolTip("뒤로가기")
+
+        self.btn_reset.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
+        self.btn_reset.setToolTip("초기화")
+
+        self.btn_save.setIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton))
+        self.btn_save.setToolTip("저장")
+
+        self.btn_upload.setIcon(self.style().standardIcon(QStyle.SP_ArrowUp))
+        self.btn_upload.setToolTip("사진 업로드")
+
+        delete_icon = self.style().standardIcon(QStyle.SP_TrashIcon)
+        if delete_icon.isNull():
+            delete_icon = self.style().standardIcon(QStyle.SP_DialogDiscardButton)
+        self.btn_delete_image.setIcon(delete_icon)
+        self.btn_delete_image.setToolTip("사진 삭제")
+
+        for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
+            b.setIconSize(QSize(18, 18))
 
         self.btn_back.clicked.connect(self.on_back_clicked)
         self.btn_reset.clicked.connect(self.on_reset_clicked)
@@ -261,9 +308,7 @@ class MainWindow(QMainWindow):
         top_bar.addWidget(self.btn_back)
         top_bar.addWidget(self.btn_reset)
         top_bar.addWidget(self.btn_save)
-        top_bar.addStretch(1)  # ✅ 오른쪽 상단 구석 정렬
-        top_bar.addWidget(self.btn_upload)
-        top_bar.addWidget(self.btn_delete_image)
+        top_bar.addStretch(1)
 
         # 이미지 영역(왼쪽) + 수정사항 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
@@ -285,13 +330,25 @@ class MainWindow(QMainWindow):
         center_layout = QGridLayout(center_row)
         center_layout.setContentsMargins(0, 0, 0, 0)
         center_layout.setHorizontalSpacing(14)
-        center_layout.setVerticalSpacing(0)
+        center_layout.setVerticalSpacing(8)
         center_layout.setColumnStretch(0, 1)
         center_layout.setColumnStretch(1, 1)
         center_layout.setColumnStretch(2, 1)
 
-        center_layout.addWidget(self.image_shell, 0, 0, 1, 2)
-        center_layout.addWidget(self.change_note_postit, 0, 2)
+        image_button_row = QHBoxLayout()
+        image_button_row.setContentsMargins(0, 0, 0, 0)
+        image_button_row.setSpacing(8)
+        image_button_row.addStretch(1)
+        image_button_row.addWidget(self.btn_upload)
+        image_button_row.addWidget(self.btn_delete_image)
+
+        image_button_wrap = QWidget()
+        image_button_wrap.setStyleSheet("background: transparent; border: none;")
+        image_button_wrap.setLayout(image_button_row)
+
+        center_layout.addWidget(image_button_wrap, 0, 0, 1, 2)
+        center_layout.addWidget(self.image_shell, 1, 0, 1, 2)
+        center_layout.addWidget(self.change_note_postit, 0, 2, 2, 1)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
         self.postit_bar.setMaximumHeight(232)
