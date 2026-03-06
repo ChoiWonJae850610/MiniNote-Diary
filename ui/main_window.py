@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QGridLayout,
     QPushButton,
     QFileDialog,
     QMessageBox,
@@ -281,12 +282,16 @@ class MainWindow(QMainWindow):
         self.change_note_postit.setVisible(True)
 
         center_row = QWidget()
-        center_layout = QHBoxLayout(center_row)
+        center_layout = QGridLayout(center_row)
         center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setSpacing(14)
+        center_layout.setHorizontalSpacing(14)
+        center_layout.setVerticalSpacing(0)
+        center_layout.setColumnStretch(0, 1)
+        center_layout.setColumnStretch(1, 1)
+        center_layout.setColumnStretch(2, 1)
 
-        center_layout.addWidget(self.image_shell, 2)
-        center_layout.addWidget(self.change_note_postit, 1)
+        center_layout.addWidget(self.image_shell, 0, 0, 1, 2)
+        center_layout.addWidget(self.change_note_postit, 0, 2)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
         self.postit_bar.setMaximumHeight(232)

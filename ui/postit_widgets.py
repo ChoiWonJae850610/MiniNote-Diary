@@ -577,6 +577,7 @@ class PostItCard(_PostItCardBase):
 
         def mk_label2(t: str) -> QLabel:
             l = QLabel(t, self)
+            l.setFixedWidth(44)
             l.setFixedHeight(FIELD_H)
             l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             l.setStyleSheet("QLabel{font-weight:600;color:#5A4B40;background:transparent;}")
