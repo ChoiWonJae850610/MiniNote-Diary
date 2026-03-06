@@ -541,10 +541,10 @@ class PostItCard(_PostItCardBase):
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
         self.btn_delete.setCursor(Qt.PointingHandCursor)
-        self.btn_delete.setFixedSize(20, 20)
+        self.btn_delete.setFixedSize(14, 14)
         self.btn_delete.setStyleSheet(
-            "QToolButton{border:none;border-radius:10px;background:rgba(92,74,60,0.12);color:#6A5748;font-weight:bold;}"
-            "QToolButton:hover{background:rgba(92,74,60,0.20);}"
+            "QToolButton{border:none;border-radius:7px;background:rgba(92,74,60,0.10);color:#6A5748;font-weight:700;font-size:10px;padding:0px;}"
+            "QToolButton:hover{background:rgba(92,74,60,0.16);}"
         )
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
@@ -716,7 +716,7 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = True
 
     def resizeEvent(self, event):
-        self.btn_delete.move(self.width() - 28, 10)
+        self.btn_delete.move(self.width() - 18, 6)
         super().resizeEvent(event)
 
 
