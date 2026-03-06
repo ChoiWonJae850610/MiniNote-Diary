@@ -379,7 +379,14 @@ class MainWindow(QMainWindow):
             return True
         if self.header_data and any((v or "").strip() for v in self.header_data.values()):
             return True
-        if self.fabric_items or self.trim_items:
+
+        def _has_real_rows(items) -> bool:
+            for row in items:
+                if any(str(v).strip() for v in row.values()):
+                    return True
+            return False
+
+        if _has_real_rows(self.fabric_items) or _has_real_rows(self.trim_items):
             return True
         return False
 
