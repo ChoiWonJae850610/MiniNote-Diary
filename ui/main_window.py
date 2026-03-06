@@ -226,7 +226,7 @@ class MainWindow(QMainWindow):
     def _build_page_work_order(self) -> QWidget:
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(12, 12, 12, 12)
+        page_layout.setContentsMargins(12, 12, 12, 4)
         page_layout.setSpacing(10)
 
         # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
@@ -302,12 +302,17 @@ class MainWindow(QMainWindow):
         image_controls_layout.addWidget(self.btn_delete_image)
 
         self.feedback_label = QLabel("", self)
-        self.feedback_label.setVisible(False)
+        self.feedback_label.setVisible(True)
         self.feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.feedback_label.setMinimumHeight(20)
+        self.feedback_label.setMaximumHeight(20)
         self.feedback_label.setStyleSheet(
-            "QLabel{background:rgba(245,246,248,0.98);"
-            "border:1px solid rgba(98,107,119,0.16);"
-            "border-radius:9px;padding:4px 10px;color:#364152;font-weight:600;}"
+            "QLabel{background:transparent;"
+            "border:none;"
+            "padding:0 2px 0 2px;"
+            "color:rgba(54,65,82,0.78);"
+            "font-size:12px;"
+            "font-weight:500;}"
         )
 
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
@@ -365,8 +370,8 @@ class MainWindow(QMainWindow):
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
         page_layout.addWidget(center_row, 1)
-        page_layout.addWidget(self.feedback_label, 0)
         page_layout.addWidget(self.postit_bar, 0)
+        page_layout.addWidget(self.feedback_label, 0)
 
         self.shortcut_save = QShortcut(QKeySequence("Ctrl+S"), page)
         self.shortcut_save.activated.connect(self.on_save_clicked)
@@ -386,13 +391,11 @@ class MainWindow(QMainWindow):
         if not hasattr(self, "feedback_label"):
             return
         self.feedback_label.setText(message)
-        self.feedback_label.setVisible(True)
         self._feedback_timer.start(timeout_ms)
 
     def _clear_feedback(self):
         if hasattr(self, "feedback_label"):
             self.feedback_label.clear()
-            self.feedback_label.setVisible(False)
 
     # ===================== Navigation ======================
     def go_work_order(self):
@@ -402,14 +405,55 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
     # ===================== Dirty/Reset ======================
+    def _normalize_scalar(self, value) -> str:
+        if value is None:
+            return ""
+        return str(value).strip()
+
+    def _normalized_header_snapshot(self) -> Dict[str, str]:
+        if not isinstance(self.header_data, dict):
+            return {}
+        return {
+            key: normalized
+            for key, value in self.header_data.items()
+            if (normalized := self._normalize_scalar(value))
+        }
+
+    def _normalized_items_snapshot(self, items: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        normalized_rows: List[Dict[str, str]] = []
+        for row in items or []:
+            if not isinstance(row, dict):
+                continue
+            normalized_row = {
+                key: normalized
+                for key, value in row.items()
+                if (normalized := self._normalize_scalar(value))
+            }
+            if normalized_row:
+                normalized_rows.append(normalized_row)
+        return normalized_rows
+
+    def _snapshot_state(self) -> dict:
+        return {
+            "header": self._normalized_header_snapshot(),
+            "fabrics": self._normalized_items_snapshot(self.fabric_items),
+            "trims": self._normalized_items_snapshot(self.trim_items),
+            "image": self._normalize_scalar(self.current_image_path),
+        }
+
+    def _set_dirty_from_change(self, before_state: dict):
+        if self._suppress_dirty:
+            return
+        after_state = self._snapshot_state()
+        if before_state != after_state:
+            self.is_dirty = True
+            self._update_window_title()
+
     def mark_dirty(self):
         if self._suppress_dirty:
             return
-        was_dirty = self.is_dirty
         self.is_dirty = True
         self._update_window_title()
-        if not was_dirty:
-            self._show_feedback("수정됨")
 
     def has_any_data(self) -> bool:
         if self.is_dirty:
@@ -509,13 +553,30 @@ class MainWindow(QMainWindow):
             self.go_menu()
 
     def _has_basic_info(self) -> bool:
-        return bool(self.header_data) and any((v or "").strip() for v in self.header_data.values())
+        required_keys = (
+            "date",
+            "style_no",
+            "factory",
+            "cost",
+            "labor",
+            "loss",
+            "sale_price",
+        )
+        if not isinstance(self.header_data, dict):
+            return False
+        return all(str(self.header_data.get(key, "")).strip() for key in required_keys)
+
+    def _is_complete_item(self, row: dict) -> bool:
+        required_keys = ("거래처", "품목", "수량", "단위", "단가", "총액")
+        if not isinstance(row, dict):
+            return False
+        return all(str(row.get(key, "")).strip() for key in required_keys)
 
     def _has_fabric_info(self) -> bool:
-        return len(self.fabric_items) > 0
+        return any(self._is_complete_item(row) for row in (self.fabric_items or []))
 
     def _has_trim_info(self) -> bool:
-        return len(self.trim_items) > 0
+        return any(self._is_complete_item(row) for row in (self.trim_items or []))
 
     def collect_work_order_data(self) -> dict:
         return {
@@ -558,40 +619,59 @@ class MainWindow(QMainWindow):
 
     
 
+    def _set_header_patch(self, patch: dict) -> bool:
+        if not isinstance(patch, dict):
+            return False
+        if not isinstance(self.header_data, dict):
+            self.header_data = {}
+        changed = False
+        for key, value in patch.items():
+            new_value = value if isinstance(value, str) else ("" if value is None else str(value))
+            old_value = self.header_data.get(key, "")
+            if old_value != new_value:
+                self.header_data[key] = new_value
+                changed = True
+        return changed
+
+    def _apply_item_patch(self, items_attr: str, idx: int, patch: dict) -> bool:
+        if not isinstance(patch, dict) or idx < 0:
+            return False
+        items = getattr(self, items_attr, None)
+        if items is None:
+            items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            setattr(self, items_attr, items)
+        while len(items) <= idx:
+            items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+
+        changed = False
+        for key, value in patch.items():
+            new_value = value if isinstance(value, str) else ("" if value is None else str(value))
+            old_value = items[idx].get(key, "")
+            if old_value != new_value:
+                items[idx][key] = new_value
+                changed = True
+        return changed
+
     # ===================== Inline post-it handlers ======================
     def on_basic_postit_changed(self, data: dict):
-        if not isinstance(data, dict):
-            return
-        if not isinstance(self.header_data, dict):
-            self.header_data = {}
-        self.header_data.update(data)
-        self.mark_dirty()
+        before_state = self._snapshot_state()
+        if self._set_header_patch(data):
+            self._set_dirty_from_change(before_state)
 
     def on_change_note_changed(self, text: str):
-        if not isinstance(self.header_data, dict):
-            self.header_data = {}
-        self.header_data["change_note"] = (text or "").rstrip()
-        self.mark_dirty()
+        before_state = self._snapshot_state()
+        if self._set_header_patch({"change_note": (text or "").rstrip()}):
+            self._set_dirty_from_change(before_state)
 
     def on_fabric_postit_changed(self, idx: int, patch: dict):
-        if not isinstance(patch, dict) or idx < 0:
-            return
-        if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
-        while len(self.fabric_items) <= idx:
-            self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
-        self.fabric_items[idx].update(patch)
-        self.mark_dirty()
+        before_state = self._snapshot_state()
+        if self._apply_item_patch("fabric_items", idx, patch):
+            self._set_dirty_from_change(before_state)
 
     def on_trim_postit_changed(self, idx: int, patch: dict):
-        if not isinstance(patch, dict) or idx < 0:
-            return
-        if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
-        while len(self.trim_items) <= idx:
-            self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
-        self.trim_items[idx].update(patch)
-        self.mark_dirty()
+        before_state = self._snapshot_state()
+        if self._apply_item_patch("trim_items", idx, patch):
+            self._set_dirty_from_change(before_state)
 
     # ===================== Image actions ======================
     def upload_image(self):
