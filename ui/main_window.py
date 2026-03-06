@@ -2,8 +2,9 @@
 import os
 from typing import Dict, List, Optional
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QMainWindow,
     QWidget,
     QVBoxLayout,
@@ -16,6 +17,10 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QDialog,
     QTextEdit,
+    QLineEdit,
+    QPlainTextEdit,
+    QComboBox,
+    QAbstractSpinBox,
     QStyle,
 )
 
@@ -95,6 +100,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1080, 760)
         self.resize(1080, 760)
         self._apply_diary_theme()
+        self._install_global_focus_clear()
 
     def _apply_diary_theme(self):
         self.setStyleSheet("""
@@ -198,6 +204,31 @@ class MainWindow(QMainWindow):
             }
         """)
 
+    def _install_global_focus_clear(self):
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
+
+    def _is_text_input_widget(self, widget) -> bool:
+        return isinstance(widget, (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QAbstractSpinBox))
+
+    def _has_input_ancestor(self, widget) -> bool:
+        current = widget
+        while current is not None:
+            if self._is_text_input_widget(current):
+                return True
+            current = current.parentWidget()
+        return False
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.MouseButtonPress:
+            focused = QApplication.focusWidget()
+            target = obj if isinstance(obj, QWidget) else None
+            if focused is not None and target is not None and self._is_text_input_widget(focused):
+                if target is not focused and not focused.isAncestorOf(target) and not self._has_input_ancestor(target):
+                    focused.clearFocus()
+        return super().eventFilter(obj, event)
+
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
         page = QWidget()
@@ -287,6 +318,18 @@ class MainWindow(QMainWindow):
             f.setPointSize(9)
             f.setBold(True)
             b.setFont(f)
+
+        reset_font = self.btn_reset.font()
+        reset_font.setPointSize(22)
+        reset_font.setBold(True)
+        self.btn_reset.setFont(reset_font)
+        self.btn_reset.setStyleSheet("font-size: 22px; font-weight: 700; padding: 0; qproperty-iconSize: 0px;")
+
+        save_font = self.btn_save.font()
+        save_font.setPointSize(20)
+        save_font.setBold(True)
+        self.btn_save.setFont(save_font)
+        self.btn_save.setStyleSheet("font-size: 20px; font-weight: 700; padding: 0; qproperty-iconSize: 0px;")
 
         self.btn_back.setToolTip("뒤로가기")
         self.btn_reset.setToolTip("초기화")
