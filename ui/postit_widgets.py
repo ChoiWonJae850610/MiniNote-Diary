@@ -695,6 +695,35 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.move(self.width() - 28, 10)
         super().resizeEvent(event)
 
+
+    def update_data(self, data: Dict[str, str]):
+        """Refresh card UI from external data without emitting change signals."""
+        self.data = dict(data or {})
+        self._unit_value = (self.data.get("단위") or "").strip()
+        self._unit_label = self._label_for_unit(self._unit_value)
+
+        widgets = (
+            self.vendor,
+            self.item,
+            self.qty,
+            self.price,
+            self.total,
+        )
+        blocked = [(w, w.blockSignals(True)) for w in widgets]
+        try:
+            self.vendor.set_text_silent(self.data.get("거래처", ""))
+            self.item.set_text_silent(self.data.get("품목", ""))
+            self.qty.set_text_silent(_digits_only(self.data.get("수량", "")))
+            self.price.setText(self.data.get("단가", ""))
+            self.total.setText(self.data.get("총액", ""))
+            self._apply_unit_button_text()
+        finally:
+            for w, old in blocked:
+                w.blockSignals(old)
+
+        # Keep total field consistent when one side is blank.
+        self._recalc_total()
+
     def _commit(self, key: str, value: str):
         value = (value or "").strip()
         self.data[key] = value
