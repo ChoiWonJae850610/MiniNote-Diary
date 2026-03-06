@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QTextEdit,
     QStyle,
-    QSizePolicy,
 )
 
 from ui.image_preview import ImagePreview
@@ -92,59 +91,14 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
         # 이미지 중심 화면 느낌 (요청 반영)
-        self.setMinimumSize(980, 720)
-        self.resize(980, 720)
-
-
-        self._apply_diary_theme()
-
-    def _apply_diary_theme(self):
-        self.setStyleSheet(
-            """
-            QMainWindow, QWidget {
-                background: #F6F1EB;
-                color: #2F2923;
-                font-size: 12px;
-            }
-            QLabel {
-                background: transparent;
-            }
-            QPushButton {
-                background: rgba(255,255,255,0.86);
-                border: 1px solid rgba(92,77,61,0.14);
-                border-radius: 12px;
-                padding: 0 14px;
-                color: #3E342C;
-                font-weight: 700;
-            }
-            QPushButton:hover {
-                background: rgba(255,255,255,0.96);
-                border-color: rgba(92,77,61,0.22);
-            }
-            QPushButton:pressed {
-                background: #EFE6DA;
-            }
-            QPushButton:disabled {
-                background: rgba(255,255,255,0.45);
-                color: rgba(62,52,44,0.42);
-                border-color: rgba(92,77,61,0.08);
-            }
-            QMessageBox QPushButton, QDialog QPushButton {
-                min-width: 88px;
-            }
-            """
-        )
+        self.setMinimumSize(1080, 760)
+        self.resize(1080, 760)
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
         page = QWidget()
-        page.setObjectName("menuPage")
-        page.setStyleSheet(
-            "#menuPage{background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #F7F2EC, stop:1 #F1EBE2);"
-            "border:1px solid rgba(92,77,61,0.06);border-radius:18px;}"
-        )
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(22, 22, 22, 22)
+        layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(0)
 
         center_col = QVBoxLayout()
@@ -152,7 +106,7 @@ class MainWindow(QMainWindow):
 
         title = QLabel("메인 메뉴")
         title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size: 24px; font-weight: 800; color:#3E342C; letter-spacing:0.4px;")
+        title.setStyleSheet("font-size: 22px; font-weight: bold;")
 
         btn_create = QPushButton("작업지시서 생성")
         btn_receipt = QPushButton("부자재 영수증 업로드")
@@ -161,7 +115,6 @@ class MainWindow(QMainWindow):
         BTN_W, BTN_H = 360, 54
         for b in (btn_create, btn_receipt, btn_status):
             b.setFixedSize(BTN_W, BTN_H)
-            b.setStyleSheet("font-size:14px;")
 
         btn_create.clicked.connect(self.go_work_order)
 
@@ -205,17 +158,13 @@ class MainWindow(QMainWindow):
     # =================== Work Order Page ===================
     def _build_page_work_order(self) -> QWidget:
         page = QWidget()
-        page.setObjectName("workOrderPage")
-        page.setStyleSheet(
-            "#workOrderPage{background:#F6F1EB;}"
-        )
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(18, 16, 18, 18)
-        page_layout.setSpacing(16)
+        page_layout.setContentsMargins(12, 12, 12, 12)
+        page_layout.setSpacing(10)
 
         # 상단 바: 왼쪽(뒤로/초기화/저장), 오른쪽(사진 업로드/삭제)
         top_bar = QHBoxLayout()
-        top_bar.setSpacing(10)
+        top_bar.setSpacing(8)
 
         self.btn_back = QPushButton("")
         self.btn_reset = QPushButton("초기화")
@@ -226,14 +175,13 @@ class MainWindow(QMainWindow):
         self.btn_delete_image.setEnabled(False)
 
         for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
-            b.setFixedHeight(36)
+            b.setFixedHeight(32)
 
         # 뒤로가기: 아이콘-only 버튼
-        self.btn_back.setFixedSize(42, 36)
+        self.btn_back.setFixedWidth(44)
         back_icon = self.style().standardIcon(QStyle.SP_ArrowBack)
         self.btn_back.setIcon(back_icon)
         self.btn_back.setToolTip("뒤로가기")
-        self.btn_back.setStyleSheet("padding:0 0 0 0;")
 
         self.btn_back.clicked.connect(self.on_back_clicked)
         self.btn_reset.clicked.connect(self.on_reset_clicked)
@@ -251,38 +199,21 @@ class MainWindow(QMainWindow):
         # 이미지 영역(왼쪽) + 수정사항 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
-        self.image_preview.setStyleSheet(
-            "QWidget{background:transparent;color:#7A6C61;border:none;}"
-        )
-
-        self.image_card = QWidget()
-        self.image_card.setObjectName("imageCard")
-        self.image_card.setStyleSheet(
-            "#imageCard{background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #FBF6F1, stop:1 #F3EBE1);"
-            "border:1px solid rgba(92,77,61,0.10);border-radius:22px;}"
-        )
-        image_card_layout = QVBoxLayout(self.image_card)
-        image_card_layout.setContentsMargins(18, 18, 18, 18)
-        image_card_layout.setSpacing(10)
-        image_card_layout.addWidget(self.image_preview, 1)
 
         self.change_note_postit = ChangeNotePostIt()
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.change_note_postit.setVisible(True)
-        self.change_note_postit.setMinimumWidth(300)
-        self.change_note_postit.setMaximumWidth(360)
 
         center_row = QWidget()
         center_layout = QHBoxLayout(center_row)
         center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setSpacing(18)
+        center_layout.setSpacing(12)
 
-        center_layout.addWidget(self.image_card, 3)
+        center_layout.addWidget(self.image_preview, 3)
         center_layout.addWidget(self.change_note_postit, 1)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
-        self.postit_bar.setMaximumHeight(236)
-        self.postit_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.postit_bar.setMaximumHeight(220)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
