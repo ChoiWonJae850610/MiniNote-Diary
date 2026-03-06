@@ -5,19 +5,9 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import os
-import sys
-
-_DBG_POSTIT = os.environ.get('MININOTE_DEBUG_POSTIT', '1') == '1'
-
-def _dbg(msg: str):
-    if _DBG_POSTIT:
-        print(f"[POSTIT_DEBUG] {msg}", file=sys.stderr, flush=True)
-
-from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate, QElapsedTimer, QEvent, QTimer
-from PySide6.QtGui import QCursor, QColor, QFontMetrics, QIcon, QPainter, QPen, QPixmap, QRegularExpressionValidator
+from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate
+from PySide6.QtGui import QColor, QFontMetrics, QIcon, QPainter, QPen, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import (
-    QApplication,
     QWidget,
     QHBoxLayout,
     QVBoxLayout,
@@ -31,6 +21,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QGraphicsDropShadowEffect,
     QSizePolicy,
+    QStackedLayout,
 )
 
 
@@ -232,16 +223,6 @@ class _ClickToEditLineEdit(QLineEdit):
         super().focusOutEvent(event)
         self._commit_lock()
 
-    def eventFilter(self, obj, event):
-        try:
-            if obj is self.unit_btn and event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease):
-                if hasattr(self, '_unit_btn_guard') and self._unit_btn_guard.isValid() and self._unit_btn_guard.elapsed() < 350:
-                    _dbg(f"unit_btn event swallowed type={event.type()} idx={self.index} kind={self.kind} elapsed={self._unit_btn_guard.elapsed()}ms")
-                    return True
-        except Exception as e:
-            _dbg(f"eventFilter error: {e}")
-        return super().eventFilter(obj, event)
-
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
             self._commit_lock()
@@ -306,6 +287,7 @@ class _PostItCardBase(QWidget):
     def set_active(self, active: bool):
         self._active = active
         self.update()
+
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing, True)
@@ -617,7 +599,27 @@ class PostItCard(_PostItCardBase):
             "QToolButton:focus{background:rgba(255,255,255,0.70);border-color:rgba(0,0,0,0.22);}"
         )
         self._apply_unit_button_text()
-        self.unit_btn.clicked.connect(self._open_unit_menu)
+        self._unit_menu = QMenu(self.unit_btn)
+        self._unit_actions: Dict[str, object] = {}
+
+        self._act_clear_unit = self._unit_menu.addAction("(비움)")
+        self._act_clear_unit.setCheckable(True)
+        self._act_clear_unit.triggered.connect(lambda: self._set_unit("", ""))
+        if self._units:
+            self._unit_menu.addSeparator()
+        else:
+            hint = self._unit_menu.addAction("(단위 목록 없음)")
+            hint.setEnabled(False)
+
+        for unit, label in self._units:
+            act = self._unit_menu.addAction(label)
+            act.setCheckable(True)
+            act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
+            self._unit_actions[unit] = act
+
+        self._unit_menu.aboutToShow.connect(self._sync_unit_menu_checks)
+        self.unit_btn.setMenu(self._unit_menu)
+        self.unit_btn.setPopupMode(QToolButton.InstantPopup)
 
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
@@ -659,58 +661,23 @@ class PostItCard(_PostItCardBase):
     def _apply_unit_button_text(self):
         self.unit_btn.setText(self._unit_label or "")
 
-    def _open_unit_menu(self):
-        # Prevent menu flash caused by click-through right after stack rebuild/add.
-        p = self.parent()
-        while p is not None and not hasattr(p, "suppress_unit_menu_active"):
-            p = p.parent()
-        if p is not None and getattr(p, "suppress_unit_menu_active", lambda: False)():
-            _dbg(f"unit menu suppressed (stack rebuilding) idx={self.index} kind={self.kind}")
-            return
-
-        if not self.unit_btn.isVisible():
-            _dbg(f"unit menu suppressed (unit_btn not visible) idx={self.index} kind={self.kind}")
-            return
-
-        # Reuse a persistent menu to avoid GC-related flicker.
-        if getattr(self, "_unit_menu", None) is None:
-            self._unit_menu = QMenu(self.unit_btn)
-        menu: QMenu = self._unit_menu
-        menu.clear()
-
-        a0 = menu.addAction("")
-        a0.triggered.connect(lambda: self._set_unit("", ""))
-
-        if not self._units:
-            hint = menu.addAction("(단위 목록 없음)")
-            hint.setEnabled(False)
-        else:
-            for unit, label in self._units:
-                act = menu.addAction(label)
-                act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
-
-        pos = self.unit_btn.mapToGlobal(QPoint(0, self.unit_btn.height() + 4))
-        if pos == QPoint(0, 0):
-            pos = QCursor.pos()
-
-        _dbg(f"unit menu popup idx={self.index} pos={pos.x()},{pos.y()}")
-        menu.popup(pos)
+    def _sync_unit_menu_checks(self):
+        current = (self._unit_value or "").strip()
+        try:
+            self._act_clear_unit.setChecked(not bool(current))
+        except Exception:
+            pass
+        for unit, act in self._unit_actions.items():
+            try:
+                act.setChecked(bool(current) and unit == current)
+            except Exception:
+                pass
 
     def _set_unit(self, unit: str, label: str):
         self._unit_value = unit or ""
         self._unit_label = label or ""
         self._apply_unit_button_text()
         self._commit("단위", self._unit_value)
-
-    def eventFilter(self, obj, event):
-        try:
-            if obj is self.unit_btn and event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease):
-                if hasattr(self, '_unit_btn_guard') and self._unit_btn_guard.isValid() and self._unit_btn_guard.elapsed() < 350:
-                    _dbg(f"unit_btn event swallowed type={event.type()} idx={self.index} kind={self.kind} elapsed={self._unit_btn_guard.elapsed()}ms")
-                    return True
-        except Exception as e:
-            _dbg(f"eventFilter error: {e}")
-        return super().eventFilter(obj, event)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete and self.unit_btn.hasFocus():
@@ -783,95 +750,120 @@ class PostItStack(QWidget):
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
         self.active_index = 0
-        self._rebuild_timer = QElapsedTimer()
-        self._rebuild_timer.invalidate()
-        self._suppress_unit_menu_ms = 450
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(6)
 
         self.index_row = QHBoxLayout()
-        self.index_row.setContentsMargins(0, 0, 0, 0)
         self.index_row.setSpacing(6)
         root.addLayout(self.index_row)
 
-        from PySide6.QtWidgets import QStackedLayout
         self.stack = QStackedLayout()
-        self.stack.setContentsMargins(0, 0, 0, 0)
         root.addLayout(self.stack)
 
         self._rebuild_index_buttons()
-
-    def suppress_unit_menu_active(self) -> bool:
-        try:
-            return self._rebuild_timer.isValid() and self._rebuild_timer.elapsed() < int(self._suppress_unit_menu_ms)
-        except Exception:
-            return False
 
     def set_items(self, items: List[Dict[str, str]]):
         items = list(items or [])
         if not items:
             items = [{"거래처": "", "품목": "", "수량": "", "단위": "", "단가": "", "총액": ""}]
 
-        # If count didn't change, update existing cards in place to avoid flicker.
-        if len(items) == len(self.items) and self.cards and self.stack.count() == len(items):
+        if not self.cards:
             self.items = items
             if self.active_index >= len(self.items):
                 self.active_index = max(0, len(self.items) - 1)
-            self.setUpdatesEnabled(False)
-            try:
-                for idx, it in enumerate(self.items):
-                    self.cards[idx].set_data(idx, it)
-                    if len(self.items) == 1:
-                        self.cards[idx].btn_delete.setVisible(False)
-                    else:
-                        self.cards[idx].btn_delete.setVisible(True)
-                self.stack.setCurrentIndex(self.active_index)
-                self._rebuild_index_buttons()
-                self._apply_active()
-            except Exception as e:
-                _dbg(f"in-place update failed, fallback rebuild err={e}")
-                self._rebuild()
-            finally:
-                self.setUpdatesEnabled(True)
+            self._rebuild()
             return
 
-        # Count changed (add/delete) → rebuild
+        if len(items) == len(self.items) == len(self.cards):
+            self.items = items
+            for idx, (card, it) in enumerate(zip(self.cards, self.items)):
+                card.index = idx
+                card.update_data(it)
+            if self.active_index >= len(self.items):
+                self.active_index = max(0, len(self.items) - 1)
+            self.stack.setCurrentIndex(self.active_index)
+            self._apply_active()
+            self._rebuild_index_buttons()
+            return
+
+        if len(items) == len(self.items) + 1 and items[:-1] == self.items:
+            self.items = items
+            self._append_card(items[-1], len(items) - 1)
+            self._refresh_delete_buttons()
+            self._rebuild_index_buttons()
+            return
+
+        removed_idx = self._find_single_removed_index(self.items, items)
+        if removed_idx is not None:
+            self.items = items
+            self._remove_card_at(removed_idx)
+            for idx in range(removed_idx, len(self.cards)):
+                self.cards[idx].index = idx
+                self.cards[idx].update_data(self.items[idx])
+            if self.active_index >= len(self.items):
+                self.active_index = max(0, len(self.items) - 1)
+            self.stack.setCurrentIndex(self.active_index)
+            self._refresh_delete_buttons()
+            self._apply_active()
+            self._rebuild_index_buttons()
+            return
+
         self.items = items
         if self.active_index >= len(self.items):
             self.active_index = max(0, len(self.items) - 1)
         self._rebuild()
 
+    def _find_single_removed_index(self, old_items, new_items):
+        if len(old_items) != len(new_items) + 1:
+            return None
+        for idx in range(len(old_items)):
+            if old_items[:idx] + old_items[idx + 1:] == new_items:
+                return idx
+        return None
+
+    def _create_card(self, idx: int, it: Dict[str, str]) -> PostItCard:
+        card = PostItCard(self.kind, idx, it, parent=self)
+        card.delete_clicked.connect(self.item_deleted.emit)
+        card.selected.connect(self.set_active_card)
+        card.data_changed.connect(self.item_changed.emit)
+        return card
+
+    def _append_card(self, it: Dict[str, str], idx: int):
+        card = self._create_card(idx, it)
+        self.stack.addWidget(card)
+        self.cards.append(card)
+        self._apply_active()
+
+    def _remove_card_at(self, idx: int):
+        if idx < 0 or idx >= len(self.cards):
+            return
+        card = self.cards.pop(idx)
+        self.stack.removeWidget(card)
+        card.setParent(None)
+        card.deleteLater()
+
+    def _refresh_delete_buttons(self):
+        single = len(self.cards) == 1
+        for c in self.cards:
+            c.btn_delete.setVisible(not single)
+
     def _rebuild(self):
-        # Mark rebuild window so unit menus can be suppressed (prevents popup flash).
-        self._rebuild_timer.start()
-        _dbg(f"stack rebuild start kind={self.kind} items={len(self.items)}")
-        self.setUpdatesEnabled(False)
-        try:
-            while self.stack.count():
-                w = self.stack.widget(0)
-                self.stack.removeWidget(w)
-                w.setParent(None)
-                w.deleteLater()
-            self.cards = []
+        while self.stack.count():
+            w = self.stack.widget(0)
+            self.stack.removeWidget(w)
+            w.setParent(None)
+            w.deleteLater()
+        self.cards = []
 
-            for idx, it in enumerate(self.items):
-                card = PostItCard(self.kind, idx, it, parent=self)
-                card.delete_clicked.connect(self.item_deleted.emit)
-                card.selected.connect(self.set_active_card)
-                card.data_changed.connect(self.item_changed.emit)
-                if len(self.items) == 1:
-                    card.btn_delete.setVisible(False)
-                self.stack.addWidget(card)
-                self.cards.append(card)
+        for idx, it in enumerate(self.items):
+            self._append_card(it, idx)
 
-            self.stack.setCurrentIndex(self.active_index)
-            self._rebuild_index_buttons()
-            self._apply_active()
-        finally:
-            self.setUpdatesEnabled(True)
-        _dbg(f"stack rebuild end kind={self.kind} cards={len(self.cards)}")
+        self.stack.setCurrentIndex(self.active_index)
+        self._refresh_delete_buttons()
+        self._rebuild_index_buttons()
+        self._apply_active()
 
     def _rebuild_index_buttons(self):
         while self.index_row.count():
@@ -886,6 +878,7 @@ class PostItStack(QWidget):
             b.setText(txt)
             b.setCursor(Qt.PointingHandCursor)
             b.setFixedSize(24, 24)
+            b.setFocusPolicy(Qt.NoFocus)
             if active:
                 b.setStyleSheet(
                     "QToolButton{border:2px solid rgba(0,0,0,0.32);border-radius:8px;"
@@ -905,8 +898,17 @@ class PostItStack(QWidget):
             b.clicked.connect(lambda _=False, idx=i: self.set_active_card(idx))
             self.index_row.addWidget(b)
 
-        b_plus = mk_btn("+", active=False)
-        b_plus.clicked.connect(lambda: (_dbg(f"plus clicked kind={self.kind}"), QTimer.singleShot(0, self.item_added.emit)))
+        b_plus = QToolButton(self)
+        b_plus.setText("+")
+        b_plus.setCursor(Qt.PointingHandCursor)
+        b_plus.setFixedSize(24, 24)
+        b_plus.setFocusPolicy(Qt.NoFocus)
+        b_plus.setStyleSheet(
+            "QToolButton{border:1px solid rgba(0,0,0,0.18);border-radius:8px;"
+            "background:rgba(255,255,255,0.55);font-weight:700;}"
+            "QToolButton:hover{background:rgba(255,255,255,0.78);}"
+        )
+        b_plus.clicked.connect(self.item_added.emit)
         self.index_row.addWidget(b_plus)
         self.index_row.addStretch(1)
 
@@ -923,7 +925,6 @@ class PostItStack(QWidget):
             c.set_active(i == self.active_index)
 
 
-# ---------- bar ----------
 class PostItBar(QWidget):
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
