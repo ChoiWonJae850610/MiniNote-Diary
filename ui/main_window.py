@@ -283,9 +283,9 @@ class MainWindow(QMainWindow):
         center_row = QWidget()
         center_layout = QHBoxLayout(center_row)
         center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setSpacing(12)
+        center_layout.setSpacing(14)
 
-        center_layout.addWidget(self.image_shell, 3)
+        center_layout.addWidget(self.image_shell, 2)
         center_layout.addWidget(self.change_note_postit, 1)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()

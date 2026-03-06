@@ -319,7 +319,7 @@ class BasicInfoPostIt(_PostItCardBase):
         date_row = QHBoxLayout()
         date_row.setSpacing(6)
 
-        lbl_date = QLabel("날짜:", self)
+        lbl_date = QLabel("날  짜", self)
         lbl_date.setFixedWidth(44)
         lbl_date.setFixedHeight(FIELD_H)
         lbl_date.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -374,9 +374,9 @@ class BasicInfoPostIt(_PostItCardBase):
         self.style_no.textChanged.connect(self._adjust_style_width)
         self._adjust_style_width(self.style_no.text())
 
-        grid.addWidget(mk_label("제품명:"), 0, 0)
+        grid.addWidget(mk_label("제품명"), 0, 0)
         grid.addWidget(self.style_no, 0, 1)
-        grid.addWidget(mk_label("공장:"), 1, 0)
+        grid.addWidget(mk_label("공  장"), 1, 0)
         grid.addWidget(self.factory, 1, 1)
         root.addLayout(grid)
 
@@ -398,13 +398,13 @@ class BasicInfoPostIt(_PostItCardBase):
                 "border-radius:8px;padding:0 6px;}"
             )
 
-        mg.addWidget(mk_label("원가:"), 0, 0)
+        mg.addWidget(mk_label("원  가"), 0, 0)
         mg.addWidget(self.cost, 0, 1)
-        mg.addWidget(mk_label("공임:"), 0, 2)
+        mg.addWidget(mk_label("공  임"), 0, 2)
         mg.addWidget(self.labor, 0, 3)
-        mg.addWidget(mk_label("로스:"), 1, 0)
+        mg.addWidget(mk_label("로  스"), 1, 0)
         mg.addWidget(self.loss, 1, 1)
-        mg.addWidget(mk_label("판매가:"), 1, 2)
+        mg.addWidget(mk_label("판매가"), 1, 2)
         mg.addWidget(self.sale_price, 1, 3)
 
         root.addLayout(mg)
@@ -481,7 +481,7 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("change", parent=parent)
-        self.setMinimumSize(QSize(320, 220))
+        self.setMinimumSize(QSize(340, 220))
         self._block = False
 
         root = QVBoxLayout(self)
@@ -565,9 +565,9 @@ class PostItCard(_PostItCardBase):
         self.vendor.set_text_silent(self.data.get("거래처", ""))
         self.item.set_text_silent(self.data.get("품목", ""))
 
-        vi.addWidget(mk_label("거래처:"), 0, 0)
+        vi.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0, 0)
         vi.addWidget(self.vendor, 0, 1)
-        vi.addWidget(mk_label("품목:"), 1, 0)
+        vi.addWidget(mk_label("품  목"), 1, 0)
         vi.addWidget(self.item, 1, 1)
         root.addLayout(vi)
 
@@ -642,13 +642,13 @@ class PostItCard(_PostItCardBase):
         self.price.setText(self.data.get("단가", ""))
         self.total.setText(self.data.get("총액", ""))
 
-        grid.addWidget(mk_label2("수량"), 0, 0)
+        grid.addWidget(mk_label2("수  량"), 0, 0)
         grid.addWidget(self.qty, 0, 1)
         grid.addWidget(mk_label2("단위"), 0, 2)
         grid.addWidget(self.unit_btn, 0, 3)
-        grid.addWidget(mk_label2("단가"), 1, 0)
+        grid.addWidget(mk_label2("단  가"), 1, 0)
         grid.addWidget(self.price, 1, 1, 1, 3)
-        grid.addWidget(mk_label2("총액"), 2, 0)
+        grid.addWidget(mk_label2("총  액"), 2, 0)
         grid.addWidget(self.total, 2, 1, 1, 3)
         root.addLayout(grid)
 
