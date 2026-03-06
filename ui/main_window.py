@@ -31,7 +31,7 @@ from services.storage import save_work_order
 from ui.unit_dialog import UnitDialog
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
-from ui.postit_widgets import PostItBar, ChangeNotePostIt
+from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
 from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
 
 
@@ -313,20 +313,17 @@ class MainWindow(QMainWindow):
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.change_note_postit.setVisible(True)
 
-        self.change_note_wrap = QWidget()
-        change_note_wrap_layout = QVBoxLayout(self.change_note_wrap)
-        change_note_wrap_layout.setContentsMargins(0, 0, 0, 0)
-        change_note_wrap_layout.setSpacing(6)
-
-        self.change_note_title = QLabel("메모", self.change_note_wrap)
-        self.change_note_title.setFixedHeight(28)
-        self.change_note_title.setAlignment(Qt.AlignCenter)
-        self.change_note_title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.change_note_title.setStyleSheet(
-            title_badge_style(color=THEME.color_change_title, border_color=THEME.color_change_border)
+        self.change_note_title = SectionTitleBadge(
+            "메모",
+            self,
+            color=THEME.color_change_title,
+            border_color=THEME.color_change_border,
         )
-        change_note_wrap_layout.addWidget(self.change_note_title, 0, Qt.AlignLeft)
-        change_note_wrap_layout.addWidget(self.change_note_postit, 1)
+        self.change_note_wrap = SectionContainer(
+            self.change_note_title,
+            self.change_note_postit,
+            spacing=6,
+        )
 
         center_row = QWidget()
         center_layout = QGridLayout(center_row)

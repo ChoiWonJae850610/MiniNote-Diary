@@ -68,6 +68,34 @@ def _int_from_any(s: str) -> int:
     return int(d) if d else 0
 
 
+class SectionContainer(QWidget):
+    """Shared section layout: top label/index row + card body."""
+
+    def __init__(self, header_widget: QWidget, body_widget: QWidget, *,
+                 parent=None, spacing: int = 6, header_alignment=Qt.AlignLeft):
+        super().__init__(parent)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(spacing)
+        self.header_widget = header_widget
+        self.body_widget = body_widget
+
+        if header_alignment is None:
+            root.addWidget(header_widget)
+        else:
+            root.addWidget(header_widget, 0, header_alignment)
+        root.addWidget(body_widget, 1)
+
+
+class SectionTitleBadge(QLabel):
+    def __init__(self, text: str, parent=None, **style_kwargs):
+        super().__init__(text, parent)
+        self.setFixedHeight(28)
+        self.setAlignment(Qt.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setStyleSheet(title_badge_style(**style_kwargs))
+
+
 def _make_calendar_icon(size: int = 16) -> QIcon:
     pm = QPixmap(size, size)
     pm.fill(Qt.transparent)
@@ -762,19 +790,27 @@ class PostItStack(QWidget):
         self.active_index = 0
         self._suppress_next_new_card_menu = False
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(6)
-
         self.index_row_wrap = QWidget(self)
         self.index_row_wrap.setFixedHeight(28)
         self.index_row = QHBoxLayout(self.index_row_wrap)
         self.index_row.setContentsMargins(0, 0, 0, 0)
         self.index_row.setSpacing(6)
-        root.addWidget(self.index_row_wrap)
 
-        self.stack = QStackedLayout()
-        root.addLayout(self.stack)
+        self.stack_host = QWidget(self)
+        self.stack = QStackedLayout(self.stack_host)
+        self.stack.setContentsMargins(0, 0, 0, 0)
+
+        self.section = SectionContainer(
+            self.index_row_wrap,
+            self.stack_host,
+            parent=self,
+            spacing=6,
+            header_alignment=None,
+        )
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+        root.addWidget(self.section)
 
         self._rebuild_index_buttons()
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -971,18 +1007,8 @@ class PostItBar(QWidget):
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
 
-        self.basic_wrap = QWidget(self)
-        basic_wrap_lay = QVBoxLayout(self.basic_wrap)
-        basic_wrap_lay.setContentsMargins(0, 0, 0, 0)
-        basic_wrap_lay.setSpacing(6)
-
-        self.basic_title = QLabel("기본정보", self.basic_wrap)
-        self.basic_title.setFixedHeight(28)
-        self.basic_title.setAlignment(Qt.AlignCenter)
-        self.basic_title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.basic_title.setStyleSheet(title_badge_style())
-        basic_wrap_lay.addWidget(self.basic_title, 0, Qt.AlignLeft)
-        basic_wrap_lay.addWidget(self.basic, 1)
+        self.basic_title = SectionTitleBadge("기본정보", self, horizontal_padding=12)
+        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=6)
 
         self.fabric = PostItStack("fabric", self)
         self.trim = PostItStack("trim", self)
