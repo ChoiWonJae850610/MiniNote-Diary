@@ -287,7 +287,7 @@ class _PostItCardBase(QWidget):
         r = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
         pen = QPen(self._bd, 2)
         if self._active:
-            pen = QPen(QColor(self._bd).darker(140), 3)
+            pen = QPen(QColor(self._bd).darker(118), 2)
         p.setPen(pen)
         p.setBrush(self._bg)
         p.drawRoundedRect(r, CARD_RADIUS, CARD_RADIUS)
@@ -766,14 +766,19 @@ class PostItStack(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(6)
 
-        self.index_row = QHBoxLayout()
+        self.index_row_wrap = QWidget(self)
+        self.index_row_wrap.setFixedHeight(28)
+        self.index_row = QHBoxLayout(self.index_row_wrap)
+        self.index_row.setContentsMargins(0, 0, 0, 0)
         self.index_row.setSpacing(6)
-        root.addLayout(self.index_row)
+        root.addWidget(self.index_row_wrap)
 
         self.stack = QStackedLayout()
         root.addLayout(self.stack)
 
         self._rebuild_index_buttons()
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setFixedHeight(232)
 
     def set_items(self, items: List[Dict[str, str]]):
         items = list(items or [])
