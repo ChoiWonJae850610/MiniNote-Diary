@@ -660,20 +660,41 @@ class PostItCard(_PostItCardBase):
         self.unit_btn.setText(self._unit_label or "")
 
     def _open_unit_menu(self):
-        menu = QMenu(self.unit_btn)
+        # Prevent menu flash caused by click-through right after stack rebuild/add.
+        p = self.parent()
+        while p is not None and not hasattr(p, "suppress_unit_menu_active"):
+            p = p.parent()
+        if p is not None and getattr(p, "suppress_unit_menu_active", lambda: False)():
+            _dbg(f"unit menu suppressed (stack rebuilding) idx={self.index} kind={self.kind}")
+            return
+
+        if not self.unit_btn.isVisible():
+            _dbg(f"unit menu suppressed (unit_btn not visible) idx={self.index} kind={self.kind}")
+            return
+
+        # Reuse a persistent menu to avoid GC-related flicker.
+        if getattr(self, "_unit_menu", None) is None:
+            self._unit_menu = QMenu(self.unit_btn)
+        menu: QMenu = self._unit_menu
+        menu.clear()
+
         a0 = menu.addAction("")
         a0.triggered.connect(lambda: self._set_unit("", ""))
+
         if not self._units:
             hint = menu.addAction("(단위 목록 없음)")
             hint.setEnabled(False)
-        for unit, label in self._units:
-            act = menu.addAction(label)
-            act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
-            pos = self.unit_btn.mapToGlobal(QPoint(0, self.unit_btn.height() + 4))
+        else:
+            for unit, label in self._units:
+                act = menu.addAction(label)
+                act.triggered.connect(lambda _=False, u=unit, lb=label: self._set_unit(u, lb))
+
+        pos = self.unit_btn.mapToGlobal(QPoint(0, self.unit_btn.height() + 4))
         if pos == QPoint(0, 0):
             pos = QCursor.pos()
-        _dbg(f"unit menu exec index={self.index} pos={pos.x()},{pos.y()}")
-        menu.exec(pos)
+
+        _dbg(f"unit menu popup idx={self.index} pos={pos.x()},{pos.y()}")
+        menu.popup(pos)
 
     def _set_unit(self, unit: str, label: str):
         self._unit_value = unit or ""
@@ -792,33 +813,64 @@ class PostItStack(QWidget):
         items = list(items or [])
         if not items:
             items = [{"거래처": "", "품목": "", "수량": "", "단위": "", "단가": "", "총액": ""}]
+
+        # If count didn't change, update existing cards in place to avoid flicker.
+        if len(items) == len(self.items) and self.cards and self.stack.count() == len(items):
+            self.items = items
+            if self.active_index >= len(self.items):
+                self.active_index = max(0, len(self.items) - 1)
+            self.setUpdatesEnabled(False)
+            try:
+                for idx, it in enumerate(self.items):
+                    self.cards[idx].set_data(idx, it)
+                    if len(self.items) == 1:
+                        self.cards[idx].btn_delete.setVisible(False)
+                    else:
+                        self.cards[idx].btn_delete.setVisible(True)
+                self.stack.setCurrentIndex(self.active_index)
+                self._rebuild_index_buttons()
+                self._apply_active()
+            except Exception as e:
+                _dbg(f"in-place update failed, fallback rebuild err={e}")
+                self._rebuild()
+            finally:
+                self.setUpdatesEnabled(True)
+            return
+
+        # Count changed (add/delete) → rebuild
         self.items = items
         if self.active_index >= len(self.items):
             self.active_index = max(0, len(self.items) - 1)
         self._rebuild()
 
     def _rebuild(self):
+        # Mark rebuild window so unit menus can be suppressed (prevents popup flash).
+        self._rebuild_timer.start()
         _dbg(f"stack rebuild start kind={self.kind} items={len(self.items)}")
-        while self.stack.count():
-            w = self.stack.widget(0)
-            self.stack.removeWidget(w)
-            w.setParent(None)
-            w.deleteLater()
-        self.cards = []
+        self.setUpdatesEnabled(False)
+        try:
+            while self.stack.count():
+                w = self.stack.widget(0)
+                self.stack.removeWidget(w)
+                w.setParent(None)
+                w.deleteLater()
+            self.cards = []
 
-        for idx, it in enumerate(self.items):
-            card = PostItCard(self.kind, idx, it, parent=self)
-            card.delete_clicked.connect(self.item_deleted.emit)
-            card.selected.connect(self.set_active_card)
-            card.data_changed.connect(self.item_changed.emit)
-            if len(self.items) == 1:
-                card.btn_delete.setVisible(False)
-            self.stack.addWidget(card)
-            self.cards.append(card)
+            for idx, it in enumerate(self.items):
+                card = PostItCard(self.kind, idx, it, parent=self)
+                card.delete_clicked.connect(self.item_deleted.emit)
+                card.selected.connect(self.set_active_card)
+                card.data_changed.connect(self.item_changed.emit)
+                if len(self.items) == 1:
+                    card.btn_delete.setVisible(False)
+                self.stack.addWidget(card)
+                self.cards.append(card)
 
-        self.stack.setCurrentIndex(self.active_index)
-        self._rebuild_index_buttons()
-        self._apply_active()
+            self.stack.setCurrentIndex(self.active_index)
+            self._rebuild_index_buttons()
+            self._apply_active()
+        finally:
+            self.setUpdatesEnabled(True)
         _dbg(f"stack rebuild end kind={self.kind} cards={len(self.cards)}")
 
     def _rebuild_index_buttons(self):
@@ -854,8 +906,7 @@ class PostItStack(QWidget):
             self.index_row.addWidget(b)
 
         b_plus = mk_btn("+", active=False)
-        b_plus.clicked.connect(lambda: (_dbg(f"plus clicked kind={self.kind}"), QTimer.singleShot(0, self.item_added.emit))[1])
-        self.setUpdatesEnabled(True)
+        b_plus.clicked.connect(lambda: (_dbg(f"plus clicked kind={self.kind}"), QTimer.singleShot(0, self.item_added.emit)))
         self.index_row.addWidget(b_plus)
         self.index_row.addStretch(1)
 
