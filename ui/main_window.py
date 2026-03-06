@@ -93,10 +93,75 @@ class MainWindow(QMainWindow):
         # 이미지 중심 화면 느낌 (요청 반영)
         self.setMinimumSize(1080, 760)
         self.resize(1080, 760)
+        self._apply_diary_theme()
+
+    def _apply_diary_theme(self):
+        self.setStyleSheet("""
+            QMainWindow, QWidget {
+                background: #F7F2EA;
+                color: #4B4036;
+                font-size: 12px;
+            }
+            QWidget#workOrderPage {
+                background: #F7F2EA;
+            }
+            QLabel {
+                color: #4B4036;
+            }
+            QPushButton {
+                background: #FFF9F1;
+                color: #5A4B40;
+                border: 1px solid #DCCBBB;
+                border-radius: 14px;
+                padding: 0 14px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: #FFF4E6;
+                border-color: #CDB9A6;
+            }
+            QPushButton:pressed {
+                background: #F3E4D4;
+            }
+            QPushButton:disabled {
+                background: #EEE7DE;
+                color: #A39587;
+                border-color: #E1D7CC;
+            }
+            QPushButton#navButton {
+                min-width: 44px;
+                max-width: 44px;
+                border-radius: 16px;
+                padding: 0;
+                background: #FFF9F1;
+            }
+            QPushButton#primaryAction {
+                background: #EEDCCB;
+                border-color: #D4BBA5;
+                color: #5E4A3C;
+            }
+            QPushButton#primaryAction:hover {
+                background: #E7D1BD;
+            }
+            QPushButton#dangerSoft {
+                background: #F5F0EB;
+                color: #9B8674;
+            }
+            QWidget#imageShell {
+                background: #F3ECE4;
+                border: 1px solid #E2D6C9;
+                border-radius: 22px;
+            }
+            QWidget#noteShell {
+                background: transparent;
+                border: none;
+            }
+        """)
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
         page = QWidget()
+        page.setObjectName("workOrderPage")
         layout = QVBoxLayout(page)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(0)
@@ -167,11 +232,14 @@ class MainWindow(QMainWindow):
         top_bar.setSpacing(8)
 
         self.btn_back = QPushButton("")
+        self.btn_back.setObjectName("navButton")
         self.btn_reset = QPushButton("초기화")
         self.btn_save = QPushButton("저장")
+        self.btn_save.setObjectName("primaryAction")
 
         self.btn_upload = QPushButton("사진 업로드")
         self.btn_delete_image = QPushButton("사진 삭제")
+        self.btn_delete_image.setObjectName("dangerSoft")
         self.btn_delete_image.setEnabled(False)
 
         for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
@@ -199,6 +267,14 @@ class MainWindow(QMainWindow):
         # 이미지 영역(왼쪽) + 수정사항 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
+        self.image_preview.setStyleSheet("background: transparent; border: none; color: #8F7F72;")
+
+        self.image_shell = QWidget()
+        self.image_shell.setObjectName("imageShell")
+        image_shell_layout = QVBoxLayout(self.image_shell)
+        image_shell_layout.setContentsMargins(18, 18, 18, 18)
+        image_shell_layout.setSpacing(0)
+        image_shell_layout.addWidget(self.image_preview)
 
         self.change_note_postit = ChangeNotePostIt()
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
@@ -209,7 +285,7 @@ class MainWindow(QMainWindow):
         center_layout.setContentsMargins(0, 0, 0, 0)
         center_layout.setSpacing(12)
 
-        center_layout.addWidget(self.image_preview, 3)
+        center_layout.addWidget(self.image_shell, 3)
         center_layout.addWidget(self.change_note_postit, 1)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
