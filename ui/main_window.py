@@ -130,13 +130,13 @@ class MainWindow(QMainWindow):
                 border-color: #E1D7CC;
             }
             QPushButton#navButton {
-                min-width: 40px;
-                max-width: 40px;
-                min-height: 40px;
-                max-height: 40px;
-                border-radius: 14px;
+                min-width: 24px;
+                max-width: 24px;
+                min-height: 24px;
+                max-height: 24px;
+                border-radius: 9px;
                 padding: 0;
-                background: #FFFCF8;
+                background: rgba(255,250,244,0.72);
             }
             QPushButton#primaryAction {
                 background: #F2E3D3;
@@ -151,33 +151,33 @@ class MainWindow(QMainWindow):
                 color: #9B8674;
             }
             QPushButton#iconAction {
-                min-width: 40px;
-                max-width: 40px;
-                min-height: 40px;
-                max-height: 40px;
-                border-radius: 14px;
+                min-width: 24px;
+                max-width: 24px;
+                min-height: 24px;
+                max-height: 24px;
+                border-radius: 9px;
                 padding: 0;
-                background: #FFFCF8;
+                background: rgba(255,250,244,0.72);
             }
             QPushButton#iconPrimary {
-                min-width: 40px;
-                max-width: 40px;
-                min-height: 40px;
-                max-height: 40px;
-                border-radius: 14px;
+                min-width: 24px;
+                max-width: 24px;
+                min-height: 24px;
+                max-height: 24px;
+                border-radius: 9px;
                 padding: 0;
-                background: #F2E3D3;
+                background: rgba(242,227,211,0.92);
                 border-color: #D4BBA5;
                 color: #5E4A3C;
             }
             QPushButton#iconDanger {
-                min-width: 40px;
-                max-width: 40px;
-                min-height: 40px;
-                max-height: 40px;
-                border-radius: 14px;
+                min-width: 24px;
+                max-width: 24px;
+                min-height: 24px;
+                max-height: 24px;
+                border-radius: 9px;
                 padding: 0;
-                background: #F7F4F0;
+                background: rgba(247,244,240,0.9);
                 color: #9B8674;
                 border: 1px solid #E1D7CC;
             }
@@ -267,28 +267,24 @@ class MainWindow(QMainWindow):
         page_layout.setContentsMargins(12, 12, 12, 12)
         page_layout.setSpacing(10)
 
-        # 상단 바: 왼쪽(뒤로/초기화/저장) + 오른쪽(사진 업로드/삭제)
-        top_bar = QHBoxLayout()
-        top_bar.setContentsMargins(0, 0, 0, 0)
-        top_bar.setSpacing(8)
-
-        self.btn_back = QPushButton("←")
+        # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
+        self.btn_back = QPushButton("◀")
         self.btn_back.setObjectName("navButton")
-        self.btn_reset = QPushButton("↺")
+        self.btn_reset = QPushButton("↻")
         self.btn_reset.setObjectName("iconAction")
-        self.btn_save = QPushButton("⤓")
+        self.btn_save = QPushButton("✓")
         self.btn_save.setObjectName("iconPrimary")
 
-        self.btn_upload = QPushButton("🖼+")
+        self.btn_upload = QPushButton("🖼")
         self.btn_upload.setObjectName("iconAction")
         self.btn_delete_image = QPushButton("")
         self.btn_delete_image.setObjectName("iconDanger")
         self.btn_delete_image.setEnabled(False)
 
         for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
-            b.setFixedSize(40, 40)
+            b.setFixedSize(24, 24)
             f = b.font()
-            f.setPointSize(11)
+            f.setPointSize(9)
             f.setBold(True)
             b.setFont(f)
 
@@ -303,8 +299,7 @@ class MainWindow(QMainWindow):
         self.btn_delete_image.setIcon(delete_icon)
         self.btn_delete_image.setToolTip("사진 삭제")
 
-        for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_delete_image):
-            b.setIconSize(QSize(18, 18))
+        self.btn_delete_image.setIconSize(QSize(12, 12))
         self.btn_delete_image.setText("")
 
         self.btn_back.clicked.connect(self.on_back_clicked)
@@ -313,14 +308,24 @@ class MainWindow(QMainWindow):
         self.btn_upload.clicked.connect(self.upload_image)
         self.btn_delete_image.clicked.connect(self.delete_image)
 
-        top_bar.addWidget(self.btn_back)
-        top_bar.addWidget(self.btn_reset)
-        top_bar.addWidget(self.btn_save)
-        top_bar.addStretch(1)
-        top_bar.addWidget(self.btn_upload)
-        top_bar.addWidget(self.btn_delete_image)
+        left_controls = QWidget()
+        left_controls_layout = QHBoxLayout(left_controls)
+        left_controls_layout.setContentsMargins(0, 0, 0, 0)
+        left_controls_layout.setSpacing(6)
+        left_controls_layout.addWidget(self.btn_back)
+        left_controls_layout.addWidget(self.btn_reset)
+        left_controls_layout.addWidget(self.btn_save)
+        left_controls_layout.addStretch(1)
 
-        # 이미지 영역(왼쪽) + 수정사항 포스트잇(오른쪽)
+        image_controls = QWidget()
+        image_controls_layout = QHBoxLayout(image_controls)
+        image_controls_layout.setContentsMargins(0, 0, 0, 0)
+        image_controls_layout.setSpacing(6)
+        image_controls_layout.addStretch(1)
+        image_controls_layout.addWidget(self.btn_upload)
+        image_controls_layout.addWidget(self.btn_delete_image)
+
+        # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
         self.image_preview.setStyleSheet("background: transparent; border: none; color: #9D9084;")
@@ -344,9 +349,12 @@ class MainWindow(QMainWindow):
         center_layout.setColumnStretch(0, 1)
         center_layout.setColumnStretch(1, 1)
         center_layout.setColumnStretch(2, 1)
+        center_layout.setRowStretch(1, 1)
 
-        center_layout.addWidget(self.image_shell, 0, 0, 1, 2)
-        center_layout.addWidget(self.change_note_postit, 0, 2, 1, 1)
+        center_layout.addWidget(left_controls, 0, 0, 1, 1)
+        center_layout.addWidget(image_controls, 0, 1, 1, 1)
+        center_layout.addWidget(self.change_note_postit, 0, 2, 2, 1)
+        center_layout.addWidget(self.image_shell, 1, 0, 1, 2)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
         self.postit_bar.setMaximumHeight(232)
@@ -358,7 +366,6 @@ class MainWindow(QMainWindow):
         self.postit_bar.trim_item_added.connect(self.on_add_trim_clicked)
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
-        page_layout.addLayout(top_bar)
         page_layout.addWidget(center_row, 1)
         page_layout.addWidget(self.postit_bar, 0)
 
