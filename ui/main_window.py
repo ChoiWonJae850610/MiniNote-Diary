@@ -30,6 +30,7 @@ from ui.unit_dialog import UnitDialog
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt
+from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
         super().__init__(parent)
@@ -103,106 +104,7 @@ class MainWindow(QMainWindow):
         self._install_global_focus_clear()
 
     def _apply_diary_theme(self):
-        self.setStyleSheet("""
-            QMainWindow, QWidget {
-                background: #FFFFFF;
-                color: #4B4036;
-                font-size: 12px;
-            }
-            QWidget#workOrderPage {
-                background: #FFFFFF;
-            }
-            QLabel {
-                color: #4B4036;
-            }
-            QPushButton {
-                background: #FFFCF8;
-                color: #5A4B40;
-                border: 1px solid #DCCBBB;
-                border-radius: 14px;
-                padding: 0 14px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: #FFF7EF;
-                border-color: #CDB9A6;
-            }
-            QPushButton:pressed {
-                background: #F6ECE1;
-            }
-            QPushButton:disabled {
-                background: #F4F1EC;
-                color: #A39587;
-                border-color: #E1D7CC;
-            }
-            QPushButton#navButton {
-                min-width: 24px;
-                max-width: 24px;
-                min-height: 24px;
-                max-height: 24px;
-                border-radius: 9px;
-                padding: 0;
-                background: rgba(255,250,244,0.72);
-            }
-            QPushButton#primaryAction {
-                background: #F2E3D3;
-                border-color: #D4BBA5;
-                color: #5E4A3C;
-            }
-            QPushButton#primaryAction:hover {
-                background: #ECD9C7;
-            }
-            QPushButton#dangerSoft {
-                background: #F7F4F0;
-                color: #9B8674;
-            }
-            QPushButton#iconAction {
-                min-width: 24px;
-                max-width: 24px;
-                min-height: 24px;
-                max-height: 24px;
-                border-radius: 9px;
-                padding: 0;
-                background: rgba(255,250,244,0.72);
-            }
-            QPushButton#iconPrimary {
-                min-width: 24px;
-                max-width: 24px;
-                min-height: 24px;
-                max-height: 24px;
-                border-radius: 9px;
-                padding: 0;
-                background: rgba(242,227,211,0.92);
-                border-color: #D4BBA5;
-                color: #5E4A3C;
-            }
-            QPushButton#iconDanger {
-                min-width: 24px;
-                max-width: 24px;
-                min-height: 24px;
-                max-height: 24px;
-                border-radius: 9px;
-                padding: 0;
-                background: rgba(247,244,240,0.9);
-                color: #9B8674;
-                border: 1px solid #E1D7CC;
-            }
-            QPushButton#iconDanger:hover {
-                background: #F1ECE6;
-            }
-            QPushButton#iconPrimary:hover {
-                background: #ECD9C7;
-            }
-            QWidget#imageShell {
-                background: #FBFBFA;
-                border: 1px solid #E8E1D9;
-                border-radius: 22px;
-            }
-            QWidget#noteShell {
-                background: transparent;
-                border: none;
-            }
-        """)
+        self.setStyleSheet(build_app_stylesheet())
 
     def _install_global_focus_clear(self):
         app = QApplication.instance()
@@ -242,7 +144,7 @@ class MainWindow(QMainWindow):
 
         title = QLabel("메인 메뉴")
         title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size: 22px; font-weight: bold;")
+        title.setStyleSheet(f"font-size: {THEME.menu_title_font_px}px; font-weight: bold;")
 
         btn_create = QPushButton("작업지시서 생성")
         btn_receipt = QPushButton("부자재 영수증 업로드")
@@ -313,23 +215,23 @@ class MainWindow(QMainWindow):
         self.btn_delete_image.setEnabled(False)
 
         for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
-            b.setFixedSize(24, 24)
+            b.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
             f = b.font()
-            f.setPointSize(9)
+            f.setPointSize(THEME.icon_button_font_px)
             f.setBold(True)
             b.setFont(f)
 
         reset_font = self.btn_reset.font()
-        reset_font.setPointSize(22)
+        reset_font.setPointSize(THEME.reset_button_font_px)
         reset_font.setBold(True)
         self.btn_reset.setFont(reset_font)
-        self.btn_reset.setStyleSheet("font-size: 22px; font-weight: 700; padding: 0; qproperty-iconSize: 0px;")
+        self.btn_reset.setStyleSheet(icon_button_override(THEME.reset_button_font_px))
 
         save_font = self.btn_save.font()
-        save_font.setPointSize(20)
+        save_font.setPointSize(THEME.save_button_font_px)
         save_font.setBold(True)
         self.btn_save.setFont(save_font)
-        self.btn_save.setStyleSheet("font-size: 20px; font-weight: 700; padding: 0; qproperty-iconSize: 0px;")
+        self.btn_save.setStyleSheet(icon_button_override(THEME.save_button_font_px))
 
         self.btn_back.setToolTip("뒤로가기")
         self.btn_reset.setToolTip("초기화")
@@ -342,7 +244,7 @@ class MainWindow(QMainWindow):
         self.btn_delete_image.setIcon(delete_icon)
         self.btn_delete_image.setToolTip("사진 삭제")
 
-        self.btn_delete_image.setIconSize(QSize(12, 12))
+        self.btn_delete_image.setIconSize(QSize(THEME.icon_size_sm, THEME.icon_size_sm))
         self.btn_delete_image.setText("")
 
         self.btn_back.clicked.connect(self.on_back_clicked)
@@ -371,7 +273,7 @@ class MainWindow(QMainWindow):
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
-        self.image_preview.setStyleSheet("background: transparent; border: none; color: #9D9084;")
+        self.image_preview.setStyleSheet(image_preview_style())
 
         self.image_shell = QWidget()
         self.image_shell.setObjectName("imageShell")

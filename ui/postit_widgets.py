@@ -25,9 +25,28 @@ from PySide6.QtWidgets import (
 )
 
 
+from ui.theme import (
+    THEME,
+    card_colors,
+    delete_button_style,
+    disabled_index_button_style,
+    display_field_style,
+    editing_line_edit_style,
+    field_label_style,
+    hex_to_rgba,
+    index_button_style,
+    input_line_edit_style,
+    menu_style,
+    plain_text_edit_style,
+    read_only_line_edit_style,
+    title_label_style,
+    tool_button_style,
+    unit_button_style,
+)
+
 # ---------- constants ----------
-FIELD_H = 26
-CARD_RADIUS = 16
+FIELD_H = THEME.field_height
+CARD_RADIUS = THEME.card_radius
 MAX_POSTIT_CARDS = 9
 
 
@@ -49,40 +68,16 @@ def _int_from_any(s: str) -> int:
     return int(d) if d else 0
 
 
-def _bg(kind: str) -> QColor:
-    if kind == "basic":
-        return QColor("#F6EDB8")
-    if kind == "fabric":
-        return QColor("#D9EFF5")
-    if kind == "trim":
-        return QColor("#E8DCF6")
-    if kind == "change":
-        return QColor("#DDEDDC")
-    return QColor("#F6EDB8")
-
-
-def _bd(kind: str) -> QColor:
-    if kind == "basic":
-        return QColor("#D4C57A")
-    if kind == "fabric":
-        return QColor("#A9CCD7")
-    if kind == "trim":
-        return QColor("#C6B1E7")
-    if kind == "change":
-        return QColor("#A8C9A6")
-    return QColor("#D4C57A")
-
-
 def _make_calendar_icon(size: int = 16) -> QIcon:
     pm = QPixmap(size, size)
     pm.fill(Qt.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.Antialiasing, True)
-    p.setPen(QPen(QColor("#222"), 2))
+    p.setPen(QPen(QColor(THEME.color_icon), 2))
     p.setBrush(Qt.NoBrush)
     p.drawRoundedRect(1, 2, size - 2, size - 3, 3, 3)
     p.drawLine(2, 6, size - 3, 6)
-    p.setPen(QPen(QColor("#222"), 2))
+    p.setPen(QPen(QColor(THEME.color_icon), 2))
     p.drawLine(5, 1, 5, 5)
     p.drawLine(size - 6, 1, size - 6, 5)
     p.end()
@@ -94,7 +89,7 @@ def _make_down_icon(size: int = 12) -> QIcon:
     pm.fill(Qt.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.Antialiasing, True)
-    pen = QPen(QColor("#222"), 2)
+    pen = QPen(QColor(THEME.color_icon), 2)
     p.setPen(pen)
     # v shape
     p.drawLine(2, 4, size // 2, size - 4)
@@ -203,15 +198,9 @@ class _ClickToEditLineEdit(QLineEdit):
     def _apply_style(self, editing: bool):
         # Keep border/padding consistent to avoid layout jitter when toggling edit mode.
         if not editing:
-            self.setStyleSheet(
-                "QLineEdit{background:rgba(255,250,244,0.28);border:1px solid transparent;color:#4B4036;padding:0 8px;border-radius:9px;}"
-                "QLineEdit:hover{background:rgba(255,255,255,0.48);border-color:rgba(111,93,77,0.14);}"
-            )
+            self.setStyleSheet(read_only_line_edit_style())
         else:
-            self.setStyleSheet(
-                "QLineEdit{background:rgba(255,255,255,0.82);border:1px solid rgba(111,93,77,0.22);"
-                "border-radius:9px;padding:0 8px;color:#4B4036;}"
-            )
+            self.setStyleSheet(editing_line_edit_style())
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.isReadOnly():
             self.setReadOnly(False)
@@ -274,13 +263,16 @@ class _PostItCardBase(QWidget):
         super().__init__(parent)
         self.kind = kind
         self._active = False
-        self._bg = _bg(kind)
-        self._bd = _bd(kind)
+        bg_hex, bd_hex = card_colors(kind)
+        self._bg = QColor(bg_hex)
+        self._bd = QColor(bd_hex)
 
         shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(22)
-        shadow.setOffset(0, 5)
-        shadow.setColor(QColor(108, 92, 78, 28))
+        shadow.setBlurRadius(THEME.card_shadow_blur)
+        shadow.setOffset(0, THEME.card_shadow_offset_y)
+        shadow_color = QColor(THEME.color_shadow)
+        shadow_color.setAlpha(28)
+        shadow.setColor(shadow_color)
         self.setGraphicsEffect(shadow)
 
         self.setAttribute(Qt.WA_StyledBackground, True)
@@ -323,17 +315,14 @@ class BasicInfoPostIt(_PostItCardBase):
         lbl_date.setFixedWidth(44)
         lbl_date.setFixedHeight(FIELD_H)
         lbl_date.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        lbl_date.setStyleSheet("QLabel{font-weight:600;color:#5A4B40;background:transparent;}")
+        lbl_date.setStyleSheet(field_label_style())
         date_row.addWidget(lbl_date)
 
         self._date_value = QDate.currentDate()
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
         self.date_text.setFixedHeight(FIELD_H)
         self.date_text.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.date_text.setStyleSheet(
-            "QLabel{background:rgba(255,252,246,0.78);border:1px solid rgba(111,93,77,0.18);"
-            "border-radius:9px;padding:0 10px;color:#4B4036;}"
-        )
+        self.date_text.setStyleSheet(display_field_style())
         self.date_text.setMinimumWidth(118)
 
         self.btn_calendar = QToolButton(self)
@@ -341,10 +330,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_calendar.setIconSize(QSize(16, 16))
         self.btn_calendar.setFixedSize(FIELD_H, FIELD_H)
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
-        self.btn_calendar.setStyleSheet(
-            "QToolButton{border:1px solid rgba(111,93,77,0.18);border-radius:9px;background:rgba(255,252,246,0.70);}"
-            "QToolButton:hover{background:rgba(255,255,255,0.90);border-color:rgba(111,93,77,0.24);}"
-        )
+        self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
 
         date_row.addWidget(self.date_text, 1)
@@ -361,7 +347,7 @@ class BasicInfoPostIt(_PostItCardBase):
             l.setFixedWidth(44)
             l.setFixedHeight(FIELD_H)
             l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            l.setStyleSheet("QLabel{font-weight:600;color:#5A4B40;background:transparent;}")
+            l.setStyleSheet(field_label_style())
             return l
 
         self.style_no = _ClickToEditLineEdit(self)
@@ -391,12 +377,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.sale_price = _MoneyLineEdit(self)
 
         for w in (self.cost, self.labor, self.loss, self.sale_price):
-            w.setStyleSheet(
-                "QLineEdit{background:rgba(255,250,244,0.24);border:1px solid transparent;color:#4B4036;padding:0 6px;border-radius:8px;}"
-                "QLineEdit:hover{background:rgba(255,255,255,0.46);border-color:rgba(111,93,77,0.12);}"
-                "QLineEdit:focus{background:rgba(255,255,255,0.84);border:1px solid rgba(111,93,77,0.22);"
-                "border-radius:8px;padding:0 6px;}"
-            )
+            w.setStyleSheet(input_line_edit_style())
 
         mg.addWidget(mk_label("원  가"), 0, 0)
         mg.addWidget(self.cost, 0, 1)
@@ -489,16 +470,12 @@ class ChangeNotePostIt(_PostItCardBase):
         root.setSpacing(10)
 
         title = QLabel("메모", self)
-        title.setStyleSheet("QLabel{font-weight:700;color:#567159;background:transparent;font-size:13px;}")
+        title.setStyleSheet(title_label_style(color=THEME.color_change_title))
         root.addWidget(title)
 
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")
-        self.editor.setStyleSheet(
-            "QPlainTextEdit{background:rgba(248,252,247,0.52);border:1px solid rgba(109,139,108,0.14);color:#4B4036;font-size:12px;"
-            "border-radius:14px;padding:10px;}"
-            "QPlainTextEdit:focus{background:rgba(255,255,255,0.88);border:1px solid rgba(109,139,108,0.24);}"
-        )
+        self.editor.setStyleSheet(plain_text_edit_style())
         root.addWidget(self.editor, 1)
         self.editor.textChanged.connect(self._on_text)
 
@@ -542,10 +519,7 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.setText("×")
         self.btn_delete.setCursor(Qt.PointingHandCursor)
         self.btn_delete.setFixedSize(14, 14)
-        self.btn_delete.setStyleSheet(
-            "QToolButton{border:none;border-radius:7px;background:rgba(92,74,60,0.10);color:#6A5748;font-weight:700;font-size:10px;padding:0px;}"
-            "QToolButton:hover{background:rgba(92,74,60,0.16);}"
-        )
+        self.btn_delete.setStyleSheet(delete_button_style())
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
         vi = QGridLayout()
@@ -557,7 +531,7 @@ class PostItCard(_PostItCardBase):
             l.setFixedWidth(44)
             l.setFixedHeight(FIELD_H)
             l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            l.setStyleSheet("QLabel{font-weight:600;color:#5A4B40;background:transparent;}")
+            l.setStyleSheet(field_label_style())
             return l
 
         self.vendor = _ClickToEditLineEdit(self)
@@ -580,7 +554,7 @@ class PostItCard(_PostItCardBase):
             l.setFixedWidth(44)
             l.setFixedHeight(FIELD_H)
             l.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            l.setStyleSheet("QLabel{font-weight:600;color:#5A4B40;background:transparent;}")
+            l.setStyleSheet(field_label_style())
             return l
 
         self.qty = _QtyClickToEditLineEdit(self)
@@ -594,20 +568,10 @@ class PostItCard(_PostItCardBase):
         self.unit_btn.setCursor(Qt.PointingHandCursor)
         self.unit_btn.setFixedHeight(FIELD_H)
         self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.unit_btn.setStyleSheet(
-            "QToolButton{background:rgba(255,250,244,0.24);border:1px solid transparent;color:#4B4036;padding:0 8px;text-align:left;border-radius:8px;}"
-            "QToolButton:hover{background:rgba(255,255,255,0.46);border-color:rgba(111,93,77,0.12);}"
-            "QToolButton:pressed{background:rgba(248,239,229,0.72);}"
-            "QToolButton:focus{background:rgba(255,255,255,0.84);border-color:rgba(111,93,77,0.22);}"
-        )
+        self.unit_btn.setStyleSheet(unit_button_style())
         self._apply_unit_button_text()
         self._unit_menu = QMenu(self.unit_btn)
-        self._unit_menu.setStyleSheet(
-            "QMenu{background:#FFF9F2;border:1px solid #DDCDBF;border-radius:10px;padding:6px;color:#4B4036;}"
-            "QMenu::item{padding:8px 14px;border-radius:8px;}"
-            "QMenu::item:selected{background:#F1E4D8;}"
-            "QMenu::separator{height:1px;background:#E9DDD2;margin:6px 8px;}"
-        )
+        self._unit_menu.setStyleSheet(menu_style())
         self._unit_actions: Dict[str, object] = {}
 
         self._act_clear_unit = self._unit_menu.addAction("(비움)")
@@ -633,12 +597,7 @@ class PostItCard(_PostItCardBase):
         self.price = _MoneyLineEdit(self)
         self.total = _MoneyLineEdit(self)
         for w in (self.price, self.total):
-            w.setStyleSheet(
-                "QLineEdit{background:rgba(255,250,244,0.24);border:1px solid transparent;color:#4B4036;padding:0 6px;border-radius:8px;}"
-                "QLineEdit:hover{background:rgba(255,255,255,0.46);border-color:rgba(111,93,77,0.12);}"
-                "QLineEdit:focus{background:rgba(255,255,255,0.84);border:1px solid rgba(111,93,77,0.22);"
-                "border-radius:8px;padding:0 6px;}"
-            )
+            w.setStyleSheet(input_line_edit_style())
 
         self.price.setText(self.data.get("단가", ""))
         self.total.setText(self.data.get("총액", ""))
@@ -926,16 +885,8 @@ class PostItStack(QWidget):
 
     def _button_style(self, active: bool) -> str:
         if active:
-            return (
-                "QToolButton{border:1px solid rgba(125,103,86,0.26);border-radius:9px;"
-                "background:rgba(255,250,244,0.95);color:#5A4B40;font-weight:800;}"
-                "QToolButton:hover{background:rgba(255,255,255,0.98);}"
-            )
-        return (
-            "QToolButton{border:1px solid rgba(125,103,86,0.16);border-radius:9px;"
-            "background:rgba(255,250,244,0.72);color:#6A584A;font-weight:700;}"
-            "QToolButton:hover{background:rgba(255,255,255,0.94);}"
-        )
+            return index_button_style(True)
+        return index_button_style(False)
 
     def _make_index_button(self, txt: str) -> QToolButton:
         b = QToolButton(self)
@@ -975,10 +926,7 @@ class PostItStack(QWidget):
             if enabled:
                 self.plus_button.setStyleSheet(self._button_style(False))
             else:
-                self.plus_button.setStyleSheet(
-                    "QToolButton{border:1px solid rgba(125,103,86,0.10);border-radius:9px;"
-                    "background:rgba(255,250,244,0.35);color:rgba(106,88,74,0.42);font-weight:700;}"
-                )
+                self.plus_button.setStyleSheet(disabled_index_button_style())
 
     def _on_add_clicked(self):
         if len(self.items) >= MAX_POSTIT_CARDS:
@@ -1030,9 +978,7 @@ class PostItBar(QWidget):
         self.basic_title = QLabel("기본정보", self.basic_wrap)
         self.basic_title.setFixedHeight(24)
         self.basic_title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.basic_title.setStyleSheet(
-            "QLabel{font-weight:700;color:#5A4B40;background:transparent;font-size:13px;padding-left:6px;}"
-        )
+        self.basic_title.setStyleSheet(title_label_style(padding_left=6))
         basic_wrap_lay.addWidget(self.basic_title)
         basic_wrap_lay.addWidget(self.basic, 1)
 
