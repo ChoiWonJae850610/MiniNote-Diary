@@ -255,7 +255,7 @@ class _ClickToEditLineEdit(QLineEdit):
         self._commit_lock()
 
     def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Tab):
             self._commit_lock()
             _move_focus(self)
             event.accept()
