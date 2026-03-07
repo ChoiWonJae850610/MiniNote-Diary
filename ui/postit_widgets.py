@@ -232,7 +232,6 @@ class _ClickToEditLineEdit(QLineEdit):
         self.setFixedHeight(FIELD_H)
         self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.setTextMargins(0, 0, 0, 0)
-        self._edit_start_text = ""
         self._apply_style(editing=False)
 
     def _apply_style(self, editing: bool):
@@ -241,10 +240,8 @@ class _ClickToEditLineEdit(QLineEdit):
             self.setStyleSheet(read_only_line_edit_style())
         else:
             self.setStyleSheet(editing_line_edit_style())
-
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.isReadOnly():
-            self._edit_start_text = self.text()
             self.setReadOnly(False)
             self._apply_style(editing=True)
             self.setFocus()
@@ -267,7 +264,6 @@ class _ClickToEditLineEdit(QLineEdit):
             event.accept()
             return
         if event.key() == Qt.Key_Escape:
-            self.setText(self._edit_start_text)
             self.setReadOnly(True)
             self._apply_style(editing=False)
             self.clearFocus()
@@ -277,17 +273,14 @@ class _ClickToEditLineEdit(QLineEdit):
 
     def _commit_lock(self):
         if not self.isReadOnly():
-            changed = self.text() != self._edit_start_text
             self.setReadOnly(True)
             self._apply_style(editing=False)
-            if changed:
-                self.committed.emit(self.text())
+            self.committed.emit(self.text())
 
     def set_text_silent(self, text: str):
         old = self.blockSignals(True)
         try:
             self.setText(text or "")
-            self._edit_start_text = self.text()
         finally:
             self.blockSignals(old)
 
@@ -458,6 +451,12 @@ class BasicInfoPostIt(_PostItCardBase):
         self.setTabOrder(self.labor, self.loss)
         self.setTabOrder(self.loss, self.sale_price)
 
+    def first_focus_widget(self):
+        return self.btn_calendar
+
+    def last_focus_widget(self):
+        return self.sale_price
+
     def _adjust_style_width(self, text: str):
         fm = QFontMetrics(self.style_no.font())
         w = fm.horizontalAdvance(text or "") + 28
@@ -550,6 +549,12 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def text(self) -> str:
         return self.editor.toPlainText().rstrip()
+
+    def first_focus_widget(self):
+        return self.editor
+
+    def last_focus_widget(self):
+        return self.editor
 
     def eventFilter(self, obj, event):
         if obj is self.editor and event.type() == QEvent.KeyPress:
@@ -695,6 +700,12 @@ class PostItCard(_PostItCardBase):
         self.setMaximumHeight(198)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+    def first_focus_widget(self):
+        return self.vendor
+
+    def last_focus_widget(self):
+        return self.total
+
     def _label_for_unit(self, unit: str) -> str:
         for u, lb in self._units:
             if u == unit:
@@ -826,6 +837,7 @@ class PostItStack(QWidget):
     item_deleted = Signal(int)
     item_changed = Signal(int, dict)
     item_added = Signal()
+    active_card_changed = Signal(int)
 
     def __init__(self, kind: str, parent=None):
         super().__init__(parent)
@@ -966,6 +978,20 @@ class PostItStack(QWidget):
         self._refresh_delete_buttons()
         self._rebuild_index_buttons()
         self._apply_active()
+        self.active_card_changed.emit(self.active_index)
+
+    def current_card(self):
+        if 0 <= self.active_index < len(self.cards):
+            return self.cards[self.active_index]
+        return None
+
+    def first_focus_widget(self):
+        card = self.current_card()
+        return card.first_focus_widget() if card is not None else None
+
+    def last_focus_widget(self):
+        card = self.current_card()
+        return card.last_focus_widget() if card is not None else None
 
     def _button_style(self, active: bool) -> str:
         if active:
@@ -1026,6 +1052,7 @@ class PostItStack(QWidget):
         self.stack.setCurrentIndex(idx)
         self._apply_active()
         self._update_index_button_states()
+        self.active_card_changed.emit(idx)
 
     def _apply_active(self):
         for i, c in enumerate(self.cards):
@@ -1044,6 +1071,8 @@ class PostItBar(QWidget):
     trim_item_added = Signal()
 
     basic_data_changed = Signal(dict)
+    fabric_active_changed = Signal(int)
+    trim_active_changed = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1068,6 +1097,8 @@ class PostItBar(QWidget):
 
         self.fabric.item_added.connect(self.fabric_item_added.emit)
         self.trim.item_added.connect(self.trim_item_added.emit)
+        self.fabric.active_card_changed.connect(self.fabric_active_changed.emit)
+        self.trim.active_card_changed.connect(self.trim_active_changed.emit)
 
         lay.addWidget(self.basic_wrap, 1)
         lay.addWidget(self.fabric, 1)
@@ -1077,3 +1108,21 @@ class PostItBar(QWidget):
         self.basic.set_header_data(header or {})
         self.fabric.set_items(fabrics or [])
         self.trim.set_items(trims or [])
+
+    def basic_first_focus_widget(self):
+        return self.basic.first_focus_widget()
+
+    def basic_last_focus_widget(self):
+        return self.basic.last_focus_widget()
+
+    def fabric_first_focus_widget(self):
+        return self.fabric.first_focus_widget()
+
+    def fabric_last_focus_widget(self):
+        return self.fabric.last_focus_widget()
+
+    def trim_first_focus_widget(self):
+        return self.trim.first_focus_widget()
+
+    def trim_last_focus_widget(self):
+        return self.trim.last_focus_widget()
