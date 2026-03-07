@@ -232,6 +232,7 @@ class _ClickToEditLineEdit(QLineEdit):
         self.setFixedHeight(FIELD_H)
         self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.setTextMargins(0, 0, 0, 0)
+        self._edit_start_text = ""
         self._apply_style(editing=False)
 
     def _apply_style(self, editing: bool):
@@ -240,8 +241,10 @@ class _ClickToEditLineEdit(QLineEdit):
             self.setStyleSheet(read_only_line_edit_style())
         else:
             self.setStyleSheet(editing_line_edit_style())
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.isReadOnly():
+            self._edit_start_text = self.text()
             self.setReadOnly(False)
             self._apply_style(editing=True)
             self.setFocus()
@@ -264,6 +267,7 @@ class _ClickToEditLineEdit(QLineEdit):
             event.accept()
             return
         if event.key() == Qt.Key_Escape:
+            self.setText(self._edit_start_text)
             self.setReadOnly(True)
             self._apply_style(editing=False)
             self.clearFocus()
@@ -273,14 +277,17 @@ class _ClickToEditLineEdit(QLineEdit):
 
     def _commit_lock(self):
         if not self.isReadOnly():
+            changed = self.text() != self._edit_start_text
             self.setReadOnly(True)
             self._apply_style(editing=False)
-            self.committed.emit(self.text())
+            if changed:
+                self.committed.emit(self.text())
 
     def set_text_silent(self, text: str):
         old = self.blockSignals(True)
         try:
             self.setText(text or "")
+            self._edit_start_text = self.text()
         finally:
             self.blockSignals(old)
 
