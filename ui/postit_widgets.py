@@ -458,6 +458,7 @@ class BasicInfoPostIt(_PostItCardBase):
         for w in (self.cost, self.labor, self.loss, self.sale_price):
             w.textChanged.connect(lambda _t: self._emit_all())
 
+        self.setTabOrder(self.btn_calendar, self.style_no)
         self.setTabOrder(self.style_no, self.factory)
         self.setTabOrder(self.factory, self.cost)
         self.setTabOrder(self.cost, self.labor)
@@ -539,6 +540,7 @@ class ChangeNotePostIt(_PostItCardBase):
         self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())
         self.editor.installEventFilter(self)
+        self.editor.setTabChangesFocus(True)
         root.addWidget(self.editor, 1)
         self.editor.textChanged.connect(self._on_text)
 
