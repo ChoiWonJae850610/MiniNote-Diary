@@ -5,9 +5,10 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate, QEvent
+from PySide6.QtCore import Qt, QPoint, QRectF, QSize, Signal, QDate, QEvent, QObject
 from PySide6.QtGui import QColor, QFontMetrics, QIcon, QPainter, QPen, QPixmap, QRegularExpressionValidator
 from PySide6.QtWidgets import (
+    QApplication,
     QWidget,
     QHBoxLayout,
     QVBoxLayout,
@@ -48,6 +49,111 @@ from ui.theme import (
 FIELD_H = THEME.field_height
 CARD_RADIUS = THEME.card_radius
 MAX_POSTIT_CARDS = 9
+
+
+class _PendingTabFocusFilter(QObject):
+    def __init__(self):
+        super().__init__()
+        self.anchor = None
+
+    def set_pending(self, anchor=None):
+        self.anchor = anchor
+
+    def clear_pending(self):
+        self.anchor = None
+
+    def eventFilter(self, obj, event):
+        if self.anchor is None:
+            return False
+
+        if event.type() == QEvent.MouseButtonPress:
+            self.clear_pending()
+            return False
+
+        if event.type() != QEvent.KeyPress:
+            return False
+
+        key = event.key()
+        if key == Qt.Key_Tab:
+            anchor = self.anchor
+            self.clear_pending()
+            if anchor is not None:
+                target = _next_focusable_widget(anchor)
+                if target is not None:
+                    try:
+                        target.setFocus(Qt.TabFocusReason)
+                    except Exception:
+                        pass
+                    event.accept()
+                    return True
+            return False
+
+        if key == Qt.Key_Backtab:
+            anchor = self.anchor
+            self.clear_pending()
+            if anchor is not None:
+                target = _prev_focusable_widget(anchor)
+                if target is not None:
+                    try:
+                        target.setFocus(Qt.BacktabFocusReason)
+                    except Exception:
+                        pass
+                    event.accept()
+                    return True
+            return False
+
+        self.clear_pending()
+        return False
+
+
+_PENDING_TAB_FILTER = _PendingTabFocusFilter()
+
+
+def _ensure_pending_tab_filter():
+    app = QApplication.instance()
+    if app is not None and not getattr(app, "_postit_pending_tab_filter_installed", False):
+        app.installEventFilter(_PENDING_TAB_FILTER)
+        app._postit_pending_tab_filter_installed = True
+
+
+def _next_focusable_widget(widget):
+    current = widget
+    visited = set()
+    while current is not None:
+        nxt = current.nextInFocusChain()
+        if nxt is None or nxt is current or id(nxt) in visited:
+            break
+        visited.add(id(nxt))
+        policy = getattr(nxt, "focusPolicy", lambda: Qt.NoFocus)()
+        if (
+            isinstance(nxt, QWidget)
+            and nxt.isVisible()
+            and nxt.isEnabled()
+            and policy != Qt.NoFocus
+        ):
+            return nxt
+        current = nxt
+    return None
+
+
+def _prev_focusable_widget(widget):
+    current = widget
+    visited = set()
+    while current is not None:
+        prev = current.previousInFocusChain()
+        if prev is None or prev is current or id(prev) in visited:
+            break
+        visited.add(id(prev))
+        policy = getattr(prev, "focusPolicy", lambda: Qt.NoFocus)()
+        if (
+            isinstance(prev, QWidget)
+            and prev.isVisible()
+            and prev.isEnabled()
+            and policy != Qt.NoFocus
+        ):
+            return prev
+        current = prev
+    return None
 
 
 def _digits_only(s: str) -> str:
@@ -232,13 +338,21 @@ class _MoneyLineEdit(QLineEdit):
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            _move_focus(self)
+            _ensure_pending_tab_filter()
+            _PENDING_TAB_FILTER.set_pending(anchor=self)
+            self.clearFocus()
             event.accept()
             return
         if event.key() == Qt.Key_Backtab:
-            _move_focus(self, backward=True)
+            _PENDING_TAB_FILTER.clear_pending()
+            self.focusNextPrevChild(False)
             event.accept()
             return
+        if event.key() == Qt.Key_Tab:
+            _PENDING_TAB_FILTER.clear_pending()
+            super().keyPressEvent(event)
+            return
+        _PENDING_TAB_FILTER.clear_pending()
         super().keyPressEvent(event)
 
 
@@ -289,21 +403,26 @@ class _ClickToEditLineEdit(QLineEdit):
         self._commit_lock()
 
     def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Tab):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
             self._commit_lock()
-            _move_focus(self)
+            self.deselect()
+            event.accept()
+            return
+        if event.key() == Qt.Key_Tab:
+            self._commit_lock()
+            self.focusNextPrevChild(True)
             event.accept()
             return
         if event.key() == Qt.Key_Backtab:
             self._commit_lock()
-            _move_focus(self, backward=True)
+            self.focusNextPrevChild(False)
             event.accept()
             return
         if event.key() == Qt.Key_Escape:
             self.setText(self._edit_start_text)
             self.setReadOnly(True)
             self._apply_style(editing=False)
-            self.clearFocus()
+            self.deselect()
             event.accept()
             return
         super().keyPressEvent(event)
