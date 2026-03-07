@@ -232,7 +232,7 @@ class _ClickToEditLineEdit(QLineEdit):
         self.setFixedHeight(FIELD_H)
         self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.setTextMargins(0, 0, 0, 0)
-        self._edit_start_text=""
+        self._edit_start_text = ""
         self._apply_style(editing=False)
 
     def _apply_style(self, editing: bool):
@@ -241,13 +241,22 @@ class _ClickToEditLineEdit(QLineEdit):
             self.setStyleSheet(read_only_line_edit_style())
         else:
             self.setStyleSheet(editing_line_edit_style())
+
+    def _begin_edit(self):
+        self._edit_start_text = self.text()
+        self.setReadOnly(False)
+        self._apply_style(editing=True)
+        self.selectAll()
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        if self.isReadOnly() and event.reason() in (Qt.TabFocusReason, Qt.BacktabFocusReason):
+            self._begin_edit()
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton and self.isReadOnly():
-            self._edit_start_text=self.text()
-            self.setReadOnly(False)
-            self._apply_style(editing=True)
+            self._begin_edit()
             self.setFocus()
-            self.selectAll()
         super().mousePressEvent(event)
 
     def focusOutEvent(self, event):
@@ -266,6 +275,7 @@ class _ClickToEditLineEdit(QLineEdit):
             event.accept()
             return
         if event.key() == Qt.Key_Escape:
+            self.setText(self._edit_start_text)
             self.setReadOnly(True)
             self._apply_style(editing=False)
             self.clearFocus()
@@ -285,10 +295,9 @@ class _ClickToEditLineEdit(QLineEdit):
         old = self.blockSignals(True)
         try:
             self.setText(text or "")
+            self._edit_start_text = self.text()
         finally:
             self.blockSignals(old)
-
-
 class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
     """Click-to-edit integer-only field (no commas)."""
     def __init__(self, parent=None):
@@ -449,7 +458,6 @@ class BasicInfoPostIt(_PostItCardBase):
         for w in (self.cost, self.labor, self.loss, self.sale_price):
             w.textChanged.connect(lambda _t: self._emit_all())
 
-        self.setTabOrder(self.btn_calendar, self.style_no)
         self.setTabOrder(self.style_no, self.factory)
         self.setTabOrder(self.factory, self.cost)
         self.setTabOrder(self.cost, self.labor)
