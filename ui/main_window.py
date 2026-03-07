@@ -101,6 +101,9 @@ class MainWindow(QMainWindow):
         self.is_dirty = False
         self._suppress_dirty = False
         self.current_image_path: Optional[str] = None
+        self._feedback_timer = QTimer(self)
+        self._feedback_timer.setSingleShot(True)
+        self._feedback_timer.timeout.connect(self._clear_feedback)
 
         # 기본정보/원단/부자재는 모두 팝업 입력 → dict/list로 관리
         self.header_data: Dict[str, str] = {}
@@ -127,6 +130,7 @@ class MainWindow(QMainWindow):
         self.resize(1080, 760)
         self._apply_diary_theme()
         self._install_global_focus_clear()
+        self._update_window_title()
 
     def _apply_diary_theme(self):
         self.setStyleSheet(build_app_stylesheet())
@@ -297,6 +301,14 @@ class MainWindow(QMainWindow):
         image_controls_layout.addWidget(self.btn_upload)
         image_controls_layout.addWidget(self.btn_delete_image)
 
+        self.feedback_label = QLabel("", self)
+        self.feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.feedback_label.setMinimumHeight(20)
+        self.feedback_label.setMaximumHeight(20)
+        self.feedback_label.setStyleSheet(
+            "QLabel{background:transparent;border:none;padding:0 2px;color:rgba(54,65,82,0.72);font-weight:600;}"
+        )
+
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
@@ -352,14 +364,33 @@ class MainWindow(QMainWindow):
 
         page_layout.addWidget(center_row, 1)
         page_layout.addWidget(self.postit_bar, 0)
+        page_layout.addWidget(self.feedback_label, 0)
 
         self._refresh_postits()
-        QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.setFocus())
+        QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
         return page
+
+    def _show_feedback(self, message: str, timeout_ms: int = 2200):
+        if not hasattr(self, "feedback_label"):
+            return
+        self.feedback_label.setText(message)
+        self._feedback_timer.start(timeout_ms)
+
+    def _clear_feedback(self):
+        if hasattr(self, "feedback_label"):
+            self.feedback_label.clear()
+
+    def _update_window_title(self):
+        suffix = " *" if self.is_dirty else ""
+        self.setWindowTitle(f"미니노트 다이어리{suffix}")
 
     # ===================== Navigation ======================
     def go_work_order(self):
         self.stack.setCurrentIndex(self.PAGE_WORK_ORDER)
+        try:
+            QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
+        except Exception:
+            pass
 
     def go_menu(self):
         self.stack.setCurrentIndex(self.PAGE_MENU)
@@ -369,6 +400,7 @@ class MainWindow(QMainWindow):
         if self._suppress_dirty:
             return
         self.is_dirty = True
+        self._update_window_title()
 
     def has_any_data(self) -> bool:
         if self.is_dirty:
@@ -400,6 +432,8 @@ class MainWindow(QMainWindow):
             self.btn_delete_image.setEnabled(False)
             self.is_dirty = False
             self._refresh_postits()
+            self._clear_feedback()
+            self._update_window_title()
             try:
                 self.change_note_postit.set_text("")
             except Exception:
@@ -510,6 +544,7 @@ class MainWindow(QMainWindow):
         msg = f"저장 완료\n\nJSON: {json_path}\nSHA256(평문): {sha256_plain}"
         if image_path:
             msg += f"\n이미지: {image_path}"
+        self._show_feedback("저장되었습니다.")
         QMessageBox.information(self, "저장", msg)
 
     
@@ -565,6 +600,7 @@ class MainWindow(QMainWindow):
             if hasattr(self, "btn_delete_image"):
                 self.btn_delete_image.setEnabled(True)
             self.mark_dirty()
+            self._show_feedback("이미지 첨부됨")
         except Exception as e:
             QMessageBox.warning(self, "오류", str(e))
 
@@ -578,6 +614,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "btn_delete_image"):
             self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
+        self._show_feedback("이미지 제거됨")
 
     # ===================== Add fabric/trim cards ======================
     def on_add_fabric_clicked(self):

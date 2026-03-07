@@ -164,6 +164,7 @@ def _load_units() -> List[Tuple[str, str]]:
 # ---------- popup calendar ----------
 class _InlineCalendarPopup(QDialog):
     datePicked = Signal(QDate)
+    moveNextRequested = Signal()
 
     def __init__(self, initial: QDate, parent=None):
         super().__init__(parent, Qt.Popup)
@@ -182,6 +183,24 @@ class _InlineCalendarPopup(QDialog):
         if d and d.isValid():
             self.datePicked.emit(d)
         self.close()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Tab:
+            d = self.cal.selectedDate()
+            if d and d.isValid():
+                self.datePicked.emit(d)
+            self.moveNextRequested.emit()
+            self.close()
+            event.accept()
+            return
+        if event.key() == Qt.Key_Backtab:
+            d = self.cal.selectedDate()
+            if d and d.isValid():
+                self.datePicked.emit(d)
+            self.close()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
 
 # ---------- inline editors ----------
@@ -246,6 +265,12 @@ class _ClickToEditLineEdit(QLineEdit):
         self._edit_start_text = self.text()
         self.setReadOnly(False)
         self._apply_style(editing=True)
+        self.selectAll()
+
+    def activate_for_input(self):
+        if self.isReadOnly():
+            self._begin_edit()
+        self.setFocus(Qt.OtherFocusReason)
         self.selectAll()
 
     def focusInEvent(self, event):
@@ -478,10 +503,12 @@ class BasicInfoPostIt(_PostItCardBase):
     def _open_calendar(self):
         popup = _InlineCalendarPopup(self._date_value, parent=self)
         popup.datePicked.connect(self._on_date_picked)
+        popup.moveNextRequested.connect(self.style_no.activate_for_input)
 
         anchor = self.btn_calendar.mapToGlobal(QPoint(0, self.btn_calendar.height() + 4))
         popup.move(anchor)
         popup.show()
+        popup.cal.setFocus(Qt.PopupFocusReason)
 
     def _on_date_picked(self, d: QDate):
         self._date_value = d
