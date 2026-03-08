@@ -5,7 +5,7 @@ from typing import List, Dict
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget,
-    QAbstractItemView, QMessageBox, QHeaderView
+    QAbstractItemView, QMessageBox, QHeaderView, QTableWidgetItem
 )
 
 
@@ -26,23 +26,60 @@ class UnitDialog(QDialog):
 
         self.table = QTableWidget(20, 2)
         self.table.setHorizontalHeaderLabels(["단위", "표시 이름"])
-
-        # 셀 단위 선택 + 클릭 즉시 입력
+        self.table.verticalHeader().setVisible(False)
+        self.table.setShowGrid(False)
+        self.table.setAlternatingRowColors(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(
-            QAbstractItemView.CurrentChanged |
             QAbstractItemView.SelectedClicked |
             QAbstractItemView.DoubleClicked |
             QAbstractItemView.EditKeyPressed
         )
         self.table.itemClicked.connect(lambda it: self.table.editItem(it))
-
-        # 선택 하이라이트 최소화(입력칸 느낌)
-        self.table.setStyleSheet("""
-            QTableWidget::item:selected { background: transparent; color: inherit; }
-            QTableWidget::item:focus { outline: none; }
-        """)
+        self.table.setStyleSheet(
+            "QTableWidget{"
+            "background:#FFFFFF;"
+            "border:1px solid #D7DCE3;"
+            "border-radius:12px;"
+            "gridline-color:transparent;"
+            "selection-background-color:transparent;"
+            "selection-color:#1F2933;"
+            "padding:4px;"
+            "}"
+            "QHeaderView::section{"
+            "background:#FAFAFB;"
+            "color:#364152;"
+            "border:none;"
+            "border-bottom:1px solid #E7EBF0;"
+            "padding:8px 10px;"
+            "font-weight:600;"
+            "}"
+            "QTableWidget::item{"
+            "border:1px solid transparent;"
+            "padding:4px 6px;"
+            "}"
+            "QTableWidget::item:selected{"
+            "background:#F5F6F8;"
+            "color:#1F2933;"
+            "border:1px solid #E7EBF0;"
+            "}"
+            "QTableWidget::item:focus{outline:none;}"
+            "QTableWidget QLineEdit{"
+            "background:#F5F6F8;"
+            "border:1px solid transparent;"
+            "border-radius:8px;"
+            "padding:0 6px;"
+            "color:#1F2933;"
+            "selection-background-color:#E9EDF2;"
+            "selection-color:#1F2933;"
+            "}"
+            "QTableWidget QLineEdit:focus{"
+            "background:#FFFFFF;"
+            "border:1px solid rgba(98,107,119,0.28);"
+            "}"
+        )
+        self.table.verticalHeader().setDefaultSectionSize(30)
 
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
@@ -54,20 +91,45 @@ class UnitDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
 
-        self.btn_save = QPushButton("저장")
-        self.btn_delete = QPushButton("삭제")
-        self.btn_close = QPushButton("닫기")
+        self.btn_save = QPushButton("✓")
+        self.btn_add = QPushButton("+")
+        self.btn_delete = QPushButton("−")
+        self.btn_close = QPushButton("×")
 
-        for b in (self.btn_save, self.btn_delete, self.btn_close):
-            b.setFixedHeight(30)
+        for b in (self.btn_save, self.btn_add, self.btn_delete, self.btn_close):
+            b.setFixedSize(24, 24)
+            b.setCursor(Qt.PointingHandCursor)
+
+        self.btn_save.setStyleSheet(
+            "QPushButton{background:#626B77;color:#FFFFFF;border:1px solid #626B77;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
+            "QPushButton:hover{background:#535B66;border-color:#535B66;}"
+            "QPushButton:pressed{background:#535B66;}"
+        )
+        self.btn_add.setStyleSheet(
+            "QPushButton{background:rgba(250,250,251,0.96);color:#364152;border:1px solid #D7DCE3;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
+            "QPushButton:hover{background:#F5F6F8;border-color:#B8C0CC;}"
+            "QPushButton:pressed{background:#E9EDF2;}"
+        )
+        self.btn_delete.setStyleSheet(
+            "QPushButton{background:rgba(239,241,244,0.96);color:#6C7684;border:1px solid #E1E6EC;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
+            "QPushButton:hover{background:#F3F5F7;}"
+            "QPushButton:pressed{background:#E9EDF2;}"
+        )
+        self.btn_close.setStyleSheet(
+            "QPushButton{background:rgba(250,250,251,0.96);color:#364152;border:1px solid #D7DCE3;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
+            "QPushButton:hover{background:#F5F6F8;border-color:#B8C0CC;}"
+            "QPushButton:pressed{background:#E9EDF2;}"
+        )
 
         btn_row.addWidget(self.btn_save)
+        btn_row.addWidget(self.btn_add)
         btn_row.addWidget(self.btn_delete)
         btn_row.addWidget(self.btn_close)
 
         layout.addLayout(btn_row)
 
         self.btn_save.clicked.connect(self.on_save)
+        self.btn_add.clicked.connect(self.on_add)
         self.btn_delete.clicked.connect(self.on_delete)
         self.btn_close.clicked.connect(self.close)
 
@@ -112,6 +174,25 @@ class UnitDialog(QDialog):
             return
 
         QMessageBox.information(self, "저장", "단위 목록이 저장되었습니다.")
+
+    def on_add(self):
+        for r in range(self.table.rowCount()):
+            if not self._cell_text(r, 0).strip() and not self._cell_text(r, 1).strip():
+                if self.table.item(r, 0) is None:
+                    self.table.setItem(r, 0, self._make_item(""))
+                if self.table.item(r, 1) is None:
+                    self.table.setItem(r, 1, self._make_item(""))
+                self.table.setCurrentCell(r, 0)
+                self.table.editItem(self.table.item(r, 0))
+                return
+
+        r = self.table.rowCount()
+        self.table.insertRow(r)
+        self.table.setRowHeight(r, 30)
+        self.table.setItem(r, 0, self._make_item(""))
+        self.table.setItem(r, 1, self._make_item(""))
+        self.table.setCurrentCell(r, 0)
+        self.table.editItem(self.table.item(r, 0))
 
     def on_delete(self):
         row = self.table.currentRow()
