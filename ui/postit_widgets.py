@@ -453,10 +453,12 @@ class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
         if not self.isReadOnly():
             # keep digits only
             digits = _digits_only(self.text())
+            changed = digits != _digits_only(self._edit_start_text)
             self.set_text_silent(digits)
             self.setReadOnly(True)
             self._apply_style(editing=False)
-            self.committed.emit(digits)
+            if changed:
+                self.committed.emit(digits)
 
 
 
