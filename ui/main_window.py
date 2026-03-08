@@ -33,6 +33,7 @@ from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
 from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
+from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
 
 
 def _make_image_outline_icon(size: int = 16) -> QIcon:
@@ -486,18 +487,18 @@ class MainWindow(QMainWindow):
             self.go_menu()
             return
 
-        box = QMessageBox(self)
-        box.setWindowTitle("임시 저장")
-        box.setText("임시 저장 하시겠습니까?")
-        yes_btn = box.addButton("예", QMessageBox.YesRole)
-        no_btn = box.addButton("아니요", QMessageBox.NoRole)
-        box.setIcon(QMessageBox.Question)
-        box.exec()
+        dialog = ConfirmActionDialog(
+            title="임시 저장",
+            message="임시 저장 하시겠습니까?",
+            confirm_text="예",
+            cancel_text="아니요",
+            parent=self,
+        )
+        result = dialog.exec()
 
-        clicked = box.clickedButton()
-        if clicked == yes_btn:
+        if result == QDialog.Accepted:
             self.go_menu()
-        elif clicked == no_btn:
+        else:
             self.reset_work_order_form()
             self.go_menu()
 
@@ -509,24 +510,6 @@ class MainWindow(QMainWindow):
         if not isinstance(row, dict):
             return False
         return all(self._is_nonempty(row.get(key, "")) for key in required_keys)
-
-    def _get_save_requirement_statuses(self):
-        return [
-            ("기본정보 전체 입력", self._has_basic_info()),
-            ("원단 포스트잇 1개 이상 완성", self._has_fabric_info()),
-            ("부자재 포스트잇 1개 이상 완성", self._has_trim_info()),
-        ]
-
-    def _build_validation_feedback_html(self) -> str:
-        parts = []
-        for label, ok in self._get_save_requirement_statuses():
-            icon = "✔" if ok else "✘"
-            color = "#1d8f4e" if ok else "#c23b3b"
-            parts.append(
-                f'<span style="color:{color}; font-weight:700;">{icon}</span> '
-                f'<span style="color:{color};">{label}</span>'
-            )
-        return " &nbsp;&nbsp;&nbsp; ".join(parts)
 
     def _has_basic_info(self) -> bool:
         required_keys = (
@@ -548,6 +531,13 @@ class MainWindow(QMainWindow):
     def _has_trim_info(self) -> bool:
         return any(self._row_has_all_fields(row) for row in (self.trim_items or []))
 
+    def _get_save_requirement_statuses(self):
+        return [
+            ("기본사항", self._has_basic_info()),
+            ("원단정보 1개 이상", self._has_fabric_info()),
+            ("부자재정보 1개 이상", self._has_trim_info()),
+        ]
+
     def collect_work_order_data(self) -> dict:
         return {
             "header": self.header_data,
@@ -557,21 +547,9 @@ class MainWindow(QMainWindow):
         }
 
     def on_save_clicked(self):
-        missing_messages = []
-        if not self._has_basic_info():
-            missing_messages.append("- 기본정보의 모든 입력 필드를 작성해야 합니다.")
-        if not self._has_fabric_info():
-            missing_messages.append("- 원단 포스트잇은 최소 1개 이상 모든 필드를 작성해야 합니다.")
-        if not self._has_trim_info():
-            missing_messages.append("- 부자재 포스트잇은 최소 1개 이상 모든 필드를 작성해야 합니다.")
-
-        if missing_messages:
-            self._show_feedback(self._build_validation_feedback_html(), timeout_ms=6000)
-            QMessageBox.warning(
-                self,
-                "저장 불가",
-                "저장하려면 아래 조건을 모두 만족해야 합니다.\n\n" + "\n".join(missing_messages),
-            )
+        statuses = self._get_save_requirement_statuses()
+        if not all(ok for _, ok in statuses):
+            ValidationStatusDialog("저장 불가", statuses, parent=self).exec()
             return
 
         data = self.collect_work_order_data()
@@ -592,10 +570,8 @@ class MainWindow(QMainWindow):
         msg = f"저장 완료\n\nJSON: {json_path}\nSHA256(평문): {sha256_plain}"
         if image_path:
             msg += f"\n이미지: {image_path}"
-        self._show_feedback("저장되었습니다.")
         QMessageBox.information(self, "저장", msg)
 
-    
 
     # ===================== Inline post-it handlers ======================
     def on_basic_postit_changed(self, data: dict):
