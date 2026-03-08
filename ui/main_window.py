@@ -210,7 +210,12 @@ class MainWindow(QMainWindow):
 
     def _install_shortcuts(self):
         self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
-        self.save_shortcut.activated.connect(self.on_save_clicked)
+        self.save_shortcut.activated.connect(self._handle_save_shortcut)
+
+    def _handle_save_shortcut(self):
+        if self.stack.currentIndex() != self.PAGE_WORK_ORDER:
+            return
+        self.on_save_clicked()
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
