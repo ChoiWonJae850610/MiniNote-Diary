@@ -50,13 +50,27 @@ def _pixmap_from_base64(png_b64: str) -> QPixmap:
     return pix
 
 
-def _make_image_placeholder_pixmap(width: int = 150, height: int = 112) -> QPixmap:
-    pix = _pixmap_from_base64(_UPLOAD_PLACEHOLDER_PNG_B64)
-    if pix.isNull():
-        fallback = QPixmap(width, height)
-        fallback.fill(Qt.transparent)
-        return fallback
-    return pix.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+def _make_image_placeholder_pixmap(width: int = 1200, height: int = 800) -> QPixmap:
+    base = QPixmap(width, height)
+    base.fill(Qt.transparent)
+
+    icon_pix = _pixmap_from_base64(_UPLOAD_PLACEHOLDER_PNG_B64)
+    if icon_pix.isNull():
+        return base
+
+    # 작은 아이콘을 큰 투명 캔버스 중앙에 배치해서,
+    # 프리뷰 영역이 커져도 플레이스홀더 원본이 과도하게 확대되어 보이지 않게 한다.
+    target_w = 260
+    target_h = 190
+    scaled = icon_pix.scaled(target_w, target_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+    painter = QPainter(base)
+    painter.setRenderHint(QPainter.Antialiasing, True)
+    x = (width - scaled.width()) // 2
+    y = (height - scaled.height()) // 2
+    painter.drawPixmap(x, y, scaled)
+    painter.end()
+    return base
 
 
 def _make_image_outline_icon(size: int = 16) -> QIcon:
@@ -290,9 +304,13 @@ class MainWindow(QMainWindow):
             b.setFont(f)
 
         self.btn_back.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 4))
-        self.btn_reset.setText("↻")
+        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 10))
+        self.btn_reset.setText("⟳")
         self.btn_reset.setIcon(QIcon())
+        reset_font = self.btn_reset.font()
+        reset_font.setPointSize(THEME.icon_button_font_px + 8)
+        reset_font.setBold(True)
+        self.btn_reset.setFont(reset_font)
         self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
 
         self.btn_back.setToolTip("뒤로가기")
