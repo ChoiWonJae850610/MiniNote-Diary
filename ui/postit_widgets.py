@@ -408,9 +408,7 @@ class _MoneyLineEdit(_ClickToEditLineEdit):
         self._apply_style(editing=False)
 
     def _apply_style(self, editing: bool):
-        # Money fields use the same visual style in both states and rely on readOnly only
-        # for "editing ended" behavior. This keeps Qt's native focus chain stable.
-        self.setStyleSheet(input_line_edit_style())
+        super()._apply_style(editing)
 
     def _on_text(self, t: str):
         if self._fmt:
