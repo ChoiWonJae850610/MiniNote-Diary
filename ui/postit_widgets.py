@@ -1016,10 +1016,17 @@ class PostItStack(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setFixedHeight(232)
 
-    def set_items(self, items: List[Dict[str, str]]):
+    def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
         items = list(items or [])
         if not items:
             items = [{"거래처": "", "품목": "", "수량": "", "단위": "", "단가": "", "총액": ""}]
+
+        if force_rebuild:
+            self.items = items
+            if self.active_index >= len(self.items):
+                self.active_index = max(0, len(self.items) - 1)
+            self._rebuild()
+            return
 
         if not self.cards:
             self.items = items
@@ -1226,7 +1233,7 @@ class PostItBar(QWidget):
         lay.addWidget(self.fabric, 1)
         lay.addWidget(self.trim, 1)
 
-    def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]]):
+    def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.basic.set_header_data(header or {})
-        self.fabric.set_items(fabrics or [])
-        self.trim.set_items(trims or [])
+        self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)
+        self.trim.set_items(trims or [], force_rebuild=force_rebuild)

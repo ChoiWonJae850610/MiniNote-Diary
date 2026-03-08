@@ -386,6 +386,7 @@ class MainWindow(QMainWindow):
 
     # ===================== Navigation ======================
     def go_work_order(self):
+        self._refresh_postits(force_rebuild=True)
         self.stack.setCurrentIndex(self.PAGE_WORK_ORDER)
         try:
             QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
@@ -442,11 +443,12 @@ class MainWindow(QMainWindow):
             self._suppress_dirty = False
 
     # ===================== Post-its refresh ======================
-    def _refresh_postits(self):
+    def _refresh_postits(self, force_rebuild: bool = False):
         self.postit_bar.set_data(
             header=self.header_data,
             fabrics=self.fabric_items,
             trims=self.trim_items,
+            force_rebuild=force_rebuild,
         )
         if hasattr(self, "change_note_postit"):
             note = (self.header_data or {}).get("change_note", "")

@@ -24,7 +24,7 @@ class UnitDialog(QDialog):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(10)
 
-        self.table = QTableWidget(20, 2)
+        self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(["단위", "표시 이름"])
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
@@ -133,23 +133,29 @@ class UnitDialog(QDialog):
         self.btn_delete.clicked.connect(self.on_delete)
         self.btn_close.clicked.connect(self.close)
 
+        self._ensure_empty_row_count(20)
         self.load_units()
 
     def load_units(self):
-        if not os.path.isfile(self.units_path):
-            return
+        units: List[Dict[str, str]] = []
+        if os.path.isfile(self.units_path):
+            try:
+                with open(self.units_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                units = data.get("units", [])
+                if not isinstance(units, list):
+                    units = []
+            except Exception:
+                units = []
 
-        try:
-            with open(self.units_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            return
-
-        units: List[Dict[str, str]] = data.get("units", [])
         self.table.blockSignals(True)
         try:
             self.table.clearContents()
-            for r, u in enumerate(units[: self.table.rowCount()]):
+            self.table.setRowCount(0)
+            self._ensure_empty_row_count(max(20, len(units) + 1))
+            for r, u in enumerate(units):
+                if not isinstance(u, dict):
+                    continue
                 self.table.setItem(r, 0, self._make_item(u.get("unit", "")))
                 self.table.setItem(r, 1, self._make_item(u.get("label", "")))
         finally:
@@ -206,6 +212,12 @@ class UnitDialog(QDialog):
             self.table.setItem(row, 1, self._make_item(""))
         finally:
             self.table.blockSignals(False)
+
+    def _ensure_empty_row_count(self, target_rows: int):
+        while self.table.rowCount() < target_rows:
+            r = self.table.rowCount()
+            self.table.insertRow(r)
+            self.table.setRowHeight(r, 30)
 
     def _cell_text(self, r: int, c: int) -> str:
         it = self.table.item(r, c)

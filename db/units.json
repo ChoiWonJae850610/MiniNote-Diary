@@ -2,15 +2,15 @@
   "units": [
     {
       "unit": "EA",
-      "label": "EA (개)"
+      "label": "개"
     },
     {
       "unit": "PCS",
-      "label": "PCS (피스)"
+      "label": "피스"
     },
     {
       "unit": "SET",
-      "label": "SET (세트)"
+      "label": "세트"
     },
     {
       "unit": "PR",
@@ -65,24 +65,16 @@
       "label": "G (그램)"
     },
     {
-      "unit": "KG",
-      "label": "KG (킬로그램)"
-    },
-    {
-      "unit": "CONE",
-      "label": "CONE (실콘)"
-    },
-    {
-      "unit": "SPOOL",
-      "label": "SPOOL (실보빈)"
-    },
-    {
-      "unit": "DOZEN",
-      "label": "DOZEN (12개)"
-    },
-    {
-      "unit": "rlxk",
+      "unit": "기타",
       "label": "기타"
+    },
+    {
+      "unit": "기타2",
+      "label": "기타2"
+    },
+    {
+      "unit": "기타3",
+      "label": "기타3"
     }
   ]
 }
