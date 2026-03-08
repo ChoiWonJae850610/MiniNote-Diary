@@ -505,10 +505,28 @@ class MainWindow(QMainWindow):
         return bool(str(value or "").strip())
 
     def _row_has_all_fields(self, row: dict) -> bool:
-        required_keys = ("거래처", "품목", "수량", "단위", "단가", "총액")
+        required_keys = ("거래처", "품목", "수량", "단가", "총액")
         if not isinstance(row, dict):
             return False
         return all(self._is_nonempty(row.get(key, "")) for key in required_keys)
+
+    def _get_save_requirement_statuses(self):
+        return [
+            ("기본정보 전체 입력", self._has_basic_info()),
+            ("원단 포스트잇 1개 이상 완성", self._has_fabric_info()),
+            ("부자재 포스트잇 1개 이상 완성", self._has_trim_info()),
+        ]
+
+    def _build_validation_feedback_html(self) -> str:
+        parts = []
+        for label, ok in self._get_save_requirement_statuses():
+            icon = "✔" if ok else "✘"
+            color = "#1d8f4e" if ok else "#c23b3b"
+            parts.append(
+                f'<span style="color:{color}; font-weight:700;">{icon}</span> '
+                f'<span style="color:{color};">{label}</span>'
+            )
+        return " &nbsp;&nbsp;&nbsp; ".join(parts)
 
     def _has_basic_info(self) -> bool:
         required_keys = (
@@ -548,6 +566,7 @@ class MainWindow(QMainWindow):
             missing_messages.append("- 부자재 포스트잇은 최소 1개 이상 모든 필드를 작성해야 합니다.")
 
         if missing_messages:
+            self._show_feedback(self._build_validation_feedback_html(), timeout_ms=6000)
             QMessageBox.warning(
                 self,
                 "저장 불가",
