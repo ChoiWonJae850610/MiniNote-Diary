@@ -3,12 +3,20 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
 
+
+
 class ImagePreview(QLabel):
     def __init__(self):
         super().__init__()
         self.setAlignment(Qt.AlignCenter)
-        self.setText("이미지 업로드 영역")
         self._pixmap = None
+        self._placeholder_pixmap = None
+        self.set_placeholder_pixmap(None)
+
+    def set_placeholder_pixmap(self, pixmap: QPixmap | None):
+        self._placeholder_pixmap = pixmap
+        if self._pixmap is None:
+            self.update_view()
 
     def set_image(self, path: str):
         pix = QPixmap(path)
@@ -21,7 +29,7 @@ class ImagePreview(QLabel):
         """현재 이미지(픽스맵)와 표시를 완전히 초기화."""
         self._pixmap = None
         self.clear()
-        self.setText("이미지 업로드 영역")
+        self.update_view()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -31,8 +39,9 @@ class ImagePreview(QLabel):
         if self._pixmap:
             scaled = self._pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.setPixmap(scaled)
-        else:
-            # ensure pixmap cleared when no image
-            if self.pixmap() is not None:
-                self.clear()
-                self.setText("이미지 업로드 영역")
+            return
+
+        self.clear()
+        if self._placeholder_pixmap and not self._placeholder_pixmap.isNull():
+            scaled = self._placeholder_pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.setPixmap(scaled)

@@ -3,7 +3,7 @@ import os
 from typing import Dict, List, Optional
 
 from PySide6.QtCore import Qt, QSize, QEvent, QTimer
-from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap, QShortcut
+from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap, QShortcut, QPainterPath
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
@@ -35,6 +35,59 @@ from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, Sec
 from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
 
+
+
+
+def _make_image_placeholder_pixmap(width: int = 240, height: int = 180) -> QPixmap:
+    pix = QPixmap(width, height)
+    pix.fill(Qt.transparent)
+
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing, True)
+
+    border = QColor(THEME.color_border_hover)
+    border.setAlpha(150)
+    fill = QColor(THEME.color_surface_alt)
+    fill.setAlpha(170)
+
+    card_rect = pix.rect().adjusted(10, 10, -10, -10)
+    path = QPainterPath()
+    path.addRoundedRect(card_rect, 18, 18)
+    p.fillPath(path, fill)
+
+    pen = QPen(border, 2)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+
+    dash_rect = card_rect.adjusted(20, 20, -20, -20)
+    dash_pen = QPen(border, 2)
+    dash_pen.setStyle(Qt.DashLine)
+    dash_pen.setDashPattern([4, 4])
+    dash_pen.setCapStyle(Qt.RoundCap)
+    dash_pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(dash_pen)
+    p.drawRoundedRect(dash_rect, 16, 16)
+
+    p.setPen(pen)
+    frame = dash_rect.adjusted(40, 28, -40, -46)
+    p.drawRoundedRect(frame, 10, 10)
+    p.drawEllipse(frame.right() - 34, frame.top() + 14, 12, 12)
+
+    ridge = QPainterPath()
+    ridge.moveTo(frame.left() + 14, frame.bottom() - 14)
+    ridge.lineTo(frame.left() + 46, frame.center().y() + 6)
+    ridge.lineTo(frame.left() + 72, frame.bottom() - 24)
+    ridge.lineTo(frame.right() - 18, frame.top() + 34)
+    p.drawPath(ridge)
+
+    plus_x = dash_rect.center().x()
+    plus_y = dash_rect.bottom() - 34
+    p.drawLine(plus_x - 10, plus_y, plus_x + 10, plus_y)
+    p.drawLine(plus_x, plus_y - 10, plus_x, plus_y + 10)
+
+    p.end()
+    return pix
 
 def _make_image_outline_icon(size: int = 16) -> QIcon:
     pix = QPixmap(size, size)
@@ -239,7 +292,7 @@ class MainWindow(QMainWindow):
         # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
         self.btn_back = QPushButton("◀")
         self.btn_back.setObjectName("navButton")
-        self.btn_reset = QPushButton("⟳")
+        self.btn_reset = QPushButton("↻")
         self.btn_reset.setObjectName("iconAction")
         self.btn_save = QPushButton("✓")
         self.btn_save.setObjectName("iconPrimary")
@@ -252,22 +305,15 @@ class MainWindow(QMainWindow):
 
         for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
             b.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
+            b.setContentsMargins(0, 0, 0, 0)
             f = b.font()
-            f.setPointSize(THEME.icon_button_font_px)
+            f.setPointSize(THEME.icon_button_font_px + 2)
             f.setBold(True)
             b.setFont(f)
 
-        reset_font = self.btn_reset.font()
-        reset_font.setPointSize(THEME.reset_button_font_px)
-        reset_font.setBold(True)
-        self.btn_reset.setFont(reset_font)
-        self.btn_reset.setStyleSheet(icon_button_override(THEME.reset_button_font_px))
-
-        save_font = self.btn_save.font()
-        save_font.setPointSize(THEME.save_button_font_px)
-        save_font.setBold(True)
-        self.btn_save.setFont(save_font)
-        self.btn_save.setStyleSheet(icon_button_override(THEME.save_button_font_px))
+        self.btn_back.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
 
         self.btn_back.setToolTip("뒤로가기")
         self.btn_reset.setToolTip("새로고침")
@@ -313,13 +359,14 @@ class MainWindow(QMainWindow):
         self.feedback_label.setMinimumHeight(20)
         self.feedback_label.setMaximumHeight(20)
         self.feedback_label.setStyleSheet(
-            "QLabel{background:transparent;border:none;padding:0 2px;color:#374151;font-weight:700;}"
+            "QLabel{background:transparent;border:none;padding:0 2px;color:#1F2933;font-weight:700;}"
         )
 
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
         self.image_preview.setMinimumHeight(520)
         self.image_preview.setStyleSheet(image_preview_style())
+        self.image_preview.set_placeholder_pixmap(_make_image_placeholder_pixmap())
 
         self.image_shell = QWidget()
         self.image_shell.setObjectName("imageShell")
@@ -434,8 +481,7 @@ class MainWindow(QMainWindow):
             self.header_data = {}
             self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
             self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
-            self.image_preview.clear()
-            self.image_preview.setText("이미지 업로드 영역")
+            self.image_preview.clear_image()
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
             self.is_dirty = False
@@ -636,8 +682,7 @@ class MainWindow(QMainWindow):
 
     def delete_image(self):
         try:
-            self.image_preview.clear()
-            self.image_preview.setText("이미지 업로드 영역")
+            self.image_preview.clear_image()
         except Exception:
             pass
         self.current_image_path = None

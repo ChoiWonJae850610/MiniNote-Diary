@@ -8,12 +8,15 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QMessageBox, QHeaderView, QTableWidgetItem
 )
 
+from ui.theme import THEME, build_app_stylesheet, icon_button_override
+
 
 class UnitDialog(QDialog):
     def __init__(self, project_root: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle("단위 관리")
         self.resize(520, 420)
+        self.setStyleSheet(build_app_stylesheet())
 
         self.project_root = project_root
         self.db_dir = os.path.join(self.project_root, "db")
@@ -96,30 +99,24 @@ class UnitDialog(QDialog):
         self.btn_delete = QPushButton("−")
         self.btn_close = QPushButton("×")
 
-        for b in (self.btn_save, self.btn_add, self.btn_delete, self.btn_close):
-            b.setFixedSize(24, 24)
-            b.setCursor(Qt.PointingHandCursor)
+        self.btn_save.setObjectName("iconPrimary")
+        self.btn_add.setObjectName("iconAction")
+        self.btn_delete.setObjectName("iconDanger")
+        self.btn_close.setObjectName("iconAction")
 
-        self.btn_save.setStyleSheet(
-            "QPushButton{background:#626B77;color:#FFFFFF;border:1px solid #626B77;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
-            "QPushButton:hover{background:#535B66;border-color:#535B66;}"
-            "QPushButton:pressed{background:#535B66;}"
-        )
-        self.btn_add.setStyleSheet(
-            "QPushButton{background:rgba(250,250,251,0.96);color:#364152;border:1px solid #D7DCE3;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
-            "QPushButton:hover{background:#F5F6F8;border-color:#B8C0CC;}"
-            "QPushButton:pressed{background:#E9EDF2;}"
-        )
-        self.btn_delete.setStyleSheet(
-            "QPushButton{background:rgba(239,241,244,0.96);color:#6C7684;border:1px solid #E1E6EC;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
-            "QPushButton:hover{background:#F3F5F7;}"
-            "QPushButton:pressed{background:#E9EDF2;}"
-        )
-        self.btn_close.setStyleSheet(
-            "QPushButton{background:rgba(250,250,251,0.96);color:#364152;border:1px solid #D7DCE3;border-radius:9px;padding:0;font-weight:700;font-size:18px;}"
-            "QPushButton:hover{background:#F5F6F8;border-color:#B8C0CC;}"
-            "QPushButton:pressed{background:#E9EDF2;}"
-        )
+        for b in (self.btn_save, self.btn_add, self.btn_delete, self.btn_close):
+            b.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
+            b.setContentsMargins(0, 0, 0, 0)
+            b.setCursor(Qt.PointingHandCursor)
+            f = b.font()
+            f.setPointSize(THEME.icon_button_font_px + 2)
+            f.setBold(True)
+            b.setFont(f)
+
+        self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        self.btn_add.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        self.btn_delete.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        self.btn_close.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
 
         btn_row.addWidget(self.btn_save)
         btn_row.addWidget(self.btn_add)
