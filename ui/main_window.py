@@ -50,13 +50,13 @@ def _pixmap_from_base64(png_b64: str) -> QPixmap:
     return pix
 
 
-def _make_image_placeholder_pixmap(width: int = 240, height: int = 180) -> QPixmap:
+def _make_image_placeholder_pixmap(width: int = 150, height: int = 112) -> QPixmap:
     pix = _pixmap_from_base64(_UPLOAD_PLACEHOLDER_PNG_B64)
     if pix.isNull():
         fallback = QPixmap(width, height)
         fallback.fill(Qt.transparent)
         return fallback
-    return pix
+    return pix.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
 
 def _make_image_outline_icon(size: int = 16) -> QIcon:
@@ -290,9 +290,9 @@ class MainWindow(QMainWindow):
             b.setFont(f)
 
         self.btn_back.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_reset.setIcon(_make_reset_icon(THEME.icon_size_md + 2))
-        self.btn_reset.setIconSize(QSize(THEME.icon_size_md + 2, THEME.icon_size_md + 2))
+        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 4))
+        self.btn_reset.setText("↻")
+        self.btn_reset.setIcon(QIcon())
         self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
 
         self.btn_back.setToolTip("뒤로가기")
