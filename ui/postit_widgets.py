@@ -855,7 +855,7 @@ class PostItCard(_PostItCardBase):
         return unit or ""
 
     def _apply_unit_button_text(self):
-        self.unit_btn.setText(self._unit_label or "")
+        self.unit_btn.setText((self._unit_value or "").strip())
 
     def _sync_unit_menu_checks(self):
         current = (self._unit_value or "").strip()
