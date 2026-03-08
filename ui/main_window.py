@@ -501,14 +501,34 @@ class MainWindow(QMainWindow):
             self.reset_work_order_form()
             self.go_menu()
 
+    def _is_nonempty(self, value) -> bool:
+        return bool(str(value or "").strip())
+
+    def _row_has_all_fields(self, row: dict) -> bool:
+        required_keys = ("거래처", "품목", "수량", "단위", "단가", "총액")
+        if not isinstance(row, dict):
+            return False
+        return all(self._is_nonempty(row.get(key, "")) for key in required_keys)
+
     def _has_basic_info(self) -> bool:
-        return bool(self.header_data) and any((v or "").strip() for v in self.header_data.values())
+        required_keys = (
+            "date",
+            "style_no",
+            "factory",
+            "cost_display",
+            "labor_display",
+            "loss_display",
+            "sale_price_display",
+        )
+        if not isinstance(self.header_data, dict):
+            return False
+        return all(self._is_nonempty(self.header_data.get(key, "")) for key in required_keys)
 
     def _has_fabric_info(self) -> bool:
-        return len(self.fabric_items) > 0
+        return any(self._row_has_all_fields(row) for row in (self.fabric_items or []))
 
     def _has_trim_info(self) -> bool:
-        return len(self.trim_items) > 0
+        return any(self._row_has_all_fields(row) for row in (self.trim_items or []))
 
     def collect_work_order_data(self) -> dict:
         return {
@@ -519,12 +539,19 @@ class MainWindow(QMainWindow):
         }
 
     def on_save_clicked(self):
-        # ✅ 저장 조건: 기본정보/원단/부자재가 모두 있을 때만
-        if not (self._has_basic_info() and self._has_fabric_info() and self._has_trim_info()):
+        missing_messages = []
+        if not self._has_basic_info():
+            missing_messages.append("- 기본정보의 모든 입력 필드를 작성해야 합니다.")
+        if not self._has_fabric_info():
+            missing_messages.append("- 원단 포스트잇은 최소 1개 이상 모든 필드를 작성해야 합니다.")
+        if not self._has_trim_info():
+            missing_messages.append("- 부자재 포스트잇은 최소 1개 이상 모든 필드를 작성해야 합니다.")
+
+        if missing_messages:
             QMessageBox.warning(
                 self,
                 "저장 불가",
-                "기본정보 / 원단 정보 / 부자재 정보가 모두 입력된 경우에만 저장할 수 있습니다.",
+                "저장하려면 아래 조건을 모두 만족해야 합니다.\n\n" + "\n".join(missing_messages),
             )
             return
 
