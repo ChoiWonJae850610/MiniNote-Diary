@@ -78,7 +78,7 @@ class _PendingTabFocusFilter(QObject):
             anchor = self.anchor
             self.clear_pending()
             if anchor is not None:
-                target = _next_focusable_widget(anchor)
+                target = getattr(anchor, "_pending_next_widget", None) or _next_focusable_widget(anchor)
                 if target is not None:
                     try:
                         target.setFocus(Qt.TabFocusReason)
@@ -92,7 +92,7 @@ class _PendingTabFocusFilter(QObject):
             anchor = self.anchor
             self.clear_pending()
             if anchor is not None:
-                target = _prev_focusable_widget(anchor)
+                target = getattr(anchor, "_pending_prev_widget", None) or _prev_focusable_widget(anchor)
                 if target is not None:
                     try:
                         target.setFocus(Qt.BacktabFocusReason)
@@ -310,52 +310,6 @@ class _InlineCalendarPopup(QDialog):
 
 
 # ---------- inline editors ----------
-class _MoneyLineEdit(QLineEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setValidator(QRegularExpressionValidator(r"[0-9,]*", self))
-        self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.setFixedHeight(FIELD_H)
-        self._fmt = False
-        self.textChanged.connect(self._on_text)
-
-    def _on_text(self, t: str):
-        if self._fmt:
-            return
-        digits = _digits_only(t)
-        formatted = _format_commas(digits)
-        if formatted == t:
-            return
-        self._fmt = True
-        try:
-            self.setText(formatted)
-            self.setCursorPosition(len(formatted))
-        finally:
-            self._fmt = False
-
-    def digits(self) -> str:
-        return _digits_only(self.text())
-
-    def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            _ensure_pending_tab_filter()
-            _PENDING_TAB_FILTER.set_pending(anchor=self)
-            self.clearFocus()
-            event.accept()
-            return
-        if event.key() == Qt.Key_Backtab:
-            _PENDING_TAB_FILTER.clear_pending()
-            self.focusNextPrevChild(False)
-            event.accept()
-            return
-        if event.key() == Qt.Key_Tab:
-            _PENDING_TAB_FILTER.clear_pending()
-            super().keyPressEvent(event)
-            return
-        _PENDING_TAB_FILTER.clear_pending()
-        super().keyPressEvent(event)
-
-
 class _ClickToEditLineEdit(QLineEdit):
     committed = Signal(str)
 
@@ -442,6 +396,40 @@ class _ClickToEditLineEdit(QLineEdit):
             self._edit_start_text = self.text()
         finally:
             self.blockSignals(old)
+
+
+class _MoneyLineEdit(_ClickToEditLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setValidator(QRegularExpressionValidator(r"[0-9,]*", self))
+        self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self._fmt = False
+        self.textChanged.connect(self._on_text)
+        self._apply_style(editing=False)
+
+    def _apply_style(self, editing: bool):
+        # Money fields use the same visual style in both states and rely on readOnly only
+        # for "editing ended" behavior. This keeps Qt's native focus chain stable.
+        self.setStyleSheet(input_line_edit_style())
+
+    def _on_text(self, t: str):
+        if self._fmt:
+            return
+        digits = _digits_only(t)
+        formatted = _format_commas(digits)
+        if formatted == t:
+            return
+        self._fmt = True
+        try:
+            self.setText(formatted)
+            self.setCursorPosition(len(formatted))
+        finally:
+            self._fmt = False
+
+    def digits(self) -> str:
+        return _digits_only(self.text())
+
+
 class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
     """Click-to-edit integer-only field (no commas)."""
     def __init__(self, parent=None):
@@ -459,7 +447,6 @@ class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
             self._apply_style(editing=False)
             if changed:
                 self.committed.emit(digits)
-
 
 
 # ---------- base card ----------
@@ -610,6 +597,14 @@ class BasicInfoPostIt(_PostItCardBase):
         self.setTabOrder(self.cost, self.labor)
         self.setTabOrder(self.labor, self.loss)
         self.setTabOrder(self.loss, self.sale_price)
+
+        self.cost._pending_prev_widget = self.factory
+        self.cost._pending_next_widget = self.labor
+        self.labor._pending_prev_widget = self.cost
+        self.labor._pending_next_widget = self.loss
+        self.loss._pending_prev_widget = self.labor
+        self.loss._pending_next_widget = self.sale_price
+        self.sale_price._pending_prev_widget = self.loss
 
     def _adjust_style_width(self, text: str):
         fm = QFontMetrics(self.style_no.font())
@@ -846,6 +841,10 @@ class PostItCard(_PostItCardBase):
         self.setTabOrder(self.qty, self.unit_btn)
         self.setTabOrder(self.unit_btn, self.price)
         self.setTabOrder(self.price, self.total)
+
+        self.price._pending_prev_widget = self.unit_btn
+        self.price._pending_next_widget = self.total
+        self.total._pending_prev_widget = self.price
 
         self.setMinimumSize(QSize(320, 198))
         self.setMaximumHeight(198)
