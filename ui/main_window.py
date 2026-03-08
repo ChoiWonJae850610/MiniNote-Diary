@@ -304,7 +304,7 @@ class MainWindow(QMainWindow):
             b.setFont(f)
 
         self.btn_back.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 10))
+        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 10) + "QPushButton { text-align: center; padding: 0; }")
         self.btn_reset.setText("⟳")
         self.btn_reset.setIcon(QIcon())
         reset_font = self.btn_reset.font()
