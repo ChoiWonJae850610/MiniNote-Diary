@@ -3,7 +3,7 @@ import os
 from typing import Dict, List, Optional
 
 from PySide6.QtCore import Qt, QSize, QEvent, QTimer
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self._apply_diary_theme()
         self._install_global_focus_clear()
         self._update_window_title()
+        self._install_shortcuts()
 
     def _apply_diary_theme(self):
         self.setStyleSheet(build_app_stylesheet())
@@ -160,6 +161,11 @@ class MainWindow(QMainWindow):
                 if target is not focused and not focused.isAncestorOf(target) and not self._has_input_ancestor(target):
                     focused.clearFocus()
         return super().eventFilter(obj, event)
+
+
+    def _install_shortcuts(self):
+        self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
+        self.save_shortcut.activated.connect(self.on_save_clicked)
 
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
@@ -233,7 +239,7 @@ class MainWindow(QMainWindow):
         # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
         self.btn_back = QPushButton("◀")
         self.btn_back.setObjectName("navButton")
-        self.btn_reset = QPushButton("↻")
+        self.btn_reset = QPushButton("⟳")
         self.btn_reset.setObjectName("iconAction")
         self.btn_save = QPushButton("✓")
         self.btn_save.setObjectName("iconPrimary")
@@ -264,7 +270,7 @@ class MainWindow(QMainWindow):
         self.btn_save.setStyleSheet(icon_button_override(THEME.save_button_font_px))
 
         self.btn_back.setToolTip("뒤로가기")
-        self.btn_reset.setToolTip("초기화")
+        self.btn_reset.setToolTip("새로고침")
         self.btn_save.setToolTip("저장")
         self.btn_upload.setIcon(_make_image_outline_icon(THEME.icon_size_md))
         self.btn_upload.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
@@ -307,7 +313,7 @@ class MainWindow(QMainWindow):
         self.feedback_label.setMinimumHeight(20)
         self.feedback_label.setMaximumHeight(20)
         self.feedback_label.setStyleSheet(
-            "QLabel{background:transparent;border:none;padding:0 2px;color:rgba(54,65,82,0.72);font-weight:600;}"
+            "QLabel{background:transparent;border:none;padding:0 2px;color:#374151;font-weight:700;}"
         )
 
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)

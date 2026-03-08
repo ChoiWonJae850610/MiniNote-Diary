@@ -146,8 +146,8 @@ class ConfirmActionDialog(_BaseThemedDialog):
         self.confirm_button.clicked.connect(self.accept)
         self.confirm_button.setDefault(True)
 
-        button_row.addWidget(self.cancel_button)
         button_row.addWidget(self.confirm_button)
+        button_row.addWidget(self.cancel_button)
         self.body.addLayout(button_row)
 
 
