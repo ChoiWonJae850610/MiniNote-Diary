@@ -8,15 +8,15 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QMessageBox, QHeaderView, QTableWidgetItem
 )
 
-from ui.theme import THEME, build_app_stylesheet, icon_button_override
+from ui.theme import THEME
+from ui.widget_factory import apply_icon_button_metrics
 
 
 class UnitDialog(QDialog):
     def __init__(self, project_root: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle("단위 관리")
-        self.resize(520, 420)
-        self.setStyleSheet(build_app_stylesheet())
+        self.resize(THEME.unit_dialog_width, THEME.unit_dialog_height)
 
         self.project_root = project_root
         self.db_dir = os.path.join(self.project_root, "db")
@@ -82,7 +82,7 @@ class UnitDialog(QDialog):
             "border:1px solid rgba(98,107,119,0.28);"
             "}"
         )
-        self.table.verticalHeader().setDefaultSectionSize(30)
+        self.table.verticalHeader().setDefaultSectionSize(THEME.table_row_height)
 
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
@@ -99,24 +99,10 @@ class UnitDialog(QDialog):
         self.btn_delete = QPushButton("−")
         self.btn_close = QPushButton("×")
 
-        self.btn_save.setObjectName("iconPrimary")
-        self.btn_add.setObjectName("iconAction")
-        self.btn_delete.setObjectName("iconDanger")
-        self.btn_close.setObjectName("iconAction")
-
-        for b in (self.btn_save, self.btn_add, self.btn_delete, self.btn_close):
-            b.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
-            b.setContentsMargins(0, 0, 0, 0)
-            b.setCursor(Qt.PointingHandCursor)
-            f = b.font()
-            f.setPointSize(THEME.icon_button_font_px + 2)
-            f.setBold(True)
-            b.setFont(f)
-
-        self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_add.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_delete.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_close.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        apply_icon_button_metrics(self.btn_save, font_px=18, object_name="iconPrimary")
+        apply_icon_button_metrics(self.btn_add, font_px=18, object_name="iconAction")
+        apply_icon_button_metrics(self.btn_delete, font_px=18, object_name="iconDanger")
+        apply_icon_button_metrics(self.btn_close, font_px=18, object_name="iconAction")
 
         btn_row.addWidget(self.btn_save)
         btn_row.addWidget(self.btn_add)
@@ -191,7 +177,7 @@ class UnitDialog(QDialog):
 
         r = self.table.rowCount()
         self.table.insertRow(r)
-        self.table.setRowHeight(r, 30)
+        self.table.setRowHeight(r, THEME.table_row_height)
         self.table.setItem(r, 0, self._make_item(""))
         self.table.setItem(r, 1, self._make_item(""))
         self.table.setCurrentCell(r, 0)
@@ -214,7 +200,7 @@ class UnitDialog(QDialog):
         while self.table.rowCount() < target_rows:
             r = self.table.rowCount()
             self.table.insertRow(r)
-            self.table.setRowHeight(r, 30)
+            self.table.setRowHeight(r, THEME.table_row_height)
 
     def _cell_text(self, r: int, c: int) -> str:
         it = self.table.item(r, c)

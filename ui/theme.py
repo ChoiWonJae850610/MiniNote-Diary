@@ -26,15 +26,32 @@ class ThemeTokens:
     reset_button_font_px: int = 22
     save_button_font_px: int = 20
     delete_button_font_px: int = 10
+
+    menu_button_width: int = 360
+    menu_button_height: int = 54
+    footer_button_width: int = 140
+    footer_button_height: int = 32
+    dialog_button_height: int = 34
+    unit_dialog_width: int = 520
+    unit_dialog_height: int = 420
+
     icon_button_size: int = 24
     icon_size_sm: int = 12
     icon_size_md: int = 16
     field_height: int = 26
+    table_row_height: int = 30
+    section_badge_height: int = 28
+    feedback_label_height: int = 20
+    image_preview_min_height: int = 520
+    postit_bar_max_height: int = 232
+    page_padding: int = 12
+    block_spacing: int = 10
+    top_button_spacing: int = 6
+    image_shell_margin: int = 18
+
     card_radius: int = 16
     card_shadow_blur: int = 22
     card_shadow_offset_y: int = 5
-    page_padding: int = 12
-    block_spacing: int = 10
     shell_radius: int = 22
     control_radius: int = 9
     input_radius: int = 8

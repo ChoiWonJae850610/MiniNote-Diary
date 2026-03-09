@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ui.theme import THEME, hex_to_rgba
+from ui.widget_factory import make_dialog_button
 
 
 def _dialog_stylesheet() -> str:
@@ -20,42 +21,53 @@ def _dialog_stylesheet() -> str:
         QFrame#dialogCard {{
             background: {t.color_surface};
             border: 1px solid {t.color_border};
-            border-radius: 16px;
+            border-radius: 18px;
+        }}
+        QLabel#dialogTitle {{
+            color: {t.color_text};
+            font-size: {t.menu_title_font_px - 2}px;
+            font-weight: 700;
+            background: transparent;
         }}
         QLabel#dialogMessage {{
-            color: {t.color_text};
+            color: {t.color_text_soft};
             font-size: {t.base_font_px + 1}px;
-            font-weight: 700;
             background: transparent;
         }}
         QLabel#statusIconOk {{
             color: {success};
-            font-size: {t.base_font_px + 2}px;
+            font-size: {t.base_font_px + 3}px;
             font-weight: 800;
             background: transparent;
         }}
         QLabel#statusIconFail {{
             color: {danger};
-            font-size: {t.base_font_px + 2}px;
+            font-size: {t.base_font_px + 3}px;
             font-weight: 800;
             background: transparent;
         }}
-        QLabel#statusText {{
-            color: {t.color_text};
-            font-size: {t.base_font_px}px;
-            font-weight: 600;
+        QLabel#statusTextOk {{
+            color: {success};
+            font-size: {t.base_font_px + 1}px;
+            font-weight: 700;
+            background: transparent;
+        }}
+        QLabel#statusTextFail {{
+            color: {danger};
+            font-size: {t.base_font_px + 1}px;
+            font-weight: 700;
             background: transparent;
         }}
         QFrame#statusRow {{
-            background: {hex_to_rgba(t.color_window, 0.94)};
+            background: {hex_to_rgba(t.color_window, 0.92)};
             border: 1px solid {t.color_border_soft};
-            border-radius: 10px;
+            border-radius: 12px;
         }}
         QPushButton#dialogConfirm {{
-            min-width: 78px;
-            min-height: 32px;
-            padding: 0 14px;
-            border-radius: 10px;
+            min-width: 88px;
+            min-height: {t.dialog_button_height}px;
+            padding: 0 16px;
+            border-radius: 12px;
             background: {t.color_primary};
             border: 1px solid {t.color_primary};
             color: {t.color_text_on_primary};
@@ -66,10 +78,10 @@ def _dialog_stylesheet() -> str:
             border-color: {t.color_primary_hover};
         }}
         QPushButton#dialogCancel, QPushButton#dialogClose {{
-            min-width: 78px;
-            min-height: 32px;
-            padding: 0 14px;
-            border-radius: 10px;
+            min-width: 88px;
+            min-height: {t.dialog_button_height}px;
+            padding: 0 16px;
+            border-radius: 12px;
             background: {t.color_surface_alt};
             border: 1px solid {t.color_border};
             color: {t.color_text_soft};
@@ -83,21 +95,27 @@ def _dialog_stylesheet() -> str:
 
 
 class _BaseThemedDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, title: str, parent=None):
         super().__init__(parent)
         self.setModal(True)
+        self.setWindowTitle(title)
+        self.setMinimumWidth(360)
         self.setStyleSheet(_dialog_stylesheet())
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(12, 12, 12, 12)
+        root.setContentsMargins(18, 18, 18, 18)
 
         self.card = QFrame(self)
         self.card.setObjectName("dialogCard")
         root.addWidget(self.card)
 
         self.body = QVBoxLayout(self.card)
-        self.body.setContentsMargins(16, 14, 16, 14)
-        self.body.setSpacing(10)
+        self.body.setContentsMargins(20, 18, 20, 18)
+        self.body.setSpacing(14)
+
+        self.title_label = QLabel(title, self.card)
+        self.title_label.setObjectName("dialogTitle")
+        self.body.addWidget(self.title_label)
 
 
 class ConfirmActionDialog(_BaseThemedDialog):
@@ -109,26 +127,22 @@ class ConfirmActionDialog(_BaseThemedDialog):
         cancel_text: str = "취소",
         parent=None,
     ):
-        super().__init__(parent=parent)
-        self.setWindowTitle(title)
-        self.setMinimumWidth(280)
-        self.setMaximumWidth(320)
+        super().__init__(title=title, parent=parent)
+        self.setMinimumWidth(380)
 
         message_label = QLabel(message, self.card)
         message_label.setObjectName("dialogMessage")
         message_label.setWordWrap(True)
-        message_label.setAlignment(Qt.AlignCenter)
         self.body.addWidget(message_label)
 
         button_row = QHBoxLayout()
-        button_row.setSpacing(8)
         button_row.addStretch(1)
 
-        self.cancel_button = QPushButton(cancel_text, self.card)
+        self.cancel_button = make_dialog_button(cancel_text, self.card)
         self.cancel_button.setObjectName("dialogCancel")
         self.cancel_button.clicked.connect(self.reject)
 
-        self.confirm_button = QPushButton(confirm_text, self.card)
+        self.confirm_button = make_dialog_button(confirm_text, self.card)
         self.confirm_button.setObjectName("dialogConfirm")
         self.confirm_button.clicked.connect(self.accept)
         self.confirm_button.setDefault(True)
@@ -140,10 +154,8 @@ class ConfirmActionDialog(_BaseThemedDialog):
 
 class ValidationStatusDialog(_BaseThemedDialog):
     def __init__(self, title: str, items: Sequence[Tuple[str, bool]], parent=None):
-        super().__init__(parent=parent)
-        self.setWindowTitle(title)
-        self.setMinimumWidth(300)
-        self.setMaximumWidth(340)
+        super().__init__(title=title, parent=parent)
+        self.setMinimumWidth(420)
 
         for label, ok in items:
             self.body.addWidget(self._make_status_row(label, ok))
@@ -151,7 +163,7 @@ class ValidationStatusDialog(_BaseThemedDialog):
         button_row = QHBoxLayout()
         button_row.addStretch(1)
 
-        close_button = QPushButton("확인", self.card)
+        close_button = make_dialog_button("확인", self.card)
         close_button.setObjectName("dialogClose")
         close_button.clicked.connect(self.accept)
 
@@ -163,16 +175,16 @@ class ValidationStatusDialog(_BaseThemedDialog):
         row.setObjectName("statusRow")
 
         layout = QHBoxLayout(row)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(8)
+        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setSpacing(10)
 
         icon = QLabel("V" if ok else "X", row)
-        icon.setFixedWidth(16)
+        icon.setFixedWidth(18)
         icon.setAlignment(Qt.AlignCenter)
         icon.setObjectName("statusIconOk" if ok else "statusIconFail")
 
         text = QLabel(label, row)
-        text.setObjectName("statusText")
+        text.setObjectName("statusTextOk" if ok else "statusTextFail")
         text.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
 
         layout.addWidget(icon)

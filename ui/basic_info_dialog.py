@@ -235,10 +235,8 @@ class BasicInfoDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
-        btn_cancel = QPushButton("취소", self)
-        btn_ok = QPushButton("확인", self)
-        btn_cancel.setFixedHeight(34)
-        btn_ok.setFixedHeight(34)
+        btn_cancel = make_dialog_button("취소", self)
+        btn_ok = make_dialog_button("확인", self)
         btn_row.addWidget(btn_cancel)
         btn_row.addWidget(btn_ok)
         root.addLayout(btn_row)

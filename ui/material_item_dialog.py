@@ -172,10 +172,8 @@ class MaterialItemDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
-        self.btn_cancel = QPushButton("취소", self)
-        self.btn_ok = QPushButton("추가", self)
-        self.btn_cancel.setFixedHeight(34)
-        self.btn_ok.setFixedHeight(34)
+        self.btn_cancel = make_dialog_button("취소", self)
+        self.btn_ok = make_dialog_button("추가", self)
         btn_row.addWidget(self.btn_cancel)
         btn_row.addWidget(self.btn_ok)
         root.addLayout(btn_row)
