@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QLabel
-from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPixmap
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QFont, QPainter, QPixmap
 
 from ui.theme import THEME
 
@@ -11,7 +11,7 @@ class ImagePreview(QLabel):
         self.setAlignment(Qt.AlignCenter)
         self._pixmap = None
         self._placeholder_pixmap = None
-        self._placeholder_text = "이미지 추가"
+        self._placeholder_text = "이미지 없음"
         self.set_placeholder_pixmap(None)
 
     def set_placeholder_pixmap(self, pixmap: QPixmap | None):
@@ -49,22 +49,6 @@ class ImagePreview(QLabel):
         rect = self.contentsRect()
         if rect.width() <= 0 or rect.height() <= 0:
             return
-
-        margin_x = max(18, int(rect.width() * 0.06))
-        margin_top = max(16, int(rect.height() * 0.07))
-        margin_bottom = max(8, int(rect.height() * 0.025))
-        dash_rect = rect.adjusted(margin_x, margin_top, -margin_x, -margin_bottom)
-        if dash_rect.width() < 80 or dash_rect.height() < 50:
-            dash_rect = rect.adjusted(10, 10, -10, -6)
-
-        pen = QPen(QColor(THEME.color_border_hover), 2)
-        pen.setStyle(Qt.DashLine)
-        pen.setCapStyle(Qt.RoundCap)
-        pen.setJoinStyle(Qt.RoundJoin)
-        pen.setDashPattern([2.5, 4.0])
-        painter.setPen(pen)
-        painter.setBrush(Qt.NoBrush)
-        painter.drawRoundedRect(QRectF(dash_rect), 18, 18)
 
         font = QFont(self.font())
         font_px = max(14, min(24, int(min(rect.width(), rect.height()) * 0.055)))
