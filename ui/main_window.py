@@ -37,7 +37,7 @@ from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
 from ui.theme import THEME, build_app_stylesheet, image_preview_style
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
-from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
+from ui.widget_factory import apply_button_metrics, apply_glyph_icon, apply_icon_button_metrics
 
 
 
@@ -295,10 +295,11 @@ class MainWindow(QMainWindow):
 
         self.btn_reset = QPushButton("⟳")
         apply_icon_button_metrics(self.btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="새로고침")
-        self.btn_reset.setIcon(QIcon())
+        apply_glyph_icon(self.btn_reset, "⟳", font_px=THEME.reset_button_font_px, color=THEME.color_text_soft)
 
         self.btn_save = QPushButton("✓")
         apply_icon_button_metrics(self.btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
+        apply_glyph_icon(self.btn_save, "✓", font_px=THEME.save_button_font_px, color=THEME.color_text_on_primary)
 
         self.btn_upload = QPushButton("")
         apply_icon_button_metrics(self.btn_upload, font_px=THEME.icon_button_font_px + 2, object_name="iconAction", tooltip="사진 업로드")
