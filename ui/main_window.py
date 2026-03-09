@@ -348,7 +348,6 @@ class MainWindow(QMainWindow):
         left_controls = QWidget()
         left_controls_layout = QHBoxLayout(left_controls)
         left_controls_layout.setContentsMargins(0, 0, 0, 0)
-        left_controls_layout.setSpacing(THEME.top_button_spacing)
         left_controls_layout.setSpacing(6)
         left_controls_layout.addWidget(self.btn_back)
         left_controls_layout.addWidget(self.btn_reset)
