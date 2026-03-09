@@ -29,12 +29,15 @@ from PySide6.QtWidgets import (
 
 from ui.image_preview import ImagePreview
 from services.storage import save_work_order
+from services.work_order_defaults import default_fabric_items, default_trim_items, empty_header_data, empty_material_row
+from services.work_order_validation import get_save_requirement_statuses
 from ui.unit_dialog import UnitDialog
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
-from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
+from ui.theme import THEME, build_app_stylesheet, image_preview_style
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
+from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
 
 
 
@@ -107,11 +110,11 @@ class _ChangeNoteDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("메모")
         self.setModal(True)
-        self.setMinimumSize(520, 360)
+        self.setMinimumSize(THEME.note_dialog_min_width, THEME.note_dialog_min_height)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(10)
+        layout.setContentsMargins(THEME.page_padding, THEME.page_padding, THEME.page_padding, THEME.page_padding)
+        layout.setSpacing(THEME.block_spacing)
 
         self.edit = QTextEdit(self)
         self.edit.setPlainText(initial_text or "")
@@ -122,8 +125,8 @@ class _ChangeNoteDialog(QDialog):
         btn_row.addStretch(1)
         btn_cancel = QPushButton("취소", self)
         btn_ok = QPushButton("확인", self)
-        btn_cancel.setFixedHeight(34)
-        btn_ok.setFixedHeight(34)
+        apply_button_metrics(btn_cancel, height=THEME.dialog_button_height)
+        apply_button_metrics(btn_ok, height=THEME.dialog_button_height)
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
         btn_row.addWidget(btn_cancel)
@@ -152,9 +155,9 @@ class MainWindow(QMainWindow):
         self._feedback_timer.timeout.connect(self._clear_feedback)
 
         # 기본정보/원단/부자재는 모두 팝업 입력 → dict/list로 관리
-        self.header_data: Dict[str, str] = {}
-        self.fabric_items: List[Dict[str, str]] = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
-        self.trim_items: List[Dict[str, str]] = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+        self.header_data: Dict[str, str] = empty_header_data()
+        self.fabric_items: List[Dict[str, str]] = default_fabric_items()
+        self.trim_items: List[Dict[str, str]] = default_trim_items()
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -172,12 +175,11 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(self.PAGE_MENU)
 
         # 이미지 중심 화면 느낌 (요청 반영)
-        self.setMinimumSize(1080, 760)
-        self.resize(1080, 760)
+        self.setMinimumSize(THEME.window_min_width, THEME.window_min_height)
+        self.resize(THEME.window_min_width, THEME.window_min_height)
         self._apply_diary_theme()
         self._install_global_focus_clear()
         self._update_window_title()
-        self._install_shortcuts()
         self._install_shortcuts()
 
     def _apply_diary_theme(self):
@@ -218,20 +220,16 @@ class MainWindow(QMainWindow):
         self.on_save_clicked()
 
 
-    def _install_shortcuts(self):
-        self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
-        self.save_shortcut.activated.connect(self.on_save_clicked)
-
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
         page = QWidget()
         page.setObjectName("workOrderPage")
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setContentsMargins(THEME.page_padding + 4, THEME.page_padding + 4, THEME.page_padding + 4, THEME.page_padding + 4)
         layout.setSpacing(0)
 
         center_col = QVBoxLayout()
-        center_col.setSpacing(14)
+        center_col.setSpacing(THEME.section_gap)
 
         title = QLabel("메인 메뉴")
         title.setAlignment(Qt.AlignCenter)
@@ -241,14 +239,14 @@ class MainWindow(QMainWindow):
         btn_receipt = QPushButton("부자재 영수증 업로드")
         btn_status = QPushButton("제품 제작 현황")
 
-        BTN_W, BTN_H = 360, 54
+        BTN_W, BTN_H = THEME.menu_button_width, THEME.menu_button_height
         for b in (btn_create, btn_receipt, btn_status):
             b.setFixedSize(BTN_W, BTN_H)
 
         btn_create.clicked.connect(self.go_work_order)
 
         center_col.addWidget(title)
-        center_col.addSpacing(14)
+        center_col.addSpacing(THEME.section_gap)
         center_col.addWidget(btn_create, alignment=Qt.AlignHCenter)
         center_col.addWidget(btn_receipt, alignment=Qt.AlignHCenter)
         center_col.addWidget(btn_status, alignment=Qt.AlignHCenter)
@@ -262,14 +260,14 @@ class MainWindow(QMainWindow):
 
         self.btn_vendor_mgmt = QPushButton("거래처 관리")
         self.btn_unit_mgmt = QPushButton("단위 추가(관리)")
-        self.btn_vendor_mgmt.setFixedSize(140, 32)
-        self.btn_unit_mgmt.setFixedSize(140, 32)
+        apply_button_metrics(self.btn_vendor_mgmt, width=THEME.footer_button_width, height=THEME.footer_button_height)
+        apply_button_metrics(self.btn_unit_mgmt, width=THEME.footer_button_width, height=THEME.footer_button_height)
 
         self.btn_vendor_mgmt.clicked.connect(self.on_vendor_mgmt_clicked)
         self.btn_unit_mgmt.clicked.connect(self.on_unit_mgmt_clicked)
 
         bottom_row.addWidget(self.btn_vendor_mgmt)
-        bottom_row.addSpacing(8)
+        bottom_row.addSpacing(THEME.row_spacing)
         bottom_row.addWidget(self.btn_unit_mgmt)
 
         layout.addLayout(bottom_row)
@@ -288,56 +286,33 @@ class MainWindow(QMainWindow):
     def _build_page_work_order(self) -> QWidget:
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(12, 12, 12, 12)
-        page_layout.setSpacing(10)
+        page_layout.setContentsMargins(THEME.page_padding, THEME.page_padding, THEME.page_padding, THEME.page_padding)
+        page_layout.setSpacing(THEME.block_spacing)
 
         # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
         self.btn_back = QPushButton("◀")
-        self.btn_back.setObjectName("navButton")
-        self.btn_reset = QPushButton("")
-        self.btn_reset.setObjectName("iconAction")
+        apply_icon_button_metrics(self.btn_back, font_px=THEME.icon_button_font_px + 2, object_name="navButton", tooltip="뒤로가기")
+
+        self.btn_reset = QPushButton("⟳")
+        apply_icon_button_metrics(self.btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="새로고침")
+        self.btn_reset.setIcon(QIcon())
+
         self.btn_save = QPushButton("✓")
-        self.btn_save.setObjectName("iconPrimary")
+        apply_icon_button_metrics(self.btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
 
         self.btn_upload = QPushButton("")
-        self.btn_upload.setObjectName("iconAction")
-        self.btn_delete_image = QPushButton("")
-        self.btn_delete_image.setObjectName("iconDanger")
-        self.btn_delete_image.setEnabled(False)
-
-        for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
-            b.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
-            b.setContentsMargins(0, 0, 0, 0)
-            f = b.font()
-            f.setPointSize(THEME.icon_button_font_px + 2)
-            f.setBold(True)
-            b.setFont(f)
-
-        self.btn_back.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 10))
-        self.btn_reset.setText("⟳")
-        self.btn_reset.setIcon(QIcon())
-        reset_font = self.btn_reset.font()
-        reset_font.setPointSize(THEME.icon_button_font_px + 8)
-        reset_font.setBold(True)
-        self.btn_reset.setFont(reset_font)
-        self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
-
-        self.btn_back.setToolTip("뒤로가기")
-        self.btn_reset.setToolTip("새로고침")
-        self.btn_save.setToolTip("저장")
+        apply_icon_button_metrics(self.btn_upload, font_px=THEME.icon_button_font_px + 2, object_name="iconAction", tooltip="사진 업로드")
         self.btn_upload.setIcon(_make_image_outline_icon(THEME.icon_size_md))
         self.btn_upload.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
-        self.btn_upload.setToolTip("사진 업로드")
 
+        self.btn_delete_image = QPushButton("")
+        apply_icon_button_metrics(self.btn_delete_image, font_px=THEME.icon_button_font_px + 2, object_name="iconDanger", tooltip="사진 삭제")
         delete_icon = self.style().standardIcon(QStyle.SP_TrashIcon)
         if delete_icon.isNull():
             delete_icon = self.style().standardIcon(QStyle.SP_DialogDiscardButton)
         self.btn_delete_image.setIcon(delete_icon)
-        self.btn_delete_image.setToolTip("사진 삭제")
-
         self.btn_delete_image.setIconSize(QSize(THEME.icon_size_sm, THEME.icon_size_sm))
-        self.btn_delete_image.setText("")
+        self.btn_delete_image.setEnabled(False)
 
         self.btn_back.clicked.connect(self.on_back_clicked)
         self.btn_reset.clicked.connect(self.on_reset_clicked)
@@ -348,7 +323,7 @@ class MainWindow(QMainWindow):
         left_controls = QWidget()
         left_controls_layout = QHBoxLayout(left_controls)
         left_controls_layout.setContentsMargins(0, 0, 0, 0)
-        left_controls_layout.setSpacing(6)
+        left_controls_layout.setSpacing(THEME.top_button_spacing)
         left_controls_layout.addWidget(self.btn_back)
         left_controls_layout.addWidget(self.btn_reset)
         left_controls_layout.addWidget(self.btn_save)
@@ -357,29 +332,29 @@ class MainWindow(QMainWindow):
         image_controls = QWidget()
         image_controls_layout = QHBoxLayout(image_controls)
         image_controls_layout.setContentsMargins(0, 0, 0, 0)
-        image_controls_layout.setSpacing(6)
+        image_controls_layout.setSpacing(THEME.top_button_spacing)
         image_controls_layout.addStretch(1)
         image_controls_layout.addWidget(self.btn_upload)
         image_controls_layout.addWidget(self.btn_delete_image)
 
         self.feedback_label = QLabel("", self)
         self.feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.feedback_label.setMinimumHeight(20)
-        self.feedback_label.setMaximumHeight(20)
+        self.feedback_label.setMinimumHeight(THEME.feedback_label_height)
+        self.feedback_label.setMaximumHeight(THEME.feedback_label_height)
         self.feedback_label.setStyleSheet(
-            "QLabel{background:transparent;border:none;padding:0 2px;color:#1F2933;font-weight:700;}"
+            f"QLabel{{background:transparent;border:none;padding:0 {THEME.label_padding_x}px;color:{THEME.color_text};font-weight:700;}}"
         )
 
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(520)
+        self.image_preview.setMinimumHeight(THEME.image_preview_min_height)
         self.image_preview.setStyleSheet(image_preview_style())
         self.image_preview.set_placeholder_pixmap(_make_image_placeholder_pixmap())
 
         self.image_shell = QWidget()
         self.image_shell.setObjectName("imageShell")
         image_shell_layout = QVBoxLayout(self.image_shell)
-        image_shell_layout.setContentsMargins(18, 18, 18, 18)
+        image_shell_layout.setContentsMargins(THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin)
         image_shell_layout.setSpacing(0)
         image_shell_layout.addWidget(self.image_preview)
 
@@ -396,14 +371,14 @@ class MainWindow(QMainWindow):
         self.change_note_wrap = SectionContainer(
             self.change_note_title,
             self.change_note_postit,
-            spacing=6,
+            spacing=THEME.top_button_spacing,
         )
 
         center_row = QWidget()
         center_layout = QGridLayout(center_row)
         center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setHorizontalSpacing(14)
-        center_layout.setVerticalSpacing(8)
+        center_layout.setHorizontalSpacing(THEME.section_gap)
+        center_layout.setVerticalSpacing(THEME.row_spacing)
         center_layout.setColumnStretch(0, 1)
         center_layout.setColumnStretch(1, 1)
         center_layout.setColumnStretch(2, 1)
@@ -415,7 +390,7 @@ class MainWindow(QMainWindow):
         center_layout.addWidget(self.image_shell, 1, 0, 1, 2)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
-        self.postit_bar.setMaximumHeight(232)
+        self.postit_bar.setMaximumHeight(THEME.postit_bar_max_height)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
@@ -486,9 +461,9 @@ class MainWindow(QMainWindow):
     def reset_work_order_form(self):
         self._suppress_dirty = True
         try:
-            self.header_data = {}
-            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
-            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.header_data = empty_header_data()
+            self.fabric_items = default_fabric_items()
+            self.trim_items = default_trim_items()
             self.image_preview.clear_image()
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
@@ -562,41 +537,8 @@ class MainWindow(QMainWindow):
             self.reset_work_order_form()
             self.go_menu()
 
-    def _is_nonempty(self, value) -> bool:
-        return bool(str(value or "").strip())
-
-    def _row_has_all_fields(self, row: dict) -> bool:
-        required_keys = ("거래처", "품목", "수량", "단가", "총액")
-        if not isinstance(row, dict):
-            return False
-        return all(self._is_nonempty(row.get(key, "")) for key in required_keys)
-
-    def _has_basic_info(self) -> bool:
-        required_keys = (
-            "date",
-            "style_no",
-            "factory",
-            "cost_display",
-            "labor_display",
-            "loss_display",
-            "sale_price_display",
-        )
-        if not isinstance(self.header_data, dict):
-            return False
-        return all(self._is_nonempty(self.header_data.get(key, "")) for key in required_keys)
-
-    def _has_fabric_info(self) -> bool:
-        return any(self._row_has_all_fields(row) for row in (self.fabric_items or []))
-
-    def _has_trim_info(self) -> bool:
-        return any(self._row_has_all_fields(row) for row in (self.trim_items or []))
-
     def _get_save_requirement_statuses(self):
-        return [
-            ("기본사항", self._has_basic_info()),
-            ("원단정보 1개 이상", self._has_fabric_info()),
-            ("부자재정보 1개 이상", self._has_trim_info()),
-        ]
+        return get_save_requirement_statuses(self.header_data, self.fabric_items, self.trim_items)
 
     def collect_work_order_data(self) -> dict:
         return {
@@ -652,9 +594,9 @@ class MainWindow(QMainWindow):
         if not isinstance(patch, dict) or idx < 0:
             return
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.fabric_items = default_fabric_items()
         while len(self.fabric_items) <= idx:
-            self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+            self.fabric_items.append(empty_material_row())
         self.fabric_items[idx].update(patch)
         self.mark_dirty()
 
@@ -662,9 +604,9 @@ class MainWindow(QMainWindow):
         if not isinstance(patch, dict) or idx < 0:
             return
         if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.trim_items = default_trim_items()
         while len(self.trim_items) <= idx:
-            self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+            self.trim_items.append(empty_material_row())
         self.trim_items[idx].update(patch)
         self.mark_dirty()
 
@@ -702,11 +644,11 @@ class MainWindow(QMainWindow):
     # ===================== Add fabric/trim cards ======================
     def on_add_fabric_clicked(self):
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.fabric_items = default_fabric_items()
         self.fabric_items = list(self.fabric_items)
         if len(self.fabric_items) >= 9:
             return
-        self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+        self.fabric_items.append(empty_material_row())
         try:
             self._refresh_postits()
             self.postit_bar.fabric.set_active_card(len(self.fabric_items) - 1)
@@ -716,11 +658,11 @@ class MainWindow(QMainWindow):
 
     def on_add_trim_clicked(self):
         if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.trim_items = default_trim_items()
         self.trim_items = list(self.trim_items)
         if len(self.trim_items) >= 9:
             return
-        self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
+        self.trim_items.append(empty_material_row())
         try:
             self._refresh_postits()
             self.postit_bar.trim.set_active_card(len(self.trim_items) - 1)

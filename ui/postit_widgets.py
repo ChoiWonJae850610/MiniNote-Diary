@@ -1019,7 +1019,7 @@ class PostItStack(QWidget):
     def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
         items = list(items or [])
         if not items:
-            items = [{"거래처": "", "품목": "", "수량": "", "단위": "", "단가": "", "총액": ""}]
+            items = [empty_material_row()]
 
         if force_rebuild:
             self.items = items

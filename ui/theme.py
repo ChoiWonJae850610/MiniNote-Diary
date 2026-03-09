@@ -34,6 +34,10 @@ class ThemeTokens:
     dialog_button_height: int = 34
     unit_dialog_width: int = 520
     unit_dialog_height: int = 420
+    window_min_width: int = 1080
+    window_min_height: int = 760
+    note_dialog_min_width: int = 520
+    note_dialog_min_height: int = 360
 
     icon_button_size: int = 24
     icon_size_sm: int = 12
@@ -46,8 +50,11 @@ class ThemeTokens:
     postit_bar_max_height: int = 232
     page_padding: int = 12
     block_spacing: int = 10
+    row_spacing: int = 8
     top_button_spacing: int = 6
+    section_gap: int = 14
     image_shell_margin: int = 18
+    label_padding_x: int = 2
 
     card_radius: int = 16
     card_shadow_blur: int = 22
