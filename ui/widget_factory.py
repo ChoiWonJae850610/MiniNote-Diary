@@ -40,7 +40,11 @@ def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name:
         button.setObjectName(object_name)
     if tooltip:
         button.setToolTip(tooltip)
-    button.setStyleSheet(icon_button_override(font_px) + " QPushButton { text-align: center; padding: 0; margin: 0; }" + extra_style)
+    button.setStyleSheet(
+        icon_button_override(font_px)
+        + f" QPushButton {{ text-align: center; padding: 0; margin: 0; line-height: {THEME.icon_button_size}px; }}"
+        + extra_style
+    )
     return button
 
 

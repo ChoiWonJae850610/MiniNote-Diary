@@ -355,4 +355,4 @@ def image_preview_style() -> str:
 
 
 def icon_button_override(font_px: int) -> str:
-    return f"font-size: {font_px}px; font-weight: 700; padding: 0; qproperty-iconSize: 0px;"
+    return f"font-size: {font_px}px; font-weight: 700; padding: 0;"
