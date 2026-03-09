@@ -37,7 +37,7 @@ from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
 from ui.theme import THEME, build_app_stylesheet, image_preview_style
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
-from ui.widget_factory import apply_button_metrics, apply_glyph_icon, apply_icon_button_metrics
+from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
 
 
 
@@ -105,6 +105,29 @@ def _make_reset_icon(size: int = 18) -> QIcon:
         return QIcon()
     scaled = pix.scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     return QIcon(scaled)
+
+
+def _make_save_icon(size: int = 16, color: str | None = None) -> QIcon:
+    pix = QPixmap(size, size)
+    pix.fill(Qt.transparent)
+
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing, True)
+    pen = QPen(QColor(color or THEME.color_text_on_primary), 1.7)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+    p.setBrush(Qt.NoBrush)
+
+    inset = 2.0
+    body = size - inset * 2
+    p.drawRoundedRect(inset, inset, body, body, 1.8, 1.8)
+    p.drawRect(size * 0.28, size * 0.20, size * 0.30, size * 0.22)
+    p.drawRect(size * 0.28, size * 0.60, size * 0.44, size * 0.18)
+    p.drawLine(size * 0.68, size * 0.22, size * 0.68, size * 0.44)
+    p.end()
+    return QIcon(pix)
+
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
         super().__init__(parent)
@@ -293,13 +316,15 @@ class MainWindow(QMainWindow):
         self.btn_back = QPushButton("◀")
         apply_icon_button_metrics(self.btn_back, font_px=THEME.icon_button_font_px + 2, object_name="navButton", tooltip="뒤로가기")
 
-        self.btn_reset = QPushButton("⟳")
+        self.btn_reset = QPushButton("")
         apply_icon_button_metrics(self.btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="새로고침")
-        apply_glyph_icon(self.btn_reset, "⟳", font_px=THEME.reset_button_font_px, color=THEME.color_text_soft)
+        self.btn_reset.setIcon(_make_reset_icon(THEME.icon_size_md))
+        self.btn_reset.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
 
-        self.btn_save = QPushButton("✓")
+        self.btn_save = QPushButton("")
         apply_icon_button_metrics(self.btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
-        apply_glyph_icon(self.btn_save, "✓", font_px=THEME.save_button_font_px, color=THEME.color_text_on_primary)
+        self.btn_save.setIcon(_make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary))
+        self.btn_save.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
 
         self.btn_upload = QPushButton("")
         apply_icon_button_metrics(self.btn_upload, font_px=THEME.icon_button_font_px + 2, object_name="iconAction", tooltip="사진 업로드")
