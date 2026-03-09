@@ -115,7 +115,7 @@ class _BaseThemedDialog(QDialog):
 
         self.title_label = QLabel(title, self.card)
         self.title_label.setObjectName("dialogTitle")
-        self.body.addWidget(self.title_label)
+        self.title_label.hide()
 
 
 class ConfirmActionDialog(_BaseThemedDialog):
@@ -128,7 +128,7 @@ class ConfirmActionDialog(_BaseThemedDialog):
         parent=None,
     ):
         super().__init__(title=title, parent=parent)
-        self.setMinimumWidth(380)
+        self.setMinimumWidth(330)
 
         message_label = QLabel(message, self.card)
         message_label.setObjectName("dialogMessage")
@@ -155,7 +155,7 @@ class ConfirmActionDialog(_BaseThemedDialog):
 class ValidationStatusDialog(_BaseThemedDialog):
     def __init__(self, title: str, items: Sequence[Tuple[str, bool]], parent=None):
         super().__init__(title=title, parent=parent)
-        self.setMinimumWidth(420)
+        self.setMinimumWidth(340)
 
         for label, ok in items:
             self.body.addWidget(self._make_status_row(label, ok))
