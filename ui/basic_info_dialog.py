@@ -4,20 +4,12 @@ from __future__ import annotations
 from typing import Dict
 
 from PySide6.QtCore import Qt, QDate, QRegularExpression, QSize, QPoint, Signal
-from PySide6.QtGui import QRegularExpressionValidator, QIcon, QGuiApplication
-from PySide6.QtWidgets import (
-    QCalendarWidget,
-    QDialog,
-    QFormLayout,
-    QGridLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QToolButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
+from PySide6.QtWidgets import QCalendarWidget, QDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
+
+from ui.icon_factory import make_calendar_icon
+from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
+from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
 
 def _digits_only(s: str) -> str:
@@ -44,6 +36,7 @@ class MoneyLineEdit(QLineEdit):
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.setFixedHeight(30)
+        self.setStyleSheet(input_line_edit_style())
         self._in_format = False
         self.textChanged.connect(self._on_text_changed)
 
@@ -70,22 +63,17 @@ class _CalendarPopup(QDialog):
 
     def __init__(self, initial: QDate, parent=None):
         super().__init__(parent, Qt.Popup)
-        # Popup: no title bar, closes on outside click / Esc by default.
         self.setObjectName("CalendarPopup")
-
         root = QVBoxLayout(self)
-        root.setContentsMargins(8, 8, 8, 8)
+        root.setContentsMargins(*compact_popup_margins())
         root.setSpacing(0)
 
         self.calendar = QCalendarWidget(self)
         self.calendar.setGridVisible(True)
         if initial and initial.isValid():
             self.calendar.setSelectedDate(initial)
-
-        # Keep it compact
         self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
         root.addWidget(self.calendar)
-
         self.calendar.activated.connect(self._on_activated)
 
     def _on_activated(self, d: QDate):
@@ -102,74 +90,33 @@ class BasicInfoDialog(QDialog):
         self.setMinimumWidth(460)
 
         initial = initial or {}
-
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 14, 14, 14)
-        root.setSpacing(10)
+        root.setContentsMargins(*dialog_layout_margins())
+        root.setSpacing(THEME.block_spacing)
 
         form = QFormLayout()
+        form.setLabelAlignment(Qt.AlignLeft)
         form.setHorizontalSpacing(12)
         form.setVerticalSpacing(10)
 
-        # 날짜: 텍스트 + 달력 버튼(팝업으로 선택)
         initial_date = QDate.fromString(initial.get("date", ""), "yyyy-MM-dd")
         if not initial_date.isValid():
             initial_date = QDate.currentDate()
         self._date_value = initial_date
 
-
-        self.date_text = QLabel(self)
+        self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
         self.date_text.setMinimumHeight(30)
-        self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
-        # Field-like look (label, not editable)
-        self.date_text.setStyleSheet(
-            "QLabel {"
-            "  color: #666;"
-            "  background: #f3f3f3;"
-            "  border: 1px solid #c8c8c8;"
-            "  border-radius: 6px;"
-            "  padding: 4px 8px;"
-            "}"
-        )
-        # 'yyyy-MM-dd' 길이(10자) 기준으로 과하게 넓지 않게
         self.date_text.setFixedWidth(110)
+        self.date_text.setStyleSheet(display_field_style(8))
 
         self.btn_calendar = QToolButton(self)
         self.btn_calendar.setFixedSize(30, 30)
         self.btn_calendar.setToolTip("달력 열기")
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
         self.btn_calendar.setAutoRaise(True)
-
-        # Icon-only calendar button (fallback: text if icon theme missing)
-        icon = QIcon.fromTheme("x-office-calendar")
-        if icon.isNull():
-            icon = QIcon.fromTheme("view-calendar")
-        if icon.isNull():
-            icon = QIcon.fromTheme("office-calendar")
-
-        if not icon.isNull():
-            self.btn_calendar.setIcon(icon)
-            self.btn_calendar.setIconSize(QSize(18, 18))
-            self.btn_calendar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        else:
-            # Fallback (some Windows setups may not provide theme icons)
-            self.btn_calendar.setText("📅")
-
-        # Subtle border so it reads as a button even with auto-raise
-        self.btn_calendar.setStyleSheet(
-            "QToolButton {"
-            "  border: 1px solid #c8c8c8;"
-            "  border-radius: 6px;"
-            "  background: #f7f7f7;"
-            "}"
-            "QToolButton:hover {"
-            "  background: #eeeeee;"
-            "}"
-            "QToolButton:pressed {"
-            "  background: #e6e6e6;"
-            "}"
-        )
-
+        self.btn_calendar.setIcon(make_calendar_icon(THEME.icon_size_md))
+        self.btn_calendar.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
+        self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
 
         date_row = QWidget(self)
@@ -184,10 +131,10 @@ class BasicInfoDialog(QDialog):
         self.factory = QLineEdit(self)
         for w in (self.style_no, self.factory):
             w.setFixedHeight(30)
+            w.setStyleSheet(input_line_edit_style())
         self.style_no.setText(initial.get("style_no", ""))
         self.factory.setText(initial.get("factory", ""))
 
-        # 금액 4개 한줄
         price_row = QWidget(self)
         grid = QGridLayout(price_row)
         grid.setContentsMargins(0, 0, 0, 0)
@@ -207,22 +154,16 @@ class BasicInfoDialog(QDialog):
             e.setMinimumWidth(90)
             e.setMaximumWidth(140)
 
-        pairs = [
-            ("원가", self.cost),
-            ("공임", self.labor),
-            ("로스", self.loss),
-            ("판매가", self.sale_price),
-        ]
-
+        pairs = [("원가", self.cost), ("공임", self.labor), ("로스", self.loss), ("판매가", self.sale_price)]
         col = 0
         for label_text, edit in pairs:
             lbl = QLabel(label_text, self)
             lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            lbl.setStyleSheet(field_label_style())
             grid.addWidget(lbl, 0, col)
             grid.addWidget(edit, 0, col + 1)
             col += 2
 
-        # 원가/공임/로스 변경 시 판매가 자동 합산 표시
         self.cost.textChanged.connect(self._sync_sale_price)
         self.labor.textChanged.connect(self._sync_sale_price)
         self.loss.textChanged.connect(self._sync_sale_price)
@@ -233,22 +174,15 @@ class BasicInfoDialog(QDialog):
         form.addRow("", price_row)
         root.addLayout(form)
 
-        btn_row = QHBoxLayout()
-        btn_row.addStretch(1)
-        btn_cancel = make_dialog_button("취소", self)
-        btn_ok = make_dialog_button("확인", self)
-        btn_row.addWidget(btn_cancel)
-        btn_row.addWidget(btn_ok)
-        root.addLayout(btn_row)
-
+        btn_cancel = make_dialog_button("취소", self, role="cancel")
+        btn_ok = make_dialog_button("확인", self, role="confirm")
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
+        root.addLayout(make_dialog_button_row([btn_cancel, btn_ok]))
 
-        # 초기값이 있어도 합산 규칙 적용(원가/공임/로스가 채워져 있으면 판매가를 맞춤)
         self._sync_sale_price()
 
     def _open_calendar(self):
-        # Close existing popup if open
         if getattr(self, "_calendar_popup", None) is not None:
             try:
                 self._calendar_popup.close()
@@ -265,45 +199,26 @@ class BasicInfoDialog(QDialog):
                 self.date_text.setText(self._date_value.toString("yyyy-MM-dd"))
 
         popup.datePicked.connect(_apply_date)
-
-        # Position popup right below the date row (label/button)
         anchor = self.date_text
         global_pos = anchor.mapToGlobal(QPoint(0, anchor.height() + 2))
-
         screen = QGuiApplication.screenAt(global_pos) or QGuiApplication.primaryScreen()
         avail = screen.availableGeometry() if screen else None
 
         popup.adjustSize()
-        w = popup.width()
-        h = popup.height()
-
-        x = global_pos.x()
-        y = global_pos.y()
-
+        w, h = popup.width(), popup.height()
+        x, y = global_pos.x(), global_pos.y()
         if avail is not None:
             if x + w > avail.right():
                 x = max(avail.left(), avail.right() - w)
             if y + h > avail.bottom():
-                # If not enough space below, show above
                 y = max(avail.top(), anchor.mapToGlobal(QPoint(0, 0)).y() - h - 2)
-
         popup.move(x, y)
         popup.show()
 
     def _sync_sale_price(self):
-        total = (
-            _safe_int_from_digits(self.cost.value_digits())
-            + _safe_int_from_digits(self.labor.value_digits())
-            + _safe_int_from_digits(self.loss.value_digits())
-        )
-        # 원가/공임/로스가 모두 비었으면 판매가를 강제로 비우지 않고 그대로 둠
-        if (
-            not self.cost.value_digits()
-            and not self.labor.value_digits()
-            and not self.loss.value_digits()
-        ):
+        total = _safe_int_from_digits(self.cost.value_digits()) + _safe_int_from_digits(self.labor.value_digits()) + _safe_int_from_digits(self.loss.value_digits())
+        if not self.cost.value_digits() and not self.labor.value_digits() and not self.loss.value_digits():
             return
-
         self.sale_price.blockSignals(True)
         try:
             self.sale_price.setText(f"{total:,}" if total else "")

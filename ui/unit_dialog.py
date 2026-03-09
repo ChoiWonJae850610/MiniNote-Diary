@@ -3,13 +3,11 @@ import os
 from typing import List, Dict
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget,
-    QAbstractItemView, QMessageBox, QHeaderView, QTableWidgetItem
-)
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QAbstractItemView, QHeaderView
 
-from ui.theme import THEME
-from ui.widget_factory import apply_icon_button_metrics
+from ui.dialogs import show_info, show_warning
+from ui.theme import THEME, dialog_layout_margins, table_widget_style
+from ui.widget_factory import make_dialog_button_row, make_icon_button
 
 
 class UnitDialog(QDialog):
@@ -24,8 +22,8 @@ class UnitDialog(QDialog):
         self.units_path = os.path.join(self.db_dir, "units.json")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(10)
+        layout.setContentsMargins(*dialog_layout_margins())
+        layout.setSpacing(THEME.block_spacing)
 
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(["단위", "표시 이름"])
@@ -34,82 +32,22 @@ class UnitDialog(QDialog):
         self.table.setAlternatingRowColors(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.table.setEditTriggers(
-            QAbstractItemView.SelectedClicked |
-            QAbstractItemView.DoubleClicked |
-            QAbstractItemView.EditKeyPressed
-        )
+        self.table.setEditTriggers(QAbstractItemView.SelectedClicked | QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
         self.table.itemClicked.connect(lambda it: self.table.editItem(it))
-        self.table.setStyleSheet(
-            "QTableWidget{"
-            "background:#FFFFFF;"
-            "border:1px solid #D7DCE3;"
-            "border-radius:12px;"
-            "gridline-color:transparent;"
-            "selection-background-color:transparent;"
-            "selection-color:#1F2933;"
-            "padding:4px;"
-            "}"
-            "QHeaderView::section{"
-            "background:#FAFAFB;"
-            "color:#364152;"
-            "border:none;"
-            "border-bottom:1px solid #E7EBF0;"
-            "padding:8px 10px;"
-            "font-weight:600;"
-            "}"
-            "QTableWidget::item{"
-            "border:1px solid transparent;"
-            "padding:4px 6px;"
-            "}"
-            "QTableWidget::item:selected{"
-            "background:#F5F6F8;"
-            "color:#1F2933;"
-            "border:1px solid #E7EBF0;"
-            "}"
-            "QTableWidget::item:focus{outline:none;}"
-            "QTableWidget QLineEdit{"
-            "background:#F5F6F8;"
-            "border:1px solid transparent;"
-            "border-radius:8px;"
-            "padding:0 6px;"
-            "color:#1F2933;"
-            "selection-background-color:#E9EDF2;"
-            "selection-color:#1F2933;"
-            "}"
-            "QTableWidget QLineEdit:focus{"
-            "background:#FFFFFF;"
-            "border:1px solid rgba(98,107,119,0.28);"
-            "}"
-        )
+        self.table.setStyleSheet(table_widget_style())
         self.table.verticalHeader().setDefaultSectionSize(THEME.table_row_height)
 
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-
         layout.addWidget(self.table)
 
-        btn_row = QHBoxLayout()
-        btn_row.addStretch(1)
-
-        self.btn_save = QPushButton("✓")
-        self.btn_add = QPushButton("+")
-        self.btn_delete = QPushButton("−")
-        self.btn_close = QPushButton("×")
-
-        apply_icon_button_metrics(self.btn_save, font_px=18, object_name="iconPrimary")
-        apply_icon_button_metrics(self.btn_add, font_px=18, object_name="iconAction")
-        apply_icon_button_metrics(self.btn_delete, font_px=18, object_name="iconDanger")
-        apply_icon_button_metrics(self.btn_close, font_px=18, object_name="iconAction")
-
-        btn_row.addWidget(self.btn_save)
-        btn_row.addWidget(self.btn_add)
-        btn_row.addWidget(self.btn_delete)
-        btn_row.addWidget(self.btn_close)
-
-        layout.addLayout(btn_row)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip="저장", text="✓", font_px=18)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip="추가", text="+", font_px=18)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip="삭제", text="−", font_px=18)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip="닫기", text="×", font_px=18)
+        layout.addLayout(make_dialog_button_row([self.btn_save, self.btn_add, self.btn_delete, self.btn_close]))
 
         self.btn_save.clicked.connect(self.on_save)
         self.btn_add.clicked.connect(self.on_add)
@@ -153,16 +91,14 @@ class UnitDialog(QDialog):
                 continue
             units.append({"unit": unit, "label": label})
 
-        payload = {"units": units}
-
         try:
             with open(self.units_path, "w", encoding="utf-8") as f:
-                json.dump(payload, f, ensure_ascii=False, indent=2)
+                json.dump({"units": units}, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            QMessageBox.warning(self, "저장 실패", str(e))
+            show_warning(self, "저장 실패", str(e))
             return
 
-        QMessageBox.information(self, "저장", "단위 목록이 저장되었습니다.")
+        show_info(self, "저장", "단위 목록이 저장되었습니다.")
 
     def on_add(self):
         for r in range(self.table.rowCount()):
@@ -174,7 +110,6 @@ class UnitDialog(QDialog):
                 self.table.setCurrentCell(r, 0)
                 self.table.editItem(self.table.item(r, 0))
                 return
-
         r = self.table.rowCount()
         self.table.insertRow(r)
         self.table.setRowHeight(r, THEME.table_row_height)
@@ -187,8 +122,6 @@ class UnitDialog(QDialog):
         row = self.table.currentRow()
         if row < 0:
             return
-
-        # 현재 행 셀 비우기(행 삭제 대신 UX 안정적)
         self.table.blockSignals(True)
         try:
             self.table.setItem(row, 0, self._make_item(""))

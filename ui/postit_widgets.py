@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 
+from ui.icon_factory import make_calendar_icon
 from ui.theme import (
     THEME,
     card_colors,
@@ -200,22 +201,6 @@ class SectionTitleBadge(QLabel):
         self.setAlignment(Qt.AlignCenter)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setStyleSheet(title_badge_style(**style_kwargs))
-
-
-def _make_calendar_icon(size: int = 16) -> QIcon:
-    pm = QPixmap(size, size)
-    pm.fill(Qt.transparent)
-    p = QPainter(pm)
-    p.setRenderHint(QPainter.Antialiasing, True)
-    p.setPen(QPen(QColor(THEME.color_icon), 2))
-    p.setBrush(Qt.NoBrush)
-    p.drawRoundedRect(1, 2, size - 2, size - 3, 3, 3)
-    p.drawLine(2, 6, size - 3, 6)
-    p.setPen(QPen(QColor(THEME.color_icon), 2))
-    p.drawLine(5, 1, 5, 5)
-    p.drawLine(size - 6, 1, size - 6, 5)
-    p.end()
-    return QIcon(pm)
 
 
 def _make_down_icon(size: int = 12) -> QIcon:
@@ -516,7 +501,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.date_text.setMinimumWidth(118)
 
         self.btn_calendar = QToolButton(self)
-        self.btn_calendar.setIcon(_make_calendar_icon(16))
+        self.btn_calendar.setIcon(make_calendar_icon(16))
         self.btn_calendar.setIconSize(QSize(16, 16))
         self.btn_calendar.setFixedSize(FIELD_H, FIELD_H)
         self.btn_calendar.setCursor(Qt.PointingHandCursor)

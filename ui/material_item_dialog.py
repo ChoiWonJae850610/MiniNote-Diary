@@ -6,16 +6,10 @@ import os
 
 from PySide6.QtCore import Qt, QRegularExpression, QEvent
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import (
-    QComboBox,
-    QDialog,
-    QFormLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-)
+from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLabel, QLineEdit, QVBoxLayout
+
+from ui.theme import THEME, combo_box_style, dialog_layout_margins, hint_label_style, input_line_edit_style, read_only_line_edit_style
+from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
 
 def _digits_only(s: str) -> str:
@@ -58,33 +52,28 @@ def _load_units() -> list[dict]:
 
 
 class ClearableComboBox(QComboBox):
-    """Delete/Backspace 로 선택값을 빈 값으로 되돌릴 수 있는 콤보박스."""
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setEditable(False)
         self.setInsertPolicy(QComboBox.NoInsert)
         self.installEventFilter(self)
+        self.setStyleSheet(combo_box_style())
 
     def eventFilter(self, obj, event):  # noqa: N802
-        if obj is self and event.type() == QEvent.KeyPress:
-            if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
-                if self.count() > 0:
-                    self.setCurrentIndex(0)
-                    return True
+        if obj is self and event.type() == QEvent.KeyPress and event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+            if self.count() > 0:
+                self.setCurrentIndex(0)
+                return True
         return super().eventFilter(obj, event)
 
 
 class CommaIntEdit(QLineEdit):
-    """- 숫자만 입력 허용 (0-9, 콤마만)
-    - 입력 중 자동으로 3자리 콤마 포맷 적용
-    """
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.setFixedHeight(30)
+        self.setStyleSheet(input_line_edit_style())
         self._in_format = False
         self.textChanged.connect(self._on_text_changed)
 
@@ -107,8 +96,6 @@ class CommaIntEdit(QLineEdit):
 
 
 class MoneyEdit(CommaIntEdit):
-    """단가/총액 입력용(콤마 + 숫자만)."""
-
     pass
 
 
@@ -120,8 +107,8 @@ class MaterialItemDialog(QDialog):
         self.setMinimumWidth(420)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 14, 14, 14)
-        root.setSpacing(10)
+        root.setContentsMargins(*dialog_layout_margins())
+        root.setSpacing(THEME.block_spacing)
 
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignLeft)
@@ -131,16 +118,10 @@ class MaterialItemDialog(QDialog):
 
         self.vendor = QLineEdit(self)
         self.item = QLineEdit(self)
-
-        # ✅ 수량/단가도 콤마 + 숫자만
         self.qty = CommaIntEdit(self)
-
-        # ✅ 단위: db/units.json 기반 콤보박스 (표시=label / 저장=unit)
         self.unit = ClearableComboBox(self)
         self.unit.setFixedHeight(30)
         self.unit.setMinimumWidth(160)
-
-        # 빈 값(삭제용) 1개 포함
         self.unit.addItem("", "")
         for u in _load_units():
             unit = str(u.get("unit", "")).strip()
@@ -148,15 +129,16 @@ class MaterialItemDialog(QDialog):
             if not unit and not label:
                 continue
             display = label if label else unit
-            # itemData = unit (unit이 비면 display)
             self.unit.addItem(display, unit if unit else display)
 
         self.unit_price = MoneyEdit(self)
         self.total = MoneyEdit(self)
         self.total.setReadOnly(True)
+        self.total.setStyleSheet(read_only_line_edit_style())
 
         for w in (self.vendor, self.item):
             w.setFixedHeight(30)
+            w.setStyleSheet(input_line_edit_style())
 
         form.addRow("거래처", self.vendor)
         form.addRow("품목", self.item)
@@ -167,16 +149,12 @@ class MaterialItemDialog(QDialog):
         root.addLayout(form)
 
         tip = QLabel("수량·단가를 입력하면 총액이 자동 계산됩니다.", self)
-        tip.setStyleSheet("color:#666;")
+        tip.setStyleSheet(hint_label_style())
         root.addWidget(tip)
 
-        btn_row = QHBoxLayout()
-        btn_row.addStretch(1)
-        self.btn_cancel = make_dialog_button("취소", self)
-        self.btn_ok = make_dialog_button("추가", self)
-        btn_row.addWidget(self.btn_cancel)
-        btn_row.addWidget(self.btn_ok)
-        root.addLayout(btn_row)
+        self.btn_cancel = make_dialog_button("취소", self, role="cancel")
+        self.btn_ok = make_dialog_button("추가", self, role="confirm")
+        root.addLayout(make_dialog_button_row([self.btn_cancel, self.btn_ok]))
 
         self.btn_cancel.clicked.connect(self.reject)
         self.btn_ok.clicked.connect(self._on_ok)
@@ -191,11 +169,9 @@ class MaterialItemDialog(QDialog):
             self.total.setText("")
             return
         try:
-            total = int(q) * int(p)
-            self.total.setText(f"{total:,}")
+            self.total.setText(f"{int(q) * int(p):,}")
         except Exception:
             self.total.setText("")
-        return
 
     def _on_ok(self):
         if not (self.vendor.text().strip() or self.item.text().strip()):

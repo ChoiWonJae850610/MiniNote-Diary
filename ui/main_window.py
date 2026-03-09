@@ -3,7 +3,7 @@ import os
 from typing import Dict, List, Optional
 
 from PySide6.QtCore import Qt, QSize, QEvent, QTimer
-from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap, QShortcut, QPainterPath
+from PySide6.QtGui import QKeySequence, QShortcut, QPainterPath
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QPushButton,
     QFileDialog,
-    QMessageBox,
     QLabel,
     QStackedWidget,
     QDialog,
@@ -35,55 +34,10 @@ from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
 from ui.theme import THEME, build_app_stylesheet, image_preview_style
-from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
-from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
+from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
+from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, show_error, show_info
+from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics, make_dialog_button, make_dialog_button_row
 
-
-
-
-def _make_image_outline_icon(size: int = 16) -> QIcon:
-    pix = QPixmap(size, size)
-    pix.fill(Qt.transparent)
-
-    p = QPainter(pix)
-    p.setRenderHint(QPainter.Antialiasing, True)
-    pen = QPen(QColor(THEME.color_icon), 1.8)
-    pen.setCapStyle(Qt.RoundCap)
-    pen.setJoinStyle(Qt.RoundJoin)
-    p.setPen(pen)
-
-    inset = 2.0
-    frame_w = size - inset * 2
-    frame_h = size - inset * 2
-    p.drawRoundedRect(inset, inset, frame_w, frame_h, 2.2, 2.2)
-    p.drawEllipse(size * 0.63, size * 0.34, size * 0.14, size * 0.14)
-    p.drawLine(size * 0.25, size * 0.73, size * 0.45, size * 0.50)
-    p.drawLine(size * 0.45, size * 0.50, size * 0.57, size * 0.61)
-    p.drawLine(size * 0.57, size * 0.61, size * 0.77, size * 0.39)
-    p.end()
-    return QIcon(pix)
-
-
-def _make_save_icon(size: int = 16, color: str | None = None) -> QIcon:
-    pix = QPixmap(size, size)
-    pix.fill(Qt.transparent)
-
-    p = QPainter(pix)
-    p.setRenderHint(QPainter.Antialiasing, True)
-    pen = QPen(QColor(color or THEME.color_text_on_primary), 1.7)
-    pen.setCapStyle(Qt.RoundCap)
-    pen.setJoinStyle(Qt.RoundJoin)
-    p.setPen(pen)
-    p.setBrush(Qt.NoBrush)
-
-    inset = 2.0
-    body = size - inset * 2
-    p.drawRoundedRect(inset, inset, body, body, 1.8, 1.8)
-    p.drawRect(size * 0.28, size * 0.20, size * 0.30, size * 0.22)
-    p.drawRect(size * 0.28, size * 0.60, size * 0.44, size * 0.18)
-    p.drawLine(size * 0.68, size * 0.22, size * 0.68, size * 0.44)
-    p.end()
-    return QIcon(pix)
 
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
@@ -101,17 +55,11 @@ class _ChangeNoteDialog(QDialog):
         self.edit.setPlaceholderText("메모를 입력하세요.")
         layout.addWidget(self.edit, 1)
 
-        btn_row = QHBoxLayout()
-        btn_row.addStretch(1)
-        btn_cancel = QPushButton("취소", self)
-        btn_ok = QPushButton("확인", self)
-        apply_button_metrics(btn_cancel, height=THEME.dialog_button_height)
-        apply_button_metrics(btn_ok, height=THEME.dialog_button_height)
+        btn_cancel = make_dialog_button("취소", self, role="cancel")
+        btn_ok = make_dialog_button("확인", self, role="confirm")
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
-        btn_row.addWidget(btn_cancel)
-        btn_row.addWidget(btn_ok)
-        layout.addLayout(btn_row)
+        layout.addLayout(make_dialog_button_row([btn_cancel, btn_ok]))
 
     def get_text(self) -> str:
         return self.edit.toPlainText().strip()
@@ -254,7 +202,7 @@ class MainWindow(QMainWindow):
         return page
 
     def on_vendor_mgmt_clicked(self):
-        QMessageBox.information(self, "거래처 관리", "거래처 관리 화면은 추후 연결됩니다.")
+        show_info(self, "거래처 관리", "거래처 관리 화면은 추후 연결됩니다.")
 
     def on_unit_mgmt_clicked(self):
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -275,23 +223,19 @@ class MainWindow(QMainWindow):
 
         self.btn_reset = QPushButton("")
         apply_icon_button_metrics(self.btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="새로고침")
-        reset_icon = self.style().standardIcon(QStyle.SP_BrowserReload)
-        if reset_icon.isNull():
-            reset_icon = self.style().standardIcon(QStyle.SP_FileDialogDetailedView)
+        reset_icon = standard_icon(self, [QStyle.SP_BrowserReload, QStyle.SP_FileDialogDetailedView])
         self.btn_reset.setIcon(reset_icon)
         self.btn_reset.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
 
         self.btn_save = QPushButton("")
         apply_icon_button_metrics(self.btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
-        save_icon = self.style().standardIcon(QStyle.SP_DialogSaveButton)
-        if save_icon.isNull():
-            save_icon = _make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary)
+        save_icon = standard_icon(self, [QStyle.SP_DialogSaveButton], fallback=make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary))
         self.btn_save.setIcon(save_icon)
         self.btn_save.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
 
         self.btn_upload = QPushButton("")
         apply_icon_button_metrics(self.btn_upload, font_px=THEME.icon_button_font_px + 2, object_name="iconAction", tooltip="사진 업로드")
-        self.btn_upload.setIcon(_make_image_outline_icon(THEME.icon_size_md))
+        self.btn_upload.setIcon(make_image_outline_icon(THEME.icon_size_md))
         self.btn_upload.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
 
         self.btn_delete_image = QPushButton("")
@@ -552,7 +496,7 @@ class MainWindow(QMainWindow):
                 image_src_path=self.current_image_path,
             )
         except Exception as e:
-            QMessageBox.warning(self, "저장 실패", str(e))
+            show_error(self, "저장 실패", str(e))
             return
 
         self.reset_work_order_form()
@@ -560,7 +504,7 @@ class MainWindow(QMainWindow):
         msg = f"저장 완료\n\nJSON: {json_path}\nSHA256(평문): {sha256_plain}"
         if image_path:
             msg += f"\n이미지: {image_path}"
-        QMessageBox.information(self, "저장", msg)
+        show_info(self, "저장", msg)
 
 
     # ===================== Inline post-it handlers ======================
@@ -616,7 +560,7 @@ class MainWindow(QMainWindow):
             self.mark_dirty()
             self._show_feedback("이미지 첨부됨")
         except Exception as e:
-            QMessageBox.warning(self, "오류", str(e))
+            show_error(self, "오류", str(e))
 
     def delete_image(self):
         try:

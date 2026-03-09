@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Sequence, Tuple
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from ui.theme import THEME, hex_to_rgba
-from ui.widget_factory import make_dialog_button
+from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba, status_row_margins
+from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
 
 def _dialog_stylesheet() -> str:
@@ -103,30 +103,37 @@ class _BaseThemedDialog(QDialog):
         self.setStyleSheet(_dialog_stylesheet())
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(18, 18, 18, 18)
+        root.setContentsMargins(*dialog_layout_margins())
 
         self.card = QFrame(self)
         self.card.setObjectName("dialogCard")
         root.addWidget(self.card)
 
         self.body = QVBoxLayout(self.card)
-        self.body.setContentsMargins(20, 18, 20, 18)
-        self.body.setSpacing(14)
+        self.body.setContentsMargins(*dialog_inner_margins())
+        self.body.setSpacing(THEME.section_gap)
 
         self.title_label = QLabel(title, self.card)
         self.title_label.setObjectName("dialogTitle")
         self.title_label.hide()
 
 
+class SimpleMessageDialog(_BaseThemedDialog):
+    def __init__(self, title: str, message: str, *, button_text: str = "확인", parent=None):
+        super().__init__(title=title, parent=parent)
+        self.setMinimumWidth(330)
+        message_label = QLabel(message, self.card)
+        message_label.setObjectName("dialogMessage")
+        message_label.setWordWrap(True)
+        self.body.addWidget(message_label)
+
+        button = make_dialog_button(button_text, self.card, role="close")
+        button.clicked.connect(self.accept)
+        self.body.addLayout(make_dialog_button_row([button]))
+
+
 class ConfirmActionDialog(_BaseThemedDialog):
-    def __init__(
-        self,
-        title: str,
-        message: str,
-        confirm_text: str = "확인",
-        cancel_text: str = "취소",
-        parent=None,
-    ):
+    def __init__(self, title: str, message: str, confirm_text: str = "확인", cancel_text: str = "취소", parent=None):
         super().__init__(title=title, parent=parent)
         self.setMinimumWidth(330)
 
@@ -135,21 +142,14 @@ class ConfirmActionDialog(_BaseThemedDialog):
         message_label.setWordWrap(True)
         self.body.addWidget(message_label)
 
-        button_row = QHBoxLayout()
-        button_row.addStretch(1)
-
-        self.cancel_button = make_dialog_button(cancel_text, self.card)
-        self.cancel_button.setObjectName("dialogCancel")
+        self.cancel_button = make_dialog_button(cancel_text, self.card, role="cancel")
         self.cancel_button.clicked.connect(self.reject)
 
-        self.confirm_button = make_dialog_button(confirm_text, self.card)
-        self.confirm_button.setObjectName("dialogConfirm")
+        self.confirm_button = make_dialog_button(confirm_text, self.card, role="confirm")
         self.confirm_button.clicked.connect(self.accept)
         self.confirm_button.setDefault(True)
 
-        button_row.addWidget(self.cancel_button)
-        button_row.addWidget(self.confirm_button)
-        self.body.addLayout(button_row)
+        self.body.addLayout(make_dialog_button_row([self.cancel_button, self.confirm_button]))
 
 
 class ValidationStatusDialog(_BaseThemedDialog):
@@ -160,23 +160,17 @@ class ValidationStatusDialog(_BaseThemedDialog):
         for label, ok in items:
             self.body.addWidget(self._make_status_row(label, ok))
 
-        button_row = QHBoxLayout()
-        button_row.addStretch(1)
-
-        close_button = make_dialog_button("확인", self.card)
-        close_button.setObjectName("dialogClose")
+        close_button = make_dialog_button("확인", self.card, role="close")
         close_button.clicked.connect(self.accept)
-
-        button_row.addWidget(close_button)
-        self.body.addLayout(button_row)
+        self.body.addLayout(make_dialog_button_row([close_button]))
 
     def _make_status_row(self, label: str, ok: bool) -> QWidget:
         row = QFrame(self.card)
         row.setObjectName("statusRow")
 
         layout = QHBoxLayout(row)
-        layout.setContentsMargins(14, 10, 14, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(*status_row_margins())
+        layout.setSpacing(THEME.row_spacing + 2)
 
         icon = QLabel("V" if ok else "X", row)
         icon.setFixedWidth(18)
@@ -190,3 +184,19 @@ class ValidationStatusDialog(_BaseThemedDialog):
         layout.addWidget(icon)
         layout.addWidget(text, 1)
         return row
+
+
+def show_info(parent, title: str, message: str) -> int:
+    return SimpleMessageDialog(title, message, parent=parent).exec()
+
+
+def show_warning(parent, title: str, message: str) -> int:
+    return SimpleMessageDialog(title, message, parent=parent).exec()
+
+
+def show_error(parent, title: str, message: str) -> int:
+    return SimpleMessageDialog(title, message, parent=parent).exec()
+
+
+def ask_confirm(parent, title: str, message: str, *, confirm_text: str = "확인", cancel_text: str = "취소") -> bool:
+    return ConfirmActionDialog(title, message, confirm_text=confirm_text, cancel_text=cancel_text, parent=parent).exec() == QDialog.Accepted

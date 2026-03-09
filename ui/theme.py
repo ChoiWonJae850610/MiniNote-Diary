@@ -234,6 +234,34 @@ def field_label_style() -> str:
     return f"QLabel{{font-weight:600;color:{t.color_text_soft};background:transparent;}}"
 
 
+def hint_label_style() -> str:
+    t = THEME
+    return f"QLabel{{background:transparent;color:{t.color_text_muted};padding:0 2px;}}"
+
+
+def dialog_layout_margins() -> tuple[int, int, int, int]:
+    t = THEME
+    return (14, 14, 14, 14)
+
+
+def dialog_inner_margins() -> tuple[int, int, int, int]:
+    t = THEME
+    return (20, 18, 20, 18)
+
+
+def compact_popup_margins() -> tuple[int, int, int, int]:
+    return (8, 8, 8, 8)
+
+
+def status_row_margins() -> tuple[int, int, int, int]:
+    return (14, 10, 14, 10)
+
+
+def page_layout_margins(extra_x: int = 0, extra_y: int = 0) -> tuple[int, int, int, int]:
+    t = THEME
+    return (t.page_padding_x + extra_x, t.page_padding_y + extra_y, t.page_padding_x + extra_x, t.page_padding_y + extra_y)
+
+
 def read_only_line_edit_style() -> str:
     t = THEME
     return (
@@ -263,6 +291,17 @@ def input_line_edit_style(horizontal_padding: int = 6) -> str:
         f"QLineEdit:focus{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border:1px solid {hex_to_rgba(t.color_primary, 0.28)};border-radius:{t.input_radius}px;"
         f"padding:0 {horizontal_padding}px;}}"
+    )
+
+
+def combo_box_style() -> str:
+    t = THEME
+    return (
+        f"QComboBox{{background:{hex_to_rgba(t.color_surface_alt, 0.98)};border:1px solid transparent;"
+        f"color:{t.color_text};padding:0 8px;border-radius:{t.input_radius}px;}}"
+        f"QComboBox:hover{{background:{hex_to_rgba(t.color_window, 1.0)};"
+        f"border-color:{hex_to_rgba(t.color_text_soft, 0.10)};}}"
+        f"QComboBox:focus{{background:{hex_to_rgba(t.color_window, 1.0)};border:1px solid {hex_to_rgba(t.color_primary, 0.28)};}}"
     )
 
 
@@ -348,6 +387,59 @@ def disabled_index_button_style() -> str:
     return (
         f"QToolButton{{border:1px solid {hex_to_rgba(t.color_text_soft, 0.08)};border-radius:{t.control_radius}px;"
         f"background:{hex_to_rgba(t.color_surface_muted, 0.86)};color:{hex_to_rgba(t.color_text_muted, 0.48)};font-weight:700;}}"
+    )
+
+
+def table_widget_style() -> str:
+    t = THEME
+    return (
+        "QTableWidget{"
+        f"background:{t.color_window};"
+        f"border:1px solid {t.color_border};"
+        "border-radius:12px;"
+        "gridline-color:transparent;"
+        "selection-background-color:transparent;"
+        f"selection-color:{t.color_text};"
+        "padding:4px;"
+        "}"
+        "QHeaderView::section{"
+        f"background:{t.color_surface};"
+        f"color:{t.color_text_soft};"
+        "border:none;"
+        f"border-bottom:1px solid {t.color_border_soft};"
+        "padding:8px 10px;"
+        "font-weight:600;"
+        "}"
+        "QTableWidget::item{"
+        "border:1px solid transparent;"
+        "padding:4px 6px;"
+        "}"
+        "QTableWidget::item:selected{"
+        f"background:{t.color_surface_alt};"
+        f"color:{t.color_text};"
+        f"border:1px solid {t.color_border_soft};"
+        "}"
+        "QTableWidget::item:focus{outline:none;}"
+        + table_line_edit_style(prefix="QTableWidget ")
+    )
+
+
+def table_line_edit_style(prefix: str = "") -> str:
+    t = THEME
+    return (
+        f"{prefix}QLineEdit{{"
+        f"background:{t.color_surface_alt};"
+        "border:1px solid transparent;"
+        "border-radius:8px;"
+        "padding:0 6px;"
+        f"color:{t.color_text};"
+        f"selection-background-color:{t.color_pressed};"
+        f"selection-color:{t.color_text};"
+        "}"
+        f"{prefix}QLineEdit:focus{{"
+        f"background:{t.color_window};"
+        f"border:1px solid {hex_to_rgba(t.color_primary, 0.28)};"
+        "}"
     )
 
 
