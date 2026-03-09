@@ -4,7 +4,7 @@ import os
 from typing import Dict, List, Optional
 
 from PySide6.QtCore import Qt, QSize, QEvent, QTimer
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtGui import QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap, QShortcut, QPainterPath
 from PySide6.QtWidgets import (
     QSizePolicy,
     QApplication,
@@ -29,15 +29,14 @@ from PySide6.QtWidgets import (
 
 from ui.image_preview import ImagePreview
 from services.storage import save_work_order
-from services.work_order_defaults import default_fabric_items, default_trim_items, empty_header_data, empty_material_row
-from services.work_order_validation import get_save_requirement_statuses
 from ui.unit_dialog import UnitDialog
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.material_item_dialog import MaterialItemDialog
 from ui.postit_widgets import PostItBar, ChangeNotePostIt, SectionContainer, SectionTitleBadge
-from ui.theme import THEME, build_app_stylesheet, image_preview_style, title_badge_style
+from ui.theme import THEME, build_app_stylesheet, icon_button_override, image_preview_style, title_badge_style
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
-from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics, make_dialog_button
+
+
 
 
 _UPLOAD_PLACEHOLDER_PNG_B64 = """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"""
@@ -103,28 +102,6 @@ def _make_reset_icon(size: int = 18) -> QIcon:
         return QIcon()
     scaled = pix.scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     return QIcon(scaled)
-
-def _make_image_outline_icon(size: int = 16) -> QIcon:
-    pix = QPixmap(size, size)
-    pix.fill(Qt.transparent)
-
-    p = QPainter(pix)
-    p.setRenderHint(QPainter.Antialiasing, True)
-    pen = QPen(QColor(THEME.color_icon), 1.8)
-    pen.setCapStyle(Qt.RoundCap)
-    pen.setJoinStyle(Qt.RoundJoin)
-    p.setPen(pen)
-
-    inset = 2.0
-    frame_w = size - inset * 2
-    frame_h = size - inset * 2
-    p.drawRoundedRect(inset, inset, frame_w, frame_h, 2.2, 2.2)
-    p.drawEllipse(size * 0.63, size * 0.34, size * 0.14, size * 0.14)
-    p.drawLine(size * 0.25, size * 0.73, size * 0.45, size * 0.50)
-    p.drawLine(size * 0.45, size * 0.50, size * 0.57, size * 0.61)
-    p.drawLine(size * 0.57, size * 0.61, size * 0.77, size * 0.39)
-    p.end()
-    return QIcon(pix)
 class _ChangeNoteDialog(QDialog):
     def __init__(self, initial_text: str = "", parent=None):
         super().__init__(parent)
@@ -143,8 +120,10 @@ class _ChangeNoteDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
-        btn_cancel = make_dialog_button("취소", self)
-        btn_ok = make_dialog_button("확인", self)
+        btn_cancel = QPushButton("취소", self)
+        btn_ok = QPushButton("확인", self)
+        btn_cancel.setFixedHeight(34)
+        btn_ok.setFixedHeight(34)
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
         btn_row.addWidget(btn_cancel)
@@ -173,9 +152,9 @@ class MainWindow(QMainWindow):
         self._feedback_timer.timeout.connect(self._clear_feedback)
 
         # 기본정보/원단/부자재는 모두 팝업 입력 → dict/list로 관리
-        self.header_data: Dict[str, str] = empty_header_data()
-        self.fabric_items: List[Dict[str, str]] = default_fabric_items()
-        self.trim_items: List[Dict[str, str]] = default_trim_items()
+        self.header_data: Dict[str, str] = {}
+        self.fabric_items: List[Dict[str, str]] = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+        self.trim_items: List[Dict[str, str]] = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -198,6 +177,8 @@ class MainWindow(QMainWindow):
         self._apply_diary_theme()
         self._install_global_focus_clear()
         self._update_window_title()
+        self._install_shortcuts()
+        self._install_shortcuts()
 
     def _apply_diary_theme(self):
         self.setStyleSheet(build_app_stylesheet())
@@ -227,6 +208,20 @@ class MainWindow(QMainWindow):
                     focused.clearFocus()
         return super().eventFilter(obj, event)
 
+    def _install_shortcuts(self):
+        self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
+        self.save_shortcut.activated.connect(self._handle_save_shortcut)
+
+    def _handle_save_shortcut(self):
+        if self.stack.currentIndex() != self.PAGE_WORK_ORDER:
+            return
+        self.on_save_clicked()
+
+
+    def _install_shortcuts(self):
+        self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
+        self.save_shortcut.activated.connect(self.on_save_clicked)
+
     # ===================== Menu Page ======================
     def _build_page_menu(self) -> QWidget:
         page = QWidget()
@@ -246,8 +241,9 @@ class MainWindow(QMainWindow):
         btn_receipt = QPushButton("부자재 영수증 업로드")
         btn_status = QPushButton("제품 제작 현황")
 
+        BTN_W, BTN_H = 360, 54
         for b in (btn_create, btn_receipt, btn_status):
-            apply_button_metrics(b, width=THEME.menu_button_width, height=THEME.menu_button_height)
+            b.setFixedSize(BTN_W, BTN_H)
 
         btn_create.clicked.connect(self.go_work_order)
 
@@ -266,8 +262,8 @@ class MainWindow(QMainWindow):
 
         self.btn_vendor_mgmt = QPushButton("거래처 관리")
         self.btn_unit_mgmt = QPushButton("단위 추가(관리)")
-        apply_button_metrics(self.btn_vendor_mgmt, width=THEME.footer_button_width, height=THEME.footer_button_height)
-        apply_button_metrics(self.btn_unit_mgmt, width=THEME.footer_button_width, height=THEME.footer_button_height)
+        self.btn_vendor_mgmt.setFixedSize(140, 32)
+        self.btn_unit_mgmt.setFixedSize(140, 32)
 
         self.btn_vendor_mgmt.clicked.connect(self.on_vendor_mgmt_clicked)
         self.btn_unit_mgmt.clicked.connect(self.on_unit_mgmt_clicked)
@@ -297,25 +293,48 @@ class MainWindow(QMainWindow):
 
         # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
         self.btn_back = QPushButton("◀")
-        self.btn_reset = QPushButton("⟳")
+        self.btn_back.setObjectName("navButton")
+        self.btn_reset = QPushButton("")
+        self.btn_reset.setObjectName("iconAction")
         self.btn_save = QPushButton("✓")
+        self.btn_save.setObjectName("iconPrimary")
 
         self.btn_upload = QPushButton("")
+        self.btn_upload.setObjectName("iconAction")
         self.btn_delete_image = QPushButton("")
+        self.btn_delete_image.setObjectName("iconDanger")
         self.btn_delete_image.setEnabled(False)
 
-        apply_icon_button_metrics(self.btn_back, font_px=THEME.icon_button_font_px, object_name="navButton", tooltip="뒤로가기")
-        apply_icon_button_metrics(self.btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="초기화")
-        apply_icon_button_metrics(self.btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
-        apply_icon_button_metrics(self.btn_upload, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip="사진 업로드")
-        apply_icon_button_metrics(self.btn_delete_image, font_px=THEME.icon_button_font_px, object_name="iconDanger", tooltip="사진 삭제")
+        for b in (self.btn_back, self.btn_reset, self.btn_save, self.btn_upload, self.btn_delete_image):
+            b.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
+            b.setContentsMargins(0, 0, 0, 0)
+            f = b.font()
+            f.setPointSize(THEME.icon_button_font_px + 2)
+            f.setBold(True)
+            b.setFont(f)
+
+        self.btn_back.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+        self.btn_reset.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 10))
+        self.btn_reset.setText("⟳")
+        self.btn_reset.setIcon(QIcon())
+        reset_font = self.btn_reset.font()
+        reset_font.setPointSize(THEME.icon_button_font_px + 8)
+        reset_font.setBold(True)
+        self.btn_reset.setFont(reset_font)
+        self.btn_save.setStyleSheet(icon_button_override(THEME.icon_button_font_px + 2))
+
+        self.btn_back.setToolTip("뒤로가기")
+        self.btn_reset.setToolTip("새로고침")
+        self.btn_save.setToolTip("저장")
         self.btn_upload.setIcon(_make_image_outline_icon(THEME.icon_size_md))
         self.btn_upload.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
+        self.btn_upload.setToolTip("사진 업로드")
 
         delete_icon = self.style().standardIcon(QStyle.SP_TrashIcon)
         if delete_icon.isNull():
             delete_icon = self.style().standardIcon(QStyle.SP_DialogDiscardButton)
         self.btn_delete_image.setIcon(delete_icon)
+        self.btn_delete_image.setToolTip("사진 삭제")
 
         self.btn_delete_image.setIconSize(QSize(THEME.icon_size_sm, THEME.icon_size_sm))
         self.btn_delete_image.setText("")
@@ -330,6 +349,7 @@ class MainWindow(QMainWindow):
         left_controls_layout = QHBoxLayout(left_controls)
         left_controls_layout.setContentsMargins(0, 0, 0, 0)
         left_controls_layout.setSpacing(THEME.top_button_spacing)
+        left_controls_layout.setSpacing(6)
         left_controls_layout.addWidget(self.btn_back)
         left_controls_layout.addWidget(self.btn_reset)
         left_controls_layout.addWidget(self.btn_save)
@@ -338,29 +358,29 @@ class MainWindow(QMainWindow):
         image_controls = QWidget()
         image_controls_layout = QHBoxLayout(image_controls)
         image_controls_layout.setContentsMargins(0, 0, 0, 0)
-        image_controls_layout.setSpacing(THEME.top_button_spacing)
+        image_controls_layout.setSpacing(6)
         image_controls_layout.addStretch(1)
         image_controls_layout.addWidget(self.btn_upload)
         image_controls_layout.addWidget(self.btn_delete_image)
 
         self.feedback_label = QLabel("", self)
         self.feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.feedback_label.setMinimumHeight(THEME.feedback_label_height)
-        self.feedback_label.setMaximumHeight(THEME.feedback_label_height)
+        self.feedback_label.setMinimumHeight(20)
+        self.feedback_label.setMaximumHeight(20)
         self.feedback_label.setStyleSheet(
-            "QLabel{background:transparent;border:none;padding:0 2px;color:rgba(54,65,82,0.72);font-weight:600;}"
+            "QLabel{background:transparent;border:none;padding:0 2px;color:#1F2933;font-weight:700;}"
         )
 
         # 이미지 영역(왼쪽) + 메모 포스트잇(오른쪽)
         self.image_preview = ImagePreview()
-        self.image_preview.setMinimumHeight(THEME.image_preview_min_height)
+        self.image_preview.setMinimumHeight(520)
         self.image_preview.setStyleSheet(image_preview_style())
         self.image_preview.set_placeholder_pixmap(_make_image_placeholder_pixmap())
 
         self.image_shell = QWidget()
         self.image_shell.setObjectName("imageShell")
         image_shell_layout = QVBoxLayout(self.image_shell)
-        image_shell_layout.setContentsMargins(THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin)
+        image_shell_layout.setContentsMargins(18, 18, 18, 18)
         image_shell_layout.setSpacing(0)
         image_shell_layout.addWidget(self.image_preview)
 
@@ -396,7 +416,7 @@ class MainWindow(QMainWindow):
         center_layout.addWidget(self.image_shell, 1, 0, 1, 2)
         # 포스트잇(정보 확인용) — 이미지 중심 느낌을 위해 높이를 과하게 먹지 않도록 제한
         self.postit_bar = PostItBar()
-        self.postit_bar.setMaximumHeight(THEME.postit_bar_max_height)
+        self.postit_bar.setMaximumHeight(232)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
@@ -467,9 +487,9 @@ class MainWindow(QMainWindow):
     def reset_work_order_form(self):
         self._suppress_dirty = True
         try:
-            self.header_data = empty_header_data()
-            self.fabric_items = default_fabric_items()
-            self.trim_items = default_trim_items()
+            self.header_data = {}
+            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
+            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
             self.image_preview.clear_image()
             self.current_image_path = None
             self.btn_delete_image.setEnabled(False)
@@ -543,6 +563,42 @@ class MainWindow(QMainWindow):
             self.reset_work_order_form()
             self.go_menu()
 
+    def _is_nonempty(self, value) -> bool:
+        return bool(str(value or "").strip())
+
+    def _row_has_all_fields(self, row: dict) -> bool:
+        required_keys = ("거래처", "품목", "수량", "단가", "총액")
+        if not isinstance(row, dict):
+            return False
+        return all(self._is_nonempty(row.get(key, "")) for key in required_keys)
+
+    def _has_basic_info(self) -> bool:
+        required_keys = (
+            "date",
+            "style_no",
+            "factory",
+            "cost_display",
+            "labor_display",
+            "loss_display",
+            "sale_price_display",
+        )
+        if not isinstance(self.header_data, dict):
+            return False
+        return all(self._is_nonempty(self.header_data.get(key, "")) for key in required_keys)
+
+    def _has_fabric_info(self) -> bool:
+        return any(self._row_has_all_fields(row) for row in (self.fabric_items or []))
+
+    def _has_trim_info(self) -> bool:
+        return any(self._row_has_all_fields(row) for row in (self.trim_items or []))
+
+    def _get_save_requirement_statuses(self):
+        return [
+            ("기본사항", self._has_basic_info()),
+            ("원단정보 1개 이상", self._has_fabric_info()),
+            ("부자재정보 1개 이상", self._has_trim_info()),
+        ]
+
     def collect_work_order_data(self) -> dict:
         return {
             "header": self.header_data,
@@ -552,7 +608,7 @@ class MainWindow(QMainWindow):
         }
 
     def on_save_clicked(self):
-        statuses = get_save_requirement_statuses(self.header_data, self.fabric_items, self.trim_items)
+        statuses = self._get_save_requirement_statuses()
         if not all(ok for _, ok in statuses):
             ValidationStatusDialog("저장 불가", statuses, parent=self).exec()
             return
@@ -597,9 +653,9 @@ class MainWindow(QMainWindow):
         if not isinstance(patch, dict) or idx < 0:
             return
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = default_fabric_items()
+            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         while len(self.fabric_items) <= idx:
-            self.fabric_items.append(empty_material_row())
+            self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         self.fabric_items[idx].update(patch)
         self.mark_dirty()
 
@@ -607,9 +663,9 @@ class MainWindow(QMainWindow):
         if not isinstance(patch, dict) or idx < 0:
             return
         if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = default_trim_items()
+            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         while len(self.trim_items) <= idx:
-            self.trim_items.append(empty_material_row())
+            self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         self.trim_items[idx].update(patch)
         self.mark_dirty()
 
@@ -647,11 +703,11 @@ class MainWindow(QMainWindow):
     # ===================== Add fabric/trim cards ======================
     def on_add_fabric_clicked(self):
         if not hasattr(self, "fabric_items") or self.fabric_items is None:
-            self.fabric_items = default_fabric_items()
+            self.fabric_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         self.fabric_items = list(self.fabric_items)
         if len(self.fabric_items) >= 9:
             return
-        self.fabric_items.append(empty_material_row())
+        self.fabric_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         try:
             self._refresh_postits()
             self.postit_bar.fabric.set_active_card(len(self.fabric_items) - 1)
@@ -661,11 +717,11 @@ class MainWindow(QMainWindow):
 
     def on_add_trim_clicked(self):
         if not hasattr(self, "trim_items") or self.trim_items is None:
-            self.trim_items = default_trim_items()
+            self.trim_items = [{"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""}]
         self.trim_items = list(self.trim_items)
         if len(self.trim_items) >= 9:
             return
-        self.trim_items.append(empty_material_row())
+        self.trim_items.append({"거래처":"", "품목":"", "수량":"", "단위":"", "단가":"", "총액":""})
         try:
             self._refresh_postits()
             self.postit_bar.trim.set_active_card(len(self.trim_items) - 1)
