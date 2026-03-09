@@ -49,6 +49,8 @@ class ThemeTokens:
     image_preview_min_height: int = 520
     postit_bar_max_height: int = 232
     page_padding: int = 12
+    page_padding_x: int = 20
+    page_padding_y: int = 12
     block_spacing: int = 10
     row_spacing: int = 8
     top_button_spacing: int = 6

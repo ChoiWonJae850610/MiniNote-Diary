@@ -50,11 +50,12 @@ class ImagePreview(QLabel):
         if rect.width() <= 0 or rect.height() <= 0:
             return
 
-        margin_x = max(22, int(rect.width() * 0.08))
-        margin_y = max(18, int(rect.height() * 0.10))
-        dash_rect = rect.adjusted(margin_x, margin_y, -margin_x, -margin_y)
+        margin_x = max(18, int(rect.width() * 0.06))
+        margin_top = max(16, int(rect.height() * 0.07))
+        margin_bottom = max(8, int(rect.height() * 0.025))
+        dash_rect = rect.adjusted(margin_x, margin_top, -margin_x, -margin_bottom)
         if dash_rect.width() < 80 or dash_rect.height() < 50:
-            dash_rect = rect.adjusted(12, 12, -12, -12)
+            dash_rect = rect.adjusted(10, 10, -10, -6)
 
         pen = QPen(QColor(THEME.color_border_hover), 2)
         pen.setStyle(Qt.DashLine)

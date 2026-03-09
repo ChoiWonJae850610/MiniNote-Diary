@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
         page = QWidget()
         page.setObjectName("workOrderPage")
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(THEME.page_padding + 4, THEME.page_padding + 4, THEME.page_padding + 4, THEME.page_padding + 4)
+        layout.setContentsMargins(THEME.page_padding_x + 4, THEME.page_padding_y + 4, THEME.page_padding_x + 4, THEME.page_padding_y + 4)
         layout.setSpacing(0)
 
         center_col = QVBoxLayout()
@@ -266,7 +266,7 @@ class MainWindow(QMainWindow):
     def _build_page_work_order(self) -> QWidget:
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(THEME.page_padding, THEME.page_padding, THEME.page_padding, THEME.page_padding)
+        page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_padding_y, THEME.page_padding_x, THEME.page_padding_y)
         page_layout.setSpacing(THEME.block_spacing)
 
         # 상단 버튼: 좌측 기능 버튼 + 이미지 영역 우측 상단의 사진 버튼
