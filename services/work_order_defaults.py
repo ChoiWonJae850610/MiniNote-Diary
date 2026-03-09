@@ -1,35 +1,42 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Dict, List
+from typing import Iterable, List
 
-EMPTY_MATERIAL_ROW: Dict[str, str] = {
-    "거래처": "",
-    "품목": "",
-    "수량": "",
-    "단위": "",
-    "단가": "",
-    "총액": "",
-}
+from services.models import MaterialItem, WorkOrderHeader
 
 
-def empty_material_row() -> Dict[str, str]:
-    return dict(EMPTY_MATERIAL_ROW)
+def empty_material_item() -> MaterialItem:
+    return MaterialItem()
 
 
-def default_fabric_items() -> List[Dict[str, str]]:
+def empty_material_row() -> dict[str, str]:
+    return empty_material_item().to_dict()
+
+
+def default_fabric_items() -> List[dict[str, str]]:
     return [empty_material_row()]
 
 
-def default_trim_items() -> List[Dict[str, str]]:
+def default_trim_items() -> List[dict[str, str]]:
     return [empty_material_row()]
 
 
-def empty_header_data() -> Dict[str, str]:
-    return {}
+def empty_header_model() -> WorkOrderHeader:
+    return WorkOrderHeader()
 
 
-def clone_material_items(items: List[Dict[str, str]] | None) -> List[Dict[str, str]]:
+def empty_header_data() -> dict[str, str]:
+    return empty_header_model().to_dict()
+
+
+def clone_material_items(items: Iterable[dict[str, str]] | None) -> List[dict[str, str]]:
     if not items:
         return [empty_material_row()]
-    return [deepcopy(it) if isinstance(it, dict) else empty_material_row() for it in items]
+    rows: List[dict[str, str]] = []
+    for item in items:
+        if isinstance(item, dict):
+            rows.append(deepcopy(MaterialItem.from_dict(item).to_dict()))
+        else:
+            rows.append(empty_material_row())
+    return rows or [empty_material_row()]

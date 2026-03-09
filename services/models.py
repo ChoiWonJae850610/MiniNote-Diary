@@ -1,54 +1,84 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Any, Dict, Iterable, List
+
+from services.schema import HEADER_FIELDS, MATERIAL_FIELDS, REQUIRED_HEADER_FIELDS, REQUIRED_MATERIAL_FIELDS
+
+
+def _to_text(value: Any) -> str:
+    return '' if value is None else str(value)
 
 
 @dataclass
 class WorkOrderHeader:
-    date: str = ""
-    style_no: str = ""
-    factory: str = ""
-    cost_display: str = ""
-    labor_display: str = ""
-    loss_display: str = ""
-    sale_price_display: str = ""
-    cost: str = ""
-    labor: str = ""
-    loss: str = ""
-    sale_price: str = ""
-    change_note: str = ""
+    date: str = ''
+    style_no: str = ''
+    factory: str = ''
+    cost_display: str = ''
+    labor_display: str = ''
+    loss_display: str = ''
+    sale_price_display: str = ''
+    cost: str = ''
+    labor: str = ''
+    loss: str = ''
+    sale_price: str = ''
+    change_note: str = ''
 
     @classmethod
-    def from_dict(cls, data: Dict[str, str] | None) -> "WorkOrderHeader":
+    def from_dict(cls, data: Dict[str, Any] | None) -> 'WorkOrderHeader':
         data = data or {}
-        fields = cls.__dataclass_fields__
-        payload = {name: str(data.get(name, "") or "") for name in fields}
+        payload = {name: _to_text(data.get(name, '')) for name in HEADER_FIELDS}
         return cls(**payload)
 
     def to_dict(self) -> Dict[str, str]:
-        return {name: str(getattr(self, name) or "") for name in self.__dataclass_fields__}
+        return {name: _to_text(getattr(self, name, '')) for name in HEADER_FIELDS}
+
+    def patch(self, patch: Dict[str, Any] | None) -> None:
+        if not isinstance(patch, dict):
+            return
+        for name in HEADER_FIELDS:
+            if name in patch:
+                setattr(self, name, _to_text(patch.get(name, '')))
+
+    def has_required_fields(self) -> bool:
+        data = self.to_dict()
+        return all(data.get(key, '').strip() for key in REQUIRED_HEADER_FIELDS)
+
+    def has_any_value(self) -> bool:
+        return any(value.strip() for value in self.to_dict().values())
 
 
 @dataclass
 class MaterialItem:
-    거래처: str = ""
-    품목: str = ""
-    수량: str = ""
-    단위: str = ""
-    단가: str = ""
-    총액: str = ""
+    거래처: str = ''
+    품목: str = ''
+    수량: str = ''
+    단위: str = ''
+    단가: str = ''
+    총액: str = ''
 
     @classmethod
-    def from_dict(cls, data: Dict[str, str] | None) -> "MaterialItem":
+    def from_dict(cls, data: Dict[str, Any] | None) -> 'MaterialItem':
         data = data or {}
-        return cls(**{name: str(data.get(name, "") or "") for name in cls.__dataclass_fields__})
+        return cls(**{name: _to_text(data.get(name, '')) for name in MATERIAL_FIELDS})
 
     def to_dict(self) -> Dict[str, str]:
-        return {name: str(getattr(self, name) or "") for name in self.__dataclass_fields__}
+        return {name: _to_text(getattr(self, name, '')) for name in MATERIAL_FIELDS}
+
+    def patch(self, patch: Dict[str, Any] | None) -> None:
+        if not isinstance(patch, dict):
+            return
+        for name in MATERIAL_FIELDS:
+            if name in patch:
+                setattr(self, name, _to_text(patch.get(name, '')))
 
     def has_any_value(self) -> bool:
-        return any(str(getattr(self, name) or "").strip() for name in self.__dataclass_fields__)
+        return any(value.strip() for value in self.to_dict().values())
+
+    def has_required_fields(self) -> bool:
+        data = self.to_dict()
+        return all(data.get(key, '').strip() for key in REQUIRED_MATERIAL_FIELDS)
 
 
 @dataclass
@@ -59,18 +89,24 @@ class WorkOrderDocument:
     image_attached: bool = False
 
     @classmethod
-    def from_raw(cls, header: Dict[str, str] | None, fabrics: List[Dict[str, str]] | None, trims: List[Dict[str, str]] | None, image_attached: bool = False) -> "WorkOrderDocument":
+    def from_raw(
+        cls,
+        header: Dict[str, Any] | WorkOrderHeader | None,
+        fabrics: Iterable[Dict[str, Any] | MaterialItem] | None,
+        trims: Iterable[Dict[str, Any] | MaterialItem] | None,
+        image_attached: bool = False,
+    ) -> 'WorkOrderDocument':
         return cls(
-            header=WorkOrderHeader.from_dict(header),
-            fabrics=[MaterialItem.from_dict(item) for item in (fabrics or [])],
-            trims=[MaterialItem.from_dict(item) for item in (trims or [])],
+            header=header if isinstance(header, WorkOrderHeader) else WorkOrderHeader.from_dict(header),
+            fabrics=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (fabrics or [])],
+            trims=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (trims or [])],
             image_attached=bool(image_attached),
         )
 
     def to_dict(self) -> Dict[str, object]:
         return {
-            "header": self.header.to_dict(),
-            "fabrics": [item.to_dict() for item in self.fabrics],
-            "trims": [item.to_dict() for item in self.trims],
-            "image_attached": self.image_attached,
+            'header': self.header.to_dict(),
+            'fabrics': [item.to_dict() for item in self.fabrics],
+            'trims': [item.to_dict() for item in self.trims],
+            'image_attached': self.image_attached,
         }
