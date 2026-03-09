@@ -311,7 +311,7 @@ class MainWindow(QMainWindow):
         if delete_icon.isNull():
             delete_icon = self.style().standardIcon(QStyle.SP_DialogDiscardButton)
         self.btn_delete_image.setIcon(delete_icon)
-        self.btn_delete_image.setIconSize(QSize(THEME.icon_size_sm, THEME.icon_size_sm))
+        self.btn_delete_image.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
         self.btn_delete_image.setEnabled(False)
 
         self.btn_back.clicked.connect(self.on_back_clicked)
