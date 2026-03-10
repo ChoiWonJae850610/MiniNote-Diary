@@ -45,8 +45,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('미니노트 다이어리')
         self.menuBar().hide()
 
+        self.project_root = self._project_root()
         self.state = WorkOrderState()
-        self.controller = WorkOrderController(self.state, self._project_root())
+        self.controller = WorkOrderController(self.state, self.project_root)
         self._suppress_dirty = False
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -192,12 +193,12 @@ class MainWindow(QMainWindow):
 
 
     def on_partner_mgmt_clicked(self):
-        dlg = PartnerDialog(project_root=self._project_root(), parent=self)
+        dlg = PartnerDialog(project_root=self.project_root, parent=self)
         dlg.setWindowModality(Qt.ApplicationModal)
         dlg.exec()
 
     def on_unit_mgmt_clicked(self):
-        dlg = UnitDialog(project_root=self._project_root(), parent=self)
+        dlg = UnitDialog(project_root=self.project_root, parent=self)
         dlg.setWindowModality(Qt.ApplicationModal)
         dlg.exec()
 

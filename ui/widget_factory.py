@@ -120,3 +120,17 @@ def make_dialog_button_row(buttons: Iterable[QPushButton], *, stretch: bool = Tr
     for button in buttons:
         row.addWidget(button)
     return row
+
+
+def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | None = None, size: int | None = None) -> QPushButton:
+    button = QPushButton(parent)
+    apply_button_metrics(button, width=size or THEME.field_height, height=size or THEME.field_height, font_px=THEME.base_font_px, bold=False, point_cursor=True)
+    if tooltip:
+        button.setToolTip(tooltip)
+    button.setContentsMargins(0, 0, 0, 0)
+    if icon is not None and not icon.isNull():
+        button.setIcon(icon)
+        icon_dim = max(12, (size or THEME.field_height) - 10)
+        button.setIconSize(button.iconSize().__class__(icon_dim, icon_dim))
+    button.setStyleSheet(icon_button_override(THEME.base_font_px) + ' QPushButton { text-align: center; padding: 0; margin: 0; }')
+    return button

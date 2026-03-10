@@ -51,3 +51,7 @@ DEFAULT_FEEDBACK_TIMEOUT_MS = 2200
 
 def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:
     return {field: '' for field in fields}
+
+PARTNERS_DB_FILENAME = 'partners.json'
+PARTNER_TYPES_DB_FILENAME = 'partner_types.json'
+PARTNER_PICKER_TOOLTIP = '거래처 관리'

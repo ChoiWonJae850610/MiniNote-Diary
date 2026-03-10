@@ -7,9 +7,10 @@ from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
 from PySide6.QtWidgets import QCalendarWidget, QDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
 from services.formatters import digits_only, format_commas_from_digits, int_from_any
-from ui.icon_factory import make_calendar_icon
+from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
-from ui.widget_factory import make_dialog_button, make_dialog_button_row
+from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
+from ui.partner_ui_utils import open_partner_management
 
 
 class MoneyLineEdit(QLineEdit):
@@ -114,6 +115,20 @@ class BasicInfoDialog(QDialog):
         self.style_no.setText(initial.get("style_no", ""))
         self.factory.setText(initial.get("factory", ""))
 
+        self.btn_factory_partner = make_inline_icon_button(
+            parent=self,
+            tooltip='거래처 관리',
+            icon=make_partner_link_icon(14),
+            size=30,
+        )
+        self.btn_factory_partner.clicked.connect(lambda: open_partner_management(self))
+        factory_row = QWidget(self)
+        factory_h = QHBoxLayout(factory_row)
+        factory_h.setContentsMargins(0, 0, 0, 0)
+        factory_h.setSpacing(6)
+        factory_h.addWidget(self.factory, 1)
+        factory_h.addWidget(self.btn_factory_partner, 0)
+
         price_row = QWidget(self)
         grid = QGridLayout(price_row)
         grid.setContentsMargins(0, 0, 0, 0)
@@ -148,7 +163,7 @@ class BasicInfoDialog(QDialog):
 
         form.addRow("날짜", date_row)
         form.addRow("제품명", self.style_no)
-        form.addRow("공장", self.factory)
+        form.addRow("공장", factory_row)
         form.addRow("", price_row)
         root.addLayout(form)
 

@@ -20,24 +20,11 @@ from PySide6.QtWidgets import (
 )
 
 from services.partner_repository import PartnerRecord, PartnerRepository
+from services.partner_utils import color_for_partner_type
+from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_error, show_info, show_warning
 from ui.theme import THEME, dialog_layout_margins, hex_to_rgba, input_line_edit_style, plain_text_edit_style, title_label_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
-
-_CHOSEONG = [
-    "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"
-]
-
-_TYPE_COLORS = [
-    "#778295",
-    "#6F8F89",
-    "#9A7A6C",
-    "#8A7AA8",
-    "#A08060",
-    "#7D8794",
-    "#6784A5",
-    "#7FA071",
-]
 
 
 @dataclass
@@ -50,34 +37,6 @@ class _PartnerDraft:
     types: list[str] | None = None
 
 
-def _chosung_string(text: str) -> str:
-    result = []
-    for ch in text:
-        code = ord(ch)
-        if 0xAC00 <= code <= 0xD7A3:
-            result.append(_CHOSEONG[(code - 0xAC00) // 588])
-        else:
-            result.append(ch)
-    return "".join(result)
-
-
-def _normalize_for_search(text: str) -> str:
-    compact = "".join(str(text or "").strip().lower().split())
-    return compact
-
-
-def _matches_keyword(keyword: str, *values: str) -> bool:
-    needle = _normalize_for_search(keyword)
-    if not needle:
-        return True
-    for value in values:
-        normalized = _normalize_for_search(value)
-        chosung = _normalize_for_search(_chosung_string(value))
-        if needle in normalized or needle in chosung:
-            return True
-    return False
-
-
 class _TypeBadgeRow(QWidget):
     def __init__(self, types: list[str], all_types: list[str], parent=None):
         super().__init__(parent)
@@ -88,7 +47,7 @@ class _TypeBadgeRow(QWidget):
         for idx, type_name in enumerate(all_types[:8]):
             badge = QLabel(type_name[:1], self)
             active = type_name in selected
-            color = _TYPE_COLORS[idx % len(_TYPE_COLORS)]
+            color = color_for_partner_type(idx)
             if active:
                 badge.setStyleSheet(
                     f"QLabel{{min-width:16px;max-width:16px;min-height:16px;max-height:16px;"
@@ -180,7 +139,7 @@ class PartnerEditDialog(QDialog):
         self.type_checks: list[QCheckBox] = []
         for idx, type_name in enumerate(all_types):
             check = QCheckBox(type_name, type_card)
-            color = _TYPE_COLORS[idx % len(_TYPE_COLORS)]
+            color = color_for_partner_type(idx)
             check.setStyleSheet(
                 f"QCheckBox{{spacing:8px;color:{THEME.color_text};}}"
                 f"QCheckBox::indicator{{width:14px;height:14px;border-radius:4px;border:1px solid {hex_to_rgba(color, 0.36)};background:{hex_to_rgba(color, 0.08)};}}"
@@ -479,7 +438,7 @@ class PartnerDialog(QDialog):
         for idx, type_name in enumerate(self._type_order):
             box = QCheckBox(type_name, self.type_checks_container)
             box.setEnabled(False)
-            color = _TYPE_COLORS[idx % len(_TYPE_COLORS)]
+            color = color_for_partner_type(idx)
             box.setStyleSheet(
                 f"QCheckBox{{spacing:8px;color:{THEME.color_text};}}"
                 f"QCheckBox::indicator{{width:14px;height:14px;border-radius:4px;border:1px solid {hex_to_rgba(color, 0.36)};background:{hex_to_rgba(color, 0.08)};}}"
@@ -496,7 +455,7 @@ class PartnerDialog(QDialog):
     def apply_filter(self, text: str) -> None:
         self._filtered = [
             row for row in self._partners
-            if _matches_keyword(text, row.name, row.owner, row.phone, row.address, " ".join(row.types or []))
+            if matches_keyword(text, row.name, row.owner, row.phone, row.address, ' '.join(row.types or []))
         ]
         self._populate_list()
 

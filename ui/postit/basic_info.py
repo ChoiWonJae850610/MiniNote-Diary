@@ -7,10 +7,11 @@ from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
 from services.formatters import format_commas_from_digits, int_from_any
-from ui.icon_factory import make_calendar_icon
+from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
+from ui.partner_ui_utils import open_partner_management
 from ui.theme import display_field_style, field_label_style, input_line_edit_style, tool_button_style
 
 
@@ -69,6 +70,14 @@ class BasicInfoPostIt(_PostItCardBase):
 
         self.style_no = _ClickToEditLineEdit(self)
         self.factory = _ClickToEditLineEdit(self)
+        self.btn_factory_partner = QToolButton(self)
+        self.btn_factory_partner.setIcon(make_partner_link_icon(14))
+        self.btn_factory_partner.setIconSize(QSize(14, 14))
+        self.btn_factory_partner.setFixedSize(FIELD_H, FIELD_H)
+        self.btn_factory_partner.setCursor(Qt.PointingHandCursor)
+        self.btn_factory_partner.setToolTip('거래처 관리')
+        self.btn_factory_partner.setStyleSheet(tool_button_style())
+        self.btn_factory_partner.clicked.connect(lambda: open_partner_management(self))
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._style_no_min = 140
         self._style_no_max = 320
@@ -78,7 +87,12 @@ class BasicInfoPostIt(_PostItCardBase):
         grid.addWidget(mk_label("제품명"), 0, 0)
         grid.addWidget(self.style_no, 0, 1)
         grid.addWidget(mk_label("공  장"), 1, 0)
-        grid.addWidget(self.factory, 1, 1)
+        factory_row = QHBoxLayout()
+        factory_row.setContentsMargins(0, 0, 0, 0)
+        factory_row.setSpacing(6)
+        factory_row.addWidget(self.factory, 1)
+        factory_row.addWidget(self.btn_factory_partner, 0)
+        grid.addLayout(factory_row, 1, 1)
         root.addLayout(grid)
 
         mg = QGridLayout()

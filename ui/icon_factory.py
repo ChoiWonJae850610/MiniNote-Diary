@@ -69,3 +69,20 @@ def standard_icon(widget: QWidget, candidates: list[QStyle.StandardPixmap], fall
         if not icon.isNull():
             return icon
     return fallback or QIcon()
+
+
+def make_partner_link_icon(size: int = 16, color: str | None = None) -> QIcon:
+    pix, p = _new_pixmap(size)
+    pen = QPen(QColor(color or THEME.color_icon), 1.7)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+    p.setBrush(Qt.NoBrush)
+    p.drawRoundedRect(size * 0.14, size * 0.18, size * 0.28, size * 0.24, 3, 3)
+    p.drawRoundedRect(size * 0.58, size * 0.18, size * 0.28, size * 0.24, 3, 3)
+    p.drawLine(size * 0.28, size * 0.58, size * 0.72, size * 0.58)
+    p.drawLine(size * 0.28, size * 0.72, size * 0.72, size * 0.72)
+    p.drawLine(size * 0.28, size * 0.58, size * 0.28, size * 0.72)
+    p.drawLine(size * 0.72, size * 0.58, size * 0.72, size * 0.72)
+    p.end()
+    return QIcon(pix)

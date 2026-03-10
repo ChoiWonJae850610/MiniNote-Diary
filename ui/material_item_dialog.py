@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, QRegularExpression, QEvent
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLabel, QLineEdit, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout
 
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units
 from ui.theme import THEME, combo_box_style, dialog_layout_margins, hint_label_style, input_line_edit_style, read_only_line_edit_style
-from ui.widget_factory import make_dialog_button, make_dialog_button_row
+from ui.icon_factory import make_partner_link_icon
+from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
+from ui.partner_ui_utils import open_partner_management
 
 
 class ClearableComboBox(QComboBox):
@@ -94,7 +96,21 @@ class MaterialItemDialog(QDialog):
             widget.setFixedHeight(30)
             widget.setStyleSheet(input_line_edit_style())
 
-        form.addRow("거래처", self.vendor)
+        self.btn_vendor_partner = make_inline_icon_button(
+            parent=self,
+            tooltip='거래처 관리',
+            icon=make_partner_link_icon(14),
+            size=30,
+        )
+        self.btn_vendor_partner.clicked.connect(lambda: open_partner_management(self))
+        vendor_row = QWidget(self)
+        vendor_h = QHBoxLayout(vendor_row)
+        vendor_h.setContentsMargins(0, 0, 0, 0)
+        vendor_h.setSpacing(6)
+        vendor_h.addWidget(self.vendor, 1)
+        vendor_h.addWidget(self.btn_vendor_partner, 0)
+
+        form.addRow("거래처", vendor_row)
         form.addRow("품목", self.item)
         form.addRow("수량", self.qty)
         form.addRow("단위", self.unit)

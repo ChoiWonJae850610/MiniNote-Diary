@@ -8,9 +8,11 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMenu, QSizePoli
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
 from ui.postit.base import _PostItCardBase
+from ui.icon_factory import make_partner_link_icon
 from ui.postit.common import FIELD_H, make_down_icon
+from ui.partner_ui_utils import open_partner_management
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
-from ui.theme import delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style
+from ui.theme import delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
 
 
 class PostItCard(_PostItCardBase):
@@ -53,10 +55,23 @@ class PostItCard(_PostItCardBase):
 
         self.vendor = _ClickToEditLineEdit(self)
         self.item = _ClickToEditLineEdit(self)
+        self.btn_vendor_partner = QToolButton(self)
+        self.btn_vendor_partner.setIcon(make_partner_link_icon(14))
+        self.btn_vendor_partner.setIconSize(QSize(14, 14))
+        self.btn_vendor_partner.setFixedSize(FIELD_H, FIELD_H)
+        self.btn_vendor_partner.setCursor(Qt.PointingHandCursor)
+        self.btn_vendor_partner.setToolTip('거래처 관리')
+        self.btn_vendor_partner.setStyleSheet(tool_button_style())
+        self.btn_vendor_partner.clicked.connect(lambda: open_partner_management(self))
         self.vendor.set_text_silent(self.data.get("거래처", ""))
         self.item.set_text_silent(self.data.get("품목", ""))
         vi.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0, 0)
-        vi.addWidget(self.vendor, 0, 1)
+        vendor_row = QHBoxLayout()
+        vendor_row.setContentsMargins(0, 0, 0, 0)
+        vendor_row.setSpacing(6)
+        vendor_row.addWidget(self.vendor, 1)
+        vendor_row.addWidget(self.btn_vendor_partner, 0)
+        vi.addLayout(vendor_row, 0, 1)
         vi.addWidget(mk_label("품  목"), 1, 0)
         vi.addWidget(self.item, 1, 1)
         root.addLayout(vi)
