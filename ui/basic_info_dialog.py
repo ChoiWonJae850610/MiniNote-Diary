@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QDate, QRegularExpression, QSize, QPoint, Signal
 from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
 from PySide6.QtWidgets import QCalendarWidget, QDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
-from services.formatters import digits_only, format_commas_from_digits, int_from_any
+from services.formatters import digits_only, format_commas_from_digits
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
@@ -144,6 +144,8 @@ class BasicInfoDialog(QDialog):
         self.labor.setText(initial.get("labor_display", ""))
         self.loss.setText(initial.get("loss_display", ""))
         self.sale_price.setText(initial.get("sale_price_display", ""))
+        self.sale_price.setReadOnly(True)
+        self.sale_price.setFocusPolicy(Qt.NoFocus)
 
         for edit in (self.cost, self.labor, self.loss, self.sale_price):
             edit.setMinimumWidth(90)
@@ -159,10 +161,6 @@ class BasicInfoDialog(QDialog):
             grid.addWidget(edit, 0, col + 1)
             col += 2
 
-        self.cost.textChanged.connect(self._sync_sale_price)
-        self.labor.textChanged.connect(self._sync_sale_price)
-        self.loss.textChanged.connect(self._sync_sale_price)
-
         form.addRow("날짜", date_row)
         form.addRow("제품명", self.style_no)
         form.addRow("공장", factory_row)
@@ -174,7 +172,6 @@ class BasicInfoDialog(QDialog):
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
         root.addLayout(make_dialog_button_row([btn_cancel, btn_ok]))
-        self._sync_sale_price()
 
     def _open_calendar(self):
         if getattr(self, "_calendar_popup", None) is not None:
@@ -211,16 +208,6 @@ class BasicInfoDialog(QDialog):
             partner_type=PARTNER_PICKER_TYPE_FACTORY,
             on_selected=lambda partner: set_partner_line_edit(self.factory, partner, id_property='factory_partner_id'),
         )
-
-    def _sync_sale_price(self):
-        total = int_from_any(self.cost.value_digits()) + int_from_any(self.labor.value_digits()) + int_from_any(self.loss.value_digits())
-        if not self.cost.value_digits() and not self.labor.value_digits() and not self.loss.value_digits():
-            return
-        self.sale_price.blockSignals(True)
-        try:
-            self.sale_price.setText(f"{total:,}" if total else "")
-        finally:
-            self.sale_price.blockSignals(False)
 
     def get_data(self) -> Dict[str, str]:
         return {

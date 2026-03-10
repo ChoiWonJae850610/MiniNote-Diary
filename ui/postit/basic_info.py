@@ -6,7 +6,6 @@ from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
-from services.formatters import format_commas_from_digits, int_from_any
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
@@ -106,6 +105,8 @@ class BasicInfoPostIt(_PostItCardBase):
         self.sale_price = _MoneyLineEdit(self)
         for widget in (self.cost, self.labor, self.loss, self.sale_price):
             widget.setStyleSheet(input_line_edit_style())
+        self.sale_price.setReadOnly(True)
+        self.sale_price.setFocusPolicy(Qt.NoFocus)
 
         mg.addWidget(mk_label("원  가"), 0, 0)
         mg.addWidget(self.cost, 0, 1)
@@ -117,12 +118,9 @@ class BasicInfoPostIt(_PostItCardBase):
         mg.addWidget(self.sale_price, 1, 3)
         root.addLayout(mg)
 
-        self.cost.textChanged.connect(self._sync_sale_price)
-        self.labor.textChanged.connect(self._sync_sale_price)
-        self.loss.textChanged.connect(self._sync_sale_price)
         self.style_no.committed.connect(lambda _v: self._emit_all())
         self.factory.committed.connect(self._on_factory_committed)
-        for widget in (self.cost, self.labor, self.loss, self.sale_price):
+        for widget in (self.cost, self.labor, self.loss):
             widget.textChanged.connect(lambda _t: self._emit_all())
 
         self.setTabOrder(self.btn_calendar, self.style_no)
@@ -130,26 +128,18 @@ class BasicInfoPostIt(_PostItCardBase):
         self.setTabOrder(self.factory, self.cost)
         self.setTabOrder(self.cost, self.labor)
         self.setTabOrder(self.labor, self.loss)
-        self.setTabOrder(self.loss, self.sale_price)
 
         self.cost._pending_prev_widget = self.factory
         self.cost._pending_next_widget = self.labor
         self.labor._pending_prev_widget = self.cost
         self.labor._pending_next_widget = self.loss
         self.loss._pending_prev_widget = self.labor
-        self.loss._pending_next_widget = self.sale_price
-        self.sale_price._pending_prev_widget = self.loss
 
     def _adjust_style_width(self, text: str):
         metrics = QFontMetrics(self.style_no.font())
         width = metrics.horizontalAdvance(text or "") + 28
         width = max(self._style_no_min, min(self._style_no_max, width))
         self.style_no.setMinimumWidth(width)
-
-    def _sync_sale_price(self):
-        total = int_from_any(self.cost.text()) + int_from_any(self.labor.text()) + int_from_any(self.loss.text())
-        self.sale_price.setText(format_commas_from_digits(str(total)) if total else "")
-
 
 
     def _on_factory_committed(self, value: str):

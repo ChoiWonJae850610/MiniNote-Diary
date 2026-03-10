@@ -7,7 +7,7 @@ from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QLineEdit, QMenu, QWidget
 
 from services.partner_repository import PartnerRepository, PartnerRecord
-from services.partner_utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER
+from services.partner_utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER, PARTNER_TYPE_TRIM
 from ui.partner_dialog import PartnerDialog
 from ui.theme import menu_style
 
@@ -39,7 +39,15 @@ def _repository_for(widget: QWidget | None) -> PartnerRepository:
 
 
 def _partners_for_type(widget: QWidget | None, partner_type: str) -> list[PartnerRecord]:
-    return _repository_for(widget).load_partners_by_type(partner_type)
+    repository = _repository_for(widget)
+    if partner_type == PARTNER_TYPE_OTHER:
+        excluded = {PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_TRIM}
+        return [
+            row
+            for row in repository.load_partners()
+            if not any(partner_type_name in excluded for partner_type_name in (row.types or []))
+        ]
+    return repository.load_partners_by_type(partner_type)
 
 
 

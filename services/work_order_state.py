@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+from services.formatters import format_commas_from_digits, int_from_any
 from services.models import MaterialItem, WorkOrderDocument, WorkOrderHeader
 from services.schema import MAX_MATERIAL_ITEMS
 
@@ -22,6 +23,7 @@ class WorkOrderState:
     @header_data.setter
     def header_data(self, value: Dict[str, str] | None) -> None:
         self.header = WorkOrderHeader.from_dict(value)
+        self._recompute_sale_price()
 
     @property
     def fabric_items(self) -> List[Dict[str, str]]:
@@ -30,6 +32,7 @@ class WorkOrderState:
     @fabric_items.setter
     def fabric_items(self, value: List[Dict[str, str]] | None) -> None:
         self.fabrics = self._coerce_items(value)
+        self._recompute_sale_price()
 
     @property
     def trim_items(self) -> List[Dict[str, str]]:
@@ -38,12 +41,14 @@ class WorkOrderState:
     @trim_items.setter
     def trim_items(self, value: List[Dict[str, str]] | None) -> None:
         self.trims = self._coerce_items(value)
+        self._recompute_sale_price()
 
     def reset(self) -> None:
         self.header = WorkOrderHeader()
         self.fabrics = [MaterialItem()]
         self.trims = [MaterialItem()]
         self.current_image_path = None
+        self._recompute_sale_price()
         self.is_dirty = False
 
     def mark_dirty(self) -> None:
@@ -60,6 +65,7 @@ class WorkOrderState:
 
     def update_header(self, patch: Dict[str, str]) -> None:
         self.header.patch(patch)
+        self._recompute_sale_price()
         self.mark_dirty()
 
     def update_change_note(self, text: str) -> None:
@@ -72,6 +78,7 @@ class WorkOrderState:
         while len(items) <= idx:
             items.append(MaterialItem())
         items[idx].patch(patch)
+        self._recompute_sale_price()
         self.mark_dirty()
 
     def add_material_item(self, target: str, max_items: int = MAX_MATERIAL_ITEMS) -> int | None:
@@ -79,6 +86,7 @@ class WorkOrderState:
         if len(items) >= max_items:
             return None
         items.append(MaterialItem())
+        self._recompute_sale_price()
         self.mark_dirty()
         return len(items) - 1
 
@@ -88,6 +96,7 @@ class WorkOrderState:
             del items[idx]
             if not items:
                 items.append(MaterialItem())
+            self._recompute_sale_price()
             self.mark_dirty()
             return True
         return False
@@ -116,6 +125,23 @@ class WorkOrderState:
     def _coerce_items(items: List[Dict[str, str]] | None) -> List[MaterialItem]:
         coerced = [MaterialItem.from_dict(item) for item in (items or [])]
         return coerced or [MaterialItem()]
+
+
+    def _recompute_sale_price(self) -> None:
+        header_total = (
+            int_from_any(self.header.cost)
+            + int_from_any(self.header.labor)
+            + int_from_any(self.header.loss)
+        )
+        material_total = self._sum_material_totals(self.fabrics) + self._sum_material_totals(self.trims)
+        sale_total = header_total + material_total
+        formatted = format_commas_from_digits(str(sale_total)) if sale_total else ''
+        self.header.sale_price = str(sale_total) if sale_total else ''
+        self.header.sale_price_display = formatted
+
+    @staticmethod
+    def _sum_material_totals(items: List[MaterialItem] | None) -> int:
+        return sum(int_from_any(item.총액) for item in (items or []))
 
     @staticmethod
     def _items_have_value(items: List[MaterialItem] | None) -> bool:
