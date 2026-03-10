@@ -26,6 +26,7 @@ from ui.feature_page import FeaturePageBuilder, FeaturePageConfig, FeatureSectio
 from ui.menu_page import MenuPageBuilder
 from ui.theme import THEME, build_app_stylesheet
 from ui.unit_dialog import UnitDialog
+from ui.partner_dialog import PartnerDialog
 from ui.work_order_page import WorkOrderPageBuilder
 
 
@@ -124,7 +125,7 @@ class MainWindow(QMainWindow):
         self.btn_complete_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_COMPLETE))
         self.btn_sale_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_SALE))
         self.btn_inventory_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_INVENTORY))
-        self.btn_partner_mgmt.clicked.connect(lambda: self.open_feature_page(self.PAGE_PARTNER))
+        self.btn_partner_mgmt.clicked.connect(self.on_partner_mgmt_clicked)
         self.btn_unit_mgmt.clicked.connect(self.on_unit_mgmt_clicked)
 
         for refs in self.feature_pages.values():
@@ -188,6 +189,12 @@ class MainWindow(QMainWindow):
                 if target is not focused and not focused.isAncestorOf(target) and not self._has_input_ancestor(target):
                     focused.clearFocus()
         return super().eventFilter(obj, event)
+
+
+    def on_partner_mgmt_clicked(self):
+        dlg = PartnerDialog(project_root=self._project_root(), parent=self)
+        dlg.setWindowModality(Qt.ApplicationModal)
+        dlg.exec()
 
     def on_unit_mgmt_clicked(self):
         dlg = UnitDialog(project_root=self._project_root(), parent=self)
