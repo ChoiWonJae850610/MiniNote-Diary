@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QLineEdit
 
@@ -107,7 +107,7 @@ class _ClickToEditLineEdit(QLineEdit):
 class _MoneyLineEdit(_ClickToEditLineEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setValidator(QRegularExpressionValidator(r"[0-9,]*", self))
+        self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self._fmt = False
         self.textChanged.connect(self._on_text)
@@ -133,7 +133,7 @@ class _MoneyLineEdit(_ClickToEditLineEdit):
 class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setValidator(QRegularExpressionValidator(r"[0-9]*", self))
+        self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
     def _commit_lock(self):

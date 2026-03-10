@@ -25,6 +25,7 @@ class PostItCard(_PostItCardBase):
         self.index = index
         self.data = dict(data or {})
         self._block_total = False
+        self._syncing_data = False
         self._units = load_units()
         self._unit_value = (self.data.get("단위") or "").strip()
         self._unit_label = unit_label_for_value(self._unit_value, self._units)
@@ -220,27 +221,33 @@ class PostItCard(_PostItCardBase):
         super().resizeEvent(event)
 
     def update_data(self, data: Dict[str, str]):
-        self.data = dict(data or {})
-        self._unit_value = (self.data.get("단위") or "").strip()
-        self._unit_label = unit_label_for_value(self._unit_value, self._units)
-        widgets = (self.vendor, self.item, self.qty, self.price, self.total)
-        blocked = [(widget, widget.blockSignals(True)) for widget in widgets]
+        self._syncing_data = True
         try:
-            self.vendor.set_text_silent(self.data.get("거래처", ""))
-            self.data["거래처_id"] = self.data.get("거래처_id", "")
-            self.item.set_text_silent(self.data.get("품목", ""))
-            self.qty.set_text_silent(digits_only(self.data.get("수량", "")))
-            self.price.setText(self.data.get("단가", ""))
-            self.total.setText(self.data.get("총액", ""))
-            self._apply_unit_button_text()
+            self.data = dict(data or {})
+            self._unit_value = (self.data.get("단위") or "").strip()
+            self._unit_label = unit_label_for_value(self._unit_value, self._units)
+            widgets = (self.vendor, self.item, self.qty, self.price, self.total)
+            blocked = [(widget, widget.blockSignals(True)) for widget in widgets]
+            try:
+                self.vendor.set_text_silent(self.data.get("거래처", ""))
+                self.data["거래처_id"] = self.data.get("거래처_id", "")
+                self.item.set_text_silent(self.data.get("품목", ""))
+                self.qty.set_text_silent(digits_only(self.data.get("수량", "")))
+                self.price.setText(self.data.get("단가", ""))
+                self.total.setText(self.data.get("총액", ""))
+                self._apply_unit_button_text()
+            finally:
+                for widget, old in blocked:
+                    widget.blockSignals(old)
+            self._recalc_total(commit=False)
         finally:
-            for widget, old in blocked:
-                widget.blockSignals(old)
-        self._recalc_total()
+            self._syncing_data = False
 
     def _commit(self, key: str, value: str):
         value = (value or "").strip()
         self.data[key] = value
+        if self._syncing_data:
+            return
         payload = {key: value}
         if key == "거래처":
             payload["거래처_id"] = str(self.data.get("거래처_id", "") or "")
@@ -254,7 +261,7 @@ class PostItCard(_PostItCardBase):
         self._commit("단가", self.price.text())
         self._recalc_total()
 
-    def _recalc_total(self):
+    def _recalc_total(self, *, commit: bool = True):
         if self._block_total:
             return
         qty_digits = digits_only(self.qty.text())
@@ -265,7 +272,8 @@ class PostItCard(_PostItCardBase):
                 self.total.setText("")
             finally:
                 self._block_total = False
-            self._commit("총액", "")
+            if commit:
+                self._commit("총액", "")
             return
         try:
             total = int(qty_digits) * int(price_digits)
@@ -276,4 +284,5 @@ class PostItCard(_PostItCardBase):
             self.total.setText(format_commas_from_digits(str(total)))
         finally:
             self._block_total = False
-        self._commit("총액", self.total.text())
+        if commit:
+            self._commit("총액", self.total.text())
