@@ -144,7 +144,7 @@ class WorkOrderState:
     def _needs_price_recompute(patch: Dict[str, str] | None) -> bool:
         if not isinstance(patch, dict) or not patch:
             return False
-        watched_keys = {"cost", "cost_display", "labor", "labor_display", "loss", "loss_display"}
+        watched_keys = {"labor", "labor_display", "loss", "loss_display"}
         return any(key in watched_keys for key in patch)
 
     @staticmethod

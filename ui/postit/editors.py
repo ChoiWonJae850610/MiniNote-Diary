@@ -19,18 +19,29 @@ class _ClickToEditLineEdit(QLineEdit):
         self.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.setTextMargins(0, 0, 0, 0)
         self._edit_start_text = ""
+        self._edit_enabled = True
         self._apply_style(editing=False)
 
     def _apply_style(self, editing: bool):
         self.setStyleSheet(editing_line_edit_style() if editing else read_only_line_edit_style())
 
+    def set_edit_enabled(self, enabled: bool):
+        self._edit_enabled = bool(enabled)
+        if not self._edit_enabled:
+            self.setReadOnly(True)
+            self._apply_style(editing=False)
+
     def _begin_edit(self):
+        if not self._edit_enabled:
+            return
         self._edit_start_text = self.text()
         self.setReadOnly(False)
         self._apply_style(editing=True)
         self.selectAll()
 
     def activate_for_input(self):
+        if not self._edit_enabled:
+            return
         if self.isReadOnly():
             self._begin_edit()
         self.setFocus(Qt.OtherFocusReason)
@@ -38,11 +49,11 @@ class _ClickToEditLineEdit(QLineEdit):
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
-        if self.isReadOnly() and event.reason() in (Qt.TabFocusReason, Qt.BacktabFocusReason):
+        if self._edit_enabled and self.isReadOnly() and event.reason() in (Qt.TabFocusReason, Qt.BacktabFocusReason):
             self._begin_edit()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and self.isReadOnly():
+        if self._edit_enabled and event.button() == Qt.LeftButton and self.isReadOnly():
             self._begin_edit()
             self.setFocus()
         super().mousePressEvent(event)

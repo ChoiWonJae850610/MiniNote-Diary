@@ -168,9 +168,9 @@ class OrderPageBuilder:
             ('작업지시서', lbl_name),
             ('공장', lbl_factory),
             ('기준일', lbl_date),
-            ('총원가', lbl_cost),
+            ('재료비', lbl_cost),
             ('공임', lbl_labor),
-            ('판매가', lbl_sale_price),
+            ('원가', lbl_sale_price),
             ('자재 요약', lbl_material_summary),
         ]
         for row_idx, (label_text, value_widget) in enumerate(rows):

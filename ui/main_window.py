@@ -561,10 +561,12 @@ class MainWindow(QMainWindow):
 
     def on_fabric_postit_changed(self, idx: int, patch: dict):
         self.state.update_material_patch('fabric', idx, patch)
+        self._refresh_postits()
         self._update_window_title()
 
     def on_trim_postit_changed(self, idx: int, patch: dict):
         self.state.update_material_patch('trim', idx, patch)
+        self._refresh_postits()
         self._update_window_title()
 
     def upload_image(self):

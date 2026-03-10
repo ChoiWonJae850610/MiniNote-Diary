@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal
+from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
@@ -105,8 +105,9 @@ class BasicInfoPostIt(_PostItCardBase):
         self.sale_price = _MoneyLineEdit(self)
         for widget in (self.cost, self.labor, self.loss, self.sale_price):
             widget.setStyleSheet(input_line_edit_style())
-        self.cost.setReadOnly(True)
+        self.cost.set_edit_enabled(False)
         self.cost.setFocusPolicy(Qt.NoFocus)
+        self._syncing_prices = False
 
         mg.addWidget(mk_label("재료비"), 0, 0)
         mg.addWidget(self.cost, 0, 1)
@@ -118,10 +119,11 @@ class BasicInfoPostIt(_PostItCardBase):
         mg.addWidget(self.sale_price, 1, 3)
         root.addLayout(mg)
 
-        self.style_no.committed.connect(lambda _v: self._emit_all())
+        self.style_no.committed.connect(lambda _v: self._emit_basic_fields())
         self.factory.committed.connect(self._on_factory_committed)
-        for widget in (self.cost, self.labor, self.loss, self.sale_price):
-            widget.textChanged.connect(lambda _t: self._emit_all())
+        self.labor.textChanged.connect(self._on_price_component_changed)
+        self.loss.textChanged.connect(self._on_price_component_changed)
+        self.sale_price.textChanged.connect(self._on_sale_price_changed)
 
         self.setTabOrder(self.btn_calendar, self.style_no)
         self.setTabOrder(self.style_no, self.factory)
@@ -135,6 +137,46 @@ class BasicInfoPostIt(_PostItCardBase):
         self.loss._pending_next_widget = self.sale_price
         self.sale_price._pending_prev_widget = self.loss
 
+    def _emit_basic_fields(self):
+        self.data_changed.emit({
+            "date": self._date_value.toString("yyyy-MM-dd"),
+            "style_no": self.style_no.text(),
+            "factory": self.factory.text(),
+            "factory_partner_id": str(self.factory.property('factory_partner_id') or ''),
+        })
+
+    def _emit_price_fields(self):
+        self.data_changed.emit({
+            "cost_display": self.cost.text(),
+            "labor_display": self.labor.text(),
+            "loss_display": self.loss.text(),
+            "sale_price_display": self.sale_price.text(),
+            "cost": self.cost.digits(),
+            "labor": self.labor.digits(),
+            "loss": self.loss.digits(),
+            "sale_price": self.sale_price.digits(),
+        })
+
+    def _recompute_prices(self):
+        material_total = int(self.cost.digits() or '0')
+        labor = int(self.labor.digits() or '0')
+        loss = int(self.loss.digits() or '0')
+        sale_total = material_total + labor + loss
+        self._syncing_prices = True
+        try:
+            self.sale_price.setText(f"{sale_total:,}" if sale_total else "")
+        finally:
+            self._syncing_prices = False
+
+    def _on_price_component_changed(self, _text: str):
+        self._recompute_prices()
+        self._emit_price_fields()
+
+    def _on_sale_price_changed(self, _text: str):
+        if self._syncing_prices:
+            return
+        self._emit_price_fields()
+
     def _adjust_style_width(self, text: str):
         metrics = QFontMetrics(self.style_no.font())
         width = metrics.horizontalAdvance(text or "") + 28
@@ -144,13 +186,13 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def _on_factory_committed(self, value: str):
         self.factory.setProperty('factory_partner_id', '')
-        self._emit_all()
+        self._emit_basic_fields()
 
     def _open_factory_picker(self):
         def _apply(partner):
             self.factory.set_text_silent(partner.name)
             self.factory.setProperty('factory_partner_id', partner.id)
-            self._emit_all()
+            self._emit_basic_fields()
 
         show_partner_picker(self.btn_factory_partner, partner_type=PARTNER_PICKER_TYPE_FACTORY, on_selected=_apply)
 
@@ -166,7 +208,7 @@ class BasicInfoPostIt(_PostItCardBase):
     def _on_date_picked(self, date: QDate):
         self._date_value = date
         self.date_text.setText(date.toString("yyyy-MM-dd"))
-        self._emit_all()
+        self._emit_basic_fields()
 
     def set_header_data(self, header: Dict[str, str]):
         header = header or {}
@@ -175,27 +217,23 @@ class BasicInfoPostIt(_PostItCardBase):
             date = QDate.currentDate()
         self._date_value = date
         self.date_text.setText(date.toString("yyyy-MM-dd"))
-        self.style_no.set_text_silent(header.get("style_no", ""))
-        self.factory.set_text_silent(header.get("factory", ""))
-        self.factory.setProperty('factory_partner_id', header.get("factory_partner_id", ""))
-        self._adjust_style_width(self.style_no.text())
-        self.cost.setText(header.get("cost_display", header.get("cost", "")) or "")
-        self.labor.setText(header.get("labor_display", header.get("labor", "")) or "")
-        self.loss.setText(header.get("loss_display", header.get("loss", "")) or "")
-        self.sale_price.setText(header.get("sale_price_display", header.get("sale_price", "")) or "")
+        blockers = [
+            QSignalBlocker(self.style_no),
+            QSignalBlocker(self.factory),
+            QSignalBlocker(self.cost),
+            QSignalBlocker(self.labor),
+            QSignalBlocker(self.loss),
+            QSignalBlocker(self.sale_price),
+        ]
+        try:
+            self.style_no.set_text_silent(header.get("style_no", ""))
+            self.factory.set_text_silent(header.get("factory", ""))
+            self.factory.setProperty('factory_partner_id', header.get("factory_partner_id", ""))
+            self._adjust_style_width(self.style_no.text())
+            self.cost.setText(header.get("cost_display", header.get("cost", "")) or "")
+            self.labor.setText(header.get("labor_display", header.get("labor", "")) or "")
+            self.loss.setText(header.get("loss_display", header.get("loss", "")) or "")
+            self.sale_price.setText(header.get("sale_price_display", header.get("sale_price", "")) or "")
+        finally:
+            del blockers
 
-    def _emit_all(self):
-        self.data_changed.emit({
-            "date": self._date_value.toString("yyyy-MM-dd"),
-            "style_no": self.style_no.text(),
-            "factory": self.factory.text(),
-            "factory_partner_id": str(self.factory.property('factory_partner_id') or ''),
-            "cost_display": self.cost.text(),
-            "labor_display": self.labor.text(),
-            "loss_display": self.loss.text(),
-            "sale_price_display": self.sale_price.text(),
-            "cost": self.cost.digits(),
-            "labor": self.labor.digits(),
-            "loss": self.loss.digits(),
-            "sale_price": self.sale_price.digits(),
-        })
