@@ -503,6 +503,9 @@ class MainWindow(QMainWindow):
         )
         self.change_note_postit.set_text(self.state.header.change_note)
 
+    def _refresh_basic_postit(self):
+        self.postit_bar.basic.set_header_data(self.state.header_data)
+
     def on_add_basic_clicked(self):
         dlg = BasicInfoDialog(initial=self.state.header_data, parent=self)
         if dlg.exec() == dlg.Accepted:
@@ -561,12 +564,12 @@ class MainWindow(QMainWindow):
 
     def on_fabric_postit_changed(self, idx: int, patch: dict):
         self.state.update_material_patch('fabric', idx, patch)
-        self._refresh_postits()
+        self._refresh_basic_postit()
         self._update_window_title()
 
     def on_trim_postit_changed(self, idx: int, patch: dict):
         self.state.update_material_patch('trim', idx, patch)
-        self._refresh_postits()
+        self._refresh_basic_postit()
         self._update_window_title()
 
     def upload_image(self):
