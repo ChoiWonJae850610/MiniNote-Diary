@@ -65,7 +65,8 @@ class WorkOrderState:
 
     def update_header(self, patch: Dict[str, str]) -> None:
         self.header.patch(patch)
-        self._recompute_sale_price()
+        if self._needs_price_recompute(patch):
+            self._recompute_sale_price()
         self.mark_dirty()
 
     def update_change_note(self, text: str) -> None:
@@ -128,16 +129,23 @@ class WorkOrderState:
 
 
     def _recompute_sale_price(self) -> None:
-        header_total = (
-            int_from_any(self.header.cost)
-            + int_from_any(self.header.labor)
-            + int_from_any(self.header.loss)
-        )
         material_total = self._sum_material_totals(self.fabrics) + self._sum_material_totals(self.trims)
-        sale_total = header_total + material_total
-        formatted = format_commas_from_digits(str(sale_total)) if sale_total else ''
-        self.header.sale_price = str(sale_total) if sale_total else ''
-        self.header.sale_price_display = formatted
+        material_text = str(material_total) if material_total else ''
+        self.header.cost = material_text
+        self.header.cost_display = format_commas_from_digits(material_text) if material_text else ''
+
+        sale_total = material_total + int_from_any(self.header.labor) + int_from_any(self.header.loss)
+        sale_text = str(sale_total) if sale_total else ''
+        self.header.sale_price = sale_text
+        self.header.sale_price_display = format_commas_from_digits(sale_text) if sale_text else ''
+
+
+    @staticmethod
+    def _needs_price_recompute(patch: Dict[str, str] | None) -> bool:
+        if not isinstance(patch, dict) or not patch:
+            return False
+        watched_keys = {"cost", "cost_display", "labor", "labor_display", "loss", "loss_display"}
+        return any(key in watched_keys for key in patch)
 
     @staticmethod
     def _sum_material_totals(items: List[MaterialItem] | None) -> int:

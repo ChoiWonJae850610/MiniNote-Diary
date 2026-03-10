@@ -105,35 +105,35 @@ class BasicInfoPostIt(_PostItCardBase):
         self.sale_price = _MoneyLineEdit(self)
         for widget in (self.cost, self.labor, self.loss, self.sale_price):
             widget.setStyleSheet(input_line_edit_style())
-        self.sale_price.setReadOnly(True)
-        self.sale_price.setFocusPolicy(Qt.NoFocus)
+        self.cost.setReadOnly(True)
+        self.cost.setFocusPolicy(Qt.NoFocus)
 
-        mg.addWidget(mk_label("원  가"), 0, 0)
+        mg.addWidget(mk_label("재료비"), 0, 0)
         mg.addWidget(self.cost, 0, 1)
         mg.addWidget(mk_label("공  임"), 0, 2)
         mg.addWidget(self.labor, 0, 3)
         mg.addWidget(mk_label("로  스"), 1, 0)
         mg.addWidget(self.loss, 1, 1)
-        mg.addWidget(mk_label("판매가"), 1, 2)
+        mg.addWidget(mk_label("원  가"), 1, 2)
         mg.addWidget(self.sale_price, 1, 3)
         root.addLayout(mg)
 
         self.style_no.committed.connect(lambda _v: self._emit_all())
         self.factory.committed.connect(self._on_factory_committed)
-        for widget in (self.cost, self.labor, self.loss):
+        for widget in (self.cost, self.labor, self.loss, self.sale_price):
             widget.textChanged.connect(lambda _t: self._emit_all())
 
         self.setTabOrder(self.btn_calendar, self.style_no)
         self.setTabOrder(self.style_no, self.factory)
-        self.setTabOrder(self.factory, self.cost)
-        self.setTabOrder(self.cost, self.labor)
+        self.setTabOrder(self.factory, self.labor)
         self.setTabOrder(self.labor, self.loss)
+        self.setTabOrder(self.loss, self.sale_price)
 
-        self.cost._pending_prev_widget = self.factory
-        self.cost._pending_next_widget = self.labor
-        self.labor._pending_prev_widget = self.cost
+        self.labor._pending_prev_widget = self.factory
         self.labor._pending_next_widget = self.loss
         self.loss._pending_prev_widget = self.labor
+        self.loss._pending_next_widget = self.sale_price
+        self.sale_price._pending_prev_widget = self.loss
 
     def _adjust_style_width(self, text: str):
         metrics = QFontMetrics(self.style_no.font())

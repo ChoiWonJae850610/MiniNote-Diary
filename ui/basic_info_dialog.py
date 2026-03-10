@@ -144,14 +144,14 @@ class BasicInfoDialog(QDialog):
         self.labor.setText(initial.get("labor_display", ""))
         self.loss.setText(initial.get("loss_display", ""))
         self.sale_price.setText(initial.get("sale_price_display", ""))
-        self.sale_price.setReadOnly(True)
-        self.sale_price.setFocusPolicy(Qt.NoFocus)
+        self.cost.setReadOnly(True)
+        self.cost.setFocusPolicy(Qt.NoFocus)
 
         for edit in (self.cost, self.labor, self.loss, self.sale_price):
             edit.setMinimumWidth(90)
             edit.setMaximumWidth(140)
 
-        pairs = [("원가", self.cost), ("공임", self.labor), ("로스", self.loss), ("판매가", self.sale_price)]
+        pairs = [("재료비", self.cost), ("공임", self.labor), ("로스", self.loss), ("원가", self.sale_price)]
         col = 0
         for label_text, edit in pairs:
             label = QLabel(label_text, self)
