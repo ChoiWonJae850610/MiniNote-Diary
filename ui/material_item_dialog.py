@@ -9,7 +9,7 @@ from services.unit_repository import load_units
 from ui.theme import THEME, combo_box_style, dialog_layout_margins, hint_label_style, input_line_edit_style, read_only_line_edit_style
 from ui.icon_factory import make_partner_link_icon
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
-from ui.partner_ui_utils import open_partner_management
+from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 
 
 class ClearableComboBox(QComboBox):
@@ -95,6 +95,7 @@ class MaterialItemDialog(QDialog):
         for widget in (self.vendor, self.item):
             widget.setFixedHeight(30)
             widget.setStyleSheet(input_line_edit_style())
+        self.vendor.textEdited.connect(lambda _text: self.vendor.setProperty("vendor_partner_id", ""))
 
         self.btn_vendor_partner = make_inline_icon_button(
             parent=self,
@@ -102,7 +103,7 @@ class MaterialItemDialog(QDialog):
             icon=make_partner_link_icon(14),
             size=30,
         )
-        self.btn_vendor_partner.clicked.connect(lambda: open_partner_management(self))
+        self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
         vendor_row = QWidget(self)
         vendor_h = QHBoxLayout(vendor_row)
         vendor_h.setContentsMargins(0, 0, 0, 0)
@@ -130,6 +131,14 @@ class MaterialItemDialog(QDialog):
         self.qty.textChanged.connect(self._recalc_total)
         self.unit_price.textChanged.connect(self._recalc_total)
 
+
+    def _open_vendor_picker(self):
+        show_partner_picker(
+            self.btn_vendor_partner,
+            partner_type=PARTNER_PICKER_TYPE_OTHER,
+            on_selected=lambda partner: set_partner_line_edit(self.vendor, partner, id_property='vendor_partner_id'),
+        )
+
     def _recalc_total(self):
         qty = self.qty.value_digits()
         price = self.unit_price.value_digits()
@@ -151,6 +160,7 @@ class MaterialItemDialog(QDialog):
         unit_val = str(self.unit.currentData() or "").strip()
         return {
             "거래처": self.vendor.text().strip(),
+            "거래처_id": str(self.vendor.property("vendor_partner_id") or "").strip(),
             "품목": self.item.text().strip(),
             "수량": self.qty.text().strip(),
             "단위": unit_val,

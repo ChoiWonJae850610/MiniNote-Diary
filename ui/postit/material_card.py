@@ -10,7 +10,7 @@ from services.unit_repository import load_units, unit_label_for_value
 from ui.postit.base import _PostItCardBase
 from ui.icon_factory import make_partner_link_icon
 from ui.postit.common import FIELD_H, make_down_icon
-from ui.partner_ui_utils import open_partner_management
+from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.theme import delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
 
@@ -62,8 +62,9 @@ class PostItCard(_PostItCardBase):
         self.btn_vendor_partner.setCursor(Qt.PointingHandCursor)
         self.btn_vendor_partner.setToolTip('거래처 관리')
         self.btn_vendor_partner.setStyleSheet(tool_button_style())
-        self.btn_vendor_partner.clicked.connect(lambda: open_partner_management(self))
+        self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
         self.vendor.set_text_silent(self.data.get("거래처", ""))
+        self.data["거래처_id"] = self.data.get("거래처_id", "")
         self.item.set_text_silent(self.data.get("품목", ""))
         vi.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0, 0)
         vendor_row = QHBoxLayout()
@@ -139,7 +140,7 @@ class PostItCard(_PostItCardBase):
         grid.addWidget(self.total, 2, 1, 1, 3)
         root.addLayout(grid)
 
-        self.vendor.committed.connect(lambda value: self._commit("거래처", value))
+        self.vendor.committed.connect(self._on_vendor_committed)
         self.item.committed.connect(lambda value: self._commit("품목", value))
         self.qty.committed.connect(self._on_qty_committed)
         self.qty.textChanged.connect(lambda _t: self._recalc_total())
@@ -158,6 +159,23 @@ class PostItCard(_PostItCardBase):
         self.setMinimumSize(QSize(320, 198))
         self.setMaximumHeight(198)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+
+    def _partner_type_for_picker(self) -> str:
+        return PARTNER_PICKER_TYPE_FABRIC if self.kind == "fabric" else PARTNER_PICKER_TYPE_OTHER
+
+    def _open_vendor_picker(self):
+        def _apply(partner):
+            self.vendor.set_text_silent(partner.name)
+            self.data["거래처_id"] = partner.id
+            self._commit("거래처", partner.name)
+
+        show_partner_picker(self.btn_vendor_partner, partner_type=self._partner_type_for_picker(), on_selected=_apply)
+
+
+    def _on_vendor_committed(self, value: str):
+        self.data["거래처_id"] = ""
+        self._commit("거래처", value)
 
     def _apply_unit_button_text(self):
         self.unit_btn.setText((self._unit_value or "").strip())
@@ -209,6 +227,7 @@ class PostItCard(_PostItCardBase):
         blocked = [(widget, widget.blockSignals(True)) for widget in widgets]
         try:
             self.vendor.set_text_silent(self.data.get("거래처", ""))
+            self.data["거래처_id"] = self.data.get("거래처_id", "")
             self.item.set_text_silent(self.data.get("품목", ""))
             self.qty.set_text_silent(digits_only(self.data.get("수량", "")))
             self.price.setText(self.data.get("단가", ""))
@@ -222,7 +241,10 @@ class PostItCard(_PostItCardBase):
     def _commit(self, key: str, value: str):
         value = (value or "").strip()
         self.data[key] = value
-        self.data_changed.emit(self.index, {key: value})
+        payload = {key: value}
+        if key == "거래처":
+            payload["거래처_id"] = str(self.data.get("거래처_id", "") or "")
+        self.data_changed.emit(self.index, payload)
 
     def _on_qty_committed(self, value: str):
         self._commit("수량", value)

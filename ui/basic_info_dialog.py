@@ -10,7 +10,7 @@ from services.formatters import digits_only, format_commas_from_digits, int_from
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
-from ui.partner_ui_utils import open_partner_management
+from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 
 
 class MoneyLineEdit(QLineEdit):
@@ -114,6 +114,8 @@ class BasicInfoDialog(QDialog):
             widget.setStyleSheet(input_line_edit_style())
         self.style_no.setText(initial.get("style_no", ""))
         self.factory.setText(initial.get("factory", ""))
+        self.factory.setProperty("factory_partner_id", initial.get("factory_partner_id", ""))
+        self.factory.textEdited.connect(lambda _text: self.factory.setProperty("factory_partner_id", ""))
 
         self.btn_factory_partner = make_inline_icon_button(
             parent=self,
@@ -121,7 +123,7 @@ class BasicInfoDialog(QDialog):
             icon=make_partner_link_icon(14),
             size=30,
         )
-        self.btn_factory_partner.clicked.connect(lambda: open_partner_management(self))
+        self.btn_factory_partner.clicked.connect(self._open_factory_picker)
         factory_row = QWidget(self)
         factory_h = QHBoxLayout(factory_row)
         factory_h.setContentsMargins(0, 0, 0, 0)
@@ -202,6 +204,14 @@ class BasicInfoDialog(QDialog):
         popup.move(x, y)
         popup.show()
 
+
+    def _open_factory_picker(self):
+        show_partner_picker(
+            self.btn_factory_partner,
+            partner_type=PARTNER_PICKER_TYPE_FACTORY,
+            on_selected=lambda partner: set_partner_line_edit(self.factory, partner, id_property='factory_partner_id'),
+        )
+
     def _sync_sale_price(self):
         total = int_from_any(self.cost.value_digits()) + int_from_any(self.labor.value_digits()) + int_from_any(self.loss.value_digits())
         if not self.cost.value_digits() and not self.labor.value_digits() and not self.loss.value_digits():
@@ -217,6 +227,7 @@ class BasicInfoDialog(QDialog):
             "date": self._date_value.toString("yyyy-MM-dd"),
             "style_no": self.style_no.text().strip(),
             "factory": self.factory.text().strip(),
+            "factory_partner_id": str(self.factory.property("factory_partner_id") or "").strip(),
             "cost_display": self.cost.text(),
             "labor_display": self.labor.text(),
             "loss_display": self.loss.text(),

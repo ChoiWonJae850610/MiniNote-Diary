@@ -11,7 +11,7 @@ from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
-from ui.partner_ui_utils import open_partner_management
+from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 from ui.theme import display_field_style, field_label_style, input_line_edit_style, tool_button_style
 
 
@@ -77,7 +77,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_factory_partner.setCursor(Qt.PointingHandCursor)
         self.btn_factory_partner.setToolTip('거래처 관리')
         self.btn_factory_partner.setStyleSheet(tool_button_style())
-        self.btn_factory_partner.clicked.connect(lambda: open_partner_management(self))
+        self.btn_factory_partner.clicked.connect(self._open_factory_picker)
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._style_no_min = 140
         self._style_no_max = 320
@@ -121,7 +121,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.labor.textChanged.connect(self._sync_sale_price)
         self.loss.textChanged.connect(self._sync_sale_price)
         self.style_no.committed.connect(lambda _v: self._emit_all())
-        self.factory.committed.connect(lambda _v: self._emit_all())
+        self.factory.committed.connect(self._on_factory_committed)
         for widget in (self.cost, self.labor, self.loss, self.sale_price):
             widget.textChanged.connect(lambda _t: self._emit_all())
 
@@ -150,6 +150,20 @@ class BasicInfoPostIt(_PostItCardBase):
         total = int_from_any(self.cost.text()) + int_from_any(self.labor.text()) + int_from_any(self.loss.text())
         self.sale_price.setText(format_commas_from_digits(str(total)) if total else "")
 
+
+
+    def _on_factory_committed(self, value: str):
+        self.factory.setProperty('factory_partner_id', '')
+        self._emit_all()
+
+    def _open_factory_picker(self):
+        def _apply(partner):
+            self.factory.set_text_silent(partner.name)
+            self.factory.setProperty('factory_partner_id', partner.id)
+            self._emit_all()
+
+        show_partner_picker(self.btn_factory_partner, partner_type=PARTNER_PICKER_TYPE_FACTORY, on_selected=_apply)
+
     def _open_calendar(self):
         popup = InlineCalendarPopup(self._date_value, parent=self)
         popup.datePicked.connect(self._on_date_picked)
@@ -173,6 +187,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.date_text.setText(date.toString("yyyy-MM-dd"))
         self.style_no.set_text_silent(header.get("style_no", ""))
         self.factory.set_text_silent(header.get("factory", ""))
+        self.factory.setProperty('factory_partner_id', header.get("factory_partner_id", ""))
         self._adjust_style_width(self.style_no.text())
         self.cost.setText(header.get("cost_display", header.get("cost", "")) or "")
         self.labor.setText(header.get("labor_display", header.get("labor", "")) or "")
@@ -184,6 +199,7 @@ class BasicInfoPostIt(_PostItCardBase):
             "date": self._date_value.toString("yyyy-MM-dd"),
             "style_no": self.style_no.text(),
             "factory": self.factory.text(),
+            "factory_partner_id": str(self.factory.property('factory_partner_id') or ''),
             "cost_display": self.cost.text(),
             "labor_display": self.labor.text(),
             "loss_display": self.loss.text(),
