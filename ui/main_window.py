@@ -15,9 +15,11 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QDialog,
+    QListWidgetItem,
 )
 
-from services.schema import DEFAULT_FEEDBACK_TIMEOUT_MS, SUPPORTED_IMAGE_FILTER
+from services.order_repository import OrderRepository
+from services.schema import DEFAULT_FEEDBACK_TIMEOUT_MS, ORDER_PAGE_ALL_MONTHS_LABEL, SUPPORTED_IMAGE_FILTER
 from services.work_order_controller import WorkOrderController
 from services.work_order_state import WorkOrderState
 from ui.basic_info_dialog import BasicInfoDialog
@@ -27,6 +29,7 @@ from ui.menu_page import MenuPageBuilder
 from ui.theme import THEME, build_app_stylesheet
 from ui.unit_dialog import UnitDialog
 from ui.partner_dialog import PartnerDialog
+from ui.order_page import OrderPageBuilder, TemplateListCard
 from ui.work_order_page import WorkOrderPageBuilder
 
 
@@ -48,6 +51,7 @@ class MainWindow(QMainWindow):
         self.project_root = self._project_root()
         self.state = WorkOrderState()
         self.controller = WorkOrderController(self.state, self.project_root)
+        self.order_repository = OrderRepository(self.project_root)
         self._suppress_dirty = False
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -77,11 +81,12 @@ class MainWindow(QMainWindow):
     def _build_pages(self) -> None:
         menu_refs = MenuPageBuilder.build()
         work_refs = WorkOrderPageBuilder.build(self)
+        order_refs = OrderPageBuilder.build()
         feature_pages = self._build_feature_pages()
 
         self.page_menu = menu_refs.page
         self.page_work_order = work_refs.page
-        self.page_job_start = feature_pages['job_start'].page
+        self.page_job_start = order_refs.page
         self.page_receipt = feature_pages['receipt'].page
         self.page_complete = feature_pages['complete'].page
         self.page_sale = feature_pages['sale'].page
@@ -107,6 +112,8 @@ class MainWindow(QMainWindow):
         self.change_note_postit = work_refs.change_note_postit
         self.postit_bar = work_refs.postit_bar
 
+        self.order_page_refs = order_refs
+
         self.feature_pages = feature_pages
 
         self.stack.addWidget(self.page_menu)
@@ -121,7 +128,7 @@ class MainWindow(QMainWindow):
 
     def _bind_page_events(self) -> None:
         self.btn_template.clicked.connect(self.go_work_order)
-        self.btn_job_start_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_JOB_START))
+        self.btn_job_start_menu.clicked.connect(self.open_order_page)
         self.btn_receipt_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_RECEIPT))
         self.btn_complete_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_COMPLETE))
         self.btn_sale_menu.clicked.connect(lambda: self.open_feature_page(self.PAGE_SALE))
@@ -133,6 +140,13 @@ class MainWindow(QMainWindow):
             refs.btn_back.clicked.connect(self.go_menu)
             refs.btn_primary.clicked.connect(lambda _=False, page=refs.page: self.on_feature_primary(page))
             refs.btn_secondary.clicked.connect(lambda _=False, page=refs.page: self.on_feature_secondary(page))
+
+        self.order_page_refs.btn_back.clicked.connect(self.go_menu)
+        self.order_page_refs.btn_reload.clicked.connect(self.refresh_order_page)
+        self.order_page_refs.btn_order.clicked.connect(self.on_order_create_clicked)
+        self.order_page_refs.search_edit.textChanged.connect(self.refresh_order_page)
+        self.order_page_refs.month_combo.currentIndexChanged.connect(self.refresh_order_page)
+        self.order_page_refs.template_list.currentRowChanged.connect(self.on_order_template_selected)
 
         self.btn_back.clicked.connect(self.on_back_clicked)
         self.btn_reset.clicked.connect(self.on_reset_clicked)
@@ -215,23 +229,6 @@ class MainWindow(QMainWindow):
 
     def _build_feature_pages(self) -> dict[str, object]:
         configs = [
-            FeaturePageConfig(
-                key='job_start',
-                title='작업 시작',
-                subtitle='기존 작업지시서를 선택하고 수량을 입력해 실제 생산 작업을 생성하는 화면 흐름입니다.',
-                left_title='작업지시서 선택',
-                left_hint='저장된 작업지시서 목록에서 기준 문서를 선택합니다.',
-                list_items=['하늘색 저지 자켓', '테스트 원단 샘플', '기본 상의 템플릿'],
-                summary_items=['선택한 작업지시서 미리보기', '생산 수량 입력', '시작 시점 지출 예정'],
-                sections=[
-                    FeatureSection('선택 정보 요약', ['대표 이미지 유무', '기본 거래처 / 스타일번호', '원단 · 부자재 카드 요약']),
-                    FeatureSection('작업 생성 입력', ['생산 수량', '작업 시작일', '작업 메모 / 공장 메모']),
-                    FeatureSection('향후 DB 포인트', ['template_id 참조', 'planned_qty 저장', '작업 시작 지출 이벤트 기록']),
-                ],
-                primary_button_text='작업 생성',
-                secondary_button_text='선택 미리보기',
-                helper_text='실제 연결 전 단계에서는 화면 흐름과 필요한 입력 묶음을 먼저 확인합니다.',
-            ),
             FeaturePageConfig(
                 key='receipt',
                 title='원단 / 부자재 등록',
@@ -319,6 +316,133 @@ class MainWindow(QMainWindow):
             ),
         ]
         return {config.key: FeaturePageBuilder.build(config) for config in configs}
+
+    def open_order_page(self) -> None:
+        self.refresh_order_page()
+        self.stack.setCurrentIndex(self.PAGE_JOB_START)
+
+    def refresh_order_page(self) -> None:
+        refs = self.order_page_refs
+        summaries = self.controller.repository.list_template_summaries()
+        month_combo = refs.month_combo
+        selected_month = month_combo.currentData() if month_combo.count() else ORDER_PAGE_ALL_MONTHS_LABEL
+        months = sorted({summary.date[:7] for summary in summaries if summary.date[:7]}, reverse=True)
+        month_combo.blockSignals(True)
+        month_combo.clear()
+        month_combo.addItem(ORDER_PAGE_ALL_MONTHS_LABEL, ORDER_PAGE_ALL_MONTHS_LABEL)
+        for month in months:
+            month_combo.addItem(month, month)
+        restore_index = month_combo.findData(selected_month)
+        if restore_index >= 0:
+            month_combo.setCurrentIndex(restore_index)
+        month_combo.blockSignals(False)
+
+        keyword = refs.search_edit.text().strip()
+        month_filter = month_combo.currentData() or ORDER_PAGE_ALL_MONTHS_LABEL
+        stats_map = self.order_repository.aggregate_by_template()
+        refs.template_list.clear()
+        from services.search_utils import matches_keyword
+        for summary in summaries:
+            if month_filter != ORDER_PAGE_ALL_MONTHS_LABEL and not str(summary.date or '').startswith(str(month_filter)):
+                continue
+            if not matches_keyword(keyword, summary.name, summary.factory_name, summary.change_note):
+                continue
+            stats = stats_map.get(summary.template_id)
+            subtitle = f"{summary.factory_name or '공장 미지정'} · 기준일 {summary.date or '-'}"
+            meta_lines = [
+                f"자재: 원단 {summary.fabric_count} / 부자재 {summary.trim_count}",
+                f"재고 {getattr(stats, 'current_stock_qty', 0)} · 진행중 {getattr(stats, 'in_progress_qty', 0)}",
+                f"최근 발주 {getattr(stats, 'last_ordered_at', '') or '없음'}",
+            ]
+            item = QListWidgetItem(refs.template_list)
+            item.setData(Qt.UserRole, summary.template_id)
+            card = TemplateListCard(title=summary.name, subtitle=subtitle, meta_lines=meta_lines)
+            item.setSizeHint(card.sizeHint())
+            refs.template_list.addItem(item)
+            refs.template_list.setItemWidget(item, card)
+
+        if refs.template_list.count() > 0:
+            refs.template_list.setCurrentRow(0)
+        else:
+            self._clear_order_template_detail()
+
+    def on_order_template_selected(self, row: int) -> None:
+        refs = self.order_page_refs
+        item = refs.template_list.item(row) if row >= 0 else None
+        if item is None:
+            self._clear_order_template_detail()
+            return
+        template_id = item.data(Qt.UserRole)
+        detail = self.controller.repository.load_template_detail(template_id)
+        if detail is None:
+            self._clear_order_template_detail()
+            return
+        stats = self.order_repository.aggregate_for_template(template_id)
+        summary = detail.summary
+        refs.page.setProperty('selected_template_id', template_id)
+        refs.lbl_name.setText(summary.name or '-')
+        refs.lbl_factory.setText(summary.factory_name or '-')
+        refs.lbl_date.setText(summary.date or '-')
+        refs.lbl_cost.setText(summary.cost_display or '-')
+        refs.lbl_labor.setText(summary.labor_display or '-')
+        refs.lbl_sale_price.setText(summary.sale_price_display or '-')
+        refs.lbl_material_summary.setText(f"원단 {summary.fabric_count} / 부자재 {summary.trim_count}")
+        refs.lbl_last_order.setText(stats.last_ordered_at or '발주 이력 없음')
+        refs.lbl_total_ordered.setText(str(stats.total_ordered_qty))
+        refs.lbl_in_progress.setText(str(stats.in_progress_qty))
+        refs.lbl_current_stock.setText(str(stats.current_stock_qty))
+        refs.memo_view.setPlainText(summary.change_note or '메모 없음')
+        refs.order_qty_spin.setValue(max(1, refs.order_qty_spin.value()))
+        refs.order_memo_edit.clear()
+        try:
+            if summary.image_path:
+                refs.image_preview.set_image(summary.image_path)
+            else:
+                refs.image_preview.clear_image()
+        except Exception:
+            refs.image_preview.clear_image()
+
+    def _clear_order_template_detail(self) -> None:
+        refs = self.order_page_refs
+        refs.page.setProperty('selected_template_id', '')
+        refs.lbl_name.setText('-')
+        refs.lbl_factory.setText('-')
+        refs.lbl_date.setText('-')
+        refs.lbl_cost.setText('-')
+        refs.lbl_labor.setText('-')
+        refs.lbl_sale_price.setText('-')
+        refs.lbl_material_summary.setText('원단 0 / 부자재 0')
+        refs.lbl_last_order.setText('발주 이력 없음')
+        refs.lbl_total_ordered.setText('0')
+        refs.lbl_in_progress.setText('0')
+        refs.lbl_current_stock.setText('0')
+        refs.memo_view.clear()
+        refs.image_preview.clear_image()
+
+    def on_order_create_clicked(self) -> None:
+        refs = self.order_page_refs
+        template_id = refs.page.property('selected_template_id') or ''
+        if not template_id:
+            show_info(self, '발주', '발주할 작업지시서를 먼저 선택하세요.')
+            return
+        detail = self.controller.repository.load_template_detail(template_id)
+        if detail is None:
+            show_error(self, '발주 실패', '선택한 작업지시서를 다시 불러올 수 없습니다.')
+            return
+        qty = max(1, refs.order_qty_spin.value())
+        ordered_at = refs.order_date_edit.date().toString('yyyy-MM-dd')
+        memo = refs.order_memo_edit.toPlainText().strip()
+        self.order_repository.create_order(
+            template_id=template_id,
+            template_name=detail.summary.name,
+            factory_name=detail.summary.factory_name,
+            ordered_qty=qty,
+            ordered_at=ordered_at,
+            memo=memo,
+        )
+        self.refresh_order_page()
+        message = f"발주 저장 완료\n\n작업지시서: {detail.summary.name}\n수량: {qty}\n발주일: {ordered_at}"
+        show_info(self, '발주 저장', message)
 
     def open_feature_page(self, page_index: int) -> None:
         self.stack.setCurrentIndex(page_index)

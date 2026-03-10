@@ -55,3 +55,5 @@ def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:
 PARTNERS_DB_FILENAME = 'partners.json'
 PARTNER_TYPES_DB_FILENAME = 'partner_types.json'
 PARTNER_PICKER_TOOLTIP = '거래처 관리'
+ORDER_RUNS_DB_FILENAME = 'job_orders.json'
+ORDER_PAGE_ALL_MONTHS_LABEL = '전체 월'

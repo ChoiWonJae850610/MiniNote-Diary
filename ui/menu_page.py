@@ -53,7 +53,7 @@ class MenuPageBuilder:
         grid.setVerticalSpacing(THEME.section_gap)
 
         btn_template = MenuPageBuilder._make_menu_card('작업지시서 관리', '기준 문서 생성 · 수정')
-        btn_job_start = MenuPageBuilder._make_menu_card('작업 시작', '템플릿 선택 후 수량 입력')
+        btn_job_start = MenuPageBuilder._make_menu_card('발주', '템플릿 선택 후 발주 수량 입력')
         btn_receipt = MenuPageBuilder._make_menu_card('원단/부자재 등록', '영수증 첨부 · 실제 지출 기록')
         btn_complete = MenuPageBuilder._make_menu_card('작업 완료', '완료 수량 반영 · 재고 생성')
         btn_sale = MenuPageBuilder._make_menu_card('판매 등록', '판매 수량 · 수입 반영')
