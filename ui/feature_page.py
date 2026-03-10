@@ -1,0 +1,165 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Iterable, Sequence
+
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ui.theme import THEME
+from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
+
+
+@dataclass(frozen=True)
+class FeatureSection:
+    title: str
+    lines: Sequence[str]
+
+
+@dataclass(frozen=True)
+class FeaturePageConfig:
+    key: str
+    title: str
+    subtitle: str
+    left_title: str
+    left_hint: str
+    list_items: Sequence[str]
+    summary_items: Sequence[str]
+    sections: Sequence[FeatureSection]
+    primary_button_text: str
+    secondary_button_text: str = '임시 저장'
+    helper_text: str = ''
+
+
+@dataclass
+class FeaturePageRefs:
+    page: QWidget
+    btn_back: QPushButton
+    btn_primary: QPushButton
+    btn_secondary: QPushButton
+    item_list: QListWidget
+
+
+class _SectionCard(QFrame):
+    def __init__(self, title: str, lines: Sequence[str], parent=None):
+        super().__init__(parent)
+        self.setObjectName('featureCard')
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(8)
+
+        title_label = QLabel(title, self)
+        title_label.setObjectName('featureSectionTitle')
+        layout.addWidget(title_label)
+
+        for line in lines:
+            line_label = QLabel(f'• {line}', self)
+            line_label.setWordWrap(True)
+            line_label.setObjectName('featureLine')
+            layout.addWidget(line_label)
+
+
+class FeaturePageBuilder:
+    @staticmethod
+    def build(config: FeaturePageConfig) -> FeaturePageRefs:
+        page = QWidget()
+        page.setObjectName('featurePage')
+        root = QVBoxLayout(page)
+        root.setContentsMargins(THEME.page_padding_x, 20, THEME.page_padding_x, 20)
+        root.setSpacing(THEME.section_gap)
+
+        top_row = QHBoxLayout()
+        top_row.setSpacing(THEME.top_button_spacing)
+        btn_back = QPushButton('◀')
+        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip='뒤로가기')
+        title_col = QVBoxLayout()
+        title_col.setSpacing(2)
+        title = QLabel(config.title, page)
+        title.setObjectName('featureTitle')
+        subtitle = QLabel(config.subtitle, page)
+        subtitle.setWordWrap(True)
+        subtitle.setObjectName('featureSubtitle')
+        title_col.addWidget(title)
+        title_col.addWidget(subtitle)
+        top_row.addWidget(btn_back, 0, Qt.AlignTop)
+        top_row.addLayout(title_col, 1)
+        root.addLayout(top_row)
+
+        summary_grid = QGridLayout()
+        summary_grid.setHorizontalSpacing(THEME.row_spacing)
+        summary_grid.setVerticalSpacing(THEME.row_spacing)
+        for index, text in enumerate(config.summary_items):
+            chip = QLabel(text, page)
+            chip.setObjectName('summaryChip')
+            chip.setAlignment(Qt.AlignCenter)
+            summary_grid.addWidget(chip, index // 3, index % 3)
+        root.addLayout(summary_grid)
+
+        content_row = QHBoxLayout()
+        content_row.setSpacing(THEME.section_gap)
+
+        left_panel = QFrame(page)
+        left_panel.setObjectName('featurePanel')
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(16, 16, 16, 16)
+        left_layout.setSpacing(THEME.row_spacing)
+        left_title = QLabel(config.left_title, left_panel)
+        left_title.setObjectName('featurePanelTitle')
+        left_hint = QLabel(config.left_hint, left_panel)
+        left_hint.setObjectName('featureHint')
+        left_hint.setWordWrap(True)
+        item_list = QListWidget(left_panel)
+        item_list.setObjectName('featureList')
+        for item_text in config.list_items:
+            QListWidgetItem(item_text, item_list)
+        if item_list.count() > 0:
+            item_list.setCurrentRow(0)
+        left_layout.addWidget(left_title)
+        left_layout.addWidget(left_hint)
+        left_layout.addWidget(item_list, 1)
+
+        right_panel = QFrame(page)
+        right_panel.setObjectName('featurePanel')
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(16, 16, 16, 16)
+        right_layout.setSpacing(THEME.section_gap)
+        for section in config.sections:
+            right_layout.addWidget(_SectionCard(section.title, section.lines, right_panel))
+        right_layout.addStretch(1)
+
+        content_row.addWidget(left_panel, 4)
+        content_row.addWidget(right_panel, 6)
+        root.addLayout(content_row, 1)
+
+        bottom_row = QHBoxLayout()
+        bottom_row.setSpacing(THEME.row_spacing)
+        helper = QLabel(config.helper_text, page)
+        helper.setObjectName('featureHint')
+        helper.setWordWrap(True)
+        btn_secondary = QPushButton(config.secondary_button_text, page)
+        apply_button_metrics(btn_secondary, width=140, height=38)
+        btn_primary = QPushButton(config.primary_button_text, page)
+        apply_button_metrics(btn_primary, width=170, height=38)
+        btn_primary.setObjectName('primaryAction')
+        bottom_row.addWidget(helper, 1)
+        bottom_row.addWidget(btn_secondary)
+        bottom_row.addWidget(btn_primary)
+        root.addLayout(bottom_row)
+
+        return FeaturePageRefs(
+            page=page,
+            btn_back=btn_back,
+            btn_primary=btn_primary,
+            btn_secondary=btn_secondary,
+            item_list=item_list,
+        )
