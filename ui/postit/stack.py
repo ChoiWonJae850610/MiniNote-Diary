@@ -6,11 +6,11 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QStackedLayout, QToolButton, QVBoxLayout, QWidget
 
 from services.work_order_defaults import empty_material_row
+from ui.postit.basic_info import BasicInfoPostIt
 from ui.postit.common import MAX_POSTIT_CARDS
 from ui.postit.layout import SectionContainer, SectionTitleBadge
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
-from ui.postit.basic_info import BasicInfoPostIt
 
 
 class PostItStack(QWidget):
@@ -59,25 +59,6 @@ class PostItStack(QWidget):
         if len(items) == len(self.items) == len(self.cards):
             self.items = items
             for idx, (card, item) in enumerate(zip(self.cards, self.items)):
-                card.index = idx
-                card.update_data(item)
-            if self.active_index >= len(self.items):
-                self.active_index = max(0, len(self.items) - 1)
-            self.stack.setCurrentIndex(self.active_index)
-            self._apply_active()
-            self._rebuild_index_buttons()
-            return
-        if len(items) == len(self.items) + 1 and items[:-1] == self.items:
-            self.items = items
-            self._append_card(items[-1], len(items) - 1)
-            self._refresh_delete_buttons()
-            self._rebuild_index_buttons()
-            return
-        removed_idx = self._find_single_removed_index(self.items, items)
-        if removed_idx is not None:
-            self.items = items
-            self._remove_card_at(removed_idx)
-            for idx in range(removed_idx, len(self.cards)):
                 self.cards[idx].index = idx
                 self.cards[idx].update_data(self.items[idx])
             if self.active_index >= len(self.items):
@@ -217,22 +198,26 @@ class PartnerTabbedPostIt(QWidget):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(THEME.top_button_spacing)
+        root.setSpacing(0)
 
-        self.tab_row = QHBoxLayout()
-        self.tab_row.setContentsMargins(0, 0, 0, 0)
-        self.tab_row.setSpacing(THEME.top_button_spacing)
+        self.tab_row_wrap = QWidget(self)
+        self.tab_row_layout = QHBoxLayout(self.tab_row_wrap)
+        self.tab_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.tab_row_layout.setSpacing(0)
+
         self.btn_fabric = self._make_tab_button('원단', self.TAB_FABRIC)
         self.btn_trim = self._make_tab_button('거래처', self.TAB_TRIM)
-        self.tab_row.addWidget(self.btn_fabric)
-        self.tab_row.addWidget(self.btn_trim)
-        self.tab_row.addStretch(1)
-        root.addLayout(self.tab_row)
+
+        self.tab_row_layout.addWidget(self.btn_fabric, 0)
+        self.tab_row_layout.addWidget(self.btn_trim, 0)
+        self.tab_row_layout.addStretch(1)
+
+        root.addWidget(self.tab_row_wrap, 0)
 
         self.body_host = QWidget(self)
         self.body_stack = QStackedLayout(self.body_host)
         self.body_stack.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(self.body_host)
+        root.addWidget(self.body_host, 1)
 
         self.fabric = PostItStack(self.TAB_FABRIC, self)
         self.trim = PostItStack(self.TAB_TRIM, self)
@@ -257,26 +242,38 @@ class PartnerTabbedPostIt(QWidget):
         button.setAutoExclusive(True)
         button.setCursor(Qt.PointingHandCursor)
         button.setFixedHeight(THEME.dialog_button_height)
-        button.setMinimumWidth(70)
+        button.setMinimumWidth(84)
         button.setFocusPolicy(Qt.NoFocus)
         button.setProperty('partnerTabKey', tab_key)
         return button
 
     def _tab_button_style(self, active: bool) -> str:
         t = THEME
+        common = (
+            'QToolButton{{'
+            f'padding:0 16px;'
+            f'border:1px solid {t.color_border};'
+            f'font-weight:700;'
+            f'min-height:{t.dialog_button_height}px;'
+            f'max-height:{t.dialog_button_height}px;'
+            f'border-top-left-radius:{t.control_radius + 5}px;'
+            f'border-top-right-radius:{t.control_radius + 5}px;'
+            'border-bottom-left-radius:0px;'
+            'border-bottom-right-radius:0px;'
+            'margin-right:2px;'
+        )
         if active:
             return (
-                'QToolButton{{'
-                f'background:{t.color_primary};color:{t.color_text_on_primary};'
-                f'border:1px solid {t.color_primary};border-radius:{t.control_radius}px;'
-                'padding:0 14px;font-weight:700;}}'
+                common
+                + f'background:{t.color_surface};color:{t.color_text};border-bottom:none;'
+                + '}}'
             )
         return (
-            'QToolButton{{'
-            f'background:{t.color_surface};color:{t.color_text_soft};'
-            f'border:1px solid {t.color_border};border-radius:{t.control_radius}px;'
-            'padding:0 14px;font-weight:600;}}'
-            f'QToolButton:hover{{background:{t.color_surface_alt};border-color:{t.color_border_hover};}}'
+            common
+            + f'background:{t.color_surface_muted};color:{t.color_text_soft};'
+            + f'border-bottom:1px solid {t.color_border};'
+            + '}}'
+            + f'QToolButton:hover{{background:{t.color_surface_alt};color:{t.color_text};}}'
         )
 
     def set_active_tab(self, tab_key: str):
@@ -314,8 +311,6 @@ class PostItBar(QWidget):
         self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=THEME.top_button_spacing)
 
         self.partner = PartnerTabbedPostIt(self)
-        self.partner_title = SectionTitleBadge('거래처', self, horizontal_padding=12)
-        self.partner_wrap = SectionContainer(self.partner_title, self.partner, parent=self, spacing=THEME.top_button_spacing)
 
         self.partner.fabric_deleted.connect(self.fabric_deleted.emit)
         self.partner.trim_deleted.connect(self.trim_deleted.emit)
@@ -324,12 +319,11 @@ class PostItBar(QWidget):
         self.partner.fabric_item_added.connect(self.fabric_item_added.emit)
         self.partner.trim_item_added.connect(self.trim_item_added.emit)
 
-        # 호환 유지
         self.fabric = self.partner.fabric
         self.trim = self.partner.trim
 
         lay.addWidget(self.basic_wrap, 1)
-        lay.addWidget(self.partner_wrap, 2)
+        lay.addWidget(self.partner, 2)
 
     def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.basic.set_header_data(header or {})

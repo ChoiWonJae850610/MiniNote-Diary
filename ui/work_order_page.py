@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
-from ui.postit_widgets import ChangeNotePostIt, PostItBar, SectionContainer, SectionTitleBadge
+from ui.postit_widgets import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import apply_icon_button_metrics
 
@@ -63,16 +63,22 @@ class WorkOrderPageBuilder:
         btn_delete_image.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
         btn_delete_image.setEnabled(False)
 
-        header = QWidget()
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        header_layout.setSpacing(THEME.top_button_spacing)
-        header_layout.addWidget(btn_back)
-        header_layout.addWidget(btn_reset)
-        header_layout.addWidget(btn_save)
-        header_layout.addStretch(1)
-        header_layout.addWidget(btn_upload)
-        header_layout.addWidget(btn_delete_image)
+        left_controls = QWidget()
+        left_controls_layout = QHBoxLayout(left_controls)
+        left_controls_layout.setContentsMargins(0, 0, 0, 0)
+        left_controls_layout.setSpacing(THEME.top_button_spacing)
+        left_controls_layout.addWidget(btn_back)
+        left_controls_layout.addWidget(btn_reset)
+        left_controls_layout.addWidget(btn_save)
+        left_controls_layout.addStretch(1)
+
+        image_controls = QWidget()
+        image_controls_layout = QHBoxLayout(image_controls)
+        image_controls_layout.setContentsMargins(0, 0, 0, 0)
+        image_controls_layout.setSpacing(THEME.top_button_spacing)
+        image_controls_layout.addStretch(1)
+        image_controls_layout.addWidget(btn_upload)
+        image_controls_layout.addWidget(btn_delete_image)
 
         feedback_label = QLabel('', parent)
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -98,26 +104,29 @@ class WorkOrderPageBuilder:
         image_shell_layout.setSpacing(0)
         image_shell_layout.addWidget(image_preview)
 
+        top_row = QWidget()
+        top_layout = QGridLayout(top_row)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setHorizontalSpacing(THEME.section_gap)
+        top_layout.setVerticalSpacing(THEME.row_spacing)
+        top_layout.setColumnStretch(0, 1)
+        top_layout.setColumnStretch(1, 1)
+        top_layout.addWidget(left_controls, 0, 0, 1, 1)
+        top_layout.addWidget(image_controls, 0, 1, 1, 1)
+        top_layout.addWidget(image_shell, 1, 0, 1, 2)
+
         postit_bar = PostItBar()
 
         change_note_postit = ChangeNotePostIt()
-        change_note_title = SectionTitleBadge('메모', parent, color=THEME.color_change_title, border_color=THEME.color_change_border)
-        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=THEME.top_button_spacing)
+        memo_header = FolderTabHeader('메모', parent)
+        change_note_wrap = SectionContainer(memo_header, change_note_postit, spacing=0, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setHorizontalSpacing(THEME.section_gap)
-        content_layout.setVerticalSpacing(THEME.row_spacing)
-
-        # Layout structure
-        # ┌──────────────────────────────┬──────────────┐
-        # │ 이미지 영역                   │ 메모         │
-        # │                              │              │
-        # ├──────────────────────────────┤              │
-        # │ 기본정보 + 거래처 포스트잇   │              │
-        # └──────────────────────────────┴──────────────┘
-        content_layout.addWidget(image_shell, 0, 0)
+        content_layout.setVerticalSpacing(THEME.section_gap)
+        content_layout.addWidget(top_row, 0, 0)
         content_layout.addWidget(postit_bar, 1, 0)
         content_layout.addWidget(change_note_wrap, 0, 1, 2, 1)
         content_layout.setColumnStretch(0, 3)
@@ -125,7 +134,6 @@ class WorkOrderPageBuilder:
         content_layout.setRowStretch(0, 3)
         content_layout.setRowStretch(1, 1)
 
-        page_layout.addWidget(header, 0)
         page_layout.addWidget(content, 1)
         page_layout.addWidget(feedback_label, 0)
 

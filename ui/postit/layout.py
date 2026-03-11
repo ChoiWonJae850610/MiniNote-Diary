@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-from ui.theme import title_badge_style
+from ui.theme import THEME, title_badge_style
 
 
 class SectionContainer(QWidget):
@@ -24,8 +24,41 @@ class SectionContainer(QWidget):
 class SectionTitleBadge(QLabel):
     def __init__(self, text: str, parent=None, **style_kwargs):
         super().__init__(text, parent)
-        from ui.theme import THEME
         self.setFixedHeight(THEME.section_badge_height)
         self.setAlignment(Qt.AlignCenter)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setStyleSheet(title_badge_style(**style_kwargs))
+
+
+class FolderTabHeader(QWidget):
+    def __init__(self, text: str, parent=None):
+        super().__init__(parent)
+        self._label = QLabel(text, self)
+        self._label.setAlignment(Qt.AlignCenter)
+        self._label.setFixedHeight(THEME.dialog_button_height)
+        self._label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self._label.setStyleSheet(self._label_style())
+
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+        root.addWidget(self._label, 0, Qt.AlignLeft)
+        root.addStretch(1)
+
+    def _label_style(self) -> str:
+        t = THEME
+        return (
+            "QLabel{"
+            f"background:{t.color_surface};"
+            f"color:{t.color_text};"
+            f"border:1px solid {t.color_border};"
+            "border-bottom:none;"
+            f"border-top-left-radius:{t.control_radius + 5}px;"
+            f"border-top-right-radius:{t.control_radius + 5}px;"
+            "border-bottom-left-radius:0px;"
+            "border-bottom-right-radius:0px;"
+            f"font-size:{t.section_title_font_px}px;"
+            "font-weight:700;"
+            "padding:0 14px;"
+            "}"
+        )
