@@ -13,7 +13,7 @@ from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
 
-POSTIT_TOTAL_HEIGHT = THEME.dialog_button_height + THEME.postit_bar_max_height + THEME.section_badge_height
+POSTIT_TOTAL_HEIGHT = THEME.dialog_button_height + THEME.postit_bar_max_height
 
 
 class PostItStack(QWidget):
