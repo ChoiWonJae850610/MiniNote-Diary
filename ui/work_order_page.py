@@ -8,9 +8,9 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
-from ui.postit_widgets import ChangeNotePostIt, PostItBar, SectionContainer, SectionTitleBadge
+from ui.postit_widgets import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
 from ui.theme import THEME, image_preview_style
-from ui.widget_factory import apply_icon_button_metrics
+from ui.widget_factory import apply_icon_button_metrics, make_hint_label, make_page_title_label
 
 
 @dataclass
@@ -61,15 +61,23 @@ class WorkOrderPageBuilder:
         apply_icon_button_metrics(btn_delete_image, font_px=THEME.icon_button_font_px, object_name="iconDanger", tooltip="사진 삭제")
         btn_delete_image.setIcon(parent.style().standardIcon(QStyle.SP_TrashIcon))
 
-        header = QWidget()
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(0, 0, 0, 0)
-        header_layout.addWidget(btn_back)
-        header_layout.addWidget(btn_reset)
-        header_layout.addWidget(btn_save)
-        header_layout.addStretch()
-        header_layout.addWidget(btn_upload)
-        header_layout.addWidget(btn_delete_image)
+        top_row = QHBoxLayout()
+        top_row.setSpacing(THEME.top_button_spacing)
+
+        title_col = QVBoxLayout()
+        title_col.setSpacing(THEME.title_stack_spacing)
+        title = make_page_title_label('작업지시서 생성', page)
+        subtitle = make_hint_label('작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다.', page)
+        title_col.addWidget(title)
+        title_col.addWidget(subtitle)
+
+        top_row.addWidget(btn_back, 0, Qt.AlignTop)
+        top_row.addLayout(title_col, 1)
+        top_row.addStretch(1)
+        top_row.addWidget(btn_reset, 0, Qt.AlignTop)
+        top_row.addWidget(btn_save, 0, Qt.AlignTop)
+        top_row.addWidget(btn_upload, 0, Qt.AlignTop)
+        top_row.addWidget(btn_delete_image, 0, Qt.AlignTop)
 
         feedback_label = QLabel("")
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -87,8 +95,8 @@ class WorkOrderPageBuilder:
         postit_bar = PostItBar()
 
         change_note_postit = ChangeNotePostIt()
-        change_note_title = SectionTitleBadge("메모", parent)
-        change_note_wrap = SectionContainer(change_note_title, change_note_postit)
+        change_note_title = FolderTabHeader('메모', page)
+        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=0, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)
@@ -110,7 +118,7 @@ class WorkOrderPageBuilder:
         content_layout.setColumnStretch(0, 2)
         content_layout.setColumnStretch(1, 1)
 
-        page_layout.addWidget(header)
+        page_layout.addLayout(top_row)
         page_layout.addWidget(content)
         page_layout.addWidget(feedback_label)
 

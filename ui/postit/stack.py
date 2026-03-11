@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QStackedLayout, QToolBut
 from services.work_order_defaults import empty_material_row
 from ui.postit.basic_info import BasicInfoPostIt
 from ui.postit.common import MAX_POSTIT_CARDS
-from ui.postit.layout import SectionContainer, SectionTitleBadge
+from ui.postit.layout import FolderTabHeader, SectionContainer
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
@@ -307,8 +307,8 @@ class PostItBar(QWidget):
 
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
-        self.basic_title = SectionTitleBadge('기본정보', self, horizontal_padding=12)
-        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=THEME.top_button_spacing)
+        self.basic_title = FolderTabHeader('기본정보', self)
+        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=0, header_alignment=None)
 
         self.partner = PartnerTabbedPostIt(self)
 
