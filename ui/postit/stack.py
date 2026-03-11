@@ -9,7 +9,7 @@ from services.work_order_defaults import empty_material_row
 from ui.postit.common import MAX_POSTIT_CARDS
 from ui.postit.layout import SectionContainer, SectionTitleBadge
 from ui.postit.material_card import PostItCard
-from ui.theme import disabled_index_button_style, index_button_style, THEME
+from ui.theme import THEME, disabled_index_button_style, index_button_style
 from ui.postit.basic_info import BasicInfoPostIt
 
 
@@ -29,7 +29,7 @@ class PostItStack(QWidget):
         self._suppress_next_new_card_menu = False
 
         self.index_row_wrap = QWidget(self)
-        self.index_row_wrap.setFixedHeight(THEME.postit_index_row_height)
+        self.index_row_wrap.setFixedHeight(THEME.section_badge_height)
         self.index_row = QHBoxLayout(self.index_row_wrap)
         self.index_row.setContentsMargins(0, 0, 0, 0)
         self.index_row.setSpacing(THEME.top_button_spacing)
@@ -151,7 +151,7 @@ class PostItStack(QWidget):
         button = QToolButton(self)
         button.setText(text)
         button.setCursor(Qt.PointingHandCursor)
-        button.setFixedSize(THEME.postit_index_button_size, THEME.postit_index_button_size)
+        button.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
         button.setFocusPolicy(Qt.NoFocus)
         return button
 
@@ -200,6 +200,99 @@ class PostItStack(QWidget):
         self._update_index_button_states()
 
 
+class PartnerTabbedPostIt(QWidget):
+    fabric_deleted = Signal(int)
+    trim_deleted = Signal(int)
+    fabric_item_changed = Signal(int, dict)
+    trim_item_changed = Signal(int, dict)
+    fabric_item_added = Signal()
+    trim_item_added = Signal()
+
+    TAB_FABRIC = 'fabric'
+    TAB_TRIM = 'trim'
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._active_tab = self.TAB_FABRIC
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(THEME.top_button_spacing)
+
+        self.tab_row = QHBoxLayout()
+        self.tab_row.setContentsMargins(0, 0, 0, 0)
+        self.tab_row.setSpacing(THEME.top_button_spacing)
+        self.btn_fabric = self._make_tab_button('원단', self.TAB_FABRIC)
+        self.btn_trim = self._make_tab_button('거래처', self.TAB_TRIM)
+        self.tab_row.addWidget(self.btn_fabric)
+        self.tab_row.addWidget(self.btn_trim)
+        self.tab_row.addStretch(1)
+        root.addLayout(self.tab_row)
+
+        self.body_host = QWidget(self)
+        self.body_stack = QStackedLayout(self.body_host)
+        self.body_stack.setContentsMargins(0, 0, 0, 0)
+        root.addWidget(self.body_host)
+
+        self.fabric = PostItStack(self.TAB_FABRIC, self)
+        self.trim = PostItStack(self.TAB_TRIM, self)
+        self.body_stack.addWidget(self.fabric)
+        self.body_stack.addWidget(self.trim)
+
+        self.fabric.item_deleted.connect(self.fabric_deleted.emit)
+        self.trim.item_deleted.connect(self.trim_deleted.emit)
+        self.fabric.item_changed.connect(self.fabric_item_changed.emit)
+        self.trim.item_changed.connect(self.trim_item_changed.emit)
+        self.fabric.item_added.connect(self.fabric_item_added.emit)
+        self.trim.item_added.connect(self.trim_item_added.emit)
+
+        self.btn_fabric.clicked.connect(lambda: self.set_active_tab(self.TAB_FABRIC))
+        self.btn_trim.clicked.connect(lambda: self.set_active_tab(self.TAB_TRIM))
+        self.set_active_tab(self.TAB_FABRIC)
+
+    def _make_tab_button(self, text: str, tab_key: str) -> QToolButton:
+        button = QToolButton(self)
+        button.setText(text)
+        button.setCheckable(True)
+        button.setAutoExclusive(True)
+        button.setCursor(Qt.PointingHandCursor)
+        button.setFixedHeight(THEME.dialog_button_height)
+        button.setMinimumWidth(70)
+        button.setFocusPolicy(Qt.NoFocus)
+        button.setProperty('partnerTabKey', tab_key)
+        return button
+
+    def _tab_button_style(self, active: bool) -> str:
+        t = THEME
+        if active:
+            return (
+                'QToolButton{{'
+                f'background:{t.color_primary};color:{t.color_text_on_primary};'
+                f'border:1px solid {t.color_primary};border-radius:{t.control_radius}px;'
+                'padding:0 14px;font-weight:700;}}'
+            )
+        return (
+            'QToolButton{{'
+            f'background:{t.color_surface};color:{t.color_text_soft};'
+            f'border:1px solid {t.color_border};border-radius:{t.control_radius}px;'
+            'padding:0 14px;font-weight:600;}}'
+            f'QToolButton:hover{{background:{t.color_surface_alt};border-color:{t.color_border_hover};}}'
+        )
+
+    def set_active_tab(self, tab_key: str):
+        self._active_tab = self.TAB_TRIM if tab_key == self.TAB_TRIM else self.TAB_FABRIC
+        is_fabric = self._active_tab == self.TAB_FABRIC
+        self.btn_fabric.setChecked(is_fabric)
+        self.btn_trim.setChecked(not is_fabric)
+        self.btn_fabric.setStyleSheet(self._tab_button_style(is_fabric))
+        self.btn_trim.setStyleSheet(self._tab_button_style(not is_fabric))
+        self.body_stack.setCurrentWidget(self.fabric if is_fabric else self.trim)
+
+    def set_data(self, fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
+        self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)
+        self.trim.set_items(trims or [], force_rebuild=force_rebuild)
+
+
 class PostItBar(QWidget):
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
@@ -213,27 +306,31 @@ class PostItBar(QWidget):
         super().__init__(parent)
         lay = QHBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(14)
+        lay.setSpacing(THEME.section_gap)
 
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
-        self.basic_title = SectionTitleBadge("기본정보", self, horizontal_padding=12)
-        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=6)
-        self.fabric = PostItStack("fabric", self)
-        self.trim = PostItStack("trim", self)
+        self.basic_title = SectionTitleBadge('기본정보', self, horizontal_padding=12)
+        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=THEME.top_button_spacing)
 
-        self.fabric.item_deleted.connect(self.fabric_deleted.emit)
-        self.trim.item_deleted.connect(self.trim_deleted.emit)
-        self.fabric.item_changed.connect(self.fabric_item_changed.emit)
-        self.trim.item_changed.connect(self.trim_item_changed.emit)
-        self.fabric.item_added.connect(self.fabric_item_added.emit)
-        self.trim.item_added.connect(self.trim_item_added.emit)
+        self.partner = PartnerTabbedPostIt(self)
+        self.partner_title = SectionTitleBadge('거래처', self, horizontal_padding=12)
+        self.partner_wrap = SectionContainer(self.partner_title, self.partner, parent=self, spacing=THEME.top_button_spacing)
+
+        self.partner.fabric_deleted.connect(self.fabric_deleted.emit)
+        self.partner.trim_deleted.connect(self.trim_deleted.emit)
+        self.partner.fabric_item_changed.connect(self.fabric_item_changed.emit)
+        self.partner.trim_item_changed.connect(self.trim_item_changed.emit)
+        self.partner.fabric_item_added.connect(self.fabric_item_added.emit)
+        self.partner.trim_item_added.connect(self.trim_item_added.emit)
+
+        # 호환 유지
+        self.fabric = self.partner.fabric
+        self.trim = self.partner.trim
 
         lay.addWidget(self.basic_wrap, 1)
-        lay.addWidget(self.fabric, 1)
-        lay.addWidget(self.trim, 1)
+        lay.addWidget(self.partner_wrap, 2)
 
     def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.basic.set_header_data(header or {})
-        self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)
-        self.trim.set_items(trims or [], force_rebuild=force_rebuild)
+        self.partner.set_data(fabrics or [], trims or [], force_rebuild=force_rebuild)

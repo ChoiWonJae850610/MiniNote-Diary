@@ -44,7 +44,7 @@ REQUIRED_MATERIAL_FIELDS: tuple[str, ...] = (
     '총액',
 )
 
-MAX_MATERIAL_ITEMS = 9
+MAX_MATERIAL_ITEMS = 15
 SUPPORTED_IMAGE_FILTER = 'Images (*.png *.jpg *.jpeg *.bmp)'
 DEFAULT_FEEDBACK_TIMEOUT_MS = 2200
 

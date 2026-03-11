@@ -6,11 +6,12 @@ from PySide6.QtWidgets import QApplication, QCalendarWidget, QDialog, QWidget
 
 from services.formatters import digits_only, format_commas_from_digits, int_from_any
 from services.unit_repository import load_units, unit_label_for_value
+from services.schema import MAX_MATERIAL_ITEMS
 from ui.theme import THEME
 
 FIELD_H = THEME.field_height
 CARD_RADIUS = THEME.card_radius
-MAX_POSTIT_CARDS = 9
+MAX_POSTIT_CARDS = MAX_MATERIAL_ITEMS
 
 
 class PendingTabFocusFilter(QObject):
