@@ -144,6 +144,7 @@ class PostItStack(QWidget):
                 widget.setParent(None)
                 widget.deleteLater()
         self.index_buttons = []
+        self.index_row.addStretch(1)
         for idx in range(len(self.items)):
             button = self._make_index_button(str(idx + 1))
             button.clicked.connect(lambda _=False, i=idx: self.set_active_card(i))
@@ -152,7 +153,6 @@ class PostItStack(QWidget):
         self.plus_button = self._make_index_button('+')
         self.plus_button.clicked.connect(self._on_add_clicked)
         self.index_row.addWidget(self.plus_button)
-        self.index_row.addStretch(1)
         self._update_index_button_states()
 
     def _update_index_button_states(self):
@@ -304,6 +304,7 @@ class PostItBar(QWidget):
         lay = QHBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(THEME.section_gap)
+        lay.setAlignment(Qt.AlignTop)
 
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)

@@ -61,8 +61,8 @@ class WorkOrderPageBuilder:
         apply_icon_button_metrics(btn_delete_image, font_px=THEME.icon_button_font_px, object_name="iconDanger", tooltip="사진 삭제")
         btn_delete_image.setIcon(parent.style().standardIcon(QStyle.SP_TrashIcon))
 
-        top_row = QHBoxLayout()
-        top_row.setSpacing(THEME.top_button_spacing)
+        title_row = QHBoxLayout()
+        title_row.setSpacing(THEME.top_button_spacing)
 
         title_col = QVBoxLayout()
         title_col.setSpacing(THEME.title_stack_spacing)
@@ -71,17 +71,23 @@ class WorkOrderPageBuilder:
         title_col.addWidget(title)
         title_col.addWidget(subtitle)
 
-        top_row.addWidget(btn_back, 0, Qt.AlignTop)
-        top_row.addLayout(title_col, 1)
-        top_row.addStretch(1)
-        top_row.addWidget(btn_reset, 0, Qt.AlignTop)
-        top_row.addWidget(btn_save, 0, Qt.AlignTop)
-        top_row.addWidget(btn_upload, 0, Qt.AlignTop)
-        top_row.addWidget(btn_delete_image, 0, Qt.AlignTop)
+        title_row.addWidget(btn_back, 0, Qt.AlignTop)
+        title_row.addLayout(title_col, 1)
+        title_row.addStretch(1)
 
         feedback_label = QLabel("")
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         feedback_label.setMinimumHeight(THEME.feedback_label_height)
+
+        image_toolbar = QWidget(page)
+        image_toolbar_layout = QHBoxLayout(image_toolbar)
+        image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
+        image_toolbar_layout.setSpacing(THEME.top_button_spacing)
+        image_toolbar_layout.addWidget(btn_reset)
+        image_toolbar_layout.addWidget(btn_save)
+        image_toolbar_layout.addWidget(btn_upload)
+        image_toolbar_layout.addWidget(btn_delete_image)
+        image_toolbar_layout.addStretch(1)
 
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.image_preview_min_height)
@@ -91,6 +97,13 @@ class WorkOrderPageBuilder:
         image_layout = QVBoxLayout(image_shell)
         image_layout.setContentsMargins(THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin)
         image_layout.addWidget(image_preview)
+
+        left_stack = QWidget(page)
+        left_layout = QVBoxLayout(left_stack)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(THEME.row_spacing)
+        left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
+        left_layout.addWidget(image_shell, 1)
 
         postit_bar = PostItBar()
 
@@ -108,17 +121,15 @@ class WorkOrderPageBuilder:
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.section_gap)
+        right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
+        right_layout.addWidget(change_note_wrap, 1)
 
-        right_layout.addWidget(postit_bar)
-        right_layout.addWidget(change_note_wrap)
-
-        content_layout.addWidget(image_shell, 0, 0)
+        content_layout.addWidget(left_stack, 0, 0)
         content_layout.addWidget(right_stack, 0, 1)
-
         content_layout.setColumnStretch(0, 2)
         content_layout.setColumnStretch(1, 1)
 
-        page_layout.addLayout(top_row)
+        page_layout.addLayout(title_row)
         page_layout.addWidget(content)
         page_layout.addWidget(feedback_label)
 

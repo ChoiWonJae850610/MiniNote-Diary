@@ -20,8 +20,8 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(320, THEME.postit_card_height))
-        self.setMaximumHeight(THEME.postit_card_height)
+        self.setMinimumSize(QSize(320, THEME.postit_bar_max_height))
+        self.setMaximumHeight(THEME.postit_bar_max_height)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         root = QVBoxLayout(self)
