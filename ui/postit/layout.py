@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
@@ -6,46 +7,36 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWi
 from ui.theme import THEME, title_badge_style
 
 
-def folder_tab_style(*, active: bool = True) -> str:
+def embedded_tab_style(*, active: bool = True) -> str:
     t = THEME
     base = (
         "QLabel{"
-        f"padding:0 14px;"
+        f"padding:0 16px;"
         f"min-height:{t.dialog_button_height}px;"
         f"max-height:{t.dialog_button_height}px;"
         f"border:1px solid {t.color_border};"
-        f"border-top-left-radius:{t.control_radius + 5}px;"
-        f"border-top-right-radius:{t.control_radius + 5}px;"
-        "border-bottom-left-radius:0px;"
-        "border-bottom-right-radius:0px;"
-        "border-bottom:none;"
+        f"border-top-left-radius:{t.control_radius + 6}px;"
+        f"border-top-right-radius:{t.control_radius + 6}px;"
+        f"border-bottom-left-radius:{t.control_radius + 2}px;"
+        f"border-bottom-right-radius:{t.control_radius + 2}px;"
         f"font-size:{t.section_title_font_px}px;"
         "font-weight:700;"
     )
     if active:
-        return (
-            base
-            + f"background:{t.color_surface};"
-            + f"color:{t.color_text};"
-            + "}"
-        )
-    return (
-        base
-        + f"background:{t.color_surface_muted};"
-        + f"color:{t.color_text_soft};"
-        + f"border-bottom:1px solid {t.color_border};"
-        + "}"
-    )
+        return base + f"background:{t.color_surface};" + f"color:{t.color_text};" + "}"
+    return base + f"background:{t.color_surface_muted};" + f"color:{t.color_text_soft};" + "}"
+
+
+def folder_tab_style(*, active: bool = True) -> str:
+    return embedded_tab_style(active=active)
 
 
 class SectionContainer(QWidget):
-    def __init__(self, header_widget: QWidget, body_widget: QWidget, *, parent=None, spacing: int = 6, header_alignment=Qt.AlignLeft):
+    def __init__(self, header_widget: QWidget, body_widget: QWidget, *, parent=None, spacing: int = 4, header_alignment=Qt.AlignLeft):
         super().__init__(parent)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(spacing)
-        self.header_widget = header_widget
-        self.body_widget = body_widget
         if header_alignment is None:
             root.addWidget(header_widget)
         else:
@@ -68,12 +59,12 @@ class FolderTabHeader(QWidget):
         self._label = QLabel(text, self)
         self._label.setAlignment(Qt.AlignCenter)
         self._label.setFixedHeight(THEME.dialog_button_height)
-        self._label.setMinimumWidth(84)
+        self._label.setMinimumWidth(92)
         self._label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self._label.setStyleSheet(folder_tab_style(active=True))
+        self._label.setStyleSheet(embedded_tab_style(active=True))
 
         root = QHBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
+        root.setContentsMargins(THEME.filter_panel_margin_h, 0, 0, 0)
         root.setSpacing(0)
         root.addWidget(self._label, 0, Qt.AlignLeft)
         root.addStretch(1)

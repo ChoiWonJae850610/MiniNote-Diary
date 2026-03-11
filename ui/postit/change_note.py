@@ -13,7 +13,8 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("change", parent=parent)
-        self.setMinimumSize(QSize(340, 220))
+        self.setMinimumSize(QSize(340, 150))
+        self.setMaximumHeight(180)
         self._block = False
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 12, 14, 14)

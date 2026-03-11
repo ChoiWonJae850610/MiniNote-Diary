@@ -47,7 +47,8 @@ class PostItStack(QWidget):
         root.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setFixedHeight(POSTIT_TOTAL_HEIGHT)
-        root.addWidget(self.section)
+        root.addWidget(self.stack_host)
+        root.addWidget(self.index_row_wrap)
 
         self._rebuild_index_buttons()
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
