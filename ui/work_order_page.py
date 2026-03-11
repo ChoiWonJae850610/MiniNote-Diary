@@ -109,7 +109,7 @@ class WorkOrderPageBuilder:
 
         change_note_postit = ChangeNotePostIt()
         change_note_title = FolderTabHeader('메모', page)
-        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=0, header_alignment=None)
+        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=THEME.top_button_spacing, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)
@@ -122,7 +122,8 @@ class WorkOrderPageBuilder:
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.section_gap)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
-        right_layout.addWidget(change_note_wrap, 1)
+        right_layout.addWidget(change_note_wrap,0,Qt.AlignTop)
+        right_layout.addStretch(1)
 
         content_layout.addWidget(left_stack, 0, 0)
         content_layout.addWidget(right_stack, 0, 1)
