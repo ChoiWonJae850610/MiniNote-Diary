@@ -3,7 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-from ui.theme import title_badge_style
+from ui.theme import THEME, title_badge_style
 
 
 class SectionContainer(QWidget):
@@ -24,7 +24,7 @@ class SectionContainer(QWidget):
 class SectionTitleBadge(QLabel):
     def __init__(self, text: str, parent=None, **style_kwargs):
         super().__init__(text, parent)
-        self.setFixedHeight(28)
+        self.setFixedHeight(THEME.section_badge_height)
         self.setAlignment(Qt.AlignCenter)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setStyleSheet(title_badge_style(**style_kwargs))

@@ -4,9 +4,17 @@ from typing import Iterable
 
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QPushButton
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
-from ui.theme import THEME, icon_button_override
+from ui.theme import (
+    THEME,
+    display_field_style,
+    hint_label_style,
+    icon_button_override,
+    panel_frame_style,
+    page_title_style,
+    panel_title_style,
+)
 
 
 def apply_button_metrics(button: QPushButton, *, width: int | None = None, height: int | None = None, font_px: int | None = None, bold: bool = True, point_cursor: bool = True) -> QPushButton:
@@ -124,13 +132,50 @@ def make_dialog_button_row(buttons: Iterable[QPushButton], *, stretch: bool = Tr
 
 def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | None = None, size: int | None = None) -> QPushButton:
     button = QPushButton(parent)
-    apply_button_metrics(button, width=size or THEME.field_height, height=size or THEME.field_height, font_px=THEME.base_font_px, bold=False, point_cursor=True)
+    button_size = size or THEME.field_height
+    apply_button_metrics(button, width=button_size, height=button_size, font_px=THEME.base_font_px, bold=False, point_cursor=True)
     if tooltip:
         button.setToolTip(tooltip)
     button.setContentsMargins(0, 0, 0, 0)
     if icon is not None and not icon.isNull():
         button.setIcon(icon)
-        icon_dim = max(12, (size or THEME.field_height) - 10)
+        icon_dim = max(12, button_size - 10)
         button.setIconSize(button.iconSize().__class__(icon_dim, icon_dim))
     button.setStyleSheet(icon_button_override(THEME.base_font_px) + ' QPushButton { text-align: center; padding: 0; margin: 0; }')
     return button
+
+
+def make_panel_frame(parent=None, *, compact: bool = False, object_name: str | None = None) -> QFrame:
+    frame = QFrame(parent)
+    frame.setStyleSheet(panel_frame_style(radius=THEME.panel_radius_sm if compact else THEME.panel_radius))
+    if object_name:
+        frame.setObjectName(object_name)
+    return frame
+
+
+def make_page_title_label(text: str, parent=None) -> QLabel:
+    label = QLabel(text, parent)
+    label.setStyleSheet(page_title_style())
+    return label
+
+
+def make_panel_title_label(text: str, parent=None) -> QLabel:
+    label = QLabel(text, parent)
+    label.setStyleSheet(panel_title_style())
+    return label
+
+
+def make_hint_label(text: str, parent=None, *, word_wrap: bool = True) -> QLabel:
+    label = QLabel(text, parent)
+    label.setWordWrap(word_wrap)
+    label.setStyleSheet(hint_label_style())
+    return label
+
+
+def make_value_label(text: str = '-', parent=None, *, min_height: int = 32, padding: int = 10) -> QLabel:
+    label = QLabel(text, parent)
+    label.setMinimumHeight(min_height)
+    label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+    label.setStyleSheet(display_field_style(padding))
+    return label

@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.postit_widgets import ChangeNotePostIt, PostItBar, SectionContainer, SectionTitleBadge
-from ui.theme import THEME, image_preview_style
+from ui.theme import THEME, feedback_label_style, image_preview_style, page_layout_margins
 from ui.widget_factory import apply_icon_button_metrics
 
 
@@ -32,7 +32,7 @@ class WorkOrderPageBuilder:
     def build(parent: QWidget) -> WorkOrderPageRefs:
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_padding_y, THEME.page_padding_x, THEME.page_padding_y)
+        page_layout.setContentsMargins(*page_layout_margins())
         page_layout.setSpacing(THEME.block_spacing)
 
         btn_back = QPushButton('◀')
@@ -80,7 +80,7 @@ class WorkOrderPageBuilder:
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         feedback_label.setMinimumHeight(THEME.feedback_label_height)
         feedback_label.setMaximumHeight(THEME.feedback_label_height)
-        feedback_label.setStyleSheet(f'QLabel{{background:transparent;border:none;padding:0 {THEME.label_padding_x}px;color:{THEME.color_text};font-weight:700;}}')
+        feedback_label.setStyleSheet(feedback_label_style())
 
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.image_preview_min_height)
@@ -88,7 +88,7 @@ class WorkOrderPageBuilder:
         image_shell = QWidget()
         image_shell.setObjectName('imageShell')
         image_shell_layout = QVBoxLayout(image_shell)
-        image_shell_layout.setContentsMargins(THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin)
+        image_shell_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_h, THEME.filter_panel_margin_h, THEME.filter_panel_margin_h)
         image_shell_layout.setSpacing(0)
         image_shell_layout.addWidget(image_preview)
 

@@ -21,6 +21,8 @@ def hex_to_rgba(hex_color: str, alpha: float) -> str:
 class ThemeTokens:
     base_font_px: int = 12
     menu_title_font_px: int = 22
+    page_title_font_px: int = 22
+    panel_title_font_px: int = 14
     section_title_font_px: int = 13
     icon_button_font_px: int = 9
     reset_button_font_px: int = 22
@@ -31,7 +33,13 @@ class ThemeTokens:
     menu_button_height: int = 54
     footer_button_width: int = 140
     footer_button_height: int = 32
+    primary_button_height: int = 38
+    primary_button_width: int = 170
+    secondary_button_width: int = 140
+    reload_button_width: int = 130
     dialog_button_height: int = 34
+    dialog_field_height: int = 30
+    order_input_height: int = 34
     unit_dialog_width: int = 520
     unit_dialog_height: int = 420
     window_min_width: int = 1080
@@ -43,18 +51,36 @@ class ThemeTokens:
     icon_size_sm: int = 12
     icon_size_md: int = 16
     field_height: int = 26
+    field_label_width: int = 44
+    calendar_display_width: int = 110
     table_row_height: int = 30
     section_badge_height: int = 28
+    summary_chip_height: int = 30
     feedback_label_height: int = 20
     image_preview_min_height: int = 520
+    image_preview_min_size: int = 240
+    memo_min_height: int = 110
+    order_memo_min_height: int = 88
     postit_bar_max_height: int = 232
+    postit_card_height: int = 198
+    postit_index_row_height: int = 28
+    postit_index_button_size: int = 24
+    delete_button_size: int = 14
+
     page_padding: int = 12
     page_padding_x: int = 30
     page_padding_y: int = 0
+    page_section_padding: int = 16
+    page_section_padding_compact: int = 14
+    page_top_bottom: int = 20
     block_spacing: int = 10
     row_spacing: int = 8
     top_button_spacing: int = 6
     section_gap: int = 14
+    card_inner_spacing: int = 8
+    title_stack_spacing: int = 2
+    filter_panel_margin_h: int = 14
+    filter_panel_margin_v: int = 12
     image_shell_margin: int = 18
     label_padding_x: int = 2
 
@@ -62,11 +88,13 @@ class ThemeTokens:
     card_shadow_blur: int = 22
     card_shadow_offset_y: int = 5
     shell_radius: int = 22
+    panel_radius: int = 18
+    panel_radius_sm: int = 14
+    list_radius: int = 12
     control_radius: int = 9
     input_radius: int = 8
     editor_radius: int = 14
 
-    # Neutral white / grayscale theme
     color_window: str = "#FFFFFF"
     color_surface: str = "#FAFAFB"
     color_surface_alt: str = "#F5F6F8"
@@ -75,7 +103,6 @@ class ThemeTokens:
     color_border_soft: str = "#E7EBF0"
     color_border_hover: str = "#B8C0CC"
 
-    # Single accent color
     color_primary: str = "#626B77"
     color_primary_hover: str = "#535B66"
     color_pressed: str = "#E9EDF2"
@@ -89,7 +116,6 @@ class ThemeTokens:
     color_disabled_border: str = "#E1E6EC"
     color_disabled_text: str = "#A0A8B5"
 
-    # Card / post-it tones: slightly different neutral cards
     color_basic_bg: str = "#F8F9FB"
     color_basic_border: str = "#D9DEE6"
     color_fabric_bg: str = "#F8F9FB"
@@ -204,6 +230,58 @@ def build_app_stylesheet() -> str:
             background: transparent;
             border: none;
         }}
+        QLabel#featureTitle {{
+            font-size: {t.page_title_font_px}px;
+            font-weight: 700;
+            color: {t.color_text};
+            background: transparent;
+        }}
+        QLabel#featureSubtitle, QLabel#featureHint {{
+            color: {t.color_text_muted};
+            background: transparent;
+        }}
+        QLabel#featurePanelTitle, QLabel#featureSectionTitle {{
+            font-size: {t.panel_title_font_px}px;
+            font-weight: 700;
+            color: {t.color_text};
+            background: transparent;
+        }}
+        QFrame#featurePanel {{
+            background: {t.color_surface};
+            border: 1px solid {t.color_border};
+            border-radius: {t.panel_radius}px;
+        }}
+        QFrame#featureCard {{
+            background: {t.color_window};
+            border: 1px solid {t.color_border_soft};
+            border-radius: {t.panel_radius_sm}px;
+        }}
+        QLabel#featureLine {{
+            color: {t.color_text_soft};
+            background: transparent;
+        }}
+        QListWidget#featureList {{
+            border: none;
+            background: transparent;
+            outline: none;
+        }}
+        QListWidget#featureList::item {{
+            border: none;
+            padding: 6px 0;
+        }}
+        QListWidget#featureList::item:selected {{
+            background: transparent;
+            color: {t.color_text};
+            font-weight: 700;
+        }}
+        QLabel#summaryChip {{
+            background: {t.color_surface};
+            border: 1px solid {t.color_border};
+            border-radius: {t.control_radius + 3}px;
+            padding: 4px 10px;
+            font-weight: 600;
+            color: {t.color_text_soft};
+        }}
     """
 
 
@@ -213,6 +291,14 @@ def title_label_style(font_px: int | None = None, color: str | None = None, padd
         f"QLabel{{font-weight:700;color:{color or t.color_text_soft};background:transparent;"
         f"font-size:{font_px or t.section_title_font_px}px;padding-left:{padding_left}px;}}"
     )
+
+
+def page_title_style(font_px: int | None = None) -> str:
+    return title_label_style(font_px=font_px or THEME.page_title_font_px, color=THEME.color_text)
+
+
+def panel_title_style(font_px: int | None = None) -> str:
+    return title_label_style(font_px=font_px or THEME.panel_title_font_px, color=THEME.color_text)
 
 
 def title_badge_style(font_px: int | None = None, color: str | None = None,
@@ -234,18 +320,47 @@ def field_label_style() -> str:
     return f"QLabel{{font-weight:600;color:{t.color_text_soft};background:transparent;}}"
 
 
+def strong_field_label_style() -> str:
+    t = THEME
+    return f"QLabel{{font-weight:700;color:{t.color_text};background:transparent;}}"
+
+
 def hint_label_style() -> str:
     t = THEME
     return f"QLabel{{background:transparent;color:{t.color_text_muted};padding:0 2px;}}"
 
 
-def dialog_layout_margins() -> tuple[int, int, int, int]:
+def panel_frame_style(*, radius: int | None = None, background: str | None = None, border_color: str | None = None) -> str:
     t = THEME
+    return (
+        f"QFrame{{border:1px solid {border_color or t.color_border};"
+        f"border-radius:{radius or t.panel_radius}px;"
+        f"background:{background or t.color_surface};}}"
+    )
+
+
+def inner_panel_frame_style() -> str:
+    return panel_frame_style(radius=THEME.panel_radius_sm, background=THEME.color_window, border_color=THEME.color_border_soft)
+
+
+def list_widget_style() -> str:
+    return (
+        'QListWidget{border:none;background:transparent;outline:none;}'
+        'QListWidget::item{border:none;padding:0px;}'
+        'QListWidget::item:selected{background:transparent;}'
+    )
+
+
+def feedback_label_style() -> str:
+    t = THEME
+    return f'QLabel{{background:transparent;border:none;padding:0 {t.label_padding_x}px;color:{t.color_text};font-weight:700;}}'
+
+
+def dialog_layout_margins() -> tuple[int, int, int, int]:
     return (14, 14, 14, 14)
 
 
 def dialog_inner_margins() -> tuple[int, int, int, int]:
-    t = THEME
     return (20, 18, 20, 18)
 
 
@@ -393,7 +508,7 @@ def disabled_index_button_style() -> str:
 def table_widget_style() -> str:
     t = THEME
     return (
-        "QTableWidget{"
+        "QTableWidget{" 
         f"background:{t.color_window};"
         f"border:1px solid {t.color_border};"
         "border-radius:12px;"
@@ -402,7 +517,7 @@ def table_widget_style() -> str:
         f"selection-color:{t.color_text};"
         "padding:4px;"
         "}"
-        "QHeaderView::section{"
+        "QHeaderView::section{" 
         f"background:{t.color_surface};"
         f"color:{t.color_text_soft};"
         "border:none;"
@@ -410,11 +525,11 @@ def table_widget_style() -> str:
         "padding:8px 10px;"
         "font-weight:600;"
         "}"
-        "QTableWidget::item{"
+        "QTableWidget::item{" 
         "border:1px solid transparent;"
         "padding:4px 6px;"
         "}"
-        "QTableWidget::item:selected{"
+        "QTableWidget::item:selected{" 
         f"background:{t.color_surface_alt};"
         f"color:{t.color_text};"
         f"border:1px solid {t.color_border_soft};"

@@ -18,7 +18,7 @@ class MoneyLineEdit(QLineEdit):
         super().__init__(parent)
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.setFixedHeight(30)
+        self.setFixedHeight(THEME.dialog_field_height)
         self.setStyleSheet(input_line_edit_style())
         self._in_format = False
         self.textChanged.connect(self._on_text_changed)
@@ -85,12 +85,12 @@ class BasicInfoDialog(QDialog):
         self._date_value = initial_date
 
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
-        self.date_text.setMinimumHeight(30)
-        self.date_text.setFixedWidth(110)
+        self.date_text.setMinimumHeight(THEME.dialog_field_height)
+        self.date_text.setFixedWidth(THEME.calendar_display_width)
         self.date_text.setStyleSheet(display_field_style(8))
 
         self.btn_calendar = QToolButton(self)
-        self.btn_calendar.setFixedSize(30, 30)
+        self.btn_calendar.setFixedSize(THEME.dialog_field_height, THEME.dialog_field_height)
         self.btn_calendar.setToolTip("달력 열기")
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
         self.btn_calendar.setAutoRaise(True)
@@ -110,7 +110,7 @@ class BasicInfoDialog(QDialog):
         self.style_no = QLineEdit(self)
         self.factory = QLineEdit(self)
         for widget in (self.style_no, self.factory):
-            widget.setFixedHeight(30)
+            widget.setFixedHeight(THEME.dialog_field_height)
             widget.setStyleSheet(input_line_edit_style())
         self.style_no.setText(initial.get("style_no", ""))
         self.factory.setText(initial.get("factory", ""))
@@ -121,7 +121,7 @@ class BasicInfoDialog(QDialog):
             parent=self,
             tooltip='거래처 관리',
             icon=make_partner_link_icon(14),
-            size=30,
+            size=THEME.dialog_field_height,
         )
         self.btn_factory_partner.clicked.connect(self._open_factory_picker)
         factory_row = QWidget(self)

@@ -29,16 +29,16 @@ class PostItStack(QWidget):
         self._suppress_next_new_card_menu = False
 
         self.index_row_wrap = QWidget(self)
-        self.index_row_wrap.setFixedHeight(28)
+        self.index_row_wrap.setFixedHeight(THEME.postit_index_row_height)
         self.index_row = QHBoxLayout(self.index_row_wrap)
         self.index_row.setContentsMargins(0, 0, 0, 0)
-        self.index_row.setSpacing(6)
+        self.index_row.setSpacing(THEME.top_button_spacing)
 
         self.stack_host = QWidget(self)
         self.stack = QStackedLayout(self.stack_host)
         self.stack.setContentsMargins(0, 0, 0, 0)
 
-        self.section = SectionContainer(self.index_row_wrap, self.stack_host, parent=self, spacing=6, header_alignment=None)
+        self.section = SectionContainer(self.index_row_wrap, self.stack_host, parent=self, spacing=THEME.top_button_spacing, header_alignment=None)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
@@ -46,7 +46,7 @@ class PostItStack(QWidget):
 
         self._rebuild_index_buttons()
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(232)
+        self.setFixedHeight(THEME.postit_bar_max_height)
 
     def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
         items = list(items or []) or [empty_material_row()]
@@ -151,7 +151,7 @@ class PostItStack(QWidget):
         button = QToolButton(self)
         button.setText(text)
         button.setCursor(Qt.PointingHandCursor)
-        button.setFixedSize(24, 24)
+        button.setFixedSize(THEME.postit_index_button_size, THEME.postit_index_button_size)
         button.setFocusPolicy(Qt.NoFocus)
         return button
 

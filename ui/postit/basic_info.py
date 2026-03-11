@@ -13,24 +13,25 @@ from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 from ui.theme import display_field_style, field_label_style, input_line_edit_style, tool_button_style
 
+from ui.theme import THEME
 
 class BasicInfoPostIt(_PostItCardBase):
     data_changed = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(320, 198))
-        self.setMaximumHeight(198)
+        self.setMinimumSize(QSize(320, THEME.postit_card_height))
+        self.setMaximumHeight(THEME.postit_card_height)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 12, 14, 10)
-        root.setSpacing(8)
+        root.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.block_spacing)
+        root.setSpacing(THEME.row_spacing)
 
         date_row = QHBoxLayout()
         date_row.setSpacing(6)
         lbl_date = QLabel("날  짜", self)
-        lbl_date.setFixedWidth(44)
+        lbl_date.setFixedWidth(THEME.field_label_width)
         lbl_date.setFixedHeight(FIELD_H)
         lbl_date.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         lbl_date.setStyleSheet(field_label_style())
@@ -41,7 +42,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.date_text.setFixedHeight(FIELD_H)
         self.date_text.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.date_text.setStyleSheet(display_field_style())
-        self.date_text.setMinimumWidth(118)
+        self.date_text.setMinimumWidth(THEME.calendar_display_width + 8)
 
         self.btn_calendar = QToolButton(self)
         self.btn_calendar.setIcon(make_calendar_icon(16))
@@ -61,7 +62,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
         def mk_label(text: str) -> QLabel:
             label = QLabel(text, self)
-            label.setFixedWidth(44)
+            label.setFixedWidth(THEME.field_label_width)
             label.setFixedHeight(FIELD_H)
             label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             label.setStyleSheet(field_label_style())

@@ -12,7 +12,7 @@ from ui.icon_factory import make_partner_link_icon
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
-from ui.theme import delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
+from ui.theme import THEME, delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
 
 
 class PostItCard(_PostItCardBase):
@@ -32,13 +32,13 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = False
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 16, 14, 12)
-        root.setSpacing(8)
+        root.setContentsMargins(THEME.filter_panel_margin_h, THEME.page_section_padding, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
+        root.setSpacing(THEME.row_spacing)
 
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
         self.btn_delete.setCursor(Qt.PointingHandCursor)
-        self.btn_delete.setFixedSize(14, 14)
+        self.btn_delete.setFixedSize(THEME.delete_button_size, THEME.delete_button_size)
         self.btn_delete.setStyleSheet(delete_button_style())
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
@@ -48,7 +48,7 @@ class PostItCard(_PostItCardBase):
 
         def mk_label(text: str) -> QLabel:
             label = QLabel(text, self)
-            label.setFixedWidth(44)
+            label.setFixedWidth(THEME.field_label_width)
             label.setFixedHeight(FIELD_H)
             label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             label.setStyleSheet(field_label_style())
@@ -125,7 +125,7 @@ class PostItCard(_PostItCardBase):
 
         def mk_label2(text: str) -> QLabel:
             label = QLabel(text, self)
-            label.setFixedWidth(44)
+            label.setFixedWidth(THEME.field_label_width)
             label.setFixedHeight(FIELD_H)
             label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             label.setStyleSheet(field_label_style())
@@ -157,8 +157,8 @@ class PostItCard(_PostItCardBase):
         self.price._pending_next_widget = self.total
         self.total._pending_prev_widget = self.price
 
-        self.setMinimumSize(QSize(320, 198))
-        self.setMaximumHeight(198)
+        self.setMinimumSize(QSize(320, THEME.postit_card_height))
+        self.setMaximumHeight(THEME.postit_card_height)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
 
@@ -217,7 +217,7 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = True
 
     def resizeEvent(self, event):
-        self.btn_delete.move(self.width() - 18, 6)
+        self.btn_delete.move(self.width() - (THEME.delete_button_size + 4), 6)
         super().resizeEvent(event)
 
     def update_data(self, data: Dict[str, str]):
