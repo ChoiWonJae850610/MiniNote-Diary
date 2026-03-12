@@ -60,7 +60,7 @@ class OrderPageBuilder:
         page = QWidget()
         page.setObjectName('orderPage')
         root = QVBoxLayout(page)
-        root.setContentsMargins(THEME.page_padding_x, THEME.page_top_bottom, THEME.page_padding_x, THEME.page_top_bottom)
+        root.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
         root.setSpacing(THEME.section_gap)
 
         top_row = QHBoxLayout()

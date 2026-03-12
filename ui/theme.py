@@ -73,6 +73,8 @@ class ThemeTokens:
     page_section_padding: int = 16
     page_section_padding_compact: int = 14
     page_top_bottom: int = 20
+    page_header_top_margin: int = 20
+    page_header_block_gap: int = 14
     block_spacing: int = 10
     row_spacing: int = 8
     top_button_spacing: int = 6
