@@ -14,11 +14,11 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("change", parent=parent)
-        self.setMinimumSize(QSize(340, 320))
-        self.setFixedHeight(320)
+        self.setMinimumSize(QSize(340, 300))
+        self.setFixedHeight(300)
         self._block = False
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 8, 14, 14)
+        root.setContentsMargins(14, 6, 14, 14)
         root.setSpacing(0)
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")
