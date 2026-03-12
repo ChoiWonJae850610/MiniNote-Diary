@@ -54,7 +54,6 @@ class BasicInfoPostIt(_PostItCardBase):
 
         date_row.addWidget(self.date_text, 1)
         date_row.addWidget(self.btn_calendar)
-        root.addLayout(date_row)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(8)

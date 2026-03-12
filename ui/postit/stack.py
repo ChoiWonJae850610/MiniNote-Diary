@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from typing import Dict, List
@@ -12,8 +13,9 @@ from ui.postit.layout import FolderTabHeader, SectionContainer, folder_tab_style
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
-
-POSTIT_TOTAL_HEIGHT = THEME.dialog_button_height + THEME.postit_bar_max_height
+BODY_HEIGHT = THEME.postit_bar_max_height
+FOOTER_HEIGHT = THEME.section_badge_height
+WRAP_HEIGHT = THEME.dialog_button_height + BODY_HEIGHT + FOOTER_HEIGHT
 
 
 class PostItStack(QWidget):
@@ -31,28 +33,26 @@ class PostItStack(QWidget):
         self.active_index = 0
         self._suppress_next_new_card_menu = False
 
+        self.stack_host = QWidget(self)
+        self.stack_host.setFixedHeight(BODY_HEIGHT)
+        self.stack = QStackedLayout(self.stack_host)
+        self.stack.setContentsMargins(0, 0, 0, 0)
+
         self.index_row_wrap = QWidget(self)
-        self.index_row_wrap.setFixedHeight(THEME.section_badge_height)
+        self.index_row_wrap.setFixedHeight(FOOTER_HEIGHT)
         self.index_row = QHBoxLayout(self.index_row_wrap)
         self.index_row.setContentsMargins(0, 0, 0, 0)
         self.index_row.setSpacing(THEME.top_button_spacing)
 
-        self.stack_host = QWidget(self)
-        self.stack = QStackedLayout(self.stack_host)
-        self.stack.setContentsMargins(0, 0, 0, 0)
-
-        self.section = SectionContainer(self.index_row_wrap, self.stack_host, parent=self, spacing=THEME.top_button_spacing, header_alignment=None)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        root.setSpacing(THEME.top_button_spacing)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(POSTIT_TOTAL_HEIGHT)
-        root.addWidget(self.stack_host)
-        root.addWidget(self.index_row_wrap)
+        self.setFixedHeight(BODY_HEIGHT + THEME.top_button_spacing + FOOTER_HEIGHT)
+        root.addWidget(self.stack_host, 0)
+        root.addWidget(self.index_row_wrap, 0)
 
         self._rebuild_index_buttons()
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(THEME.postit_bar_max_height)
 
     def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
         items = list(items or []) or [empty_material_row()]
@@ -64,9 +64,9 @@ class PostItStack(QWidget):
             return
         if len(items) == len(self.items) == len(self.cards):
             self.items = items
-            for idx, (card, item) in enumerate(zip(self.cards, self.items)):
+            for idx, item in enumerate(self.items):
                 self.cards[idx].index = idx
-                self.cards[idx].update_data(self.items[idx])
+                self.cards[idx].update_data(item)
             if self.active_index >= len(self.items):
                 self.active_index = max(0, len(self.items) - 1)
             self.stack.setCurrentIndex(self.active_index)
@@ -78,15 +78,6 @@ class PostItStack(QWidget):
         if self.active_index >= len(self.items):
             self.active_index = max(0, len(self.items) - 1)
         self._rebuild()
-
-    @staticmethod
-    def _find_single_removed_index(old_items, new_items):
-        if len(old_items) != len(new_items) + 1:
-            return None
-        for idx in range(len(old_items)):
-            if old_items[:idx] + old_items[idx + 1:] == new_items:
-                return idx
-        return None
 
     def _create_card(self, idx: int, item: Dict[str, str]) -> PostItCard:
         card = PostItCard(self.kind, idx, item, parent=self)
@@ -102,14 +93,6 @@ class PostItStack(QWidget):
             self._suppress_next_new_card_menu = False
         self.stack.addWidget(card)
         self.cards.append(card)
-        self._apply_active()
-
-    def _remove_card_at(self, idx: int):
-        if 0 <= idx < len(self.cards):
-            card = self.cards.pop(idx)
-            self.stack.removeWidget(card)
-            card.setParent(None)
-            card.deleteLater()
 
     def _refresh_delete_buttons(self):
         single = len(self.cards) == 1
@@ -206,11 +189,11 @@ class PartnerTabbedPostIt(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(POSTIT_TOTAL_HEIGHT)
+        self.setFixedHeight(WRAP_HEIGHT)
 
         self.tab_row_wrap = QWidget(self)
         self.tab_row_layout = QHBoxLayout(self.tab_row_wrap)
-        self.tab_row_layout.setContentsMargins(0, 0, 0, 0)
+        self.tab_row_layout.setContentsMargins(THEME.filter_panel_margin_h + 22, 0, 0, 0)
         self.tab_row_layout.setSpacing(0)
 
         self.btn_fabric = self._make_tab_button('원단', self.TAB_FABRIC)
@@ -219,11 +202,10 @@ class PartnerTabbedPostIt(QWidget):
         self.tab_row_layout.addWidget(self.btn_fabric, 0)
         self.tab_row_layout.addWidget(self.btn_trim, 0)
         self.tab_row_layout.addStretch(1)
-
         root.addWidget(self.tab_row_wrap, 0)
 
         self.body_host = QWidget(self)
-        self.body_host.setFixedHeight(THEME.postit_bar_max_height)
+        self.body_host.setFixedHeight(BODY_HEIGHT + THEME.top_button_spacing + FOOTER_HEIGHT)
         self.body_stack = QStackedLayout(self.body_host)
         self.body_stack.setContentsMargins(0, 0, 0, 0)
         root.addWidget(self.body_host, 1)
@@ -257,13 +239,10 @@ class PartnerTabbedPostIt(QWidget):
         return button
 
     def _tab_button_style(self, active: bool) -> str:
-        base = folder_tab_style(active=active)
+        base = folder_tab_style(active=active).replace('QLabel', 'QToolButton')
         if active:
-            return base.replace('QLabel', 'QToolButton')
-        return (
-            base.replace('QLabel', 'QToolButton')
-            + f'QToolButton:hover{{background:{THEME.color_surface_alt};color:{THEME.color_text};}}'
-        )
+            return base
+        return base + f'QToolButton:hover{{background:{THEME.color_surface_alt};color:{THEME.color_text};}}'
 
     def set_active_tab(self, tab_key: str):
         self._active_tab = self.TAB_TRIM if tab_key == self.TAB_TRIM else self.TAB_FABRIC
@@ -298,13 +277,13 @@ class PostItBar(QWidget):
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
         self.basic_title = FolderTabHeader('기본정보', self)
-        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=0, header_alignment=None)
+        self.basic_wrap = SectionContainer(self.basic_title, self.basic, parent=self, spacing=-12, header_alignment=None)
         self.basic_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.basic_wrap.setFixedHeight(POSTIT_TOTAL_HEIGHT)
+        self.basic_wrap.setFixedHeight(WRAP_HEIGHT)
 
         self.partner = PartnerTabbedPostIt(self)
         self.partner.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.partner.setFixedHeight(POSTIT_TOTAL_HEIGHT)
+        self.partner.setFixedHeight(WRAP_HEIGHT)
 
         self.partner.fabric_deleted.connect(self.fabric_deleted.emit)
         self.partner.trim_deleted.connect(self.trim_deleted.emit)

@@ -32,7 +32,7 @@ def folder_tab_style(*, active: bool = True) -> str:
 
 
 class SectionContainer(QWidget):
-    def __init__(self, header_widget: QWidget, body_widget: QWidget, *, parent=None, spacing: int = 4, header_alignment=Qt.AlignLeft):
+    def __init__(self, header_widget: QWidget, body_widget: QWidget, *, parent=None, spacing: int = -12, header_alignment=Qt.AlignLeft):
         super().__init__(parent)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -64,7 +64,7 @@ class FolderTabHeader(QWidget):
         self._label.setStyleSheet(embedded_tab_style(active=True))
 
         root = QHBoxLayout(self)
-        root.setContentsMargins(THEME.filter_panel_margin_h, 0, 0, 0)
+        root.setContentsMargins(THEME.filter_panel_margin_h + 22, 0, 0, 0)
         root.setSpacing(0)
         root.addWidget(self._label, 0, Qt.AlignLeft)
         root.addStretch(1)
