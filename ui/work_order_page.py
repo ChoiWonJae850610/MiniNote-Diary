@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.postit_widgets import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
-from ui.theme import THEME, image_preview_style
+from ui.theme import THEME, image_preview_style, field_label_style
 from ui.widget_factory import apply_icon_button_metrics, make_hint_label, make_page_title_label
 
 
@@ -36,7 +36,7 @@ class WorkOrderPageBuilder:
         page_layout = QVBoxLayout(page)
         page_layout.setContentsMargins(
             THEME.page_padding_x,
-            THEME.page_padding_y,
+            20,
             THEME.page_padding_x,
             THEME.page_padding_y,
         )
@@ -78,6 +78,8 @@ class WorkOrderPageBuilder:
         feedback_label = QLabel("")
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         feedback_label.setMinimumHeight(THEME.feedback_label_height)
+     
+        postit_bar = PostItBar()
 
         image_toolbar = QWidget(page)
         image_toolbar_layout = QHBoxLayout(image_toolbar)
@@ -87,6 +89,9 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.addWidget(btn_save)
         image_toolbar_layout.addWidget(btn_upload)
         image_toolbar_layout.addWidget(btn_delete_image)
+        image_toolbar_layout.addSpacing(12)
+        image_toolbar_layout.addWidget(postit_bar.basic.date_text)
+        image_toolbar_layout.addWidget(postit_bar.basic.btn_calendar)
         image_toolbar_layout.addStretch(1)
 
         image_preview = ImagePreview()
@@ -105,11 +110,10 @@ class WorkOrderPageBuilder:
         left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
         left_layout.addWidget(image_shell, 1)
 
-        postit_bar = PostItBar()
-
+        
         change_note_postit = ChangeNotePostIt()
         change_note_title = FolderTabHeader('메모', page)
-        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=0, header_alignment=None)
+        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=-12, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)
