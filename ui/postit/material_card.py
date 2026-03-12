@@ -10,6 +10,7 @@ from services.unit_repository import load_units, unit_label_for_value
 from ui.postit.base import _PostItCardBase
 from ui.icon_factory import make_partner_link_icon
 from ui.postit.common import FIELD_H, make_down_icon
+from ui.postit.layout import POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_SECTION_SPACING, POSTIT_GRID_H_SPACING, POSTIT_GRID_V_SPACING
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.theme import THEME, delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
@@ -32,8 +33,8 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = False
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(THEME.filter_panel_margin_h, THEME.page_section_padding, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
-        root.setSpacing(THEME.row_spacing)
+        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
+        root.setSpacing(POSTIT_SECTION_SPACING)
 
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
@@ -43,8 +44,8 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
         vi = QGridLayout()
-        vi.setHorizontalSpacing(8)
-        vi.setVerticalSpacing(8)
+        vi.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
+        vi.setVerticalSpacing(POSTIT_GRID_V_SPACING)
 
         def mk_label(text: str) -> QLabel:
             label = QLabel(text, self)

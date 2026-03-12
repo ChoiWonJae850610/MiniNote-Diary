@@ -11,6 +11,12 @@ POSTIT_TAB_OVERLAP = -12
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
 POSTIT_WRAP_HEIGHT = THEME.dialog_button_height + POSTIT_BODY_HEIGHT
+POSTIT_INNER_TOP_PADDING = THEME.page_section_padding
+POSTIT_INNER_BOTTOM_PADDING = THEME.filter_panel_margin_v
+POSTIT_INNER_SIDE_PADDING = THEME.filter_panel_margin_h
+POSTIT_SECTION_SPACING = THEME.row_spacing
+POSTIT_GRID_H_SPACING = 8
+POSTIT_GRID_V_SPACING = 8
 
 
 def embedded_tab_style(*, active: bool = True) -> str:

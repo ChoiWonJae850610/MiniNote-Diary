@@ -43,47 +43,22 @@ class WorkOrderPageBuilder:
         page_layout.setSpacing(THEME.block_spacing)
 
         btn_back = QPushButton("◀")
-        apply_icon_button_metrics(
-            btn_back,
-            font_px=THEME.icon_button_font_px + 2,
-            object_name="navButton",
-            tooltip="뒤로가기",
-        )
+        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name="navButton", tooltip="뒤로가기")
 
         btn_reset = QPushButton("")
-        apply_icon_button_metrics(
-            btn_reset,
-            font_px=THEME.reset_button_font_px,
-            object_name="iconAction",
-            tooltip="새로고침",
-        )
+        apply_icon_button_metrics(btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="새로고침")
         btn_reset.setIcon(standard_icon(parent, [QStyle.SP_BrowserReload]))
 
         btn_save = QPushButton("")
-        apply_icon_button_metrics(
-            btn_save,
-            font_px=THEME.save_button_font_px,
-            object_name="iconPrimary",
-            tooltip="저장",
-        )
+        apply_icon_button_metrics(btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
         btn_save.setIcon(make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary))
 
         btn_upload = QPushButton("")
-        apply_icon_button_metrics(
-            btn_upload,
-            font_px=THEME.icon_button_font_px,
-            object_name="iconAction",
-            tooltip="사진 업로드",
-        )
+        apply_icon_button_metrics(btn_upload, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip="사진 업로드")
         btn_upload.setIcon(make_image_outline_icon(THEME.icon_size_md))
 
         btn_delete_image = QPushButton("")
-        apply_icon_button_metrics(
-            btn_delete_image,
-            font_px=THEME.icon_button_font_px,
-            object_name="iconDanger",
-            tooltip="사진 삭제",
-        )
+        apply_icon_button_metrics(btn_delete_image, font_px=THEME.icon_button_font_px, object_name="iconDanger", tooltip="사진 삭제")
         btn_delete_image.setIcon(parent.style().standardIcon(QStyle.SP_TrashIcon))
 
         title_row = QHBoxLayout()
@@ -117,6 +92,8 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.addStretch(1)
         image_toolbar_layout.addWidget(postit_bar.basic.date_text)
         image_toolbar_layout.addWidget(postit_bar.basic.btn_calendar)
+        image_toolbar_layout.addWidget(postit_bar.basic.date_text)
+        image_toolbar_layout.addWidget(postit_bar.basic.btn_calendar)
 
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.image_preview_min_height)
@@ -141,12 +118,7 @@ class WorkOrderPageBuilder:
 
         change_note_postit = ChangeNotePostIt()
         change_note_title = FolderTabHeader("메모", page)
-        change_note_wrap = SectionContainer(
-            change_note_title,
-            change_note_postit,
-            spacing=-12,
-            header_alignment=None,
-        )
+        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=-12, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)

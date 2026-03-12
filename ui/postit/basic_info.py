@@ -6,7 +6,7 @@ from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
-from ui.postit.layout import POSTIT_BODY_HEIGHT
+from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_SECTION_SPACING, POSTIT_GRID_H_SPACING, POSTIT_GRID_V_SPACING
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
@@ -26,9 +26,11 @@ class BasicInfoPostIt(_PostItCardBase):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.block_spacing)
-        root.setSpacing(THEME.row_spacing)
+        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
+        root.setSpacing(POSTIT_SECTION_SPACING)
 
+        date_row = QHBoxLayout()
+        date_row.setSpacing(6)
 
         self._date_value = QDate.currentDate()
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
@@ -47,8 +49,8 @@ class BasicInfoPostIt(_PostItCardBase):
 
 
         grid = QGridLayout()
-        grid.setHorizontalSpacing(8)
-        grid.setVerticalSpacing(8)
+        grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
+        grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
 
         def mk_label(text: str) -> QLabel:
             label = QLabel(text, self)
@@ -86,9 +88,9 @@ class BasicInfoPostIt(_PostItCardBase):
         root.addLayout(grid)
 
         mg = QGridLayout()
-        mg.setHorizontalSpacing(8)
-        mg.setVerticalSpacing(5)
-        mg.setContentsMargins(0, 2, 0, 0)
+        mg.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
+        mg.setVerticalSpacing(POSTIT_GRID_V_SPACING)
+        mg.setContentsMargins(0, 0, 0, 0)
 
         self.cost = _MoneyLineEdit(self)
         self.labor = _MoneyLineEdit(self)
