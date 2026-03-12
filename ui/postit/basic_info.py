@@ -21,7 +21,7 @@ class BasicInfoPostIt(_PostItCardBase):
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
         self.setMinimumSize(QSize(320, THEME.postit_bar_max_height))
-        self.setFixedHeight(THEME.postit_bar_max_height)
+        self.setMaximumHeight(THEME.postit_bar_max_height)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         root = QVBoxLayout(self)
@@ -30,12 +30,6 @@ class BasicInfoPostIt(_PostItCardBase):
 
         date_row = QHBoxLayout()
         date_row.setSpacing(6)
-        lbl_date = QLabel("날  짜", self)
-        lbl_date.setFixedWidth(THEME.field_label_width)
-        lbl_date.setFixedHeight(FIELD_H)
-        lbl_date.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        lbl_date.setStyleSheet(field_label_style())
-        date_row.addWidget(lbl_date)
 
         self._date_value = QDate.currentDate()
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
@@ -54,6 +48,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
         date_row.addWidget(self.date_text, 1)
         date_row.addWidget(self.btn_calendar)
+        root.addLayout(date_row)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(8)

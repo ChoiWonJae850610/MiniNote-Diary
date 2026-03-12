@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.postit_widgets import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
-from ui.theme import THEME, image_preview_style, field_label_style
+from ui.theme import THEME, image_preview_style
 from ui.widget_factory import apply_icon_button_metrics, make_hint_label, make_page_title_label
 
 
@@ -34,7 +34,12 @@ class WorkOrderPageBuilder:
         page = QWidget()
 
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(THEME.page_padding_x, 18, THEME.page_padding_x, THEME.page_padding_y)
+        page_layout.setContentsMargins(
+            THEME.page_padding_x,
+            THEME.page_padding_y,
+            THEME.page_padding_x,
+            THEME.page_padding_y,
+        )
         page_layout.setSpacing(THEME.block_spacing)
 
         btn_back = QPushButton("◀")
@@ -74,12 +79,6 @@ class WorkOrderPageBuilder:
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         feedback_label.setMinimumHeight(THEME.feedback_label_height)
 
-        postit_bar = PostItBar()
-
-        date_label = QLabel("날짜", page)
-        date_label.setStyleSheet(field_label_style())
-        date_label.setFixedHeight(THEME.dialog_field_height)
-
         image_toolbar = QWidget(page)
         image_toolbar_layout = QHBoxLayout(image_toolbar)
         image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
@@ -88,10 +87,6 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.addWidget(btn_save)
         image_toolbar_layout.addWidget(btn_upload)
         image_toolbar_layout.addWidget(btn_delete_image)
-        image_toolbar_layout.addSpacing(12)
-        image_toolbar_layout.addWidget(date_label)
-        image_toolbar_layout.addWidget(postit_bar.basic.date_text)
-        image_toolbar_layout.addWidget(postit_bar.basic.btn_calendar)
         image_toolbar_layout.addStretch(1)
 
         image_preview = ImagePreview()
@@ -110,9 +105,11 @@ class WorkOrderPageBuilder:
         left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
         left_layout.addWidget(image_shell, 1)
 
+        postit_bar = PostItBar()
+
         change_note_postit = ChangeNotePostIt()
         change_note_title = FolderTabHeader('메모', page)
-        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=-12, header_alignment=None)
+        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=0, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)
@@ -125,8 +122,7 @@ class WorkOrderPageBuilder:
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.section_gap)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
-        right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
-        right_layout.addStretch(1)
+        right_layout.addWidget(change_note_wrap, 1)
 
         content_layout.addWidget(left_stack, 0, 0)
         content_layout.addWidget(right_stack, 0, 1)

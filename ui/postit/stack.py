@@ -15,7 +15,7 @@ from ui.theme import THEME, disabled_index_button_style, index_button_style
 
 BODY_HEIGHT = THEME.postit_bar_max_height
 FOOTER_HEIGHT = THEME.section_badge_height
-WRAP_HEIGHT = THEME.dialog_button_height + BODY_HEIGHT + FOOTER_HEIGHT
+WRAP_HEIGHT = THEME.dialog_button_height + BODY_HEIGHT
 
 
 class PostItStack(QWidget):
@@ -38,21 +38,25 @@ class PostItStack(QWidget):
         self.stack = QStackedLayout(self.stack_host)
         self.stack.setContentsMargins(0, 0, 0, 0)
 
-        self.index_row_wrap = QWidget(self)
-        self.index_row_wrap.setFixedHeight(FOOTER_HEIGHT)
-        self.index_row = QHBoxLayout(self.index_row_wrap)
-        self.index_row.setContentsMargins(0, 0, 0, 0)
-        self.index_row.setSpacing(THEME.top_button_spacing)
-
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(THEME.top_button_spacing)
+        root.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(BODY_HEIGHT + THEME.top_button_spacing + FOOTER_HEIGHT)
+        self.setFixedHeight(BODY_HEIGHT)
         root.addWidget(self.stack_host, 0)
-        root.addWidget(self.index_row_wrap, 0)
 
-        self._rebuild_index_buttons()
+        self._build_footer_host()
+
+    def _build_footer_host(self):
+        self.footer_host = QWidget(self)
+        lay = QHBoxLayout(self.footer_host)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(THEME.top_button_spacing)
+        lay.addStretch(1)
+        self.index_row = lay
+
+    def footer_widget(self) -> QWidget:
+        return self.footer_host
 
     def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
         items = list(items or []) or [empty_material_row()]
@@ -126,14 +130,13 @@ class PostItStack(QWidget):
         return button
 
     def _rebuild_index_buttons(self):
-        while self.index_row.count():
-            item = self.index_row.takeAt(0)
+        while self.index_row.count() > 1:
+            item = self.index_row.takeAt(1)
             widget = item.widget()
             if widget is not None:
                 widget.setParent(None)
                 widget.deleteLater()
         self.index_buttons = []
-        self.index_row.addStretch(1)
         for idx in range(len(self.items)):
             button = self._make_index_button(str(idx + 1))
             button.clicked.connect(lambda _=False, i=idx: self.set_active_card(i))
@@ -189,7 +192,7 @@ class PartnerTabbedPostIt(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(WRAP_HEIGHT)
+        self.setFixedHeight(WRAP_HEIGHT + THEME.top_button_spacing + FOOTER_HEIGHT)
 
         self.tab_row_wrap = QWidget(self)
         self.tab_row_layout = QHBoxLayout(self.tab_row_wrap)
@@ -205,15 +208,24 @@ class PartnerTabbedPostIt(QWidget):
         root.addWidget(self.tab_row_wrap, 0)
 
         self.body_host = QWidget(self)
-        self.body_host.setFixedHeight(BODY_HEIGHT + THEME.top_button_spacing + FOOTER_HEIGHT)
+        self.body_host.setFixedHeight(BODY_HEIGHT)
         self.body_stack = QStackedLayout(self.body_host)
         self.body_stack.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(self.body_host, 1)
+        root.addWidget(self.body_host, 0)
 
         self.fabric = PostItStack(self.TAB_FABRIC, self)
         self.trim = PostItStack(self.TAB_TRIM, self)
         self.body_stack.addWidget(self.fabric)
         self.body_stack.addWidget(self.trim)
+
+        self.footer_stack = QStackedLayout()
+        self.footer_stack.addWidget(self.fabric.footer_widget())
+        self.footer_stack.addWidget(self.trim.footer_widget())
+        footer_host = QWidget(self)
+        footer_host.setFixedHeight(FOOTER_HEIGHT)
+        footer_host.setLayout(self.footer_stack)
+        root.addSpacing(THEME.top_button_spacing)
+        root.addWidget(footer_host, 0)
 
         self.fabric.item_deleted.connect(self.fabric_deleted.emit)
         self.trim.item_deleted.connect(self.trim_deleted.emit)
@@ -252,6 +264,7 @@ class PartnerTabbedPostIt(QWidget):
         self.btn_fabric.setStyleSheet(self._tab_button_style(is_fabric))
         self.btn_trim.setStyleSheet(self._tab_button_style(not is_fabric))
         self.body_stack.setCurrentWidget(self.fabric if is_fabric else self.trim)
+        self.footer_stack.setCurrentWidget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
 
     def set_data(self, fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)
@@ -283,7 +296,7 @@ class PostItBar(QWidget):
 
         self.partner = PartnerTabbedPostIt(self)
         self.partner.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.partner.setFixedHeight(WRAP_HEIGHT)
+        self.partner.setFixedHeight(WRAP_HEIGHT + THEME.top_button_spacing + FOOTER_HEIGHT)
 
         self.partner.fabric_deleted.connect(self.fabric_deleted.emit)
         self.partner.trim_deleted.connect(self.trim_deleted.emit)
