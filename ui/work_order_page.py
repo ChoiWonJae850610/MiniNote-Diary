@@ -36,7 +36,7 @@ class WorkOrderPageBuilder:
         page_layout = QVBoxLayout(page)
         page_layout.setContentsMargins(
             THEME.page_padding_x,
-            20,
+            THEME.page_padding_y,
             THEME.page_padding_x,
             THEME.page_padding_y,
         )
@@ -66,8 +66,8 @@ class WorkOrderPageBuilder:
 
         title_col = QVBoxLayout()
         title_col.setSpacing(THEME.title_stack_spacing)
-        title = make_page_title_label("작업지시서 생성", page)
-        subtitle = make_hint_label("작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다.", page)
+        title = make_page_title_label('작업지시서 생성', page)
+        subtitle = make_hint_label('작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다.', page)
         title_col.addWidget(title)
         title_col.addWidget(subtitle)
 
@@ -79,8 +79,6 @@ class WorkOrderPageBuilder:
         feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         feedback_label.setMinimumHeight(THEME.feedback_label_height)
 
-        postit_bar = PostItBar()
-
         image_toolbar = QWidget(page)
         image_toolbar_layout = QHBoxLayout(image_toolbar)
         image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
@@ -90,8 +88,6 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.addWidget(btn_upload)
         image_toolbar_layout.addWidget(btn_delete_image)
         image_toolbar_layout.addStretch(1)
-        image_toolbar_layout.addWidget(postit_bar.basic.date_text)
-        image_toolbar_layout.addWidget(postit_bar.basic.btn_calendar)
 
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.image_preview_min_height)
@@ -99,12 +95,7 @@ class WorkOrderPageBuilder:
 
         image_shell = QWidget()
         image_layout = QVBoxLayout(image_shell)
-        image_layout.setContentsMargins(
-            THEME.image_shell_margin,
-            THEME.image_shell_margin,
-            THEME.image_shell_margin,
-            THEME.image_shell_margin,
-        )
+        image_layout.setContentsMargins(THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin, THEME.image_shell_margin)
         image_layout.addWidget(image_preview)
 
         left_stack = QWidget(page)
@@ -114,9 +105,11 @@ class WorkOrderPageBuilder:
         left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
         left_layout.addWidget(image_shell, 1)
 
+        postit_bar = PostItBar()
+
         change_note_postit = ChangeNotePostIt()
-        change_note_title = FolderTabHeader("메모", page)
-        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=-12, header_alignment=None)
+        change_note_title = FolderTabHeader('메모', page)
+        change_note_wrap = SectionContainer(change_note_title, change_note_postit, spacing=-10, header_alignment=None)
 
         content = QWidget()
         content_layout = QGridLayout(content)
@@ -129,8 +122,7 @@ class WorkOrderPageBuilder:
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.section_gap)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
-        right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
-        right_layout.addStretch(1)
+        right_layout.addWidget(change_note_wrap, 1)
 
         content_layout.addWidget(left_stack, 0, 0)
         content_layout.addWidget(right_stack, 0, 1)

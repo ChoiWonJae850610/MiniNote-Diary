@@ -14,22 +14,29 @@ from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_ed
 from ui.theme import display_field_style, field_label_style, input_line_edit_style, tool_button_style
 
 from ui.theme import THEME
+from ui.postit.layout import POSTIT_BODY_HEIGHT
 
 class BasicInfoPostIt(_PostItCardBase):
     data_changed = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(320, THEME.postit_bar_max_height))
-        self.setFixedHeight(THEME.postit_bar_max_height)
+        self.setMinimumSize(QSize(320, POSTIT_BODY_HEIGHT))
+        self.setFixedHeight(POSTIT_BODY_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.block_spacing)
+        root.setContentsMargins(THEME.filter_panel_margin_h, THEME.page_section_padding, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
         root.setSpacing(THEME.row_spacing)
 
         date_row = QHBoxLayout()
         date_row.setSpacing(6)
+        lbl_date = QLabel("날  짜", self)
+        lbl_date.setFixedWidth(THEME.field_label_width)
+        lbl_date.setFixedHeight(FIELD_H)
+        lbl_date.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        lbl_date.setStyleSheet(field_label_style())
+        date_row.addWidget(lbl_date)
 
         self._date_value = QDate.currentDate()
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
