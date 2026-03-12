@@ -6,7 +6,22 @@ from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
-from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_SECTION_SPACING, POSTIT_GRID_H_SPACING, POSTIT_GRID_V_SPACING
+from ui.postit.layout import (
+    FolderTabHeader,
+    SectionContainer,
+    folder_tab_style,
+    POSTIT_TAB_INSET_LEFT,
+    POSTIT_TAB_OVERLAP,
+    POSTIT_BODY_HEIGHT,
+    POSTIT_FOOTER_HEIGHT,
+    POSTIT_WRAP_HEIGHT,
+    POSTIT_INNER_SIDE_PADDING,
+    POSTIT_INNER_TOP_PADDING,
+    POSTIT_INNER_BOTTOM_PADDING,
+    POSTIT_SECTION_SPACING,
+    POSTIT_GRID_H_SPACING,
+    POSTIT_GRID_V_SPACING,
+)
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
@@ -21,7 +36,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(320, THEME.postit_bar_max_height))
+        self.setMinimumSize(QSize(320, POSTIT_BODY_HEIGHT))
         self.setFixedHeight(POSTIT_BODY_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -29,8 +44,6 @@ class BasicInfoPostIt(_PostItCardBase):
         root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
         root.setSpacing(POSTIT_SECTION_SPACING)
 
-        date_row = QHBoxLayout()
-        date_row.setSpacing(6)
 
         self._date_value = QDate.currentDate()
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)

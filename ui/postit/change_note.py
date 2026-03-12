@@ -5,6 +5,7 @@ from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout
 
 from ui.postit.base import _PostItCardBase
+from ui.postit.layout import POSTIT_INNER_SIDE_PADDING, POSTIT_MEMO_BODY_HEIGHT
 from ui.theme import plain_text_edit_style
 
 
@@ -14,19 +15,18 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("change", parent=parent)
-        self.setMinimumSize(QSize(340, 320))
-        self.setFixedHeight(320)
+        self.setMinimumSize(QSize(340, POSTIT_MEMO_BODY_HEIGHT))
+        self.setFixedHeight(POSTIT_MEMO_BODY_HEIGHT)
         self._block = False
-
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 8, 14, 14)
+        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, 6, POSTIT_INNER_SIDE_PADDING, 12)
         root.setSpacing(0)
-
         self.editor = QPlainTextEdit(self)
+        self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())
         self.editor.installEventFilter(self)
+        self.editor.setTabChangesFocus(True)
         root.addWidget(self.editor, 1)
-
         self.editor.textChanged.connect(self._on_text)
 
     def _on_text(self):
@@ -47,5 +47,6 @@ class ChangeNotePostIt(_PostItCardBase):
         if obj is self.editor and event.type() == QEvent.KeyPress:
             if event.key() in (Qt.Key_Return, Qt.Key_Enter) and event.modifiers() & Qt.ControlModifier:
                 self.save_requested.emit()
+                event.accept()
                 return True
         return super().eventFilter(obj, event)

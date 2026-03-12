@@ -17,6 +17,7 @@ POSTIT_INNER_SIDE_PADDING = THEME.filter_panel_margin_h
 POSTIT_SECTION_SPACING = THEME.row_spacing
 POSTIT_GRID_H_SPACING = 8
 POSTIT_GRID_V_SPACING = 8
+POSTIT_MEMO_BODY_HEIGHT = 300
 
 
 def embedded_tab_style(*, active: bool = True) -> str:
