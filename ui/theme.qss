@@ -1,108 +1,116 @@
-/* ui/theme.qss */
+* {
+    font-family: __FONT_FAMILY__;
+    font-size: __BASE_FONT_PX__px;
+}
 
-* {{
-    font-family: "{FONT_FAMILY}";
-    font-size: {BASE_FONT_PX}px;
-}}
+QWidget {
+    background-color: __WINDOW_BG__;
+    color: __TEXT_COLOR__;
+}
 
-QWidget {{
-    background: {WINDOW_BG};
-    color: {TEXT_COLOR};
-}}
-
-QGroupBox {{
-    border: 1px solid {BORDER_SOFT_COLOR};
-    border-radius: {PANEL_RADIUS_SM}px;
+QGroupBox {
+    background-color: __WINDOW_BG__;
+    border: 1px solid __BORDER_SOFT_COLOR__;
+    border-radius: __PANEL_RADIUS_SM__px;
     margin-top: 12px;
     padding: 12px;
-    background: {WINDOW_BG};
-}}
-QGroupBox::title {{
+}
+
+QGroupBox::title {
     subcontrol-origin: margin;
     left: 12px;
     padding: 0 8px;
     font-size: 13px;
     font-weight: 600;
-    color: {TEXT_SOFT_COLOR};
-}}
+    color: __TEXT_SOFT_COLOR__;
+}
 
-QLineEdit, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox {{
-    background: {WINDOW_BG};
-    border: 1px solid {BORDER_COLOR};
-    border-radius: {INPUT_RADIUS}px;
+QLineEdit, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox {
+    background-color: __WINDOW_BG__;
+    border: 1px solid __BORDER_COLOR__;
+    border-radius: __INPUT_RADIUS__px;
     padding: 0 10px;
     min-height: 30px;
-}}
-QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
-    border: 1px solid {PRIMARY_COLOR};
-}}
+}
 
-QPushButton {{
-    background: {SURFACE_BG};
-    color: {TEXT_SOFT_COLOR};
-    border: 1px solid {BORDER_COLOR};
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+    border: 1px solid __PRIMARY_COLOR__;
+}
+
+QPushButton {
+    background-color: __SURFACE_BG__;
+    color: __TEXT_SOFT_COLOR__;
+    border: 1px solid __BORDER_COLOR__;
     border-radius: 14px;
     padding: 0 14px;
     min-height: 30px;
     font-weight: 600;
-}}
-QPushButton:hover {{
-    background: {SURFACE_ALT_BG};
-    border-color: {BORDER_HOVER_COLOR};
-}}
-QPushButton:pressed {{
-    background: {PRESSED_COLOR};
-}}
-QPushButton:disabled {{
-    color: {DISABLED_TEXT};
-    background: {DISABLED_BG};
-    border-color: {DISABLED_BORDER};
-}}
+}
 
-QTableWidget, QTableView {{
-    background: {WINDOW_BG};
-    border: 1px solid {BORDER_SOFT_COLOR};
+QPushButton:hover {
+    background-color: __SURFACE_ALT_BG__;
+    border-color: __BORDER_HOVER_COLOR__;
+}
+
+QPushButton:pressed {
+    background-color: __PRESSED_COLOR__;
+}
+
+QPushButton:disabled {
+    color: __DISABLED_TEXT__;
+    background-color: __DISABLED_BG__;
+    border-color: __DISABLED_BORDER__;
+}
+
+QTableWidget, QTableView {
+    background-color: __WINDOW_BG__;
+    border: 1px solid __BORDER_SOFT_COLOR__;
     border-radius: 12px;
-    alternate-background-color: {SURFACE_ALT_BG};
-    selection-background-color: {SURFACE_MUTED_BG};
-    selection-color: {TEXT_COLOR};
-}}
-QHeaderView::section {{
-    background: {SURFACE_BG};
-    color: {TEXT_SOFT_COLOR};
-    padding: 8px 10px;
-    border: 0;
-    border-bottom: 1px solid {BORDER_SOFT_COLOR};
-    font-weight: 600;
-}}
-QTableView::item {{
-    padding: 6px 10px;
-    border: 0;
-}}
+    alternate-background-color: __SURFACE_ALT_BG__;
+    selection-background-color: __SURFACE_MUTED_BG__;
+    selection-color: __TEXT_COLOR__;
+}
 
-QScrollBar:vertical {{
-    width: 10px;
+QHeaderView::section {
+    background-color: __SURFACE_BG__;
+    color: __TEXT_SOFT_COLOR__;
+    padding: 8px 10px;
+    border: 0px;
+    border-bottom: 1px solid __BORDER_SOFT_COLOR__;
+    font-weight: 600;
+}
+
+QTableView::item {
+    padding: 6px 10px;
+    border: 0px;
+}
+
+QScrollBar:vertical {
     background: transparent;
+    width: 10px;
     margin: 6px 2px 6px 2px;
-}}
-QScrollBar::handle:vertical {{
-    background: {BORDER_COLOR};
+}
+
+QScrollBar::handle:vertical {
+    background-color: __BORDER_COLOR__;
     border-radius: 5px;
     min-height: 30px;
-}}
-QScrollBar::handle:vertical:hover {{
-    background: {BORDER_HOVER_COLOR};
-}}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-    height: 0;
-}}
+}
 
-QToolTip {{
-    background: {TOOLTIP_BG};
-    color: {TOOLTIP_TEXT};
-    border: 1px solid {TOOLTIP_BORDER};
-    border-radius: {TOOLTIP_RADIUS}px;
-    padding: {TOOLTIP_PADDING_V}px {TOOLTIP_PADDING_H}px;
-    font-size: {TOOLTIP_FONT_PX}px;
+QScrollBar::handle:vertical:hover {
+    background-color: __BORDER_HOVER_COLOR__;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QToolTip {
+    background-color: __TOOLTIP_BG__;
+    color: __TOOLTIP_TEXT__;
+    border: 1px solid __TOOLTIP_BORDER__;
+    border-radius: __TOOLTIP_RADIUS__px;
+    padding: __TOOLTIP_PADDING_V__px __TOOLTIP_PADDING_H__px;
+    font-size: __TOOLTIP_FONT_PX__px;
     font-weight: 600;
-}}
+}

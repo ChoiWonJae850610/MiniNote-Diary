@@ -80,7 +80,7 @@ def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name:
     set_widget_tooltip(button, tooltip)
     button.setStyleSheet(
         icon_button_override(font_px)
-        + f" QPushButton {{ text-align: center; padding: 0; margin: 0; line-height: {THEME.icon_button_size}px; }}"
+        + " QPushButton { text-align: center; padding: 0; }"
         + extra_style
     )
     return button
@@ -160,7 +160,7 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
         button.setIcon(icon)
         icon_dim = max(12, button_size - 10)
         button.setIconSize(button.iconSize().__class__(icon_dim, icon_dim))
-    button.setStyleSheet(icon_button_override(THEME.base_font_px) + ' QPushButton { text-align: center; padding: 0; margin: 0; }')
+    button.setStyleSheet(icon_button_override(THEME.base_font_px) + ' QPushButton { text-align: center; padding: 0; }')
     return button
 
 
