@@ -11,6 +11,7 @@ from ui.postit.basic_info import BasicInfoPostIt
 from ui.postit.common import MAX_POSTIT_CARDS
 from ui.postit.layout import (
     FolderTabHeader,
+    PostItTabButton,
     SectionContainer,
     folder_tab_style,
     POSTIT_TAB_INSET_LEFT,
@@ -255,19 +256,14 @@ class PartnerTabbedPostIt(QWidget):
         self.set_active_tab(self.TAB_FABRIC)
 
     def _make_tab_button(self, text: str, tab_key: str) -> QToolButton:
-        button = QToolButton(self)
-        button.setText(text)
+        button = PostItTabButton(text, self, active=(tab_key == self._active_tab))
         button.setCheckable(True)
         button.setAutoExclusive(True)
-        button.setCursor(Qt.PointingHandCursor)
-        button.setFixedHeight(THEME.dialog_button_height)
-        button.setMinimumWidth(84)
-        button.setFocusPolicy(Qt.NoFocus)
         button.setProperty("partnerTabKey", tab_key)
         return button
 
     def _tab_button_style(self, active: bool) -> str:
-        base = folder_tab_style(active=active).replace("QLabel", "QToolButton")
+        base = folder_tab_style(active=active, selector="QToolButton")
         if active:
             return base
         return base + f"QToolButton:hover{{background:{THEME.color_surface_alt};color:{THEME.color_text};}}"

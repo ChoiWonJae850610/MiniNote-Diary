@@ -10,7 +10,7 @@ from services.unit_repository import load_units, unit_label_for_value
 from ui.postit.base import _PostItCardBase
 from ui.icon_factory import make_partner_link_icon
 from ui.postit.common import FIELD_H, make_down_icon
-from ui.postit.layout import POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_SECTION_SPACING, POSTIT_GRID_H_SPACING, POSTIT_GRID_V_SPACING
+from ui.postit.layout import POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_SECTION_SPACING, POSTIT_GRID_H_SPACING, POSTIT_GRID_V_SPACING, POSTIT_ROW_ACTION_GAP
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.theme import THEME, delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
@@ -71,7 +71,7 @@ class PostItCard(_PostItCardBase):
         vi.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0, 0)
         vendor_row = QHBoxLayout()
         vendor_row.setContentsMargins(0, 0, 0, 0)
-        vendor_row.setSpacing(6)
+        vendor_row.setSpacing(POSTIT_ROW_ACTION_GAP)
         vendor_row.addWidget(self.vendor, 1)
         vendor_row.addWidget(self.btn_vendor_partner, 0)
         vi.addLayout(vendor_row, 0, 1)
@@ -80,8 +80,8 @@ class PostItCard(_PostItCardBase):
         root.addLayout(vi)
 
         grid = QGridLayout()
-        grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(6)
+        grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
+        grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
 
         self.qty = _QtyClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)

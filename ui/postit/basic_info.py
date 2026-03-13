@@ -14,6 +14,7 @@ from ui.postit.layout import (
     POSTIT_SECTION_SPACING,
     POSTIT_GRID_H_SPACING,
     POSTIT_GRID_V_SPACING,
+    POSTIT_ROW_ACTION_GAP,
 )
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
@@ -87,7 +88,7 @@ class BasicInfoPostIt(_PostItCardBase):
         grid.addWidget(mk_label("공  장"), 1, 0)
         factory_row = QHBoxLayout()
         factory_row.setContentsMargins(0, 0, 0, 0)
-        factory_row.setSpacing(6)
+        factory_row.setSpacing(POSTIT_ROW_ACTION_GAP)
         factory_row.addWidget(self.factory, 1)
         factory_row.addWidget(self.btn_factory_partner, 0)
         grid.addLayout(factory_row, 1, 1)

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout, QWidget
 
 from ui.theme import THEME, title_badge_style
 
@@ -12,6 +12,9 @@ POSTIT_HEADER_HEIGHT = THEME.dialog_button_height
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
 POSTIT_FOOTER_GAP = THEME.top_button_spacing
+POSTIT_TAB_MIN_WIDTH = 92
+POSTIT_TAB_PADDING_X = 16
+POSTIT_ROW_ACTION_GAP = 6
 
 
 def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
@@ -33,11 +36,11 @@ POSTIT_GRID_V_SPACING = 4
 POSTIT_MEMO_BODY_HEIGHT = 300
 
 
-def embedded_tab_style(*, active: bool = True) -> str:
+def embedded_tab_style(*, active: bool = True, selector: str = "QToolButton") -> str:
     t = THEME
     base = (
-        "QLabel{"
-        f"padding:0 16px;"
+        f"{selector}{{"
+        f"padding:0 {POSTIT_TAB_PADDING_X}px;"
         f"min-height:{t.dialog_button_height}px;"
         f"max-height:{t.dialog_button_height}px;"
         f"border:1px solid {t.color_border};"
@@ -53,8 +56,8 @@ def embedded_tab_style(*, active: bool = True) -> str:
     return base + f"background:{t.color_surface_muted};" + f"color:{t.color_text_soft};" + "}"
 
 
-def folder_tab_style(*, active: bool = True) -> str:
-    return embedded_tab_style(active=active)
+def folder_tab_style(*, active: bool = True, selector: str = "QToolButton") -> str:
+    return embedded_tab_style(active=active, selector=selector)
 
 
 class SectionContainer(QWidget):
@@ -97,18 +100,29 @@ class SectionTitleBadge(QLabel):
         self.setStyleSheet(title_badge_style(**style_kwargs))
 
 
+class PostItTabButton(QToolButton):
+    def __init__(self, text: str, parent=None, *, active: bool = True):
+        super().__init__(parent)
+        self.setText(text)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFocusPolicy(Qt.NoFocus)
+        self.setCheckable(False)
+        self.setAutoRaise(False)
+        self.setFixedHeight(POSTIT_HEADER_HEIGHT)
+        self.setMinimumWidth(POSTIT_TAB_MIN_WIDTH)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setStyleSheet(folder_tab_style(active=active, selector="QToolButton"))
+
+
 class FolderTabHeader(QWidget):
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
-        self._label = QLabel(text, self)
-        self._label.setAlignment(Qt.AlignCenter)
-        self._label.setFixedHeight(THEME.dialog_button_height)
-        self._label.setMinimumWidth(92)
-        self._label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self._label.setStyleSheet(embedded_tab_style(active=True))
+        self._button = PostItTabButton(text, self, active=True)
+        self._button.setEnabled(True)
+        self._button.setAttribute(Qt.WA_TransparentForMouseEvents, True)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(POSTIT_TAB_INSET_LEFT, 0, 0, 0)
         root.setSpacing(0)
-        root.addWidget(self._label, 0, Qt.AlignLeft)
+        root.addWidget(self._button, 0, Qt.AlignLeft)
         root.addStretch(1)
