@@ -14,13 +14,27 @@ from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP,
     POSTIT_FOOTER_HEIGHT,
-    POSTIT_STACK_SECTION_OVERLAP,
     POSTIT_TAB_OVERLAP,
     POSTIT_WRAP_HEIGHT_WITH_FOOTER,
     PostItSectionColumn,
 )
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
+
+
+class _StackHost(QWidget):
+    def __init__(self, fixed_height: int, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(fixed_height)
+        self._stack = QStackedLayout(self)
+        self._stack.setContentsMargins(0, 0, 0, 0)
+        self._stack.setSpacing(0)
+
+    def add_widget(self, widget: QWidget):
+        self._stack.addWidget(widget)
+
+    def set_current_widget(self, widget: QWidget):
+        self._stack.setCurrentWidget(widget)
 
 
 class PostItStack(QWidget):
@@ -216,30 +230,21 @@ class PartnerTabbedPostIt(PostItSectionColumn):
 
         self.tab_header = FolderTabHeader(
             [(self.TAB_FABRIC, "원단"), (self.TAB_TRIM, "부자재")],
-            parent,
             active_key=self.TAB_FABRIC,
             interactive=True,
         )
-        self.body_host = QWidget(parent)
-        self.body_host.setFixedHeight(POSTIT_BODY_HEIGHT)
-        self.body_stack = QStackedLayout(self.body_host)
-        self.body_stack.setContentsMargins(0, 0, 0, 0)
+        self.body_host = _StackHost(POSTIT_BODY_HEIGHT)
 
-        self.fabric = PostItStack(self.TAB_FABRIC, parent)
-        self.trim = PostItStack(self.TAB_TRIM, parent)
-        self.body_stack.addWidget(self.fabric)
-        self.body_stack.addWidget(self.trim)
+        self.fabric = PostItStack(self.TAB_FABRIC)
+        self.trim = PostItStack(self.TAB_TRIM)
+        self.body_host.add_widget(self.fabric)
+        self.body_host.add_widget(self.trim)
 
-        self.footer_spacer = FooterSpacer(parent)
+        self.footer_spacer = FooterSpacer()
 
-        self.pager_stack = QStackedLayout()
-        self.pager_stack.setContentsMargins(0, 0, 0, 0)
-        self.pager_stack.addWidget(self.fabric.footer_widget())
-        self.pager_stack.addWidget(self.trim.footer_widget())
-
-        self.pager_host = QWidget(parent)
-        self.pager_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
-        self.pager_host.setLayout(self.pager_stack)
+        self.pager_host = _StackHost(POSTIT_FOOTER_HEIGHT)
+        self.pager_host.add_widget(self.fabric.footer_widget())
+        self.pager_host.add_widget(self.trim.footer_widget())
 
         super().__init__(
             self.tab_header,
@@ -248,7 +253,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             body_height=POSTIT_BODY_HEIGHT,
             footer_widget=self.footer_spacer,
             external_row_widget=self.pager_host,
-            spacing=POSTIT_STACK_SECTION_OVERLAP,
+            spacing=POSTIT_TAB_OVERLAP,
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -267,8 +272,8 @@ class PartnerTabbedPostIt(PostItSectionColumn):
         self._active_tab = self.TAB_TRIM if tab_key == self.TAB_TRIM else self.TAB_FABRIC
         is_fabric = self._active_tab == self.TAB_FABRIC
         self.tab_header.set_active_tab(self._active_tab)
-        self.body_stack.setCurrentWidget(self.fabric if is_fabric else self.trim)
-        self.pager_stack.setCurrentWidget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
+        self.body_host.set_current_widget(self.fabric if is_fabric else self.trim)
+        self.pager_host.set_current_widget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
 
     def set_data(self, fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)
