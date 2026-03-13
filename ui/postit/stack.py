@@ -13,6 +13,7 @@ from ui.postit.layout import (
     FooterSpacer,
     POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP,
+    POSTIT_EXTERNAL_ROW_GAP_TIGHT,
     POSTIT_FOOTER_HEIGHT,
     POSTIT_TAB_OVERLAP,
     POSTIT_WRAP_HEIGHT_WITH_FOOTER,
@@ -266,7 +267,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             footer_widget=self.footer_spacer,
             external_row_widget=self.pager_host,
             spacing=POSTIT_TAB_OVERLAP,
-            external_row_gap=2,
+            external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 

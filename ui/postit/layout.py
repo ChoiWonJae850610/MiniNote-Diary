@@ -7,13 +7,13 @@ from ui.theme import THEME, title_badge_style
 
 POSTIT_TAB_INSET_LEFT = THEME.filter_panel_margin_h + 4
 POSTIT_TAB_OVERLAP = -12
-POSTIT_HEADER_HEIGHT = THEME.dialog_button_height
+POSTIT_HEADER_HEIGHT = THEME.icon_button_size
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
 POSTIT_CARD_HEIGHT = POSTIT_BODY_HEIGHT
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
 POSTIT_FOOTER_GAP = THEME.top_button_spacing
 POSTIT_EXTERNAL_ROW_GAP = THEME.top_button_spacing
-POSTIT_EXTERNAL_ROW_GAP_TIGHT = 2
+POSTIT_EXTERNAL_ROW_GAP_TIGHT = 0
 POSTIT_TAB_MIN_WIDTH = 0
 POSTIT_TAB_PADDING_X = 10
 POSTIT_ROW_ACTION_GAP = 6
@@ -29,7 +29,7 @@ POSTIT_GRID_H_SPACING = 8
 POSTIT_GRID_V_SPACING = 4
 POSTIT_ROW_GAP = POSTIT_GRID_V_SPACING
 POSTIT_UNIFORM_ROW_SPACING = POSTIT_ROW_GAP
-POSTIT_MEMO_BODY_HEIGHT = 292
+POSTIT_MEMO_BODY_HEIGHT = 276
 
 
 def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
@@ -48,8 +48,8 @@ def embedded_tab_style(*, active: bool = True, selector: str = "QToolButton") ->
     base = (
         f"{selector}{{"
         f"padding:0 {POSTIT_TAB_PADDING_X}px;"
-                f"max-height:{t.dialog_button_height}px;"
-        f"min-height:{t.dialog_button_height}px;"
+                f"max-height:{POSTIT_HEADER_HEIGHT}px;"
+        f"min-height:{POSTIT_HEADER_HEIGHT}px;"
         f"border:1px solid {t.color_border};"
         f"border-top-left-radius:{t.control_radius + 6}px;"
         f"border-top-right-radius:{t.control_radius + 6}px;"

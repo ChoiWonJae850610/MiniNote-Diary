@@ -35,8 +35,6 @@ class _PostItCardBase(QWidget):
         painter.setRenderHint(QPainter.Antialiasing, True)
         rect = QRectF(0.5, 0.5, self.width() - 1, self.height() - 1)
         pen = QPen(self._bd, 2)
-        if self._active:
-            pen = QPen(QColor(self._bd).darker(118), 2)
         painter.setPen(pen)
         painter.setBrush(self._bg)
         painter.drawRoundedRect(rect, CARD_RADIUS, CARD_RADIUS)
