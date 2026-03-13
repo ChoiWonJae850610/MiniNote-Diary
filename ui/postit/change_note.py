@@ -5,7 +5,7 @@ from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout
 
 from ui.postit.base import _PostItCardBase
-from ui.postit.layout import POSTIT_INNER_SIDE_PADDING, POSTIT_MEMO_BODY_HEIGHT
+from ui.postit.layout import POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_MEMO_BODY_HEIGHT
 from ui.theme import plain_text_edit_style
 
 
@@ -19,7 +19,7 @@ class ChangeNotePostIt(_PostItCardBase):
         self.setFixedHeight(POSTIT_MEMO_BODY_HEIGHT)
         self._block = False
         root = QVBoxLayout(self)
-        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, 6, POSTIT_INNER_SIDE_PADDING, 12)
+        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
         root.setSpacing(0)
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")

@@ -8,9 +8,21 @@ from ui.theme import THEME, title_badge_style
 
 POSTIT_TAB_INSET_LEFT = THEME.filter_panel_margin_h + 22
 POSTIT_TAB_OVERLAP = -12
+POSTIT_HEADER_HEIGHT = THEME.dialog_button_height
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
-POSTIT_WRAP_HEIGHT = THEME.dialog_button_height + POSTIT_BODY_HEIGHT
+POSTIT_FOOTER_GAP = THEME.top_button_spacing
+
+
+def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
+    total = POSTIT_HEADER_HEIGHT + POSTIT_TAB_OVERLAP + body_height
+    if has_footer:
+        total += POSTIT_FOOTER_GAP + POSTIT_FOOTER_HEIGHT
+    return total
+
+
+POSTIT_WRAP_HEIGHT = postit_section_height(body_height=POSTIT_BODY_HEIGHT)
+POSTIT_WRAP_HEIGHT_WITH_FOOTER = postit_section_height(body_height=POSTIT_BODY_HEIGHT, has_footer=True)
 
 POSTIT_INNER_SIDE_PADDING = 14
 POSTIT_INNER_TOP_PADDING = 4
@@ -46,7 +58,18 @@ def folder_tab_style(*, active: bool = True) -> str:
 
 
 class SectionContainer(QWidget):
-    def __init__(self, header_widget: QWidget, body_widget: QWidget, *, parent=None, spacing: int = POSTIT_TAB_OVERLAP, header_alignment=Qt.AlignLeft):
+    def __init__(
+        self,
+        header_widget: QWidget,
+        body_widget: QWidget,
+        *,
+        parent=None,
+        spacing: int = POSTIT_TAB_OVERLAP,
+        header_alignment=Qt.AlignLeft,
+        footer_widget: QWidget | None = None,
+        footer_gap: int = POSTIT_FOOTER_GAP,
+        body_height: int | None = None,
+    ):
         super().__init__(parent)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -55,7 +78,14 @@ class SectionContainer(QWidget):
             root.addWidget(header_widget)
         else:
             root.addWidget(header_widget, 0, header_alignment)
-        root.addWidget(body_widget, 1)
+        root.addWidget(body_widget, 0)
+        if footer_widget is not None:
+            root.addSpacing(footer_gap)
+            root.addWidget(footer_widget, 0)
+
+        height = body_height if body_height is not None else body_widget.sizeHint().height()
+        if height > 0:
+            self.setFixedHeight(postit_section_height(body_height=height, has_footer=footer_widget is not None))
 
 
 class SectionTitleBadge(QLabel):
