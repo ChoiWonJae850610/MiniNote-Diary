@@ -41,6 +41,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_calendar.setIconSize(QSize(16, 16))
         self.btn_calendar.setFixedSize(FIELD_H, FIELD_H)
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
+        set_widget_tooltip(self.btn_calendar, Tooltips.OPEN_CALENDAR)
         self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
 
@@ -58,6 +59,8 @@ class BasicInfoPostIt(_PostItCardBase):
         set_widget_tooltip(self.btn_factory_partner, Tooltips.PARTNER_MANAGE)
         self.btn_factory_partner.setStyleSheet(tool_button_style())
         self.btn_factory_partner.clicked.connect(self._open_factory_picker)
+        self.factory.set_edit_enabled(False)
+        self.factory.setFocusPolicy(Qt.NoFocus)
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._style_no_min = 140
         self._style_no_max = 320
@@ -75,6 +78,8 @@ class BasicInfoPostIt(_PostItCardBase):
             widget.setStyleSheet(input_line_edit_style())
         self.cost.set_edit_enabled(False)
         self.cost.setFocusPolicy(Qt.NoFocus)
+        self.sale_price.set_edit_enabled(False)
+        self.sale_price.setFocusPolicy(Qt.NoFocus)
         self._syncing_prices = False
 
         root.addLayout(
@@ -95,22 +100,19 @@ class BasicInfoPostIt(_PostItCardBase):
         )
 
         self.style_no.committed.connect(lambda _v: self._emit_basic_fields())
-        self.factory.committed.connect(self._on_factory_committed)
         self.labor.textChanged.connect(self._on_price_component_changed)
         self.loss.textChanged.connect(self._on_price_component_changed)
         self.sale_price.textChanged.connect(self._on_sale_price_changed)
 
         self.setTabOrder(self.btn_calendar, self.style_no)
-        self.setTabOrder(self.style_no, self.factory)
-        self.setTabOrder(self.factory, self.labor)
+        self.setTabOrder(self.style_no, self.btn_factory_partner)
+        self.setTabOrder(self.btn_factory_partner, self.labor)
         self.setTabOrder(self.labor, self.loss)
         self.setTabOrder(self.loss, self.sale_price)
 
-        self.labor._pending_prev_widget = self.factory
+        self.labor._pending_prev_widget = self.btn_factory_partner
         self.labor._pending_next_widget = self.loss
         self.loss._pending_prev_widget = self.labor
-        self.loss._pending_next_widget = self.sale_price
-        self.sale_price._pending_prev_widget = self.loss
 
     def _emit_basic_fields(self):
         self.data_changed.emit({

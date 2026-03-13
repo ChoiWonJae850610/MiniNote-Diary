@@ -54,6 +54,8 @@ class PostItCard(_PostItCardBase):
         set_widget_tooltip(self.btn_vendor_partner, Tooltips.PARTNER_MANAGE)
         self.btn_vendor_partner.setStyleSheet(tool_button_style())
         self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
+        self.vendor.set_edit_enabled(False)
+        self.vendor.setFocusPolicy(Qt.NoFocus)
         self.vendor.set_text_silent(self.data.get("거래처", ""))
         self.data["거래처_id"] = self.data.get("거래처_id", "")
         self.item.set_text_silent(self.data.get("품목", ""))
@@ -102,6 +104,8 @@ class PostItCard(_PostItCardBase):
         for widget in (self.price, self.total):
             widget.setStyleSheet(input_line_edit_style())
         self.price.setText(self.data.get("단가", ""))
+        self.total.set_edit_enabled(False)
+        self.total.setFocusPolicy(Qt.NoFocus)
         self.total.setText(self.data.get("총액", ""))
 
         root.addLayout(
@@ -115,21 +119,17 @@ class PostItCard(_PostItCardBase):
         root.addLayout(make_form_row(make_field_label("단  가", self), (self.price, 1)))
         root.addLayout(make_form_row(make_field_label("총  액", self), (self.total, 1)))
 
-        self.vendor.committed.connect(self._on_vendor_committed)
         self.item.committed.connect(lambda value: self._commit("품목", value))
         self.qty.committed.connect(self._on_qty_committed)
         self.qty.textChanged.connect(lambda _t: self._recalc_total())
         self.price.textChanged.connect(lambda _t: self._on_price_changed())
         self.total.textChanged.connect(lambda _t: None if self._block_total else self._commit("총액", self.total.text()))
 
-        self.setTabOrder(self.vendor, self.item)
+        self.setTabOrder(self.btn_vendor_partner, self.item)
         self.setTabOrder(self.item, self.qty)
         self.setTabOrder(self.qty, self.unit_btn)
         self.setTabOrder(self.unit_btn, self.price)
-        self.setTabOrder(self.price, self.total)
         self.price._pending_prev_widget = self.unit_btn
-        self.price._pending_next_widget = self.total
-        self.total._pending_prev_widget = self.price
 
         self.setMinimumSize(QSize(320, POSTIT_CARD_HEIGHT))
         self.setMaximumHeight(POSTIT_CARD_HEIGHT)

@@ -1,23 +1,18 @@
 # main.py
-import os
 import sys
 
 from PySide6.QtWidgets import QApplication
 
 from ui.main_window import MainWindow
+from ui.theme import build_app_stylesheet
 
 
 def apply_theme(app: QApplication) -> None:
     app.setStyle("Fusion")
-
-    base_dir = os.path.abspath(os.path.dirname(__file__))
-    qss_path = os.path.join(base_dir, "ui", "theme.qss")
-    if os.path.isfile(qss_path):
-        try:
-            with open(qss_path, "r", encoding="utf-8") as f:
-                app.setStyleSheet(f.read())
-        except Exception:
-            pass
+    try:
+        app.setStyleSheet(build_app_stylesheet())
+    except Exception:
+        pass
 
 
 def main():

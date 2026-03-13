@@ -21,9 +21,12 @@ from ui.theme import (
 
 def set_widget_tooltip(widget: QWidget, tooltip: str | None) -> QWidget:
     if tooltip:
-        widget.setToolTip(tooltip)
+        widget.setToolTip(tooltip.strip())
+        widget.setToolTipDuration(3000)
     else:
         widget.setToolTip("")
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
     return widget
 
 

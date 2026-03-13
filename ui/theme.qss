@@ -113,4 +113,5 @@ QToolTip {
     padding: __TOOLTIP_PADDING_V__px __TOOLTIP_PADDING_H__px;
     font-size: __TOOLTIP_FONT_PX__px;
     font-weight: 600;
+    min-height: 0px;
 }
