@@ -86,6 +86,9 @@ class WorkOrderDocument:
     header: WorkOrderHeader = field(default_factory=WorkOrderHeader)
     fabrics: List[MaterialItem] = field(default_factory=list)
     trims: List[MaterialItem] = field(default_factory=list)
+    dyeings: List[MaterialItem] = field(default_factory=list)
+    finishings: List[MaterialItem] = field(default_factory=list)
+    others: List[MaterialItem] = field(default_factory=list)
     image_attached: bool = False
 
     @classmethod
@@ -94,12 +97,18 @@ class WorkOrderDocument:
         header: Dict[str, Any] | WorkOrderHeader | None,
         fabrics: Iterable[Dict[str, Any] | MaterialItem] | None,
         trims: Iterable[Dict[str, Any] | MaterialItem] | None,
+        dyeings: Iterable[Dict[str, Any] | MaterialItem] | None = None,
+        finishings: Iterable[Dict[str, Any] | MaterialItem] | None = None,
+        others: Iterable[Dict[str, Any] | MaterialItem] | None = None,
         image_attached: bool = False,
     ) -> 'WorkOrderDocument':
         return cls(
             header=header if isinstance(header, WorkOrderHeader) else WorkOrderHeader.from_dict(header),
             fabrics=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (fabrics or [])],
             trims=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (trims or [])],
+            dyeings=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (dyeings or [])],
+            finishings=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (finishings or [])],
+            others=[item if isinstance(item, MaterialItem) else MaterialItem.from_dict(item) for item in (others or [])],
             image_attached=bool(image_attached),
         )
 
@@ -108,5 +117,8 @@ class WorkOrderDocument:
             'header': self.header.to_dict(),
             'fabrics': [item.to_dict() for item in self.fabrics],
             'trims': [item.to_dict() for item in self.trims],
+            'dyeings': [item.to_dict() for item in self.dyeings],
+            'finishings': [item.to_dict() for item in self.finishings],
+            'others': [item.to_dict() for item in self.others],
             'image_attached': self.image_attached,
         }

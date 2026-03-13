@@ -100,6 +100,9 @@ class WorkOrderRepository:
             header=data.get('header'),
             fabrics=data.get('fabrics'),
             trims=data.get('trims'),
+            dyeings=data.get('dyeings'),
+            finishings=data.get('finishings'),
+            others=data.get('others'),
             image_attached=bool(data.get('image_attached')),
         )
         header = document.header

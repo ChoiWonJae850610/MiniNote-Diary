@@ -13,6 +13,7 @@ POSTIT_CARD_HEIGHT = POSTIT_BODY_HEIGHT
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
 POSTIT_FOOTER_GAP = THEME.top_button_spacing
 POSTIT_EXTERNAL_ROW_GAP = THEME.top_button_spacing
+POSTIT_EXTERNAL_ROW_GAP_TIGHT = 2
 POSTIT_TAB_MIN_WIDTH = 92
 POSTIT_TAB_PADDING_X = 16
 POSTIT_ROW_ACTION_GAP = 6
@@ -28,7 +29,7 @@ POSTIT_GRID_H_SPACING = 8
 POSTIT_GRID_V_SPACING = 4
 POSTIT_ROW_GAP = POSTIT_GRID_V_SPACING
 POSTIT_UNIFORM_ROW_SPACING = POSTIT_ROW_GAP
-POSTIT_MEMO_BODY_HEIGHT = 300
+POSTIT_MEMO_BODY_HEIGHT = 292
 
 
 def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
@@ -109,6 +110,7 @@ class PostItSectionColumn(QWidget):
         footer_widget: QWidget | None = None,
         external_row_widget: QWidget | None = None,
         spacing: int = POSTIT_TAB_OVERLAP,
+        external_row_gap: int = POSTIT_EXTERNAL_ROW_GAP,
     ):
         super().__init__(parent)
         self.section_wrap = SectionContainer(
@@ -128,13 +130,13 @@ class PostItSectionColumn(QWidget):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(POSTIT_EXTERNAL_ROW_GAP)
+        root.setSpacing(external_row_gap)
         root.addWidget(self.section_wrap, 0)
         root.addWidget(self.external_row_widget, 0)
 
         has_footer = footer_widget is not None
         section_height = postit_section_height(body_height=body_height or body_widget.sizeHint().height(), has_footer=has_footer)
-        self.setFixedHeight(section_height + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
+        self.setFixedHeight(section_height + external_row_gap + POSTIT_FOOTER_HEIGHT)
 
 
 class SectionTitleBadge(QLabel):

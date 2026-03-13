@@ -13,6 +13,9 @@ class WorkOrderState:
     header: WorkOrderHeader = field(default_factory=WorkOrderHeader)
     fabrics: List[MaterialItem] = field(default_factory=lambda: [MaterialItem()])
     trims: List[MaterialItem] = field(default_factory=lambda: [MaterialItem()])
+    dyeings: List[MaterialItem] = field(default_factory=lambda: [MaterialItem()])
+    finishings: List[MaterialItem] = field(default_factory=lambda: [MaterialItem()])
+    others: List[MaterialItem] = field(default_factory=lambda: [MaterialItem()])
     current_image_path: Optional[str] = None
     is_dirty: bool = False
 
@@ -43,10 +46,41 @@ class WorkOrderState:
         self.trims = self._coerce_items(value)
         self._recompute_sale_price()
 
+
+    @property
+    def dyeing_items(self) -> List[Dict[str, str]]:
+        return [item.to_dict() for item in self.dyeings]
+
+    @dyeing_items.setter
+    def dyeing_items(self, value: List[Dict[str, str]] | None) -> None:
+        self.dyeings = self._coerce_items(value)
+        self._recompute_sale_price()
+
+    @property
+    def finishing_items(self) -> List[Dict[str, str]]:
+        return [item.to_dict() for item in self.finishings]
+
+    @finishing_items.setter
+    def finishing_items(self, value: List[Dict[str, str]] | None) -> None:
+        self.finishings = self._coerce_items(value)
+        self._recompute_sale_price()
+
+    @property
+    def other_items(self) -> List[Dict[str, str]]:
+        return [item.to_dict() for item in self.others]
+
+    @other_items.setter
+    def other_items(self, value: List[Dict[str, str]] | None) -> None:
+        self.others = self._coerce_items(value)
+        self._recompute_sale_price()
+
     def reset(self) -> None:
         self.header = WorkOrderHeader()
         self.fabrics = [MaterialItem()]
         self.trims = [MaterialItem()]
+        self.dyeings = [MaterialItem()]
+        self.finishings = [MaterialItem()]
+        self.others = [MaterialItem()]
         self.current_image_path = None
         self._recompute_sale_price()
         self.is_dirty = False
@@ -61,6 +95,9 @@ class WorkOrderState:
             or self.header.has_any_value()
             or self._items_have_value(self.fabrics)
             or self._items_have_value(self.trims)
+            or self._items_have_value(self.dyeings)
+            or self._items_have_value(self.finishings)
+            or self._items_have_value(self.others)
         )
 
     def update_header(self, patch: Dict[str, str]) -> None:
@@ -107,6 +144,9 @@ class WorkOrderState:
             header=WorkOrderHeader.from_dict(self.header.to_dict()),
             fabrics=[MaterialItem.from_dict(item.to_dict()) for item in self.fabrics],
             trims=[MaterialItem.from_dict(item.to_dict()) for item in self.trims],
+            dyeings=[MaterialItem.from_dict(item.to_dict()) for item in self.dyeings],
+            finishings=[MaterialItem.from_dict(item.to_dict()) for item in self.finishings],
+            others=[MaterialItem.from_dict(item.to_dict()) for item in self.others],
             image_attached=bool(self.current_image_path),
         )
 
@@ -119,8 +159,25 @@ class WorkOrderState:
     def normalized_trims(self) -> List[Dict[str, str]]:
         return self.trim_items
 
+
+    def normalized_dyeings(self) -> List[Dict[str, str]]:
+        return self.dyeing_items
+
+    def normalized_finishings(self) -> List[Dict[str, str]]:
+        return self.finishing_items
+
+    def normalized_others(self) -> List[Dict[str, str]]:
+        return self.other_items
+
     def _target_items(self, target: str) -> List[MaterialItem]:
-        return self.fabrics if target == 'fabric' else self.trims
+        mapping = {
+            'fabric': self.fabrics,
+            'trim': self.trims,
+            'dyeing': self.dyeings,
+            'finishing': self.finishings,
+            'other': self.others,
+        }
+        return mapping.get(target, self.trims)
 
     @staticmethod
     def _coerce_items(items: List[Dict[str, str]] | None) -> List[MaterialItem]:
@@ -129,7 +186,13 @@ class WorkOrderState:
 
 
     def _recompute_sale_price(self) -> None:
-        material_total = self._sum_material_totals(self.fabrics) + self._sum_material_totals(self.trims)
+        material_total = (
+            self._sum_material_totals(self.fabrics)
+            + self._sum_material_totals(self.trims)
+            + self._sum_material_totals(self.dyeings)
+            + self._sum_material_totals(self.finishings)
+            + self._sum_material_totals(self.others)
+        )
         material_text = str(material_total) if material_total else ''
         self.header.cost = material_text
         self.header.cost_display = format_commas_from_digits(material_text) if material_text else ''

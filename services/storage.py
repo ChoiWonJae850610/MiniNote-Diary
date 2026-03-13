@@ -68,6 +68,13 @@ def pick_vendor_name(data: Dict[str, Any]) -> str:
         if v:
             return v
 
+    for key in ("dyeings", "finishings", "others"):
+        rows = data.get(key, [])
+        for row in rows:
+            v = (row.get("거래처") or "").strip()
+            if v:
+                return v
+
     return "NO_VENDOR"
 
 

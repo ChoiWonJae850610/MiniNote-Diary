@@ -157,10 +157,19 @@ class MainWindow(QMainWindow):
         self.change_note_postit.text_changed.connect(self.on_change_note_changed)
         self.postit_bar.fabric_deleted.connect(self.on_fabric_deleted)
         self.postit_bar.trim_deleted.connect(self.on_trim_deleted)
+        self.postit_bar.dyeing_deleted.connect(self.on_dyeing_deleted)
+        self.postit_bar.finishing_deleted.connect(self.on_finishing_deleted)
+        self.postit_bar.other_deleted.connect(self.on_other_deleted)
         self.postit_bar.fabric_item_changed.connect(self.on_fabric_postit_changed)
         self.postit_bar.trim_item_changed.connect(self.on_trim_postit_changed)
+        self.postit_bar.dyeing_item_changed.connect(self.on_dyeing_postit_changed)
+        self.postit_bar.finishing_item_changed.connect(self.on_finishing_postit_changed)
+        self.postit_bar.other_item_changed.connect(self.on_other_postit_changed)
         self.postit_bar.fabric_item_added.connect(self.on_add_fabric_clicked)
         self.postit_bar.trim_item_added.connect(self.on_add_trim_clicked)
+        self.postit_bar.dyeing_item_added.connect(self.on_add_dyeing_clicked)
+        self.postit_bar.finishing_item_added.connect(self.on_add_finishing_clicked)
+        self.postit_bar.other_item_added.connect(self.on_add_other_clicked)
         self.postit_bar.basic_data_changed.connect(self.on_basic_postit_changed)
 
     def _apply_window_defaults(self) -> None:
@@ -499,6 +508,9 @@ class MainWindow(QMainWindow):
             header=self.state.header_data,
             fabrics=self.state.fabric_items,
             trims=self.state.trim_items,
+            dyeings=self.state.dyeing_items,
+            finishings=self.state.finishing_items,
+            others=self.state.other_items,
             force_rebuild=force_rebuild,
         )
         self.change_note_postit.set_text(self.state.header.change_note)
@@ -520,6 +532,21 @@ class MainWindow(QMainWindow):
 
     def on_trim_deleted(self, idx: int):
         if self.state.remove_material_item('trim', idx):
+            self._refresh_postits(force_rebuild=True)
+            self._update_window_title()
+
+    def on_dyeing_deleted(self, idx: int):
+        if self.state.remove_material_item('dyeing', idx):
+            self._refresh_postits(force_rebuild=True)
+            self._update_window_title()
+
+    def on_finishing_deleted(self, idx: int):
+        if self.state.remove_material_item('finishing', idx):
+            self._refresh_postits(force_rebuild=True)
+            self._update_window_title()
+
+    def on_other_deleted(self, idx: int):
+        if self.state.remove_material_item('other', idx):
             self._refresh_postits(force_rebuild=True)
             self._update_window_title()
 
@@ -572,6 +599,21 @@ class MainWindow(QMainWindow):
         self._refresh_basic_postit()
         self._update_window_title()
 
+    def on_dyeing_postit_changed(self, idx: int, patch: dict):
+        self.state.update_material_patch('dyeing', idx, patch)
+        self._refresh_basic_postit()
+        self._update_window_title()
+
+    def on_finishing_postit_changed(self, idx: int, patch: dict):
+        self.state.update_material_patch('finishing', idx, patch)
+        self._refresh_basic_postit()
+        self._update_window_title()
+
+    def on_other_postit_changed(self, idx: int, patch: dict):
+        self.state.update_material_patch('other', idx, patch)
+        self._refresh_basic_postit()
+        self._update_window_title()
+
     def upload_image(self):
         path, _ = QFileDialog.getOpenFileName(self, '이미지 선택', '', SUPPORTED_IMAGE_FILTER)
         if not path:
@@ -606,4 +648,28 @@ class MainWindow(QMainWindow):
             return
         self._refresh_postits(force_rebuild=True)
         self.postit_bar.trim.set_active_card(new_index)
+        self._update_window_title()
+
+    def on_add_dyeing_clicked(self):
+        new_index = self.state.add_material_item('dyeing')
+        if new_index is None:
+            return
+        self._refresh_postits(force_rebuild=True)
+        self.postit_bar.dyeing.set_active_card(new_index)
+        self._update_window_title()
+
+    def on_add_finishing_clicked(self):
+        new_index = self.state.add_material_item('finishing')
+        if new_index is None:
+            return
+        self._refresh_postits(force_rebuild=True)
+        self.postit_bar.finishing.set_active_card(new_index)
+        self._update_window_title()
+
+    def on_add_other_clicked(self):
+        new_index = self.state.add_material_item('other')
+        if new_index is None:
+            return
+        self._refresh_postits(force_rebuild=True)
+        self.postit_bar.other.set_active_card(new_index)
         self._update_window_title()
