@@ -9,6 +9,7 @@ POSTIT_TAB_INSET_LEFT = THEME.filter_panel_margin_h + 22
 POSTIT_TAB_OVERLAP = -12
 POSTIT_HEADER_HEIGHT = THEME.dialog_button_height
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
+POSTIT_CARD_HEIGHT = POSTIT_BODY_HEIGHT
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
 POSTIT_FOOTER_GAP = THEME.top_button_spacing
 POSTIT_EXTERNAL_ROW_GAP = THEME.top_button_spacing
@@ -19,6 +20,7 @@ POSTIT_TAB_GROUP_GAP = 0
 
 POSTIT_INNER_SIDE_PADDING = 14
 POSTIT_BODY_TOP_PADDING = 4
+POSTIT_STACK_SECTION_OVERLAP = POSTIT_TAB_OVERLAP - POSTIT_BODY_TOP_PADDING
 POSTIT_INNER_TOP_PADDING = POSTIT_BODY_TOP_PADDING
 POSTIT_INNER_BOTTOM_PADDING = 4
 POSTIT_SECTION_SPACING = 2
@@ -106,13 +108,14 @@ class PostItSectionColumn(QWidget):
         body_height: int | None = None,
         footer_widget: QWidget | None = None,
         external_row_widget: QWidget | None = None,
+        spacing: int = POSTIT_TAB_OVERLAP,
     ):
         super().__init__(parent)
         self.section_wrap = SectionContainer(
             header_widget,
             body_widget,
             parent=self,
-            spacing=POSTIT_TAB_OVERLAP,
+            spacing=spacing,
             header_alignment=None,
             footer_widget=footer_widget,
             body_height=body_height,

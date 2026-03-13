@@ -13,7 +13,7 @@ from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
-from ui.postit.layout import POSTIT_ROW_ACTION_GAP
+from ui.postit.layout import POSTIT_CARD_HEIGHT, POSTIT_ROW_ACTION_GAP
 from ui.theme import THEME, delete_button_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
 
 
@@ -129,8 +129,8 @@ class PostItCard(_PostItCardBase):
         self.price._pending_next_widget = self.total
         self.total._pending_prev_widget = self.price
 
-        self.setMinimumSize(QSize(320, THEME.postit_card_height))
-        self.setMaximumHeight(THEME.postit_card_height)
+        self.setMinimumSize(QSize(320, POSTIT_CARD_HEIGHT))
+        self.setMaximumHeight(POSTIT_CARD_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def _partner_type_for_picker(self) -> str:
