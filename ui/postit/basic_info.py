@@ -13,7 +13,6 @@ from ui.postit.layout import (
     POSTIT_INNER_BOTTOM_PADDING,
     POSTIT_CONTENT_ROW_SPACING,
     POSTIT_GRID_H_SPACING,
-    POSTIT_ROW_ACTION_GAP,
     POSTIT_UNIFORM_ROW_SPACING,
 )
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
@@ -76,7 +75,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
         date_row = QHBoxLayout()
         date_row.setContentsMargins(0, 0, 0, 0)
-        date_row.setSpacing(POSTIT_ROW_ACTION_GAP)
+        date_row.setSpacing(POSTIT_GRID_H_SPACING)
         date_row.addWidget(mk_label("작성일"), 0)
         date_row.addWidget(self.date_text, 0)
         date_row.addWidget(self.btn_calendar, 0)
@@ -104,7 +103,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
         factory_row = QHBoxLayout()
         factory_row.setContentsMargins(0, 0, 0, 0)
-        factory_row.setSpacing(POSTIT_ROW_ACTION_GAP)
+        factory_row.setSpacing(POSTIT_GRID_H_SPACING)
         factory_row.addWidget(mk_label("공  장"), 0)
         factory_row.addWidget(self.factory, 1)
         factory_row.addWidget(self.btn_factory_partner, 0)
