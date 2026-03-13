@@ -21,6 +21,7 @@ class WorkOrderPageRefs:
     btn_back: QPushButton
     btn_reset: QPushButton
     btn_save: QPushButton
+    btn_load: QPushButton
     btn_upload: QPushButton
     btn_delete_image: QPushButton
     feedback_label: QLabel
@@ -55,6 +56,10 @@ class WorkOrderPageBuilder:
         apply_icon_button_metrics(btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip=Tooltips.SAVE)
         btn_save.setIcon(make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary))
 
+        btn_load = QPushButton("")
+        apply_icon_button_metrics(btn_load, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip=Tooltips.LOAD)
+        btn_load.setIcon(standard_icon(parent, [QStyle.SP_DialogOpenButton, QStyle.SP_DirOpenIcon, QStyle.SP_DriveHDIcon]))
+
         btn_upload = QPushButton("")
         apply_icon_button_metrics(btn_upload, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip=Tooltips.IMAGE_UPLOAD)
         btn_upload.setIcon(make_image_outline_icon(THEME.icon_size_md))
@@ -88,6 +93,7 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
         image_toolbar_layout.setSpacing(THEME.top_button_spacing)
         image_toolbar_layout.addWidget(btn_reset)
+        image_toolbar_layout.addWidget(btn_load)
         image_toolbar_layout.addWidget(btn_save)
         image_toolbar_layout.addWidget(btn_upload)
         image_toolbar_layout.addWidget(btn_delete_image)
@@ -148,6 +154,7 @@ class WorkOrderPageBuilder:
             btn_back=btn_back,
             btn_reset=btn_reset,
             btn_save=btn_save,
+            btn_load=btn_load,
             btn_upload=btn_upload,
             btn_delete_image=btn_delete_image,
             feedback_label=feedback_label,
