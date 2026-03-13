@@ -16,6 +16,7 @@ from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
     POSTIT_FOOTER_HEIGHT,
     POSTIT_WRAP_HEIGHT_WITH_FOOTER,
+    POSTIT_EXTERNAL_ROW_GAP,
 )
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
@@ -50,11 +51,11 @@ class PostItStack(QWidget):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(THEME.top_button_spacing)
+        root.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         root.addWidget(self.stack_host, 0)
         root.addWidget(self.footer_host, 0)
-        self.setFixedHeight(POSTIT_BODY_HEIGHT + THEME.top_button_spacing + POSTIT_FOOTER_HEIGHT)
+        self.setFixedHeight(POSTIT_BODY_HEIGHT + POSTIT_FOOTER_HEIGHT)
 
         self._rebuild_index_buttons()
 
@@ -214,13 +215,16 @@ class PartnerTabbedPostIt(QWidget):
         self.body_stack.addWidget(self.fabric)
         self.body_stack.addWidget(self.trim)
 
-        self.footer_stack = QStackedLayout()
-        self.footer_stack.addWidget(self.fabric.footer_widget())
-        self.footer_stack.addWidget(self.trim.footer_widget())
+        self.footer_spacer = FooterSpacer(self)
 
-        footer_host = QWidget(self)
-        footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
-        footer_host.setLayout(self.footer_stack)
+        self.pager_stack = QStackedLayout()
+        self.pager_stack.setContentsMargins(0, 0, 0, 0)
+        self.pager_stack.addWidget(self.fabric.footer_widget())
+        self.pager_stack.addWidget(self.trim.footer_widget())
+
+        self.pager_host = QWidget(self)
+        self.pager_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+        self.pager_host.setLayout(self.pager_stack)
 
         self.section_wrap = SectionContainer(
             self.tab_header,
@@ -228,7 +232,7 @@ class PartnerTabbedPostIt(QWidget):
             parent=self,
             spacing=POSTIT_TAB_OVERLAP,
             header_alignment=None,
-            footer_widget=footer_host,
+            footer_widget=self.footer_spacer,
             body_height=POSTIT_BODY_HEIGHT,
         )
         self.section_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -236,9 +240,10 @@ class PartnerTabbedPostIt(QWidget):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        root.setSpacing(POSTIT_EXTERNAL_ROW_GAP)
         root.addWidget(self.section_wrap, 0)
-        self.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER)
+        root.addWidget(self.pager_host, 0)
+        self.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
 
         self.fabric.item_deleted.connect(self.fabric_deleted.emit)
         self.trim.item_deleted.connect(self.trim_deleted.emit)
@@ -256,7 +261,7 @@ class PartnerTabbedPostIt(QWidget):
         is_fabric = self._active_tab == self.TAB_FABRIC
         self.tab_header.set_active_tab(self._active_tab)
         self.body_stack.setCurrentWidget(self.fabric if is_fabric else self.trim)
-        self.footer_stack.setCurrentWidget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
+        self.pager_stack.setCurrentWidget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
 
     def set_data(self, fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)

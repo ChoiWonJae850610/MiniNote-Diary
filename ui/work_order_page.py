@@ -91,8 +91,6 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.addWidget(btn_upload)
         image_toolbar_layout.addWidget(btn_delete_image)
         image_toolbar_layout.addStretch(1)
-        image_toolbar_layout.addWidget(postit_bar.basic.date_text)
-        image_toolbar_layout.addWidget(postit_bar.basic.btn_calendar)
 
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.image_preview_min_height)

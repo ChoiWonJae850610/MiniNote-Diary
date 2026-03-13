@@ -54,12 +54,6 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
 
-
-        grid = QGridLayout()
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
-        grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
-
         def mk_label(text: str) -> QLabel:
             label = QLabel(text, self)
             label.setFixedWidth(THEME.field_label_width)
@@ -67,6 +61,22 @@ class BasicInfoPostIt(_PostItCardBase):
             label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             label.setStyleSheet(field_label_style())
             return label
+
+        date_row = QHBoxLayout()
+        date_row.setContentsMargins(0, 0, 0, 0)
+        date_row.setSpacing(POSTIT_ROW_ACTION_GAP)
+        date_row.addWidget(mk_label("작성일"), 0)
+        date_row.addWidget(self.date_text, 0)
+        date_row.addWidget(self.btn_calendar, 0)
+        date_row.addStretch(1)
+        root.addLayout(date_row)
+
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
+        grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
+
+
 
         self.style_no = _ClickToEditLineEdit(self)
         self.factory = _ClickToEditLineEdit(self)
