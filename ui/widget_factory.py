@@ -14,6 +14,7 @@ from ui.theme import (
     panel_frame_style,
     page_title_style,
     panel_title_style,
+    tooltip_style_override,
 )
 
 
@@ -83,9 +84,12 @@ def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name:
     set_widget_tooltip(button, tooltip)
     button.setStyleSheet(
         icon_button_override(font_px)
-        + " QPushButton { text-align: center; padding: 0; }"
+        + "QPushButton{text-align:center;padding:0;margin:0;}"
+        + tooltip_style_override()
         + extra_style
     )
+    button.style().unpolish(button)
+    button.style().polish(button)
     return button
 
 
@@ -163,7 +167,13 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
         button.setIcon(icon)
         icon_dim = max(12, button_size - 10)
         button.setIconSize(button.iconSize().__class__(icon_dim, icon_dim))
-    button.setStyleSheet(icon_button_override(THEME.base_font_px) + ' QPushButton { text-align: center; padding: 0; }')
+    button.setStyleSheet(
+        icon_button_override(THEME.base_font_px)
+        + 'QPushButton{text-align:center;padding:0;margin:0;}'
+        + tooltip_style_override()
+    )
+    button.style().unpolish(button)
+    button.style().polish(button)
     return button
 
 

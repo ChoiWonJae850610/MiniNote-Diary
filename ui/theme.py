@@ -623,5 +623,22 @@ def image_preview_style() -> str:
     return f"background: transparent; border: none; color: {t.color_placeholder};"
 
 
+def tooltip_style_override() -> str:
+    t = THEME
+    return (
+        "QToolTip{" 
+        f"background-color:{t.color_tooltip_bg};"
+        f"color:{t.color_tooltip_text};"
+        f"border:1px solid {t.color_tooltip_border};"
+        f"border-radius:{t.tooltip_radius}px;"
+        f"padding:{t.tooltip_padding_v}px {t.tooltip_padding_h}px;"
+        f"font-size:{t.tooltip_font_px}px;"
+        "font-weight:600;"
+        "min-height:0px;"
+        "}"
+    )
+
+
 def icon_button_override(font_px: int) -> str:
-    return f"font-size: {font_px}px; font-weight: 700; padding: 0;"
+    _ = font_px
+    return "QPushButton{font-weight:700;padding:0;margin:0;}" + tooltip_style_override()
