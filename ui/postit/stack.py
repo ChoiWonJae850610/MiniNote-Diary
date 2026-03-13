@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QStackedLayout, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QStackedLayout, QToolButton, QWidget
 
 from services.work_order_defaults import empty_material_row
 from ui.postit.basic_info import BasicInfoPostIt
@@ -20,21 +20,6 @@ from ui.postit.layout import (
 )
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
-
-
-class _StackHost(QWidget):
-    def __init__(self, fixed_height: int, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(fixed_height)
-        self._stack = QStackedLayout(self)
-        self._stack.setContentsMargins(0, 0, 0, 0)
-        self._stack.setSpacing(0)
-
-    def add_widget(self, widget: QWidget):
-        self._stack.addWidget(widget)
-
-    def set_current_widget(self, widget: QWidget):
-        self._stack.setCurrentWidget(widget)
 
 
 class PostItStack(QWidget):
@@ -64,15 +49,13 @@ class PostItStack(QWidget):
         self.index_row.setSpacing(THEME.top_button_spacing)
         self.index_row.addStretch(1)
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        root.addWidget(self.stack_host, 0)
-        root.addWidget(self.footer_host, 0)
         self.setFixedHeight(POSTIT_BODY_HEIGHT + POSTIT_FOOTER_HEIGHT)
 
         self._rebuild_index_buttons()
+
+    def body_widget(self) -> QWidget:
+        return self.stack_host
 
     def footer_widget(self) -> QWidget:
         return self.footer_host
@@ -233,18 +216,26 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             active_key=self.TAB_FABRIC,
             interactive=True,
         )
-        self.body_host = _StackHost(POSTIT_BODY_HEIGHT)
+        self.body_host = QWidget()
+        self.body_host.setFixedHeight(POSTIT_BODY_HEIGHT)
+        self.body_stack = QStackedLayout(self.body_host)
+        self.body_stack.setContentsMargins(0, 0, 0, 0)
+        self.body_stack.setSpacing(0)
 
         self.fabric = PostItStack(self.TAB_FABRIC)
         self.trim = PostItStack(self.TAB_TRIM)
-        self.body_host.add_widget(self.fabric)
-        self.body_host.add_widget(self.trim)
+        self.body_stack.addWidget(self.fabric.body_widget())
+        self.body_stack.addWidget(self.trim.body_widget())
 
         self.footer_spacer = FooterSpacer()
 
-        self.pager_host = _StackHost(POSTIT_FOOTER_HEIGHT)
-        self.pager_host.add_widget(self.fabric.footer_widget())
-        self.pager_host.add_widget(self.trim.footer_widget())
+        self.pager_host = QWidget()
+        self.pager_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+        self.pager_stack = QStackedLayout(self.pager_host)
+        self.pager_stack.setContentsMargins(0, 0, 0, 0)
+        self.pager_stack.setSpacing(0)
+        self.pager_stack.addWidget(self.fabric.footer_widget())
+        self.pager_stack.addWidget(self.trim.footer_widget())
 
         super().__init__(
             self.tab_header,
@@ -272,8 +263,8 @@ class PartnerTabbedPostIt(PostItSectionColumn):
         self._active_tab = self.TAB_TRIM if tab_key == self.TAB_TRIM else self.TAB_FABRIC
         is_fabric = self._active_tab == self.TAB_FABRIC
         self.tab_header.set_active_tab(self._active_tab)
-        self.body_host.set_current_widget(self.fabric if is_fabric else self.trim)
-        self.pager_host.set_current_widget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
+        self.body_stack.setCurrentWidget(self.fabric.body_widget() if is_fabric else self.trim.body_widget())
+        self.pager_stack.setCurrentWidget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
 
     def set_data(self, fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
         self.fabric.set_items(fabrics or [], force_rebuild=force_rebuild)
