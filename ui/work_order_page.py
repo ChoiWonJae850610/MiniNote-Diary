@@ -8,8 +8,9 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
-from ui.postit.layout import POSTIT_TAB_OVERLAP, postit_section_height
+from ui.postit.layout import FooterSpacer, POSTIT_TAB_OVERLAP, postit_section_height
 from ui.postit_widgets import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
+from ui.postit.stack import PostItColumn
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import apply_icon_button_metrics, make_hint_label, make_page_title_label
 
@@ -110,14 +111,17 @@ class WorkOrderPageBuilder:
 
         change_note_postit = ChangeNotePostIt()
         change_note_title = FolderTabHeader('메모', page)
+        change_note_footer = FooterSpacer(page)
         change_note_wrap = SectionContainer(
             change_note_title,
             change_note_postit,
             spacing=POSTIT_TAB_OVERLAP,
             header_alignment=None,
+            footer_widget=change_note_footer,
             body_height=change_note_postit.height(),
         )
-        change_note_wrap.setFixedHeight(postit_section_height(body_height=change_note_postit.height()))
+        change_note_wrap.setFixedHeight(postit_section_height(body_height=change_note_postit.height(), has_footer=True))
+        change_note_wrap = PostItColumn(change_note_wrap, parent=page)
 
         content = QWidget()
         content_layout = QGridLayout(content)

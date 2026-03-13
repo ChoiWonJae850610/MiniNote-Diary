@@ -143,7 +143,6 @@ class PostItCard(_PostItCardBase):
         total_row = make_row(mk_label("총  액"), (self.total, 1))
         root.addLayout(total_row)
 
-        root.addStretch(1)
 
         self.vendor.committed.connect(self._on_vendor_committed)
         self.item.committed.connect(lambda value: self._commit("품목", value))

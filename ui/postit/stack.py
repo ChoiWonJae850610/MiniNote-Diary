@@ -181,6 +181,22 @@ class PostItStack(QWidget):
         self.item_added.emit()
 
 
+class PostItColumn(QWidget):
+    def __init__(self, section_wrap: QWidget, row_widget: QWidget | None = None, parent=None):
+        super().__init__(parent)
+        self.section_wrap = section_wrap
+        self.row_widget = row_widget or FooterSpacer(self)
+        self.row_widget.setParent(self)
+        self.row_widget.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(POSTIT_EXTERNAL_ROW_GAP)
+        root.addWidget(self.section_wrap, 0)
+        root.addWidget(self.row_widget, 0)
+        self.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
+
+
 class PartnerTabbedPostIt(QWidget):
     TAB_FABRIC = "fabric"
     TAB_TRIM = "trim"
@@ -299,6 +315,8 @@ class PostItBar(QWidget):
         )
         self.basic_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.basic_wrap.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER)
+        self.basic_column = PostItColumn(self.basic_wrap, parent=self)
+        self.basic_column.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.partner = PartnerTabbedPostIt(self)
         self.partner.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -313,7 +331,7 @@ class PostItBar(QWidget):
         self.fabric = self.partner.fabric
         self.trim = self.partner.trim
 
-        lay.addWidget(self.basic_wrap, 1)
+        lay.addWidget(self.basic_column, 1)
         lay.addWidget(self.partner, 2)
 
     def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):

@@ -136,7 +136,6 @@ class BasicInfoPostIt(_PostItCardBase):
         )
         root.addLayout(total_row)
 
-        root.addStretch(1)
 
         self.style_no.committed.connect(lambda _v: self._emit_basic_fields())
         self.factory.committed.connect(self._on_factory_committed)
