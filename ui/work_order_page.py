@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.postit.layout import FooterSpacer, POSTIT_MEMO_BODY_HEIGHT, PostItSectionColumn
-from ui.postit_widgets import ChangeNotePostIt, FolderTabHeader, PostItBar
+from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import apply_icon_button_metrics, make_hint_label, make_page_title_label
 

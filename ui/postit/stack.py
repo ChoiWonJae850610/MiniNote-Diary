@@ -317,3 +317,13 @@ class PostItBar(QWidget):
 
         lay.addWidget(self.basic_column, 1)
         lay.addWidget(self.partner, 2)
+
+    def set_data(
+        self,
+        header: dict | None = None,
+        fabrics: List[Dict[str, str]] | None = None,
+        trims: List[Dict[str, str]] | None = None,
+        force_rebuild: bool = False,
+    ):
+        self.basic.set_header_data(header or {})
+        self.partner.set_data(fabrics or [], trims or [], force_rebuild=force_rebuild)
