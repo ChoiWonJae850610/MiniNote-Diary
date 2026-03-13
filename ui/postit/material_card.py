@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QMenu, QSizePolicy, QToolButton
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
 from ui.icon_factory import make_partner_link_icon
+from ui.messages import Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, make_down_icon
@@ -15,6 +16,7 @@ from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToE
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
 from ui.postit.layout import POSTIT_CARD_HEIGHT, POSTIT_ROW_ACTION_GAP
 from ui.theme import THEME, delete_button_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
+from ui.widget_factory import set_widget_tooltip
 
 
 class PostItCard(_PostItCardBase):
@@ -49,7 +51,7 @@ class PostItCard(_PostItCardBase):
         self.btn_vendor_partner.setIconSize(QSize(14, 14))
         self.btn_vendor_partner.setFixedSize(FIELD_H, FIELD_H)
         self.btn_vendor_partner.setCursor(Qt.PointingHandCursor)
-        self.btn_vendor_partner.setToolTip("거래처 관리")
+        set_widget_tooltip(self.btn_vendor_partner, Tooltips.PARTNER_MANAGE)
         self.btn_vendor_partner.setStyleSheet(tool_button_style())
         self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
         self.vendor.set_text_silent(self.data.get("거래처", ""))

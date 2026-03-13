@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 
 def _clamp_alpha(alpha: float) -> float:
@@ -66,6 +67,10 @@ class ThemeTokens:
     postit_index_row_height: int = 28
     postit_index_button_size: int = 24
     delete_button_size: int = 14
+    tooltip_font_px: int = 12
+    tooltip_padding_v: int = 6
+    tooltip_padding_h: int = 10
+    tooltip_radius: int = 8
 
     page_padding: int = 12
     page_padding_x: int = 30
@@ -96,6 +101,8 @@ class ThemeTokens:
     control_radius: int = 9
     input_radius: int = 8
     editor_radius: int = 14
+
+    font_family: str = "Pretendard, Noto Sans KR, Segoe UI"
 
     color_window: str = "#FFFFFF"
     color_surface: str = "#FAFAFB"
@@ -130,6 +137,9 @@ class ThemeTokens:
 
     color_shadow: str = "#6B7280"
     color_icon: str = "#2F3945"
+    color_tooltip_bg: str = "#FFFFFF"
+    color_tooltip_border: str = "#D7DCE3"
+    color_tooltip_text: str = "#364152"
 
 
 THEME = ThemeTokens()
@@ -150,7 +160,7 @@ def build_app_stylesheet() -> str:
     icon_bg = hex_to_rgba(t.color_surface, 0.96)
     icon_primary_bg = t.color_primary
     icon_danger_bg = hex_to_rgba(t.color_surface_muted, 0.96)
-    return f"""
+    dynamic_qss = f"""
         QMainWindow, QWidget {{
             background: {t.color_window};
             color: {t.color_text};
@@ -285,6 +295,51 @@ def build_app_stylesheet() -> str:
             color: {t.color_text_soft};
         }}
     """
+    return load_theme_qss() + "\n" + dynamic_qss
+
+
+def _theme_qss_context() -> dict[str, object]:
+    t = THEME
+    return {
+        "FONT_FAMILY": t.font_family,
+        "BASE_FONT_PX": t.base_font_px,
+        "WINDOW_BG": t.color_window,
+        "TEXT_COLOR": t.color_text,
+        "SURFACE_BG": t.color_surface,
+        "SURFACE_ALT_BG": t.color_surface_alt,
+        "SURFACE_MUTED_BG": t.color_surface_muted,
+        "BORDER_COLOR": t.color_border,
+        "BORDER_SOFT_COLOR": t.color_border_soft,
+        "BORDER_HOVER_COLOR": t.color_border_hover,
+        "PRIMARY_COLOR": t.color_primary,
+        "PRIMARY_HOVER_COLOR": t.color_primary_hover,
+        "PRESSED_COLOR": t.color_pressed,
+        "TEXT_SOFT_COLOR": t.color_text_soft,
+        "TEXT_MUTED_COLOR": t.color_text_muted,
+        "PLACEHOLDER_COLOR": t.color_placeholder,
+        "DISABLED_BG": t.color_disabled_bg,
+        "DISABLED_BORDER": t.color_disabled_border,
+        "DISABLED_TEXT": t.color_disabled_text,
+        "PANEL_RADIUS": t.panel_radius,
+        "PANEL_RADIUS_SM": t.panel_radius_sm,
+        "CONTROL_RADIUS": t.control_radius,
+        "INPUT_RADIUS": t.input_radius,
+        "EDITOR_RADIUS": t.editor_radius,
+        "ICON_BUTTON_SIZE": t.icon_button_size,
+        "TOOLTIP_FONT_PX": t.tooltip_font_px,
+        "TOOLTIP_PADDING_V": t.tooltip_padding_v,
+        "TOOLTIP_PADDING_H": t.tooltip_padding_h,
+        "TOOLTIP_RADIUS": t.tooltip_radius,
+        "TOOLTIP_BG": t.color_tooltip_bg,
+        "TOOLTIP_BORDER": t.color_tooltip_border,
+        "TOOLTIP_TEXT": t.color_tooltip_text,
+    }
+
+
+def load_theme_qss() -> str:
+    qss_path = Path(__file__).with_name("theme.qss")
+    raw = qss_path.read_text(encoding="utf-8")
+    return raw.format_map(_theme_qss_context())
 
 
 def title_label_style(font_px: int | None = None, color: str | None = None, padding_left: int = 0) -> str:

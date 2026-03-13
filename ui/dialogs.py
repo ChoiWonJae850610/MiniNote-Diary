@@ -5,6 +5,7 @@ from typing import Sequence, Tuple
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from ui.messages import Buttons
 from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba, status_row_margins
 from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
@@ -119,7 +120,7 @@ class _BaseThemedDialog(QDialog):
 
 
 class SimpleMessageDialog(_BaseThemedDialog):
-    def __init__(self, title: str, message: str, *, button_text: str = "확인", parent=None):
+    def __init__(self, title: str, message: str, *, button_text: str = Buttons.OK, parent=None):
         super().__init__(title=title, parent=parent)
         self.setMinimumWidth(330)
         message_label = QLabel(message, self.card)
@@ -133,7 +134,7 @@ class SimpleMessageDialog(_BaseThemedDialog):
 
 
 class ConfirmActionDialog(_BaseThemedDialog):
-    def __init__(self, title: str, message: str, confirm_text: str = "확인", cancel_text: str = "취소", parent=None):
+    def __init__(self, title: str, message: str, confirm_text: str = Buttons.OK, cancel_text: str = Buttons.CANCEL, parent=None):
         super().__init__(title=title, parent=parent)
         self.setMinimumWidth(330)
 
@@ -160,7 +161,7 @@ class ValidationStatusDialog(_BaseThemedDialog):
         for label, ok in items:
             self.body.addWidget(self._make_status_row(label, ok))
 
-        close_button = make_dialog_button("확인", self.card, role="close")
+        close_button = make_dialog_button(Buttons.OK, self.card, role="close")
         close_button.clicked.connect(self.accept)
         self.body.addLayout(make_dialog_button_row([close_button]))
 
@@ -198,5 +199,5 @@ def show_error(parent, title: str, message: str) -> int:
     return SimpleMessageDialog(title, message, parent=parent).exec()
 
 
-def ask_confirm(parent, title: str, message: str, *, confirm_text: str = "확인", cancel_text: str = "취소") -> bool:
+def ask_confirm(parent, title: str, message: str, *, confirm_text: str = Buttons.OK, cancel_text: str = Buttons.CANCEL) -> bool:
     return ConfirmActionDialog(title, message, confirm_text=confirm_text, cancel_text=cancel_text, parent=parent).exec() == QDialog.Accepted

@@ -23,6 +23,7 @@ from services.partner_repository import PartnerRecord, PartnerRepository
 from services.partner_utils import color_for_partner_type
 from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_error, show_info, show_warning
+from ui.messages import DialogTitles, InfoMessages, Tooltips, WarningMessages
 from ui.theme import THEME, dialog_layout_margins, hex_to_rgba, input_line_edit_style, plain_text_edit_style, title_label_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 
@@ -150,8 +151,8 @@ class PartnerEditDialog(QDialog):
         type_layout.addStretch(1)
         body.addWidget(type_card, 4)
 
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip="저장", text="✓", font_px=18)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip="닫기", text="×", font_px=18)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text="✓", font_px=18)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=18)
         root.addLayout(make_dialog_button_row([self.btn_save, self.btn_close]))
 
         self.btn_save.clicked.connect(self._accept_if_valid)
@@ -191,11 +192,11 @@ class PartnerEditDialog(QDialog):
 
     def _accept_if_valid(self) -> None:
         if not self.name_edit.text().strip():
-            show_warning(self, "저장 불가", "상호명을 입력하세요.")
+            show_warning(self, DialogTitles.SAVE_BLOCKED, WarningMessages.PARTNER_NAME_REQUIRED)
             self.name_edit.setFocus()
             return
         if not self.selected_types():
-            show_warning(self, "저장 불가", "거래처 타입을 1개 이상 선택하세요.")
+            show_warning(self, DialogTitles.SAVE_BLOCKED, WarningMessages.PARTNER_TYPE_REQUIRED)
             return
         self.accept()
 
@@ -246,10 +247,10 @@ class PartnerTypeDialog(QDialog):
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         root.addWidget(self.table)
 
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip="저장", text="✓", font_px=18)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip="추가", text="+", font_px=18)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip="삭제", text="−", font_px=18)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip="닫기", text="×", font_px=18)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text="✓", font_px=18)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=18)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=18)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=18)
         root.addLayout(make_dialog_button_row([self.btn_save, self.btn_add, self.btn_delete, self.btn_close]))
 
         self.btn_save.clicked.connect(self.on_save)
@@ -301,7 +302,7 @@ class PartnerTypeDialog(QDialog):
                 values.append(text)
                 seen.add(text)
         self.repo.save_types(values)
-        show_info(self, "저장", "거래처 타입 목록이 저장되었습니다.")
+        show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_TYPES_SAVED)
         self.accept()
 
 
@@ -375,11 +376,11 @@ class PartnerDialog(QDialog):
         right_layout.addStretch(1)
         body.addWidget(right_card, 6)
 
-        self.btn_type = make_icon_button(parent=self, object_name="iconAction", tooltip="타입 관리", text="≡", font_px=15)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip="추가", text="+", font_px=18)
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip="수정", text="✓", font_px=18)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip="삭제", text="−", font_px=18)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip="닫기", text="×", font_px=18)
+        self.btn_type = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.TYPE_MANAGE, text="≡", font_px=15)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=18)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.EDIT, text="✓", font_px=18)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=18)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=18)
         root.addLayout(make_dialog_button_row([self.btn_type, self.btn_add, self.btn_save, self.btn_delete, self.btn_close]))
 
         self.setStyleSheet(self.styleSheet() + self._dialog_style())
@@ -517,12 +518,12 @@ class PartnerDialog(QDialog):
         self.repo.save_partners(self._partners)
         self.reload_all()
         self._select_partner(record.id)
-        show_info(self, "저장", "거래처가 저장되었습니다.")
+        show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_SAVED)
 
     def on_edit(self) -> None:
         record = self._find_by_id(self._current_partner_id)
         if record is None:
-            show_warning(self, "수정", "수정할 거래처를 먼저 선택하세요.")
+            show_warning(self, DialogTitles.EDIT, WarningMessages.PARTNER_SELECT_TO_EDIT)
             return
         dlg = PartnerEditDialog(self._type_order, partner=record, parent=self)
         if dlg.exec() != QDialog.Accepted:
@@ -536,7 +537,7 @@ class PartnerDialog(QDialog):
         self.repo.save_partners(self._partners)
         self.reload_all()
         self._select_partner(new_record.id)
-        show_info(self, "저장", "거래처가 수정되었습니다.")
+        show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_UPDATED)
 
     def on_delete(self) -> None:
         record = self._find_by_id(self._current_partner_id)

@@ -7,6 +7,7 @@ from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QLabel, QSizePolicy, QToolButton
 
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
+from ui.messages import Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
@@ -14,6 +15,7 @@ from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
 from ui.postit.layout import POSTIT_BODY_HEIGHT
 from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
+from ui.widget_factory import set_widget_tooltip
 
 
 class BasicInfoPostIt(_PostItCardBase):
@@ -53,7 +55,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_factory_partner.setIconSize(QSize(14, 14))
         self.btn_factory_partner.setFixedSize(FIELD_H, FIELD_H)
         self.btn_factory_partner.setCursor(Qt.PointingHandCursor)
-        self.btn_factory_partner.setToolTip("거래처 관리")
+        set_widget_tooltip(self.btn_factory_partner, Tooltips.PARTNER_MANAGE)
         self.btn_factory_partner.setStyleSheet(tool_button_style())
         self.btn_factory_partner.clicked.connect(self._open_factory_picker)
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)

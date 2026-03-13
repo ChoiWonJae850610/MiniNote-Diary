@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QAbstractItemView, QHeaderView
 
 from ui.dialogs import show_info, show_warning
+from ui.messages import DialogTitles, InfoMessages, Tooltips
 from ui.theme import THEME, dialog_layout_margins, table_widget_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 
@@ -43,10 +44,10 @@ class UnitDialog(QDialog):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         layout.addWidget(self.table)
 
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip="저장", text="✓", font_px=18)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip="추가", text="+", font_px=18)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip="삭제", text="−", font_px=18)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip="닫기", text="×", font_px=18)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text="✓", font_px=18)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=18)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=18)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=18)
         layout.addLayout(make_dialog_button_row([self.btn_save, self.btn_add, self.btn_delete, self.btn_close]))
 
         self.btn_save.clicked.connect(self.on_save)
@@ -95,10 +96,10 @@ class UnitDialog(QDialog):
             with open(self.units_path, "w", encoding="utf-8") as f:
                 json.dump({"units": units}, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            show_warning(self, "저장 실패", str(e))
+            show_warning(self, DialogTitles.SAVE_FAILED, str(e))
             return
 
-        show_info(self, "저장", "단위 목록이 저장되었습니다.")
+        show_info(self, DialogTitles.SAVE, InfoMessages.UNITS_SAVED)
 
     def on_add(self):
         for r in range(self.table.rowCount()):

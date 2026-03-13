@@ -1,104 +1,108 @@
 /* ui/theme.qss */
 
-* {
-    font-family: "Pretendard", "Noto Sans KR", "Segoe UI";
-    font-size: 12px;
-}
+* {{
+    font-family: "{FONT_FAMILY}";
+    font-size: {BASE_FONT_PX}px;
+}}
 
-QWidget {
-    background: #F6F7FB;
-    color: #1F2328;
-}
+QWidget {{
+    background: {WINDOW_BG};
+    color: {TEXT_COLOR};
+}}
 
-/* GroupBox */
-QGroupBox {
-    border: 1px solid #E3E6EF;
-    border-radius: 14px;
+QGroupBox {{
+    border: 1px solid {BORDER_SOFT_COLOR};
+    border-radius: {PANEL_RADIUS_SM}px;
     margin-top: 12px;
     padding: 12px;
-    background: #FFFFFF;
-}
-QGroupBox::title {
+    background: {WINDOW_BG};
+}}
+QGroupBox::title {{
     subcontrol-origin: margin;
     left: 12px;
     padding: 0 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #2B313A;
-}
+    color: {TEXT_SOFT_COLOR};
+}}
 
-/* 입력 위젯 */
-QLineEdit, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox {
-    background: #FFFFFF;
-    border: 1px solid #D7DBE7;
-    border-radius: 10px;
-    padding: 6px 10px;
+QLineEdit, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox {{
+    background: {WINDOW_BG};
+    border: 1px solid {BORDER_COLOR};
+    border-radius: {INPUT_RADIUS}px;
+    padding: 0 10px;
     min-height: 30px;
-}
-QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {
-    border: 1px solid #6C8CFF;
-}
+}}
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
+    border: 1px solid {PRIMARY_COLOR};
+}}
 
-/* 버튼 */
-QPushButton {
-    background: #FFFFFF;
-    border: 1px solid #D7DBE7;
-    border-radius: 12px;
-    padding: 6px 12px;
+QPushButton {{
+    background: {SURFACE_BG};
+    color: {TEXT_SOFT_COLOR};
+    border: 1px solid {BORDER_COLOR};
+    border-radius: 14px;
+    padding: 0 14px;
     min-height: 30px;
-}
-QPushButton:hover {
-    background: #F0F3FF;
-    border: 1px solid #B9C6FF;
-}
-QPushButton:pressed {
-    background: #E6ECFF;
-}
-QPushButton:disabled {
-    color: #9AA4B2;
-    background: #F3F4F6;
-    border: 1px solid #E5E7EB;
-}
-
-/* 테이블 */
-QTableWidget, QTableView {
-    background: #FFFFFF;
-    border: 1px solid #E3E6EF;
-    border-radius: 12px;
-
-    alternate-background-color: #FAFBFF;
-    selection-background-color: #DCE6FF;
-    selection-color: #1F2328;
-}
-
-QHeaderView::section {
-    background: #F3F5FB;
-    color: #2B313A;
-    padding: 8px 10px;
-    border: 0px;
-    border-bottom: 1px solid #E3E6EF;
     font-weight: 600;
-}
+}}
+QPushButton:hover {{
+    background: {SURFACE_ALT_BG};
+    border-color: {BORDER_HOVER_COLOR};
+}}
+QPushButton:pressed {{
+    background: {PRESSED_COLOR};
+}}
+QPushButton:disabled {{
+    color: {DISABLED_TEXT};
+    background: {DISABLED_BG};
+    border-color: {DISABLED_BORDER};
+}}
 
-QTableView::item {
+QTableWidget, QTableView {{
+    background: {WINDOW_BG};
+    border: 1px solid {BORDER_SOFT_COLOR};
+    border-radius: 12px;
+    alternate-background-color: {SURFACE_ALT_BG};
+    selection-background-color: {SURFACE_MUTED_BG};
+    selection-color: {TEXT_COLOR};
+}}
+QHeaderView::section {{
+    background: {SURFACE_BG};
+    color: {TEXT_SOFT_COLOR};
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 1px solid {BORDER_SOFT_COLOR};
+    font-weight: 600;
+}}
+QTableView::item {{
     padding: 6px 10px;
-    border: 0px;
-}
+    border: 0;
+}}
 
-/* 스크롤바 */
-QScrollBar:vertical {
+QScrollBar:vertical {{
     width: 10px;
     background: transparent;
     margin: 6px 2px 6px 2px;
-}
-QScrollBar::handle:vertical {
-    background: #C9D2F2;
+}}
+QScrollBar::handle:vertical {{
+    background: {BORDER_COLOR};
     border-radius: 5px;
     min-height: 30px;
-}
-QScrollBar::handle:vertical:hover {
-    background: #AEBBEB;
-}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;
-}
+}}
+QScrollBar::handle:vertical:hover {{
+    background: {BORDER_HOVER_COLOR};
+}}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+    height: 0;
+}}
+
+QToolTip {{
+    background: {TOOLTIP_BG};
+    color: {TOOLTIP_TEXT};
+    border: 1px solid {TOOLTIP_BORDER};
+    border-radius: {TOOLTIP_RADIUS}px;
+    padding: {TOOLTIP_PADDING_V}px {TOOLTIP_PADDING_H}px;
+    font-size: {TOOLTIP_FONT_PX}px;
+    font-weight: 600;
+}}

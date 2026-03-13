@@ -8,8 +8,9 @@ from PySide6.QtWidgets import QCalendarWidget, QDialog, QFormLayout, QGridLayout
 
 from services.formatters import digits_only, format_commas_from_digits
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
+from ui.messages import Buttons, Tooltips
 from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
-from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
+from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button, set_widget_tooltip
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 
 
@@ -91,7 +92,7 @@ class BasicInfoDialog(QDialog):
 
         self.btn_calendar = QToolButton(self)
         self.btn_calendar.setFixedSize(THEME.dialog_field_height, THEME.dialog_field_height)
-        self.btn_calendar.setToolTip("달력 열기")
+        set_widget_tooltip(self.btn_calendar, Tooltips.OPEN_CALENDAR)
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
         self.btn_calendar.setAutoRaise(True)
         self.btn_calendar.setIcon(make_calendar_icon(THEME.icon_size_md))
@@ -119,7 +120,7 @@ class BasicInfoDialog(QDialog):
 
         self.btn_factory_partner = make_inline_icon_button(
             parent=self,
-            tooltip='거래처 관리',
+            tooltip=Tooltips.PARTNER_MANAGE,
             icon=make_partner_link_icon(14),
             size=THEME.dialog_field_height,
         )
@@ -167,8 +168,8 @@ class BasicInfoDialog(QDialog):
         form.addRow("", price_row)
         root.addLayout(form)
 
-        btn_cancel = make_dialog_button("취소", self, role="cancel")
-        btn_ok = make_dialog_button("확인", self, role="confirm")
+        btn_cancel = make_dialog_button(Buttons.CANCEL, self, role="cancel")
+        btn_ok = make_dialog_button(Buttons.OK, self, role="confirm")
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
         root.addLayout(make_dialog_button_row([btn_cancel, btn_ok]))

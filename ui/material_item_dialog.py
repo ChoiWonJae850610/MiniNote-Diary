@@ -8,6 +8,7 @@ from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units
 from ui.theme import THEME, combo_box_style, dialog_layout_margins, hint_label_style, input_line_edit_style, read_only_line_edit_style
 from ui.icon_factory import make_partner_link_icon
+from ui.messages import Buttons, Tooltips
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 
@@ -99,7 +100,7 @@ class MaterialItemDialog(QDialog):
 
         self.btn_vendor_partner = make_inline_icon_button(
             parent=self,
-            tooltip='거래처 관리',
+            tooltip=Tooltips.PARTNER_MANAGE,
             icon=make_partner_link_icon(14),
             size=30,
         )
@@ -123,7 +124,7 @@ class MaterialItemDialog(QDialog):
         tip.setStyleSheet(hint_label_style())
         root.addWidget(tip)
 
-        self.btn_cancel = make_dialog_button("취소", self, role="cancel")
+        self.btn_cancel = make_dialog_button(Buttons.CANCEL, self, role="cancel")
         self.btn_ok = make_dialog_button("추가", self, role="confirm")
         root.addLayout(make_dialog_button_row([self.btn_cancel, self.btn_ok]))
         self.btn_cancel.clicked.connect(self.reject)

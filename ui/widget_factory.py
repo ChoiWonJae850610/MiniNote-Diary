@@ -4,7 +4,7 @@ from typing import Iterable
 
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from ui.theme import (
     THEME,
@@ -16,6 +16,29 @@ from ui.theme import (
     panel_title_style,
 )
 
+
+
+
+def set_widget_tooltip(widget: QWidget, tooltip: str | None) -> QWidget:
+    if tooltip:
+        widget.setToolTip(tooltip)
+    else:
+        widget.setToolTip("")
+    return widget
+
+
+def apply_button_role_style(button: QPushButton, *, object_name: str | None = None, extra_style: str = "",) -> QPushButton:
+    if object_name:
+        button.setObjectName(object_name)
+
+    if extra_style:
+        button.setStyleSheet(extra_style)
+
+    # style refresh
+    button.style().unpolish(button)
+    button.style().polish(button)
+
+    return button
 
 def apply_button_metrics(button: QPushButton, *, width: int | None = None, height: int | None = None, font_px: int | None = None, bold: bool = True, point_cursor: bool = True) -> QPushButton:
     if width is not None and height is not None:
@@ -39,8 +62,7 @@ def apply_button_metrics(button: QPushButton, *, width: int | None = None, heigh
 def make_button(text: str, parent=None, *, width: int | None = None, height: int | None = None, object_name: str | None = None, font_px: int | None = None) -> QPushButton:
     button = QPushButton(text, parent)
     apply_button_metrics(button, width=width, height=height, font_px=font_px)
-    if object_name:
-        button.setObjectName(object_name)
+    apply_button_role_style(button, object_name=object_name)
     return button
 
 
@@ -54,10 +76,8 @@ def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name:
         point_cursor=True,
     )
     button.setContentsMargins(0, 0, 0, 0)
-    if object_name:
-        button.setObjectName(object_name)
-    if tooltip:
-        button.setToolTip(tooltip)
+    apply_button_role_style(button, object_name=object_name)
+    set_widget_tooltip(button, tooltip)
     button.setStyleSheet(
         icon_button_override(font_px)
         + f" QPushButton {{ text-align: center; padding: 0; margin: 0; line-height: {THEME.icon_button_size}px; }}"
@@ -112,11 +132,11 @@ def make_dialog_button(text: str, parent=None, *, role: str | None = None) -> QP
     button = QPushButton(text, parent)
     apply_button_metrics(button, height=THEME.dialog_button_height)
     if role == "confirm":
-        button.setObjectName("dialogConfirm")
+        apply_button_role_style(button, object_name="dialogConfirm")
     elif role == "cancel":
-        button.setObjectName("dialogCancel")
+        apply_button_role_style(button, object_name="dialogCancel")
     elif role == "close":
-        button.setObjectName("dialogClose")
+        apply_button_role_style(button, object_name="dialogClose")
     return button
 
 
@@ -134,8 +154,7 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
     button = QPushButton(parent)
     button_size = size or THEME.field_height
     apply_button_metrics(button, width=button_size, height=button_size, font_px=THEME.base_font_px, bold=False, point_cursor=True)
-    if tooltip:
-        button.setToolTip(tooltip)
+    set_widget_tooltip(button, tooltip)
     button.setContentsMargins(0, 0, 0, 0)
     if icon is not None and not icon.isNull():
         button.setIcon(icon)
