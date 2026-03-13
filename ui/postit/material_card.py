@@ -3,17 +3,18 @@ from __future__ import annotations
 from typing import Dict
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QSizePolicy, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QMenu, QSizePolicy, QToolButton
 
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
-from ui.postit.base import _PostItCardBase
 from ui.icon_factory import make_partner_link_icon
-from ui.postit.common import FIELD_H, make_down_icon
-from ui.postit.layout import POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_GRID_H_SPACING, POSTIT_ROW_ACTION_GAP, POSTIT_UNIFORM_ROW_SPACING
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
+from ui.postit.base import _PostItCardBase
+from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
-from ui.theme import THEME, delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
+from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
+from ui.postit.layout import POSTIT_ROW_ACTION_GAP
+from ui.theme import THEME, delete_button_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
 
 
 class PostItCard(_PostItCardBase):
@@ -32,9 +33,7 @@ class PostItCard(_PostItCardBase):
         self._unit_label = unit_label_for_value(self._unit_value, self._units)
         self._suppress_unit_menu_once = False
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
-        root.setSpacing(POSTIT_UNIFORM_ROW_SPACING)
+        root = PostItBodyLayout(self)
 
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
@@ -43,26 +42,6 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.setStyleSheet(delete_button_style())
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
-        def make_row(*items) -> QHBoxLayout:
-            row = QHBoxLayout()
-            row.setContentsMargins(0, 0, 0, 0)
-            row.setSpacing(POSTIT_GRID_H_SPACING)
-            for item in items:
-                if isinstance(item, tuple):
-                    widget, stretch = item
-                    row.addWidget(widget, stretch)
-                else:
-                    row.addWidget(item, 0)
-            return row
-
-        def mk_label(text: str) -> QLabel:
-            label = QLabel(text, self)
-            label.setFixedWidth(THEME.field_label_width)
-            label.setFixedHeight(FIELD_H)
-            label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            label.setStyleSheet(field_label_style())
-            return label
-
         self.vendor = _ClickToEditLineEdit(self)
         self.item = _ClickToEditLineEdit(self)
         self.btn_vendor_partner = QToolButton(self)
@@ -70,23 +49,17 @@ class PostItCard(_PostItCardBase):
         self.btn_vendor_partner.setIconSize(QSize(14, 14))
         self.btn_vendor_partner.setFixedSize(FIELD_H, FIELD_H)
         self.btn_vendor_partner.setCursor(Qt.PointingHandCursor)
-        self.btn_vendor_partner.setToolTip('거래처 관리')
+        self.btn_vendor_partner.setToolTip("거래처 관리")
         self.btn_vendor_partner.setStyleSheet(tool_button_style())
         self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
         self.vendor.set_text_silent(self.data.get("거래처", ""))
         self.data["거래처_id"] = self.data.get("거래처_id", "")
         self.item.set_text_silent(self.data.get("품목", ""))
 
-        vendor_row = QHBoxLayout()
-        vendor_row.setContentsMargins(0, 0, 0, 0)
+        vendor_row = make_form_row(make_field_label("원단처" if self.kind == "fabric" else "거래처", self), (self.vendor, 1), self.btn_vendor_partner)
         vendor_row.setSpacing(POSTIT_ROW_ACTION_GAP)
-        vendor_row.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0)
-        vendor_row.addWidget(self.vendor, 1)
-        vendor_row.addWidget(self.btn_vendor_partner, 0)
         root.addLayout(vendor_row)
-
-        item_row = make_row(mk_label("품  목"), (self.item, 1))
-        root.addLayout(item_row)
+        root.addLayout(make_form_row(make_field_label("품  목", self), (self.item, 1)))
 
         self.qty = _QtyClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -129,20 +102,16 @@ class PostItCard(_PostItCardBase):
         self.price.setText(self.data.get("단가", ""))
         self.total.setText(self.data.get("총액", ""))
 
-        qty_row = make_row(
-            mk_label("수  량"),
-            (self.qty, 1),
-            mk_label("단위"),
-            (self.unit_btn, 1),
+        root.addLayout(
+            make_form_row(
+                make_field_label("수  량", self),
+                (self.qty, 1),
+                make_field_label("단위", self),
+                (self.unit_btn, 1),
+            )
         )
-        root.addLayout(qty_row)
-
-        price_row = make_row(mk_label("단  가"), (self.price, 1))
-        root.addLayout(price_row)
-
-        total_row = make_row(mk_label("총  액"), (self.total, 1))
-        root.addLayout(total_row)
-
+        root.addLayout(make_form_row(make_field_label("단  가", self), (self.price, 1)))
+        root.addLayout(make_form_row(make_field_label("총  액", self), (self.total, 1)))
 
         self.vendor.committed.connect(self._on_vendor_committed)
         self.item.committed.connect(lambda value: self._commit("품목", value))
@@ -164,7 +133,6 @@ class PostItCard(_PostItCardBase):
         self.setMaximumHeight(THEME.postit_card_height)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-
     def _partner_type_for_picker(self) -> str:
         return PARTNER_PICKER_TYPE_FABRIC if self.kind == "fabric" else PARTNER_PICKER_TYPE_OTHER
 
@@ -175,7 +143,6 @@ class PostItCard(_PostItCardBase):
             self._commit("거래처", partner.name)
 
         show_partner_picker(self.btn_vendor_partner, partner_type=self._partner_type_for_picker(), on_selected=_apply)
-
 
     def _on_vendor_committed(self, value: str):
         self.data["거래처_id"] = ""

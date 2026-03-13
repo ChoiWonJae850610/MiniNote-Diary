@@ -11,13 +11,12 @@ from ui.postit.common import MAX_POSTIT_CARDS
 from ui.postit.layout import (
     FolderTabHeader,
     FooterSpacer,
-    SectionContainer,
-    POSTIT_TAB_OVERLAP,
-    POSTIT_TABBED_SECTION_OVERLAP,
     POSTIT_BODY_HEIGHT,
-    POSTIT_FOOTER_HEIGHT,
-    POSTIT_WRAP_HEIGHT_WITH_FOOTER,
     POSTIT_EXTERNAL_ROW_GAP,
+    POSTIT_FOOTER_HEIGHT,
+    POSTIT_TAB_OVERLAP,
+    POSTIT_WRAP_HEIGHT_WITH_FOOTER,
+    PostItSectionColumn,
 )
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
@@ -182,23 +181,25 @@ class PostItStack(QWidget):
         self.item_added.emit()
 
 
-class PostItColumn(QWidget):
+class PostItColumn(PostItSectionColumn):
     def __init__(self, section_wrap: QWidget, row_widget: QWidget | None = None, parent=None):
-        super().__init__(parent)
+        # backward-compatible wrapper for existing call sites
+        super().__init__(
+            QWidget(),
+            QWidget(),
+            parent=parent,
+            body_height=0,
+            footer_widget=None,
+            external_row_widget=row_widget or FooterSpacer(parent),
+        )
+        self.layout().removeWidget(self.section_wrap)
+        self.section_wrap.setParent(None)
         self.section_wrap = section_wrap
-        self.row_widget = row_widget or FooterSpacer(self)
-        self.row_widget.setParent(self)
-        self.row_widget.setFixedHeight(POSTIT_FOOTER_HEIGHT)
-
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(POSTIT_EXTERNAL_ROW_GAP)
-        root.addWidget(self.section_wrap, 0)
-        root.addWidget(self.row_widget, 0)
+        self.layout().insertWidget(0, self.section_wrap, 0)
         self.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
 
 
-class PartnerTabbedPostIt(QWidget):
+class PartnerTabbedPostIt(PostItSectionColumn):
     TAB_FABRIC = "fabric"
     TAB_TRIM = "trim"
 
@@ -210,57 +211,44 @@ class PartnerTabbedPostIt(QWidget):
     trim_item_added = Signal()
 
     def __init__(self, parent=None):
-        super().__init__(parent)
         self._active_tab = self.TAB_FABRIC
 
         self.tab_header = FolderTabHeader(
             [(self.TAB_FABRIC, "원단"), (self.TAB_TRIM, "부자재")],
-            self,
+            parent,
             active_key=self.TAB_FABRIC,
             interactive=True,
         )
-        self.btn_fabric = self.tab_header.button(self.TAB_FABRIC)
-        self.btn_trim = self.tab_header.button(self.TAB_TRIM)
-
-        self.body_host = QWidget(self)
+        self.body_host = QWidget(parent)
         self.body_host.setFixedHeight(POSTIT_BODY_HEIGHT)
         self.body_stack = QStackedLayout(self.body_host)
         self.body_stack.setContentsMargins(0, 0, 0, 0)
 
-        self.fabric = PostItStack(self.TAB_FABRIC, self)
-        self.trim = PostItStack(self.TAB_TRIM, self)
+        self.fabric = PostItStack(self.TAB_FABRIC, parent)
+        self.trim = PostItStack(self.TAB_TRIM, parent)
         self.body_stack.addWidget(self.fabric)
         self.body_stack.addWidget(self.trim)
 
-        self.footer_spacer = FooterSpacer(self)
+        self.footer_spacer = FooterSpacer(parent)
 
         self.pager_stack = QStackedLayout()
         self.pager_stack.setContentsMargins(0, 0, 0, 0)
         self.pager_stack.addWidget(self.fabric.footer_widget())
         self.pager_stack.addWidget(self.trim.footer_widget())
 
-        self.pager_host = QWidget(self)
+        self.pager_host = QWidget(parent)
         self.pager_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
         self.pager_host.setLayout(self.pager_stack)
 
-        self.section_wrap = SectionContainer(
+        super().__init__(
             self.tab_header,
             self.body_host,
-            parent=self,
-            spacing=POSTIT_TABBED_SECTION_OVERLAP,
-            header_alignment=None,
-            footer_widget=self.footer_spacer,
+            parent=parent,
             body_height=POSTIT_BODY_HEIGHT,
+            footer_widget=self.footer_spacer,
+            external_row_widget=self.pager_host,
         )
-        self.section_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.section_wrap.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER)
-
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(POSTIT_EXTERNAL_ROW_GAP)
-        root.addWidget(self.section_wrap, 0)
-        root.addWidget(self.pager_host, 0)
-        self.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.fabric.item_deleted.connect(self.fabric_deleted.emit)
         self.trim.item_deleted.connect(self.trim_deleted.emit)
@@ -269,8 +257,8 @@ class PartnerTabbedPostIt(QWidget):
         self.fabric.item_added.connect(self.fabric_item_added.emit)
         self.trim.item_added.connect(self.trim_item_added.emit)
 
-        self.btn_fabric.clicked.connect(lambda: self.set_active_tab(self.TAB_FABRIC))
-        self.btn_trim.clicked.connect(lambda: self.set_active_tab(self.TAB_TRIM))
+        self.tab_header.button(self.TAB_FABRIC).clicked.connect(lambda: self.set_active_tab(self.TAB_FABRIC))
+        self.tab_header.button(self.TAB_TRIM).clicked.connect(lambda: self.set_active_tab(self.TAB_TRIM))
         self.set_active_tab(self.TAB_FABRIC)
 
     def set_active_tab(self, tab_key: str):
@@ -305,18 +293,13 @@ class PostItBar(QWidget):
         self.basic.data_changed.connect(self.basic_data_changed.emit)
         self.basic_title = FolderTabHeader("기본정보", self)
         self.basic_footer = FooterSpacer(self)
-        self.basic_wrap = SectionContainer(
+        self.basic_column = PostItSectionColumn(
             self.basic_title,
             self.basic,
             parent=self,
-            spacing=POSTIT_TAB_OVERLAP,
-            header_alignment=None,
-            footer_widget=self.basic_footer,
             body_height=POSTIT_BODY_HEIGHT,
+            footer_widget=self.basic_footer,
         )
-        self.basic_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.basic_wrap.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER)
-        self.basic_column = PostItColumn(self.basic_wrap, parent=self)
         self.basic_column.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.partner = PartnerTabbedPostIt(self)
@@ -334,7 +317,3 @@ class PostItBar(QWidget):
 
         lay.addWidget(self.basic_column, 1)
         lay.addWidget(self.partner, 2)
-
-    def set_data(self, header: Dict[str, str], fabrics: List[Dict[str, str]], trims: List[Dict[str, str]], force_rebuild: bool = False):
-        self.basic.set_header_data(header or {})
-        self.partner.set_data(fabrics or [], trims or [], force_rebuild=force_rebuild)

@@ -20,13 +20,12 @@ POSTIT_TAB_GROUP_GAP = 0
 POSTIT_INNER_SIDE_PADDING = 14
 POSTIT_BODY_TOP_PADDING = 4
 POSTIT_INNER_TOP_PADDING = POSTIT_BODY_TOP_PADDING
-POSTIT_TABBED_SECTION_OVERLAP = POSTIT_TAB_OVERLAP - POSTIT_BODY_TOP_PADDING
 POSTIT_INNER_BOTTOM_PADDING = 4
 POSTIT_SECTION_SPACING = 2
 POSTIT_GRID_H_SPACING = 8
 POSTIT_GRID_V_SPACING = 4
-POSTIT_CONTENT_ROW_SPACING = POSTIT_GRID_V_SPACING
-POSTIT_UNIFORM_ROW_SPACING = POSTIT_GRID_V_SPACING
+POSTIT_ROW_GAP = POSTIT_GRID_V_SPACING
+POSTIT_UNIFORM_ROW_SPACING = POSTIT_ROW_GAP
 POSTIT_MEMO_BODY_HEIGHT = 300
 
 
@@ -95,6 +94,44 @@ class SectionContainer(QWidget):
         height = body_height if body_height is not None else body_widget.sizeHint().height()
         if height > 0:
             self.setFixedHeight(postit_section_height(body_height=height, has_footer=footer_widget is not None))
+
+
+class PostItSectionColumn(QWidget):
+    def __init__(
+        self,
+        header_widget: QWidget,
+        body_widget: QWidget,
+        *,
+        parent=None,
+        body_height: int | None = None,
+        footer_widget: QWidget | None = None,
+        external_row_widget: QWidget | None = None,
+    ):
+        super().__init__(parent)
+        self.section_wrap = SectionContainer(
+            header_widget,
+            body_widget,
+            parent=self,
+            spacing=POSTIT_TAB_OVERLAP,
+            header_alignment=None,
+            footer_widget=footer_widget,
+            body_height=body_height,
+        )
+        self.section_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        self.external_row_widget = external_row_widget or FooterSpacer(self)
+        self.external_row_widget.setParent(self)
+        self.external_row_widget.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(POSTIT_EXTERNAL_ROW_GAP)
+        root.addWidget(self.section_wrap, 0)
+        root.addWidget(self.external_row_widget, 0)
+
+        has_footer = footer_widget is not None
+        section_height = postit_section_height(body_height=body_height or body_widget.sizeHint().height(), has_footer=has_footer)
+        self.setFixedHeight(section_height + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
 
 
 class SectionTitleBadge(QLabel):

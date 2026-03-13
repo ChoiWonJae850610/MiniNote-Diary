@@ -4,25 +4,17 @@ from typing import Dict
 
 from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QLabel, QSizePolicy, QToolButton
 
-from ui.postit.layout import (
-    POSTIT_BODY_HEIGHT,
-    POSTIT_INNER_SIDE_PADDING,
-    POSTIT_INNER_TOP_PADDING,
-    POSTIT_INNER_BOTTOM_PADDING,
-    POSTIT_CONTENT_ROW_SPACING,
-    POSTIT_GRID_H_SPACING,
-    POSTIT_UNIFORM_ROW_SPACING,
-)
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
+from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
-from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
-from ui.theme import display_field_style, field_label_style, input_line_edit_style, tool_button_style
+from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
+from ui.postit.layout import POSTIT_BODY_HEIGHT
+from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
 
-from ui.theme import THEME
 
 class BasicInfoPostIt(_PostItCardBase):
     data_changed = Signal(dict)
@@ -33,10 +25,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.setFixedHeight(POSTIT_BODY_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
-        root.setSpacing(POSTIT_UNIFORM_ROW_SPACING)
-
+        root = PostItBodyLayout(self)
 
         self._date_value = QDate.currentDate()
         self.date_text = QLabel(self._date_value.toString("yyyy-MM-dd"), self)
@@ -53,32 +42,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
 
-        def mk_label(text: str) -> QLabel:
-            label = QLabel(text, self)
-            label.setFixedWidth(THEME.field_label_width)
-            label.setFixedHeight(FIELD_H)
-            label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            label.setStyleSheet(field_label_style())
-            return label
-
-        def make_row(*items, stretch_index: int | None = None) -> QHBoxLayout:
-            row = QHBoxLayout()
-            row.setContentsMargins(0, 0, 0, 0)
-            row.setSpacing(POSTIT_GRID_H_SPACING)
-            for idx, item in enumerate(items):
-                if isinstance(item, tuple):
-                    widget, stretch = item
-                    row.addWidget(widget, stretch)
-                else:
-                    row.addWidget(item, 1 if stretch_index == idx else 0)
-            return row
-
-        date_row = QHBoxLayout()
-        date_row.setContentsMargins(0, 0, 0, 0)
-        date_row.setSpacing(POSTIT_GRID_H_SPACING)
-        date_row.addWidget(mk_label("작성일"), 0)
-        date_row.addWidget(self.date_text, 0)
-        date_row.addWidget(self.btn_calendar, 0)
+        date_row = make_form_row(make_field_label("작성일", self), self.date_text, self.btn_calendar)
         date_row.addStretch(1)
         root.addLayout(date_row)
 
@@ -89,7 +53,7 @@ class BasicInfoPostIt(_PostItCardBase):
         self.btn_factory_partner.setIconSize(QSize(14, 14))
         self.btn_factory_partner.setFixedSize(FIELD_H, FIELD_H)
         self.btn_factory_partner.setCursor(Qt.PointingHandCursor)
-        self.btn_factory_partner.setToolTip('거래처 관리')
+        self.btn_factory_partner.setToolTip("거래처 관리")
         self.btn_factory_partner.setStyleSheet(tool_button_style())
         self.btn_factory_partner.clicked.connect(self._open_factory_picker)
         self.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -98,16 +62,8 @@ class BasicInfoPostIt(_PostItCardBase):
         self.style_no.textChanged.connect(self._adjust_style_width)
         self._adjust_style_width(self.style_no.text())
 
-        product_row = make_row(mk_label("제품명"), (self.style_no, 1))
-        root.addLayout(product_row)
-
-        factory_row = QHBoxLayout()
-        factory_row.setContentsMargins(0, 0, 0, 0)
-        factory_row.setSpacing(POSTIT_GRID_H_SPACING)
-        factory_row.addWidget(mk_label("공  장"), 0)
-        factory_row.addWidget(self.factory, 1)
-        factory_row.addWidget(self.btn_factory_partner, 0)
-        root.addLayout(factory_row)
+        root.addLayout(make_form_row(make_field_label("제품명", self), (self.style_no, 1)))
+        root.addLayout(make_form_row(make_field_label("공  장", self), (self.factory, 1), self.btn_factory_partner))
 
         self.cost = _MoneyLineEdit(self)
         self.labor = _MoneyLineEdit(self)
@@ -119,22 +75,22 @@ class BasicInfoPostIt(_PostItCardBase):
         self.cost.setFocusPolicy(Qt.NoFocus)
         self._syncing_prices = False
 
-        price_row = make_row(
-            mk_label("재료비"),
-            (self.cost, 1),
-            mk_label("공  임"),
-            (self.labor, 1),
+        root.addLayout(
+            make_form_row(
+                make_field_label("재료비", self),
+                (self.cost, 1),
+                make_field_label("공  임", self),
+                (self.labor, 1),
+            )
         )
-        root.addLayout(price_row)
-
-        total_row = make_row(
-            mk_label("로  스"),
-            (self.loss, 1),
-            mk_label("원  가"),
-            (self.sale_price, 1),
+        root.addLayout(
+            make_form_row(
+                make_field_label("로  스", self),
+                (self.loss, 1),
+                make_field_label("원  가", self),
+                (self.sale_price, 1),
+            )
         )
-        root.addLayout(total_row)
-
 
         self.style_no.committed.connect(lambda _v: self._emit_basic_fields())
         self.factory.committed.connect(self._on_factory_committed)
@@ -159,7 +115,7 @@ class BasicInfoPostIt(_PostItCardBase):
             "date": self._date_value.toString("yyyy-MM-dd"),
             "style_no": self.style_no.text(),
             "factory": self.factory.text(),
-            "factory_partner_id": str(self.factory.property('factory_partner_id') or ''),
+            "factory_partner_id": str(self.factory.property("factory_partner_id") or ""),
         })
 
     def _emit_price_fields(self):
@@ -175,9 +131,9 @@ class BasicInfoPostIt(_PostItCardBase):
         })
 
     def _recompute_prices(self):
-        material_total = int(self.cost.digits() or '0')
-        labor = int(self.labor.digits() or '0')
-        loss = int(self.loss.digits() or '0')
+        material_total = int(self.cost.digits() or "0")
+        labor = int(self.labor.digits() or "0")
+        loss = int(self.loss.digits() or "0")
         sale_total = material_total + labor + loss
         self._syncing_prices = True
         try:
@@ -200,15 +156,14 @@ class BasicInfoPostIt(_PostItCardBase):
         width = max(self._style_no_min, min(self._style_no_max, width))
         self.style_no.setMinimumWidth(width)
 
-
     def _on_factory_committed(self, value: str):
-        self.factory.setProperty('factory_partner_id', '')
+        self.factory.setProperty("factory_partner_id", "")
         self._emit_basic_fields()
 
     def _open_factory_picker(self):
         def _apply(partner):
             self.factory.set_text_silent(partner.name)
-            self.factory.setProperty('factory_partner_id', partner.id)
+            self.factory.setProperty("factory_partner_id", partner.id)
             self._emit_basic_fields()
 
         show_partner_picker(self.btn_factory_partner, partner_type=PARTNER_PICKER_TYPE_FACTORY, on_selected=_apply)
@@ -245,7 +200,7 @@ class BasicInfoPostIt(_PostItCardBase):
         try:
             self.style_no.set_text_silent(header.get("style_no", ""))
             self.factory.set_text_silent(header.get("factory", ""))
-            self.factory.setProperty('factory_partner_id', header.get("factory_partner_id", ""))
+            self.factory.setProperty("factory_partner_id", header.get("factory_partner_id", ""))
             self._adjust_style_width(self.style_no.text())
             self.cost.setText(header.get("cost_display", header.get("cost", "")) or "")
             self.labor.setText(header.get("labor_display", header.get("labor", "")) or "")
@@ -253,4 +208,3 @@ class BasicInfoPostIt(_PostItCardBase):
             self.sale_price.setText(header.get("sale_price_display", header.get("sale_price", "")) or "")
         finally:
             del blockers
-
