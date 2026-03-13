@@ -19,6 +19,7 @@ class WorkOrderPageRefs:
     page: QWidget
     btn_back: QPushButton
     btn_reset: QPushButton
+    btn_load: QPushButton
     btn_save: QPushButton
     btn_upload: QPushButton
     btn_delete_image: QPushButton
@@ -49,6 +50,10 @@ class WorkOrderPageBuilder:
         btn_reset = QPushButton("")
         apply_icon_button_metrics(btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip="새로고침")
         btn_reset.setIcon(standard_icon(parent, [QStyle.SP_BrowserReload]))
+
+        btn_load = QPushButton("")
+        apply_icon_button_metrics(btn_load, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip="불러오기")
+        btn_load.setIcon(standard_icon(parent, [QStyle.SP_DialogOpenButton, QStyle.SP_DirOpenIcon]))
 
         btn_save = QPushButton("")
         apply_icon_button_metrics(btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip="저장")
@@ -87,6 +92,7 @@ class WorkOrderPageBuilder:
         image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
         image_toolbar_layout.setSpacing(THEME.top_button_spacing)
         image_toolbar_layout.addWidget(btn_reset)
+        image_toolbar_layout.addWidget(btn_load)
         image_toolbar_layout.addWidget(btn_save)
         image_toolbar_layout.addWidget(btn_upload)
         image_toolbar_layout.addWidget(btn_delete_image)
@@ -128,7 +134,7 @@ class WorkOrderPageBuilder:
         right_stack = QWidget()
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(THEME.section_gap)
+        right_layout.setSpacing(max(2, THEME.top_button_spacing - 2))
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
         right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
         right_layout.addStretch(1)
@@ -146,6 +152,7 @@ class WorkOrderPageBuilder:
             page=page,
             btn_back=btn_back,
             btn_reset=btn_reset,
+            btn_load=btn_load,
             btn_save=btn_save,
             btn_upload=btn_upload,
             btn_delete_image=btn_delete_image,

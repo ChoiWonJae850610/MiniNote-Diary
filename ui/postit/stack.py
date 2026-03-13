@@ -358,6 +358,7 @@ class PostItBar(QWidget):
             parent=self,
             body_height=POSTIT_BODY_HEIGHT,
             footer_widget=self.basic_footer,
+            external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )
         self.basic_column.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 

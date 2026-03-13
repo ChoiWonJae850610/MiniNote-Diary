@@ -104,6 +104,7 @@ class MainWindow(QMainWindow):
 
         self.btn_back = work_refs.btn_back
         self.btn_reset = work_refs.btn_reset
+        self.btn_load = work_refs.btn_load
         self.btn_save = work_refs.btn_save
         self.btn_upload = work_refs.btn_upload
         self.btn_delete_image = work_refs.btn_delete_image
