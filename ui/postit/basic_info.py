@@ -56,6 +56,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
 
         grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
         grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
 
@@ -95,6 +96,7 @@ class BasicInfoPostIt(_PostItCardBase):
         root.addLayout(grid)
 
         mg = QGridLayout()
+        mg.setContentsMargins(0, 0, 0, 0)
         mg.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
         mg.setVerticalSpacing(POSTIT_GRID_V_SPACING)
         mg.setContentsMargins(0, 0, 0, 0)

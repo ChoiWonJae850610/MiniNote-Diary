@@ -44,6 +44,7 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
         vi = QGridLayout()
+        vi.setContentsMargins(0, 0, 0, 0)
         vi.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
         vi.setVerticalSpacing(POSTIT_GRID_V_SPACING)
 
@@ -80,6 +81,7 @@ class PostItCard(_PostItCardBase):
         root.addLayout(vi)
 
         grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
         grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
 

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
@@ -7,7 +6,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVB
 from ui.theme import THEME, title_badge_style
 
 POSTIT_TAB_INSET_LEFT = THEME.filter_panel_margin_h + 22
-POSTIT_TAB_OVERLAP = -12
+POSTIT_TAB_OVERLAP = -10
 POSTIT_HEADER_HEIGHT = THEME.dialog_button_height
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
 POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
@@ -15,6 +14,15 @@ POSTIT_FOOTER_GAP = THEME.top_button_spacing
 POSTIT_TAB_MIN_WIDTH = 92
 POSTIT_TAB_PADDING_X = 16
 POSTIT_ROW_ACTION_GAP = 6
+POSTIT_TAB_GROUP_GAP = 0
+
+POSTIT_INNER_SIDE_PADDING = 14
+POSTIT_INNER_TOP_PADDING = 4
+POSTIT_INNER_BOTTOM_PADDING = 4
+POSTIT_SECTION_SPACING = 2
+POSTIT_GRID_H_SPACING = 8
+POSTIT_GRID_V_SPACING = 4
+POSTIT_MEMO_BODY_HEIGHT = 300
 
 
 def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
@@ -27,22 +35,15 @@ def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
 POSTIT_WRAP_HEIGHT = postit_section_height(body_height=POSTIT_BODY_HEIGHT)
 POSTIT_WRAP_HEIGHT_WITH_FOOTER = postit_section_height(body_height=POSTIT_BODY_HEIGHT, has_footer=True)
 
-POSTIT_INNER_SIDE_PADDING = 14
-POSTIT_INNER_TOP_PADDING = 4
-POSTIT_INNER_BOTTOM_PADDING = 4
-POSTIT_SECTION_SPACING = 2
-POSTIT_GRID_H_SPACING = 8
-POSTIT_GRID_V_SPACING = 4
-POSTIT_MEMO_BODY_HEIGHT = 300
-
 
 def embedded_tab_style(*, active: bool = True, selector: str = "QToolButton") -> str:
     t = THEME
     base = (
         f"{selector}{{"
         f"padding:0 {POSTIT_TAB_PADDING_X}px;"
-        f"min-height:{t.dialog_button_height}px;"
+        f"min-width:{POSTIT_TAB_MIN_WIDTH}px;"
         f"max-height:{t.dialog_button_height}px;"
+        f"min-height:{t.dialog_button_height}px;"
         f"border:1px solid {t.color_border};"
         f"border-top-left-radius:{t.control_radius + 6}px;"
         f"border-top-right-radius:{t.control_radius + 6}px;"
@@ -113,16 +114,56 @@ class PostItTabButton(QToolButton):
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setStyleSheet(folder_tab_style(active=active, selector="QToolButton"))
 
+    def set_active(self, active: bool):
+        self.setStyleSheet(folder_tab_style(active=active, selector="QToolButton"))
+
 
 class FolderTabHeader(QWidget):
-    def __init__(self, text: str, parent=None):
+    def __init__(self, tabs, parent=None, *, active_key: str | None = None, interactive: bool = True):
         super().__init__(parent)
-        self._button = PostItTabButton(text, self, active=True)
-        self._button.setEnabled(True)
-        self._button.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        if isinstance(tabs, str):
+            tabs = [(tabs, tabs)]
+            interactive = False
+        self._buttons: dict[str, PostItTabButton] = {}
+        self._interactive = interactive
 
         root = QHBoxLayout(self)
         root.setContentsMargins(POSTIT_TAB_INSET_LEFT, 0, 0, 0)
+        root.setSpacing(POSTIT_TAB_GROUP_GAP)
+
+        first_key = tabs[0][0] if tabs else None
+        self._active_key = active_key or first_key
+
+        for key, text in tabs:
+            button = PostItTabButton(text, self, active=(key == self._active_key))
+            button.setCheckable(True)
+            button.setChecked(key == self._active_key)
+            button.setEnabled(interactive)
+            if not interactive:
+                button.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            self._buttons[key] = button
+            root.addWidget(button, 0, Qt.AlignLeft)
+        root.addStretch(1)
+
+    def button(self, key: str) -> PostItTabButton | None:
+        return self._buttons.get(key)
+
+    def keys(self) -> list[str]:
+        return list(self._buttons.keys())
+
+    def set_active_tab(self, key: str):
+        self._active_key = key
+        for button_key, button in self._buttons.items():
+            active = button_key == key
+            button.setChecked(active)
+            button.set_active(active)
+
+
+class FooterSpacer(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
-        root.addWidget(self._button, 0, Qt.AlignLeft)
         root.addStretch(1)

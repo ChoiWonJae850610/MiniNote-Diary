@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from typing import Dict, List
@@ -11,14 +10,11 @@ from ui.postit.basic_info import BasicInfoPostIt
 from ui.postit.common import MAX_POSTIT_CARDS
 from ui.postit.layout import (
     FolderTabHeader,
-    PostItTabButton,
+    FooterSpacer,
     SectionContainer,
-    folder_tab_style,
-    POSTIT_TAB_INSET_LEFT,
     POSTIT_TAB_OVERLAP,
     POSTIT_BODY_HEIGHT,
     POSTIT_FOOTER_HEIGHT,
-    POSTIT_WRAP_HEIGHT,
     POSTIT_WRAP_HEIGHT_WITH_FOOTER,
 )
 from ui.postit.material_card import PostItCard
@@ -141,46 +137,53 @@ class PostItStack(QWidget):
             item = self.index_row.takeAt(1)
             widget = item.widget()
             if widget is not None:
-                widget.setParent(None)
                 widget.deleteLater()
         self.index_buttons = []
         for idx in range(len(self.items)):
             button = self._make_index_button(str(idx + 1))
             button.clicked.connect(lambda _=False, i=idx: self.set_active_card(i))
             self.index_buttons.append(button)
-            self.index_row.addWidget(button)
+            self.index_row.addWidget(button, 0)
         self.plus_button = self._make_index_button("+")
-        self.plus_button.clicked.connect(self._on_add_clicked)
-        self.index_row.addWidget(self.plus_button)
-        self._update_index_button_states()
+        self.plus_button.clicked.connect(self._add_item)
+        self.index_row.addWidget(self.plus_button, 0)
+        self._apply_active()
 
-    def _update_index_button_states(self):
+    def _apply_active(self):
         for idx, button in enumerate(self.index_buttons):
             button.setStyleSheet(self._button_style(idx == self.active_index))
         if self.plus_button is not None:
             enabled = len(self.items) < MAX_POSTIT_CARDS
             self.plus_button.setEnabled(enabled)
-            self.plus_button.setStyleSheet(self._button_style(False) if enabled else disabled_index_button_style())
-
-    def _on_add_clicked(self):
-        if len(self.items) < MAX_POSTIT_CARDS:
-            self._suppress_next_new_card_menu = True
-            self.item_added.emit()
+            self.plus_button.setStyleSheet(index_button_style(False) if enabled else disabled_index_button_style())
+        for idx, card in enumerate(self.cards):
+            card.set_active(idx == self.active_index)
 
     def set_active_card(self, idx: int):
         if 0 <= idx < len(self.items):
             self.active_index = idx
             self.stack.setCurrentIndex(idx)
             self._apply_active()
-            self._update_index_button_states()
 
-    def _apply_active(self):
-        for idx, card in enumerate(self.cards):
-            card.set_active(idx == self.active_index)
-        self._update_index_button_states()
+    def _add_item(self):
+        if len(self.items) >= MAX_POSTIT_CARDS:
+            return
+        self._suppress_next_new_card_menu = True
+        self.items.append(empty_material_row())
+        idx = len(self.items) - 1
+        self._append_card(self.items[idx], idx)
+        self.active_index = idx
+        self.stack.setCurrentIndex(idx)
+        self._refresh_delete_buttons()
+        self._rebuild_index_buttons()
+        self._apply_active()
+        self.item_added.emit()
 
 
 class PartnerTabbedPostIt(QWidget):
+    TAB_FABRIC = "fabric"
+    TAB_TRIM = "trim"
+
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
     fabric_item_changed = Signal(int, dict)
@@ -188,25 +191,18 @@ class PartnerTabbedPostIt(QWidget):
     fabric_item_added = Signal()
     trim_item_added = Signal()
 
-    TAB_FABRIC = "fabric"
-    TAB_TRIM = "trim"
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self._active_tab = self.TAB_FABRIC
 
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        self.tab_row_wrap = QWidget(self)
-        self.tab_row_layout = QHBoxLayout(self.tab_row_wrap)
-        self.tab_row_layout.setContentsMargins(POSTIT_TAB_INSET_LEFT, 0, 0, 0)
-        self.tab_row_layout.setSpacing(0)
-
-        self.btn_fabric = self._make_tab_button("원단", self.TAB_FABRIC)
-        self.btn_trim = self._make_tab_button("부자재", self.TAB_TRIM)
-        self.tab_row_layout.addWidget(self.btn_fabric, 0)
-        self.tab_row_layout.addWidget(self.btn_trim, 0)
-        self.tab_row_layout.addStretch(1)
+        self.tab_header = FolderTabHeader(
+            [(self.TAB_FABRIC, "원단"), (self.TAB_TRIM, "부자재")],
+            self,
+            active_key=self.TAB_FABRIC,
+            interactive=True,
+        )
+        self.btn_fabric = self.tab_header.button(self.TAB_FABRIC)
+        self.btn_trim = self.tab_header.button(self.TAB_TRIM)
 
         self.body_host = QWidget(self)
         self.body_host.setFixedHeight(POSTIT_BODY_HEIGHT)
@@ -227,7 +223,7 @@ class PartnerTabbedPostIt(QWidget):
         footer_host.setLayout(self.footer_stack)
 
         self.section_wrap = SectionContainer(
-            self.tab_row_wrap,
+            self.tab_header,
             self.body_host,
             parent=self,
             spacing=POSTIT_TAB_OVERLAP,
@@ -255,26 +251,10 @@ class PartnerTabbedPostIt(QWidget):
         self.btn_trim.clicked.connect(lambda: self.set_active_tab(self.TAB_TRIM))
         self.set_active_tab(self.TAB_FABRIC)
 
-    def _make_tab_button(self, text: str, tab_key: str) -> QToolButton:
-        button = PostItTabButton(text, self, active=(tab_key == self._active_tab))
-        button.setCheckable(True)
-        button.setAutoExclusive(True)
-        button.setProperty("partnerTabKey", tab_key)
-        return button
-
-    def _tab_button_style(self, active: bool) -> str:
-        base = folder_tab_style(active=active, selector="QToolButton")
-        if active:
-            return base
-        return base + f"QToolButton:hover{{background:{THEME.color_surface_alt};color:{THEME.color_text};}}"
-
     def set_active_tab(self, tab_key: str):
         self._active_tab = self.TAB_TRIM if tab_key == self.TAB_TRIM else self.TAB_FABRIC
         is_fabric = self._active_tab == self.TAB_FABRIC
-        self.btn_fabric.setChecked(is_fabric)
-        self.btn_trim.setChecked(not is_fabric)
-        self.btn_fabric.setStyleSheet(self._tab_button_style(is_fabric))
-        self.btn_trim.setStyleSheet(self._tab_button_style(not is_fabric))
+        self.tab_header.set_active_tab(self._active_tab)
         self.body_stack.setCurrentWidget(self.fabric if is_fabric else self.trim)
         self.footer_stack.setCurrentWidget(self.fabric.footer_widget() if is_fabric else self.trim.footer_widget())
 
@@ -302,16 +282,18 @@ class PostItBar(QWidget):
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
         self.basic_title = FolderTabHeader("기본정보", self)
+        self.basic_footer = FooterSpacer(self)
         self.basic_wrap = SectionContainer(
             self.basic_title,
             self.basic,
             parent=self,
             spacing=POSTIT_TAB_OVERLAP,
             header_alignment=None,
+            footer_widget=self.basic_footer,
             body_height=POSTIT_BODY_HEIGHT,
         )
         self.basic_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.basic_wrap.setFixedHeight(POSTIT_WRAP_HEIGHT)
+        self.basic_wrap.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER)
 
         self.partner = PartnerTabbedPostIt(self)
         self.partner.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
