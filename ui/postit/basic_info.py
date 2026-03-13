@@ -4,17 +4,17 @@ from typing import Dict
 
 from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal, QSignalBlocker
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
 from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
     POSTIT_INNER_SIDE_PADDING,
     POSTIT_INNER_TOP_PADDING,
     POSTIT_INNER_BOTTOM_PADDING,
-    POSTIT_SECTION_SPACING,
+    POSTIT_CONTENT_ROW_SPACING,
     POSTIT_GRID_H_SPACING,
-    POSTIT_GRID_V_SPACING,
     POSTIT_ROW_ACTION_GAP,
+    POSTIT_UNIFORM_ROW_SPACING,
 )
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.postit.base import _PostItCardBase
@@ -36,7 +36,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
-        root.setSpacing(POSTIT_SECTION_SPACING)
+        root.setSpacing(POSTIT_UNIFORM_ROW_SPACING)
 
 
         self._date_value = QDate.currentDate()
@@ -62,6 +62,18 @@ class BasicInfoPostIt(_PostItCardBase):
             label.setStyleSheet(field_label_style())
             return label
 
+        def make_row(*items, stretch_index: int | None = None) -> QHBoxLayout:
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(POSTIT_GRID_H_SPACING)
+            for idx, item in enumerate(items):
+                if isinstance(item, tuple):
+                    widget, stretch = item
+                    row.addWidget(widget, stretch)
+                else:
+                    row.addWidget(item, 1 if stretch_index == idx else 0)
+            return row
+
         date_row = QHBoxLayout()
         date_row.setContentsMargins(0, 0, 0, 0)
         date_row.setSpacing(POSTIT_ROW_ACTION_GAP)
@@ -70,13 +82,6 @@ class BasicInfoPostIt(_PostItCardBase):
         date_row.addWidget(self.btn_calendar, 0)
         date_row.addStretch(1)
         root.addLayout(date_row)
-
-        grid = QGridLayout()
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
-        grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
-
-
 
         self.style_no = _ClickToEditLineEdit(self)
         self.factory = _ClickToEditLineEdit(self)
@@ -94,22 +99,16 @@ class BasicInfoPostIt(_PostItCardBase):
         self.style_no.textChanged.connect(self._adjust_style_width)
         self._adjust_style_width(self.style_no.text())
 
-        grid.addWidget(mk_label("제품명"), 0, 0)
-        grid.addWidget(self.style_no, 0, 1)
-        grid.addWidget(mk_label("공  장"), 1, 0)
+        product_row = make_row(mk_label("제품명"), (self.style_no, 1))
+        root.addLayout(product_row)
+
         factory_row = QHBoxLayout()
         factory_row.setContentsMargins(0, 0, 0, 0)
         factory_row.setSpacing(POSTIT_ROW_ACTION_GAP)
+        factory_row.addWidget(mk_label("공  장"), 0)
         factory_row.addWidget(self.factory, 1)
         factory_row.addWidget(self.btn_factory_partner, 0)
-        grid.addLayout(factory_row, 1, 1)
-        root.addLayout(grid)
-
-        mg = QGridLayout()
-        mg.setContentsMargins(0, 0, 0, 0)
-        mg.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
-        mg.setVerticalSpacing(POSTIT_GRID_V_SPACING)
-        mg.setContentsMargins(0, 0, 0, 0)
+        root.addLayout(factory_row)
 
         self.cost = _MoneyLineEdit(self)
         self.labor = _MoneyLineEdit(self)
@@ -121,15 +120,23 @@ class BasicInfoPostIt(_PostItCardBase):
         self.cost.setFocusPolicy(Qt.NoFocus)
         self._syncing_prices = False
 
-        mg.addWidget(mk_label("재료비"), 0, 0)
-        mg.addWidget(self.cost, 0, 1)
-        mg.addWidget(mk_label("공  임"), 0, 2)
-        mg.addWidget(self.labor, 0, 3)
-        mg.addWidget(mk_label("로  스"), 1, 0)
-        mg.addWidget(self.loss, 1, 1)
-        mg.addWidget(mk_label("원  가"), 1, 2)
-        mg.addWidget(self.sale_price, 1, 3)
-        root.addLayout(mg)
+        price_row = make_row(
+            mk_label("재료비"),
+            (self.cost, 1),
+            mk_label("공  임"),
+            (self.labor, 1),
+        )
+        root.addLayout(price_row)
+
+        total_row = make_row(
+            mk_label("로  스"),
+            (self.loss, 1),
+            mk_label("원  가"),
+            (self.sale_price, 1),
+        )
+        root.addLayout(total_row)
+
+        root.addStretch(1)
 
         self.style_no.committed.connect(lambda _v: self._emit_basic_fields())
         self.factory.committed.connect(self._on_factory_committed)

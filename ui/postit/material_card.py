@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Dict
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMenu, QSizePolicy, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QSizePolicy, QToolButton, QVBoxLayout
 
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
 from ui.postit.base import _PostItCardBase
 from ui.icon_factory import make_partner_link_icon
 from ui.postit.common import FIELD_H, make_down_icon
-from ui.postit.layout import POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_SECTION_SPACING, POSTIT_GRID_H_SPACING, POSTIT_GRID_V_SPACING, POSTIT_ROW_ACTION_GAP
+from ui.postit.layout import POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_GRID_H_SPACING, POSTIT_ROW_ACTION_GAP, POSTIT_UNIFORM_ROW_SPACING
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.theme import THEME, delete_button_style, field_label_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
@@ -34,7 +34,7 @@ class PostItCard(_PostItCardBase):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
-        root.setSpacing(POSTIT_SECTION_SPACING)
+        root.setSpacing(POSTIT_UNIFORM_ROW_SPACING)
 
         self.btn_delete = QToolButton(self)
         self.btn_delete.setText("×")
@@ -43,10 +43,17 @@ class PostItCard(_PostItCardBase):
         self.btn_delete.setStyleSheet(delete_button_style())
         self.btn_delete.clicked.connect(lambda: self.delete_clicked.emit(self.index))
 
-        vi = QGridLayout()
-        vi.setContentsMargins(0, 0, 0, 0)
-        vi.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
-        vi.setVerticalSpacing(POSTIT_GRID_V_SPACING)
+        def make_row(*items) -> QHBoxLayout:
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(POSTIT_GRID_H_SPACING)
+            for item in items:
+                if isinstance(item, tuple):
+                    widget, stretch = item
+                    row.addWidget(widget, stretch)
+                else:
+                    row.addWidget(item, 0)
+            return row
 
         def mk_label(text: str) -> QLabel:
             label = QLabel(text, self)
@@ -69,21 +76,17 @@ class PostItCard(_PostItCardBase):
         self.vendor.set_text_silent(self.data.get("거래처", ""))
         self.data["거래처_id"] = self.data.get("거래처_id", "")
         self.item.set_text_silent(self.data.get("품목", ""))
-        vi.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0, 0)
+
         vendor_row = QHBoxLayout()
         vendor_row.setContentsMargins(0, 0, 0, 0)
         vendor_row.setSpacing(POSTIT_ROW_ACTION_GAP)
+        vendor_row.addWidget(mk_label("원단처" if self.kind == "fabric" else "거래처"), 0)
         vendor_row.addWidget(self.vendor, 1)
         vendor_row.addWidget(self.btn_vendor_partner, 0)
-        vi.addLayout(vendor_row, 0, 1)
-        vi.addWidget(mk_label("품  목"), 1, 0)
-        vi.addWidget(self.item, 1, 1)
-        root.addLayout(vi)
+        root.addLayout(vendor_row)
 
-        grid = QGridLayout()
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(POSTIT_GRID_H_SPACING)
-        grid.setVerticalSpacing(POSTIT_GRID_V_SPACING)
+        item_row = make_row(mk_label("품  목"), (self.item, 1))
+        root.addLayout(item_row)
 
         self.qty = _QtyClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -126,23 +129,21 @@ class PostItCard(_PostItCardBase):
         self.price.setText(self.data.get("단가", ""))
         self.total.setText(self.data.get("총액", ""))
 
-        def mk_label2(text: str) -> QLabel:
-            label = QLabel(text, self)
-            label.setFixedWidth(THEME.field_label_width)
-            label.setFixedHeight(FIELD_H)
-            label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            label.setStyleSheet(field_label_style())
-            return label
+        qty_row = make_row(
+            mk_label("수  량"),
+            (self.qty, 1),
+            mk_label("단위"),
+            (self.unit_btn, 1),
+        )
+        root.addLayout(qty_row)
 
-        grid.addWidget(mk_label2("수  량"), 0, 0)
-        grid.addWidget(self.qty, 0, 1)
-        grid.addWidget(mk_label2("단위"), 0, 2)
-        grid.addWidget(self.unit_btn, 0, 3)
-        grid.addWidget(mk_label2("단  가"), 1, 0)
-        grid.addWidget(self.price, 1, 1, 1, 3)
-        grid.addWidget(mk_label2("총  액"), 2, 0)
-        grid.addWidget(self.total, 2, 1, 1, 3)
-        root.addLayout(grid)
+        price_row = make_row(mk_label("단  가"), (self.price, 1))
+        root.addLayout(price_row)
+
+        total_row = make_row(mk_label("총  액"), (self.total, 1))
+        root.addLayout(total_row)
+
+        root.addStretch(1)
 
         self.vendor.committed.connect(self._on_vendor_committed)
         self.item.committed.connect(lambda value: self._commit("품목", value))
