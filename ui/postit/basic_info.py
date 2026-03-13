@@ -7,14 +7,7 @@ from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
 from ui.postit.layout import (
-    FolderTabHeader,
-    SectionContainer,
-    folder_tab_style,
-    POSTIT_TAB_INSET_LEFT,
-    POSTIT_TAB_OVERLAP,
     POSTIT_BODY_HEIGHT,
-    POSTIT_FOOTER_HEIGHT,
-    POSTIT_WRAP_HEIGHT,
     POSTIT_INNER_SIDE_PADDING,
     POSTIT_INNER_TOP_PADDING,
     POSTIT_INNER_BOTTOM_PADDING,
