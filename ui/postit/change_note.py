@@ -19,7 +19,7 @@ class ChangeNotePostIt(_PostItCardBase):
         self.setFixedHeight(POSTIT_MEMO_BODY_HEIGHT)
         self._block = False
         root = QVBoxLayout(self)
-        root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
+        root.setContentsMargins(POSTIT_INNER_TOP_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
         root.setSpacing(0)
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")

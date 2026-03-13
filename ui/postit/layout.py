@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVB
 
 from ui.theme import THEME, title_badge_style
 
-POSTIT_TAB_INSET_LEFT = THEME.filter_panel_margin_h + 22
+POSTIT_TAB_INSET_LEFT = THEME.filter_panel_margin_h + 4
 POSTIT_TAB_OVERLAP = -12
 POSTIT_HEADER_HEIGHT = THEME.dialog_button_height
 POSTIT_BODY_HEIGHT = THEME.postit_bar_max_height
@@ -14,8 +14,8 @@ POSTIT_FOOTER_HEIGHT = THEME.section_badge_height
 POSTIT_FOOTER_GAP = THEME.top_button_spacing
 POSTIT_EXTERNAL_ROW_GAP = THEME.top_button_spacing
 POSTIT_EXTERNAL_ROW_GAP_TIGHT = 2
-POSTIT_TAB_MIN_WIDTH = 92
-POSTIT_TAB_PADDING_X = 16
+POSTIT_TAB_MIN_WIDTH = 0
+POSTIT_TAB_PADDING_X = 10
 POSTIT_ROW_ACTION_GAP = 6
 POSTIT_TAB_GROUP_GAP = 0
 
@@ -48,8 +48,7 @@ def embedded_tab_style(*, active: bool = True, selector: str = "QToolButton") ->
     base = (
         f"{selector}{{"
         f"padding:0 {POSTIT_TAB_PADDING_X}px;"
-        f"min-width:{POSTIT_TAB_MIN_WIDTH}px;"
-        f"max-height:{t.dialog_button_height}px;"
+                f"max-height:{t.dialog_button_height}px;"
         f"min-height:{t.dialog_button_height}px;"
         f"border:1px solid {t.color_border};"
         f"border-top-left-radius:{t.control_radius + 6}px;"
@@ -157,7 +156,7 @@ class PostItTabButton(QToolButton):
         self.setCheckable(False)
         self.setAutoRaise(False)
         self.setFixedHeight(POSTIT_HEADER_HEIGHT)
-        self.setMinimumWidth(POSTIT_TAB_MIN_WIDTH)
+        self.setMinimumWidth(0)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setStyleSheet(folder_tab_style(active=active, selector="QToolButton"))
 
