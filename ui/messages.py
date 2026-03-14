@@ -1,4 +1,4 @@
-from ui.messages_common import Actions, Buttons, FileDialogFilters, Labels, Placeholders, Symbols, UiTiming
+from ui.messages_common import Actions, Buttons, FileDialogFilters, Labels, Placeholders, Symbols, Tooltips, UiTiming
 from ui.messages_dialogs import DialogTitles, InfoMessages, WarningMessages, Warnings
 from ui.messages_pages import (
     DefaultTexts,
@@ -34,6 +34,7 @@ __all__ = [
     "SectionTitles",
     "Symbols",
     "TableHeaders",
+    "Tooltips",
     "UiTiming",
     "WarningMessages",
     "Warnings",
