@@ -23,8 +23,8 @@ from PySide6.QtWidgets import (
 
 from ui.image_preview import ImagePreview
 from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Tooltips
-from ui.theme import THEME, display_field_style, field_label_style, hint_label_style, input_line_edit_style, plain_text_edit_style, inner_panel_frame_style, list_widget_style, panel_title_style
-from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics, make_hint_label, make_page_title_label, make_panel_frame, make_panel_title_label
+from ui.theme import THEME, inner_panel_frame_style, input_line_edit_style, list_widget_style, plain_text_edit_style
+from ui.widget_factory import apply_button_metrics, make_action_button, make_field_label, make_hint_label, make_meta_label, make_nav_button, make_page_title_label, make_panel_frame, make_panel_title_label, make_plain_text_editor, make_value_label, make_input_line_edit, make_section_title_label
 
 
 @dataclass
@@ -66,8 +66,7 @@ class OrderPageBuilder:
 
         top_row = QHBoxLayout()
         top_row.setSpacing(THEME.top_button_spacing)
-        btn_back = QPushButton('◀')
-        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip=Tooltips.BACK)
+        btn_back = make_nav_button(parent=page, tooltip=Tooltips.BACK)
         title_col = QVBoxLayout()
         title_col.setSpacing(THEME.title_stack_spacing)
         title = make_page_title_label(DialogTitles.ORDER, page)
@@ -84,15 +83,12 @@ class OrderPageBuilder:
         filter_layout.setSpacing(THEME.row_spacing)
         month_combo = QComboBox(filter_panel)
         month_combo.setFixedWidth(150)
-        search_edit = QLineEdit(filter_panel)
-        search_edit.setPlaceholderText(Placeholders.ORDER_SEARCH)
-        search_edit.setStyleSheet(input_line_edit_style())
-        btn_reload = QPushButton(Buttons.REFRESH, filter_panel)
-        apply_button_metrics(btn_reload, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
-        filter_layout.addWidget(QLabel(Labels.MONTH_FILTER, filter_panel))
+        search_edit = make_input_line_edit(filter_panel, placeholder=Placeholders.ORDER_SEARCH)
+        btn_reload = make_action_button(Buttons.REFRESH, filter_panel, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
+        filter_layout.addWidget(make_field_label(Labels.MONTH_FILTER, filter_panel))
         filter_layout.addWidget(month_combo)
         filter_layout.addSpacing(6)
-        filter_layout.addWidget(QLabel(Labels.SEARCH, filter_panel))
+        filter_layout.addWidget(make_field_label(Labels.SEARCH, filter_panel))
         filter_layout.addWidget(search_edit, 1)
         filter_layout.addWidget(btn_reload)
         root.addWidget(filter_panel)
@@ -161,15 +157,14 @@ class OrderPageBuilder:
             (Labels.MATERIAL_SUMMARY, lbl_material_summary),
         ]
         for row_idx, (label_text, value_widget) in enumerate(rows):
-            label = QLabel(label_text, summary_panel)
-            label.setStyleSheet(field_label_style())
+            label = make_field_label(label_text, summary_panel)
             detail_grid.addWidget(label, row_idx, 0)
             detail_grid.addWidget(value_widget, row_idx, 1)
         top_summary.addLayout(detail_grid, 6)
         summary_layout.addLayout(top_summary)
 
         stats_panel = QFrame(summary_panel)
-        stats_panel.setStyleSheet(inner_panel_frame_style())
+        stats_panel.setObjectName('innerPanelFrame')
         stats_layout = QGridLayout(stats_panel)
         stats_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
         stats_layout.setHorizontalSpacing(10)
@@ -185,18 +180,13 @@ class OrderPageBuilder:
             (Labels.CURRENT_STOCK, lbl_current_stock),
         ]
         for row_idx, (label_text, value_widget) in enumerate(stat_rows):
-            label = QLabel(label_text, stats_panel)
-            label.setStyleSheet(field_label_style())
+            label = make_field_label(label_text, stats_panel)
             stats_layout.addWidget(label, row_idx // 2, (row_idx % 2) * 2)
             stats_layout.addWidget(value_widget, row_idx // 2, (row_idx % 2) * 2 + 1)
         summary_layout.addWidget(stats_panel)
 
-        memo_title = QLabel('작업지시서 메모', summary_panel)
-        memo_title.setStyleSheet(panel_title_style(font_px=THEME.section_title_font_px))
-        memo_view = QTextEdit(summary_panel)
-        memo_view.setReadOnly(True)
-        memo_view.setMinimumHeight(THEME.memo_min_height)
-        memo_view.setStyleSheet(plain_text_edit_style())
+        memo_title = make_section_title_label('작업지시서 메모', summary_panel)
+        memo_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.memo_min_height)
         summary_layout.addWidget(memo_title)
         summary_layout.addWidget(memo_view)
         right_layout.addWidget(summary_panel)
@@ -222,24 +212,20 @@ class OrderPageBuilder:
         order_date_edit.setDate(QDate.currentDate())
         order_date_edit.setDisplayFormat('yyyy-MM-dd')
         order_date_edit.setFixedHeight(THEME.order_input_height)
-        order_memo_edit = QTextEdit(order_panel)
-        order_memo_edit.setMinimumHeight(THEME.order_memo_min_height)
-        order_memo_edit.setStyleSheet(plain_text_edit_style())
+        order_memo_edit = make_plain_text_editor(order_panel, min_height=THEME.order_memo_min_height)
         order_qty_spin.setStyleSheet(input_line_edit_style())
         order_date_edit.setStyleSheet(input_line_edit_style())
-        order_grid.addWidget(QLabel(Labels.ORDER_QTY, order_panel), 0, 0)
+        order_grid.addWidget(make_field_label(Labels.ORDER_QTY, order_panel), 0, 0)
         order_grid.addWidget(order_qty_spin, 0, 1)
-        order_grid.addWidget(QLabel(Labels.ORDER_DATE, order_panel), 1, 0)
+        order_grid.addWidget(make_field_label(Labels.ORDER_DATE, order_panel), 1, 0)
         order_grid.addWidget(order_date_edit, 1, 1)
-        order_grid.addWidget(QLabel(Labels.ORDER_MEMO, order_panel), 2, 0, Qt.AlignTop)
+        order_grid.addWidget(make_field_label(Labels.ORDER_MEMO, order_panel), 2, 0, Qt.AlignTop)
         order_grid.addWidget(order_memo_edit, 2, 1)
         order_layout.addLayout(order_grid)
 
         button_row = QHBoxLayout()
         button_row.addStretch(1)
-        btn_order = QPushButton(Buttons.ORDER_SAVE, order_panel)
-        apply_button_metrics(btn_order, width=THEME.primary_button_width, height=THEME.primary_button_height)
-        btn_order.setObjectName('primaryAction')
+        btn_order = make_action_button(Buttons.ORDER_SAVE, order_panel, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
         button_row.addWidget(btn_order)
         order_layout.addLayout(button_row)
         right_layout.addWidget(order_panel)
@@ -278,33 +264,22 @@ class OrderPageBuilder:
 
     @staticmethod
     def _make_value_label(text: str) -> QLabel:
-        label = QLabel(text)
-        label.setMinimumHeight(THEME.order_input_height - 2)
+        label = make_value_label(text, min_height=THEME.order_input_height - 2)
         label.setWordWrap(True)
-        label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
-        label.setStyleSheet(display_field_style())
         return label
 
 
 class TemplateListCard(QFrame):
     def __init__(self, *, title: str, subtitle: str, meta_lines: list[str], parent=None):
         super().__init__(parent)
-        self.setStyleSheet(
-            inner_panel_frame_style()
-            + f'QFrame:hover{{border-color:{THEME.color_border_hover}; background:{THEME.color_surface};}}'
-        )
+        self.setObjectName('listCard')
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(4)
-        title_label = QLabel(title, self)
-        title_label.setStyleSheet(panel_title_style(font_px=THEME.section_title_font_px))
-        subtitle_label = QLabel(subtitle, self)
-        subtitle_label.setStyleSheet(hint_label_style())
-        subtitle_label.setWordWrap(True)
+        title_label = make_section_title_label(title, self)
+        subtitle_label = make_hint_label(subtitle, self)
         layout.addWidget(title_label)
         layout.addWidget(subtitle_label)
         for line in meta_lines:
-            meta = QLabel(line, self)
-            meta.setWordWrap(True)
-            meta.setStyleSheet(f'QLabel{{color:{THEME.color_text_soft};background:transparent;}}')
+            meta = make_meta_label(line, self)
             layout.addWidget(meta)

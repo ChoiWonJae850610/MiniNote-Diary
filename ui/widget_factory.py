@@ -4,20 +4,23 @@ from typing import Iterable
 
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QWidget
 
 from ui.theme import (
     THEME,
+    combo_box_style,
     display_field_style,
-    hint_label_style,
     icon_button_override,
-    panel_frame_style,
-    page_title_style,
-    panel_title_style,
-    tooltip_style_override,
+    input_line_edit_style,
+    plain_text_edit_style,
 )
 
 
+
+def refresh_style(widget: QWidget) -> QWidget:
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
+    return widget
 
 
 def set_widget_tooltip(widget: QWidget, tooltip: str | None) -> QWidget:
@@ -26,9 +29,7 @@ def set_widget_tooltip(widget: QWidget, tooltip: str | None) -> QWidget:
         widget.setToolTipDuration(3000)
     else:
         widget.setToolTip("")
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
-    return widget
+    return refresh_style(widget)
 
 
 def apply_button_role_style(button: QPushButton, *, object_name: str | None = None, extra_style: str = "",) -> QPushButton:
@@ -39,10 +40,7 @@ def apply_button_role_style(button: QPushButton, *, object_name: str | None = No
         button.setStyleSheet(extra_style)
 
     # style refresh
-    button.style().unpolish(button)
-    button.style().polish(button)
-
-    return button
+    return refresh_style(button)
 
 def apply_button_metrics(button: QPushButton, *, width: int | None = None, height: int | None = None, font_px: int | None = None, bold: bool = True, point_cursor: bool = True) -> QPushButton:
     if width is not None and height is not None:
@@ -85,12 +83,9 @@ def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name:
     button.setStyleSheet(
         icon_button_override(font_px)
         + "QPushButton{text-align:center;padding:0;margin:0;}"
-        + tooltip_style_override()
         + extra_style
     )
-    button.style().unpolish(button)
-    button.style().polish(button)
-    return button
+    return refresh_style(button)
 
 
 def make_icon_button(*, parent=None, object_name: str, tooltip: str = "", icon: QIcon | None = None, text: str = "", font_px: int | None = None, icon_size: int | None = None) -> QPushButton:
@@ -167,41 +162,37 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
         button.setIcon(icon)
         icon_dim = max(12, button_size - 10)
         button.setIconSize(button.iconSize().__class__(icon_dim, icon_dim))
+    apply_button_role_style(button, object_name='iconAction')
     button.setStyleSheet(
         icon_button_override(THEME.base_font_px)
         + 'QPushButton{text-align:center;padding:0;margin:0;}'
-        + tooltip_style_override()
     )
-    button.style().unpolish(button)
-    button.style().polish(button)
-    return button
+    return refresh_style(button)
 
 
 def make_panel_frame(parent=None, *, compact: bool = False, object_name: str | None = None) -> QFrame:
     frame = QFrame(parent)
-    frame.setStyleSheet(panel_frame_style(radius=THEME.panel_radius_sm if compact else THEME.panel_radius))
-    if object_name:
-        frame.setObjectName(object_name)
-    return frame
+    frame.setObjectName(object_name or ('panelFrameCompact' if compact else 'panelFrame'))
+    return refresh_style(frame)
 
 
 def make_page_title_label(text: str, parent=None) -> QLabel:
     label = QLabel(text, parent)
-    label.setStyleSheet(page_title_style())
-    return label
+    label.setObjectName('pageTitle')
+    return refresh_style(label)
 
 
 def make_panel_title_label(text: str, parent=None) -> QLabel:
     label = QLabel(text, parent)
-    label.setStyleSheet(panel_title_style())
-    return label
+    label.setObjectName('panelTitle')
+    return refresh_style(label)
 
 
 def make_hint_label(text: str, parent=None, *, word_wrap: bool = True) -> QLabel:
     label = QLabel(text, parent)
     label.setWordWrap(word_wrap)
-    label.setStyleSheet(hint_label_style())
-    return label
+    label.setObjectName('hintLabel')
+    return refresh_style(label)
 
 
 def make_value_label(text: str = '-', parent=None, *, min_height: int = 32, padding: int = 10) -> QLabel:
@@ -209,5 +200,69 @@ def make_value_label(text: str = '-', parent=None, *, min_height: int = 32, padd
     label.setMinimumHeight(min_height)
     label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
     label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-    label.setStyleSheet(display_field_style(padding))
-    return label
+    label.setObjectName('displayField')
+    if padding != 10:
+        label.setStyleSheet(display_field_style(padding))
+    return refresh_style(label)
+
+
+def make_nav_button(*, parent=None, tooltip: str = '') -> QPushButton:
+    button = QPushButton('◀', parent)
+    return apply_icon_button_metrics(button, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip=tooltip)
+
+
+def make_toolbar_icon_button(*, parent=None, object_name: str = 'iconAction', tooltip: str = '', icon: QIcon | None = None, font_px: int | None = None) -> QPushButton:
+    button = QPushButton('', parent)
+    apply_icon_button_metrics(button, font_px=font_px or THEME.icon_button_font_px, object_name=object_name, tooltip=tooltip)
+    if icon is not None and not icon.isNull():
+        button.setIcon(icon)
+    return button
+
+
+def make_action_button(text: str, parent=None, *, primary: bool = False, width: int | None = None, height: int | None = None) -> QPushButton:
+    button = QPushButton(text, parent)
+    apply_button_metrics(button, width=width, height=height)
+    apply_button_role_style(button, object_name='primaryAction' if primary else None)
+    return button
+
+
+def make_field_label(text: str, parent=None, *, strong: bool = False) -> QLabel:
+    label = QLabel(text, parent)
+    label.setObjectName('strongFieldLabel' if strong else 'fieldLabel')
+    return refresh_style(label)
+
+
+def make_meta_label(text: str, parent=None, *, word_wrap: bool = True) -> QLabel:
+    label = QLabel(text, parent)
+    label.setWordWrap(word_wrap)
+    label.setObjectName('metaLabel')
+    return refresh_style(label)
+
+
+def make_section_title_label(text: str, parent=None) -> QLabel:
+    label = QLabel(text, parent)
+    label.setObjectName('sectionTitle')
+    return refresh_style(label)
+
+
+def make_input_line_edit(parent=None, *, placeholder: str = '') -> QLineEdit:
+    edit = QLineEdit(parent)
+    if placeholder:
+        edit.setPlaceholderText(placeholder)
+    edit.setStyleSheet(input_line_edit_style())
+    return edit
+
+
+def make_combo_box(parent=None) -> QComboBox:
+    combo = QComboBox(parent)
+    combo.setStyleSheet(combo_box_style())
+    return combo
+
+
+def make_plain_text_editor(parent=None, *, read_only: bool = False, min_height: int | None = None) -> QTextEdit:
+    editor = QTextEdit(parent)
+    editor.setReadOnly(read_only)
+    if min_height is not None:
+        editor.setMinimumHeight(min_height)
+    editor.setStyleSheet(plain_text_edit_style())
+    return editor

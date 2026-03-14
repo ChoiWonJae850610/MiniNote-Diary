@@ -172,6 +172,46 @@ def build_app_stylesheet() -> str:
         QLabel {{
             color: {t.color_text};
         }}
+        QLabel#pageTitle, QLabel#panelTitle, QLabel#sectionTitle {{
+            background: transparent;
+            color: {t.color_text};
+            font-weight: 700;
+        }}
+        QLabel#pageTitle {{
+            font-size: {t.page_title_font_px}px;
+        }}
+        QLabel#panelTitle {{
+            font-size: {t.panel_title_font_px}px;
+        }}
+        QLabel#sectionTitle {{
+            font-size: {t.section_title_font_px}px;
+        }}
+        QLabel#hintLabel {{
+            background: transparent;
+            color: {t.color_text_muted};
+            padding: 0 {t.label_padding_x}px;
+        }}
+        QLabel#fieldLabel {{
+            background: transparent;
+            color: {t.color_text_soft};
+            font-weight: 600;
+        }}
+        QLabel#strongFieldLabel {{
+            background: transparent;
+            color: {t.color_text};
+            font-weight: 700;
+        }}
+        QLabel#metaLabel {{
+            background: transparent;
+            color: {t.color_text_soft};
+        }}
+        QLabel#displayField {{
+            background: {hex_to_rgba(t.color_surface, 1.0)};
+            border: 1px solid {hex_to_rgba(t.color_text_soft, 0.12)};
+            border-radius: {t.control_radius}px;
+            padding: 0 10px;
+            color: {t.color_text};
+        }}
         QPushButton {{
             background: {t.color_surface};
             color: {t.color_text_soft};
@@ -233,10 +273,34 @@ def build_app_stylesheet() -> str:
         QPushButton#iconDanger:hover {{
             background: {t.color_disabled_bg};
         }}
-        QWidget#imageShell {{
+        QWidget#imageShell, QFrame#imageShell {{
             background: {t.color_surface_alt};
             border: 1px solid {t.color_border_soft};
             border-radius: {t.shell_radius}px;
+        }}
+        QFrame#panelFrame {{
+            background: {t.color_surface};
+            border: 1px solid {t.color_border};
+            border-radius: {t.panel_radius}px;
+        }}
+        QFrame#panelFrameCompact {{
+            background: {t.color_surface};
+            border: 1px solid {t.color_border};
+            border-radius: {t.panel_radius_sm}px;
+        }}
+        QFrame#innerPanelFrame {{
+            background: {t.color_window};
+            border: 1px solid {t.color_border_soft};
+            border-radius: {t.panel_radius_sm}px;
+        }}
+        QFrame#listCard {{
+            background: {t.color_window};
+            border: 1px solid {t.color_border_soft};
+            border-radius: {t.panel_radius_sm}px;
+        }}
+        QFrame#listCard:hover {{
+            border-color: {t.color_border_hover};
+            background: {t.color_surface};
         }}
         QWidget#noteShell {{
             background: transparent;
@@ -641,4 +705,4 @@ def tooltip_style_override() -> str:
 
 def icon_button_override(font_px: int) -> str:
     _ = font_px
-    return "QPushButton{font-weight:700;padding:0;margin:0;}" + tooltip_style_override()
+    return "QPushButton{font-weight:700;padding:0;margin:0;}"

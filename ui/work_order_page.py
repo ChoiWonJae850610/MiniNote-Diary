@@ -12,7 +12,7 @@ from ui.messages import Tooltips
 from ui.postit.layout import FooterSpacer, POSTIT_MEMO_BODY_HEIGHT, PostItSectionColumn
 from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar
 from ui.theme import THEME, image_preview_style
-from ui.widget_factory import apply_icon_button_metrics, make_hint_label, make_page_title_label
+from ui.widget_factory import make_hint_label, make_nav_button, make_page_title_label, make_toolbar_icon_button
 
 
 @dataclass
@@ -45,27 +45,21 @@ class WorkOrderPageBuilder:
         )
         page_layout.setSpacing(THEME.block_spacing)
 
-        btn_back = QPushButton("◀")
-        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name="navButton", tooltip=Tooltips.BACK)
+        btn_back = make_nav_button(parent=page, tooltip=Tooltips.BACK)
 
-        btn_reset = QPushButton("")
-        apply_icon_button_metrics(btn_reset, font_px=THEME.reset_button_font_px, object_name="iconAction", tooltip=Tooltips.RELOAD)
+        btn_reset = make_toolbar_icon_button(parent=page, object_name="iconAction", tooltip=Tooltips.RELOAD, font_px=THEME.reset_button_font_px)
         btn_reset.setIcon(standard_icon(parent, [QStyle.SP_BrowserReload]))
 
-        btn_save = QPushButton("")
-        apply_icon_button_metrics(btn_save, font_px=THEME.save_button_font_px, object_name="iconPrimary", tooltip=Tooltips.SAVE)
+        btn_save = make_toolbar_icon_button(parent=page, object_name="iconPrimary", tooltip=Tooltips.SAVE, font_px=THEME.save_button_font_px)
         btn_save.setIcon(make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary))
 
-        btn_load = QPushButton("")
-        apply_icon_button_metrics(btn_load, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip=Tooltips.LOAD)
+        btn_load = make_toolbar_icon_button(parent=page, object_name="iconAction", tooltip=Tooltips.LOAD)
         btn_load.setIcon(standard_icon(parent, [QStyle.SP_DialogOpenButton, QStyle.SP_DirOpenIcon, QStyle.SP_DriveHDIcon]))
 
-        btn_upload = QPushButton("")
-        apply_icon_button_metrics(btn_upload, font_px=THEME.icon_button_font_px, object_name="iconAction", tooltip=Tooltips.IMAGE_UPLOAD)
+        btn_upload = make_toolbar_icon_button(parent=page, object_name="iconAction", tooltip=Tooltips.IMAGE_UPLOAD)
         btn_upload.setIcon(make_image_outline_icon(THEME.icon_size_md))
 
-        btn_delete_image = QPushButton("")
-        apply_icon_button_metrics(btn_delete_image, font_px=THEME.icon_button_font_px, object_name="iconDanger", tooltip=Tooltips.IMAGE_DELETE)
+        btn_delete_image = make_toolbar_icon_button(parent=page, object_name="iconDanger", tooltip=Tooltips.IMAGE_DELETE)
         btn_delete_image.setIcon(parent.style().standardIcon(QStyle.SP_TrashIcon))
 
         title_row = QHBoxLayout()

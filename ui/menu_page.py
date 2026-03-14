@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics
+from ui.widget_factory import apply_button_metrics, make_action_button, make_page_title_label, make_hint_label
 
 
 @dataclass
@@ -38,12 +38,11 @@ class MenuPageBuilder:
         layout.setContentsMargins(THEME.page_padding_x + 4, 22, THEME.page_padding_x + 4, 18)
         layout.setSpacing(THEME.section_gap)
 
-        title = QLabel('업무 메뉴')
+        title = make_page_title_label('업무 메뉴', page)
         title.setAlignment(Qt.AlignCenter)
         title.setObjectName('menuHeroTitle')
-        subtitle = QLabel('작업지시서 관리부터 작업 시작, 영수증 등록, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다.')
+        subtitle = make_hint_label('작업지시서 관리부터 작업 시작, 영수증 등록, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다.', page)
         subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setWordWrap(True)
         subtitle.setObjectName('menuHeroSubtitle')
         layout.addWidget(title)
         layout.addWidget(subtitle)
@@ -71,10 +70,8 @@ class MenuPageBuilder:
 
         bottom_row = QHBoxLayout()
         bottom_row.addStretch(1)
-        btn_partner_mgmt = QPushButton('거래처 관리')
-        btn_unit_mgmt = QPushButton('단위 관리')
-        apply_button_metrics(btn_partner_mgmt, width=THEME.footer_button_width + 10, height=THEME.footer_button_height + 2)
-        apply_button_metrics(btn_unit_mgmt, width=THEME.footer_button_width, height=THEME.footer_button_height + 2)
+        btn_partner_mgmt = make_action_button('거래처 관리', page, width=THEME.footer_button_width + 10, height=THEME.footer_button_height + 2)
+        btn_unit_mgmt = make_action_button('단위 관리', page, width=THEME.footer_button_width, height=THEME.footer_button_height + 2)
         bottom_row.addWidget(btn_partner_mgmt)
         bottom_row.addSpacing(THEME.row_spacing)
         bottom_row.addWidget(btn_unit_mgmt)

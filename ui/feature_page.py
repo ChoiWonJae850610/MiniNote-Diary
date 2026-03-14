@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 
 from ui.messages import Tooltips
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
+from ui.widget_factory import make_action_button, make_hint_label, make_meta_label, make_nav_button, make_page_title_label, make_panel_title_label, make_section_title_label
 
 
 @dataclass(frozen=True)
@@ -59,13 +59,12 @@ class _SectionCard(QFrame):
         layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding_compact, THEME.page_section_padding, THEME.page_section_padding_compact)
         layout.setSpacing(THEME.card_inner_spacing)
 
-        title_label = QLabel(title, self)
+        title_label = make_section_title_label(title, self)
         title_label.setObjectName('featureSectionTitle')
         layout.addWidget(title_label)
 
         for line in lines:
-            line_label = QLabel(f'• {line}', self)
-            line_label.setWordWrap(True)
+            line_label = make_meta_label(f'• {line}', self)
             line_label.setObjectName('featureLine')
             layout.addWidget(line_label)
 
@@ -81,14 +80,12 @@ class FeaturePageBuilder:
 
         top_row = QHBoxLayout()
         top_row.setSpacing(THEME.top_button_spacing)
-        btn_back = QPushButton('◀')
-        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip=Tooltips.BACK)
+        btn_back = make_nav_button(parent=page, tooltip=Tooltips.BACK)
         title_col = QVBoxLayout()
         title_col.setSpacing(THEME.title_stack_spacing)
-        title = QLabel(config.title, page)
+        title = make_page_title_label(config.title, page)
         title.setObjectName('featureTitle')
-        subtitle = QLabel(config.subtitle, page)
-        subtitle.setWordWrap(True)
+        subtitle = make_hint_label(config.subtitle, page)
         subtitle.setObjectName('featureSubtitle')
         title_col.addWidget(title)
         title_col.addWidget(subtitle)
@@ -114,11 +111,10 @@ class FeaturePageBuilder:
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         left_layout.setSpacing(THEME.row_spacing)
-        left_title = QLabel(config.left_title, left_panel)
+        left_title = make_panel_title_label(config.left_title, left_panel)
         left_title.setObjectName('featurePanelTitle')
-        left_hint = QLabel(config.left_hint, left_panel)
+        left_hint = make_hint_label(config.left_hint, left_panel)
         left_hint.setObjectName('featureHint')
-        left_hint.setWordWrap(True)
         item_list = QListWidget(left_panel)
         item_list.setObjectName('featureList')
         for item_text in config.list_items:
@@ -144,14 +140,10 @@ class FeaturePageBuilder:
 
         bottom_row = QHBoxLayout()
         bottom_row.setSpacing(THEME.row_spacing)
-        helper = QLabel(config.helper_text, page)
+        helper = make_hint_label(config.helper_text, page)
         helper.setObjectName('featureHint')
-        helper.setWordWrap(True)
-        btn_secondary = QPushButton(config.secondary_button_text, page)
-        apply_button_metrics(btn_secondary, width=THEME.secondary_button_width, height=THEME.primary_button_height)
-        btn_primary = QPushButton(config.primary_button_text, page)
-        apply_button_metrics(btn_primary, width=THEME.primary_button_width, height=THEME.primary_button_height)
-        btn_primary.setObjectName('primaryAction')
+        btn_secondary = make_action_button(config.secondary_button_text, page, width=THEME.secondary_button_width, height=THEME.primary_button_height)
+        btn_primary = make_action_button(config.primary_button_text, page, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
         bottom_row.addWidget(helper, 1)
         bottom_row.addWidget(btn_secondary)
         bottom_row.addWidget(btn_primary)
