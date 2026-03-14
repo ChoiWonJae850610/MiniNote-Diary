@@ -194,6 +194,12 @@ class SectionTitles:
     ORDER_TEMPLATE_DETAIL = "선택 작업지시서"
     ORDER_TEMPLATE_MEMO = "작업지시서 메모"
     ORDER_INPUT = "신규 발주 입력"
+    BASIC_INFO = "기본정보"
+    FABRIC = "원단"
+    TRIM = "부자재"
+    DYEING = "염색"
+    FINISHING = "마감"
+    OTHER = "기타"
     CHANGE_NOTE = "메모"
 
 

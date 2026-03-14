@@ -23,6 +23,7 @@ from ui.postit.layout import (
     PostItSectionColumn,
 )
 from ui.postit.material_card import PostItCard
+from ui.messages import SectionTitles
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
 
@@ -128,7 +129,7 @@ class PostItStack(QWidget):
         button = QToolButton(self)
         button.setText(text)
         button.setCursor(Qt.PointingHandCursor)
-        button.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
+        button.setFixedSize(THEME.postit_index_button_size, THEME.postit_index_button_size)
         button.setFocusPolicy(Qt.NoFocus)
         return button
 
@@ -207,11 +208,11 @@ class PartnerTabbedPostIt(PostItSectionColumn):
         self._active_tab = self.TAB_FABRIC
         self.tab_header = FolderTabHeader(
             [
-                (self.TAB_FABRIC, '원단'),
-                (self.TAB_TRIM, '부자재'),
-                (self.TAB_DYEING, '염색'),
-                (self.TAB_FINISHING, '마감'),
-                (self.TAB_OTHER, '기타'),
+                (self.TAB_FABRIC, SectionTitles.FABRIC),
+                (self.TAB_TRIM, SectionTitles.TRIM),
+                (self.TAB_DYEING, SectionTitles.DYEING),
+                (self.TAB_FINISHING, SectionTitles.FINISHING),
+                (self.TAB_OTHER, SectionTitles.OTHER),
             ],
             active_key=self.TAB_FABRIC,
             interactive=True,
@@ -324,7 +325,7 @@ class PostItBar(QWidget):
         self.basic.data_changed.connect(self.basic_data_changed.emit)
         self.basic_footer = make_postit_footer_spacer(self)
         self.basic_column = make_static_postit_column(
-            '기본정보',
+            SectionTitles.BASIC_INFO,
             self.basic,
             parent=self,
             body_height=POSTIT_STANDARD_BODY_HEIGHT,
