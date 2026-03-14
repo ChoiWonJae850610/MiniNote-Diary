@@ -5,7 +5,8 @@ from collections.abc import Iterable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
-from services.partner_repository import PartnerRecord, PartnerRepository
+from services.partner_management_service import PartnerManagementService
+from services.partner_repository import PartnerRecord
 from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_info, show_warning
 from ui.layout_metrics import PartnerLayout
@@ -30,10 +31,10 @@ class PartnerDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(DialogTitles.PARTNER_MANAGE)
         self.resize(880, 580)
-        self.repo = PartnerRepository(project_root)
+        self.partner_service = PartnerManagementService(project_root)
         self._partners: list[PartnerRecord] = []
         self._filtered: list[PartnerRecord] = []
-        self._type_order = self.repo.load_types()
+        self._type_order = self.partner_service.list_types()
         self._current_partner_id = ""
 
         root = QVBoxLayout(self)
@@ -138,7 +139,7 @@ class PartnerDialog(QDialog):
         return label
 
     def reload_all(self) -> None:
-        self._type_order = self.repo.load_types()
+        self._type_order = self.partner_service.list_types()
         self._partners = self.repo.load_partners()
         self.apply_filter(self.search_edit.text())
 
@@ -203,9 +204,9 @@ class PartnerDialog(QDialog):
         if dialog.exec() != QDialog.Accepted:
             return
         record = dialog.to_record()
-        record.id = self.repo.next_partner_id(self._partners)
+        record.id = self.partner_service.next_partner_id(self._partners)
         self._partners.append(record)
-        self.repo.save_partners(self._partners)
+        self.partner_service.save_partners(self._partners)
         self.reload_all()
         self._select_partner(record.id)
         show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_SAVED)
@@ -224,7 +225,7 @@ class PartnerDialog(QDialog):
             if item.id == record.id:
                 self._partners[idx] = new_record
                 break
-        self.repo.save_partners(self._partners)
+        self.partner_service.save_partners(self._partners)
         self.reload_all()
         self._select_partner(new_record.id)
         show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_UPDATED)
@@ -243,14 +244,14 @@ class PartnerDialog(QDialog):
         if confirm.exec() != QDialog.Accepted:
             return
         self._partners = [row for row in self._partners if row.id != record.id]
-        self.repo.save_partners(self._partners)
+        self.partner_service.save_partners(self._partners)
         self.reload_all()
 
     def on_manage_types(self) -> None:
-        dialog = PartnerTypeDialog(self.repo, parent=self)
+        dialog = PartnerTypeDialog(self.partner_service, parent=self)
         if dialog.exec() != QDialog.Accepted:
             return
-        active_types = set(self.repo.load_types())
+        active_types = set(self.partner_service.list_types())
         changed = False
         for row in self._partners:
             original = list(row.types or [])
@@ -258,7 +259,7 @@ class PartnerDialog(QDialog):
             if row.types != original:
                 changed = True
         if changed:
-            self.repo.save_partners(self._partners)
+            self.partner_service.save_partners(self._partners)
         self.reload_all()
 
     def _select_partner(self, partner_id: str) -> None:

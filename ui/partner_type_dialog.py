@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QHeaderView, QTableWidget, QTableWidgetItem
 
-from services.partner_repository import PartnerRepository
+from services.partner_management_service import PartnerManagementService
 from ui.dialogs import show_info
 from ui.messages import DialogTitles, InfoMessages, TableHeaders, Tooltips
 from ui.theme import THEME, table_widget_style
@@ -12,11 +12,11 @@ from ui.layout_metrics import PartnerTypeDialogLayout
 
 
 class PartnerTypeDialog(QDialog):
-    def __init__(self, repo: PartnerRepository, parent=None):
+    def __init__(self, partner_service: PartnerManagementService, parent=None):
         super().__init__(parent)
         self.setWindowTitle(DialogTitles.PARTNER_TYPE_MANAGE)
         self.resize(PartnerTypeDialogLayout.WIDTH, PartnerTypeDialogLayout.HEIGHT)
-        self.repo = repo
+        self.partner_service = partner_service
 
         root = make_dialog_root_layout(self)
 
@@ -56,7 +56,7 @@ class PartnerTypeDialog(QDialog):
             self.table.setRowHeight(row, THEME.table_row_height)
 
     def load_types(self) -> None:
-        types = self.repo.load_types()
+        types = self.partner_service.list_types()
         self.table.clearContents()
         self.table.setRowCount(0)
         self._ensure_rows(max(PartnerTypeDialogLayout.MIN_ROWS, len(types) + 1))
@@ -89,6 +89,6 @@ class PartnerTypeDialog(QDialog):
             if text and text not in seen:
                 values.append(text)
                 seen.add(text)
-        self.repo.save_types(values)
+        self.partner_service.save_types(values)
         show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_TYPES_SAVED)
         self.accept()

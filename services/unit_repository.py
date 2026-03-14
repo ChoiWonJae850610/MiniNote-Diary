@@ -50,3 +50,17 @@ def unit_label_for_value(unit: str, options: List[UnitOption] | None = None) -> 
         if value == current:
             return label
     return current
+
+
+
+def save_units(options: list[UnitOption], base_dir: str | Path | None = None) -> None:
+    path = unit_file_path(base_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for value, label in options:
+        unit = str(value or "").strip()
+        display = str(label or "").strip()
+        if not unit and not display:
+            continue
+        rows.append({"unit": unit, "label": display or unit})
+    path.write_text(json.dumps({"units": rows}, ensure_ascii=False, indent=2), encoding="utf-8")

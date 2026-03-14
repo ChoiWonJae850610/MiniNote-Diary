@@ -1,10 +1,9 @@
-import json
-import os
 from typing import List, Dict
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QTableWidget, QAbstractItemView, QHeaderView
 
+from services.unit_service import UnitService
 from ui.dialogs import show_info, show_warning
 from ui.layout_metrics import UnitDialogLayout
 from ui.messages import DialogTitles, InfoMessages, TableHeaders, Tooltips
@@ -20,9 +19,7 @@ class UnitDialog(QDialog):
         self.resize(THEME.unit_dialog_width, THEME.unit_dialog_height)
 
         self.project_root = project_root
-        self.db_dir = os.path.join(self.project_root, "db")
-        os.makedirs(self.db_dir, exist_ok=True)
-        self.units_path = os.path.join(self.db_dir, "units.json")
+        self.unit_service = UnitService(project_root)
 
         layout = make_dialog_root_layout(self)
 
@@ -59,16 +56,7 @@ class UnitDialog(QDialog):
         self.load_units()
 
     def load_units(self):
-        units: List[Dict[str, str]] = []
-        if os.path.isfile(self.units_path):
-            try:
-                with open(self.units_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                units = data.get("units", [])
-                if not isinstance(units, list):
-                    units = []
-            except Exception:
-                units = []
+        units: List[Dict[str, str]] = self.unit_service.list_units()
 
         self.table.blockSignals(True)
         try:
@@ -93,8 +81,7 @@ class UnitDialog(QDialog):
             units.append({"unit": unit, "label": label})
 
         try:
-            with open(self.units_path, "w", encoding="utf-8") as f:
-                json.dump({"units": units}, f, ensure_ascii=False, indent=2)
+            self.unit_service.save_units(units)
         except Exception as e:
             show_warning(self, DialogTitles.SAVE_FAILED, str(e))
             return
