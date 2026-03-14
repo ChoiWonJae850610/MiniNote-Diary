@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from services.formatters import format_commas_from_digits, int_from_any
+from services.field_keys import HeaderKeys, MaterialKeys, MaterialTargets
 from services.models import MaterialItem, WorkOrderDocument, WorkOrderHeader
 from services.schema import MAX_MATERIAL_ITEMS
 
@@ -107,7 +108,7 @@ class WorkOrderState:
         self.mark_dirty()
 
     def update_change_note(self, text: str) -> None:
-        self.update_header({'change_note': (text or '').rstrip()})
+        self.update_header({HeaderKeys.CHANGE_NOTE: (text or '').rstrip()})
 
     def update_material_patch(self, target: str, idx: int, patch: Dict[str, str]) -> None:
         if idx < 0 or not isinstance(patch, dict):
@@ -171,11 +172,11 @@ class WorkOrderState:
 
     def _target_items(self, target: str) -> List[MaterialItem]:
         mapping = {
-            'fabric': self.fabrics,
-            'trim': self.trims,
-            'dyeing': self.dyeings,
-            'finishing': self.finishings,
-            'other': self.others,
+            MaterialTargets.FABRIC: self.fabrics,
+            MaterialTargets.TRIM: self.trims,
+            MaterialTargets.DYEING: self.dyeings,
+            MaterialTargets.FINISHING: self.finishings,
+            MaterialTargets.OTHER: self.others,
         }
         return mapping.get(target, self.trims)
 
@@ -207,12 +208,12 @@ class WorkOrderState:
     def _needs_price_recompute(patch: Dict[str, str] | None) -> bool:
         if not isinstance(patch, dict) or not patch:
             return False
-        watched_keys = {"labor", "labor_display", "loss", "loss_display"}
+        watched_keys = {HeaderKeys.LABOR, HeaderKeys.LABOR_DISPLAY, HeaderKeys.LOSS, HeaderKeys.LOSS_DISPLAY}
         return any(key in watched_keys for key in patch)
 
     @staticmethod
     def _sum_material_totals(items: List[MaterialItem] | None) -> int:
-        return sum(int_from_any(item.총액) for item in (items or []))
+        return sum(int_from_any(item.total) for item in (items or []))
 
     @staticmethod
     def _items_have_value(items: List[MaterialItem] | None) -> bool:

@@ -8,10 +8,11 @@ from PySide6.QtWidgets import QCalendarWidget, QDialog, QFormLayout, QGridLayout
 
 from services.formatters import digits_only, format_commas_from_digits
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
-from ui.messages import Buttons, Tooltips
+from ui.messages import Buttons, DialogTitles, Labels, Tooltips
 from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button, set_widget_tooltip
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
+from ui.layout_metrics import DialogLayout
 
 
 class MoneyLineEdit(QLineEdit):
@@ -67,9 +68,9 @@ class _CalendarPopup(QDialog):
 class BasicInfoDialog(QDialog):
     def __init__(self, initial: Dict[str, str] | None = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("기본정보 입력")
+        self.setWindowTitle(DialogTitles.BASIC_INFO_INPUT)
         self.setModal(True)
-        self.setMinimumWidth(460)
+        self.setMinimumWidth(DialogLayout.MIN_WIDTH_STANDARD)
         initial = initial or {}
         root = QVBoxLayout(self)
         root.setContentsMargins(*dialog_layout_margins())
@@ -77,8 +78,8 @@ class BasicInfoDialog(QDialog):
 
         form = QFormLayout()
         form.setLabelAlignment(Qt.AlignLeft)
-        form.setHorizontalSpacing(12)
-        form.setVerticalSpacing(10)
+        form.setHorizontalSpacing(DialogLayout.FORM_HORIZONTAL_SPACING)
+        form.setVerticalSpacing(DialogLayout.FORM_VERTICAL_SPACING)
 
         initial_date = QDate.fromString(initial.get("date", ""), "yyyy-MM-dd")
         if not initial_date.isValid():
@@ -103,7 +104,7 @@ class BasicInfoDialog(QDialog):
         date_row = QWidget(self)
         date_h = QHBoxLayout(date_row)
         date_h.setContentsMargins(0, 0, 0, 0)
-        date_h.setSpacing(6)
+        date_h.setSpacing(DialogLayout.INLINE_ROW_SPACING)
         date_h.addWidget(self.date_text)
         date_h.addWidget(self.btn_calendar)
         date_h.addStretch(1)
@@ -121,21 +122,21 @@ class BasicInfoDialog(QDialog):
         self.btn_factory_partner = make_inline_icon_button(
             parent=self,
             tooltip=Tooltips.PARTNER_MANAGE,
-            icon=make_partner_link_icon(14),
+            icon=make_partner_link_icon(DialogLayout.BUTTON_ICON_SIZE),
             size=THEME.dialog_field_height,
         )
         self.btn_factory_partner.clicked.connect(self._open_factory_picker)
         factory_row = QWidget(self)
         factory_h = QHBoxLayout(factory_row)
         factory_h.setContentsMargins(0, 0, 0, 0)
-        factory_h.setSpacing(6)
+        factory_h.setSpacing(DialogLayout.INLINE_ROW_SPACING)
         factory_h.addWidget(self.factory, 1)
         factory_h.addWidget(self.btn_factory_partner, 0)
 
         price_row = QWidget(self)
         grid = QGridLayout(price_row)
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(10)
+        grid.setHorizontalSpacing(DialogLayout.PRICE_GRID_SPACING)
 
         self.cost = MoneyLineEdit(self)
         self.labor = MoneyLineEdit(self)
@@ -152,7 +153,7 @@ class BasicInfoDialog(QDialog):
             edit.setMinimumWidth(90)
             edit.setMaximumWidth(140)
 
-        pairs = [("재료비", self.cost), ("공임", self.labor), ("로스", self.loss), ("원가", self.sale_price)]
+        pairs = [(Labels.COST, self.cost), (Labels.LABOR, self.labor), (Labels.LOSS, self.loss), (Labels.SALE_PRICE, self.sale_price)]
         col = 0
         for label_text, edit in pairs:
             label = QLabel(label_text, self)
@@ -162,9 +163,9 @@ class BasicInfoDialog(QDialog):
             grid.addWidget(edit, 0, col + 1)
             col += 2
 
-        form.addRow("날짜", date_row)
-        form.addRow("제품명", self.style_no)
-        form.addRow("공장", factory_row)
+        form.addRow(Labels.DATE, date_row)
+        form.addRow(Labels.STYLE_NO, self.style_no)
+        form.addRow(Labels.FACTORY, factory_row)
         form.addRow("", price_row)
         root.addLayout(form)
 

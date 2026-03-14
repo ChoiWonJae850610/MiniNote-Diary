@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+
+class DialogLayout:
+    MIN_WIDTH_NARROW = 420
+    MIN_WIDTH_STANDARD = 460
+    FORM_HORIZONTAL_SPACING = 12
+    FORM_VERTICAL_SPACING = 10
+    INLINE_ROW_SPACING = 6
+    PRICE_GRID_SPACING = 10
+    FIELD_HEIGHT = 30
+    BUTTON_ICON_SIZE = 14

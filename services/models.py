@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List
 
+from services.field_keys import MaterialKeys
 from services.schema import HEADER_FIELDS, MATERIAL_FIELDS, REQUIRED_HEADER_FIELDS, REQUIRED_MATERIAL_FIELDS
 
 
@@ -57,6 +58,30 @@ class MaterialItem:
     단위: str = ''
     단가: str = ''
     총액: str = ''
+
+    @property
+    def vendor(self) -> str:
+        return getattr(self, MaterialKeys.VENDOR)
+
+    @property
+    def item(self) -> str:
+        return getattr(self, MaterialKeys.ITEM)
+
+    @property
+    def qty(self) -> str:
+        return getattr(self, MaterialKeys.QTY)
+
+    @property
+    def unit(self) -> str:
+        return getattr(self, MaterialKeys.UNIT)
+
+    @property
+    def unit_price(self) -> str:
+        return getattr(self, MaterialKeys.UNIT_PRICE)
+
+    @property
+    def total(self) -> str:
+        return getattr(self, MaterialKeys.TOTAL)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any] | None) -> 'MaterialItem':

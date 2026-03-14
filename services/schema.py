@@ -2,46 +2,49 @@ from __future__ import annotations
 
 from typing import Iterable
 
+from services.field_keys import HeaderKeys, MaterialKeys
+from ui.messages import Tooltips
+
 HEADER_FIELDS: tuple[str, ...] = (
-    'date',
-    'style_no',
-    'factory',
-    'cost_display',
-    'labor_display',
-    'loss_display',
-    'sale_price_display',
-    'cost',
-    'labor',
-    'loss',
-    'sale_price',
-    'change_note',
+    HeaderKeys.DATE,
+    HeaderKeys.STYLE_NO,
+    HeaderKeys.FACTORY,
+    HeaderKeys.COST_DISPLAY,
+    HeaderKeys.LABOR_DISPLAY,
+    HeaderKeys.LOSS_DISPLAY,
+    HeaderKeys.SALE_PRICE_DISPLAY,
+    HeaderKeys.COST,
+    HeaderKeys.LABOR,
+    HeaderKeys.LOSS,
+    HeaderKeys.SALE_PRICE,
+    HeaderKeys.CHANGE_NOTE,
 )
 
 REQUIRED_HEADER_FIELDS: tuple[str, ...] = (
-    'date',
-    'style_no',
-    'factory',
-    'cost_display',
-    'labor_display',
-    'loss_display',
-    'sale_price_display',
+    HeaderKeys.DATE,
+    HeaderKeys.STYLE_NO,
+    HeaderKeys.FACTORY,
+    HeaderKeys.COST_DISPLAY,
+    HeaderKeys.LABOR_DISPLAY,
+    HeaderKeys.LOSS_DISPLAY,
+    HeaderKeys.SALE_PRICE_DISPLAY,
 )
 
 MATERIAL_FIELDS: tuple[str, ...] = (
-    '거래처',
-    '품목',
-    '수량',
-    '단위',
-    '단가',
-    '총액',
+    MaterialKeys.VENDOR,
+    MaterialKeys.ITEM,
+    MaterialKeys.QTY,
+    MaterialKeys.UNIT,
+    MaterialKeys.UNIT_PRICE,
+    MaterialKeys.TOTAL,
 )
 
 REQUIRED_MATERIAL_FIELDS: tuple[str, ...] = (
-    '거래처',
-    '품목',
-    '수량',
-    '단가',
-    '총액',
+    MaterialKeys.VENDOR,
+    MaterialKeys.ITEM,
+    MaterialKeys.QTY,
+    MaterialKeys.UNIT_PRICE,
+    MaterialKeys.TOTAL,
 )
 
 MAX_MATERIAL_ITEMS = 15
@@ -52,8 +55,9 @@ DEFAULT_FEEDBACK_TIMEOUT_MS = 2200
 def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:
     return {field: '' for field in fields}
 
+
 PARTNERS_DB_FILENAME = 'partners.json'
 PARTNER_TYPES_DB_FILENAME = 'partner_types.json'
-PARTNER_PICKER_TOOLTIP = '거래처 관리'
+PARTNER_PICKER_TOOLTIP = Tooltips.PARTNER_MANAGE
 ORDER_RUNS_DB_FILENAME = 'job_orders.json'
 ORDER_PAGE_ALL_MONTHS_LABEL = '전체 월'

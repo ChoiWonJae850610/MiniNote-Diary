@@ -5,10 +5,11 @@ from typing import Dict
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtWidgets import QMenu, QSizePolicy, QToolButton
 
+from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
 from ui.icon_factory import make_partner_link_icon
-from ui.messages import Tooltips
+from ui.messages import Labels, Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, make_down_icon
@@ -31,7 +32,7 @@ class PostItCard(_PostItCardBase):
         self._block_total = False
         self._syncing_data = False
         self._units = load_units()
-        self._unit_value = (self.data.get("단위") or "").strip()
+        self._unit_value = (self.data.get(MaterialKeys.UNIT) or "").strip()
         self._unit_label = unit_label_for_value(self._unit_value, self._units)
         self._suppress_unit_menu_once = False
 
@@ -56,18 +57,18 @@ class PostItCard(_PostItCardBase):
         self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
         self.vendor.set_edit_enabled(False)
         self.vendor.setFocusPolicy(Qt.NoFocus)
-        self.vendor.set_text_silent(self.data.get("거래처", ""))
-        self.data["거래처_id"] = self.data.get("거래처_id", "")
-        self.item.set_text_silent(self.data.get("품목", ""))
+        self.vendor.set_text_silent(self.data.get(MaterialKeys.VENDOR, ""))
+        self.data[MaterialKeys.VENDOR_ID] = self.data.get(MaterialKeys.VENDOR_ID, "")
+        self.item.set_text_silent(self.data.get(MaterialKeys.ITEM, ""))
 
-        vendor_row = make_form_row(make_field_label("원단처" if self.kind == "fabric" else "거래처", self), (self.vendor, 1), self.btn_vendor_partner)
+        vendor_row = make_form_row(make_field_label(Labels.FABRIC_VENDOR if self.kind == "fabric" else Labels.VENDOR, self), (self.vendor, 1), self.btn_vendor_partner)
         vendor_row.setSpacing(POSTIT_ROW_ACTION_GAP)
         root.addLayout(vendor_row)
         root.addLayout(make_form_row(make_field_label("품  목", self), (self.item, 1)))
 
         self.qty = _QtyClickToEditLineEdit(self)
         self.qty.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.qty.set_text_silent(self.data.get("수량", ""))
+        self.qty.set_text_silent(self.data.get(MaterialKeys.QTY, ""))
 
         self.unit_btn = QToolButton(self)
         self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -103,27 +104,27 @@ class PostItCard(_PostItCardBase):
         self.total = _MoneyLineEdit(self)
         for widget in (self.price, self.total):
             widget.setStyleSheet(input_line_edit_style())
-        self.price.setText(self.data.get("단가", ""))
+        self.price.setText(self.data.get(MaterialKeys.UNIT_PRICE, ""))
         self.total.set_edit_enabled(False)
         self.total.setFocusPolicy(Qt.NoFocus)
-        self.total.setText(self.data.get("총액", ""))
+        self.total.setText(self.data.get(MaterialKeys.TOTAL, ""))
 
         root.addLayout(
             make_form_row(
                 make_field_label("수  량", self),
                 (self.qty, 1),
-                make_field_label("단위", self),
+                make_field_label(Labels.UNIT, self),
                 (self.unit_btn, 1),
             )
         )
         root.addLayout(make_form_row(make_field_label("단  가", self), (self.price, 1)))
         root.addLayout(make_form_row(make_field_label("총  액", self), (self.total, 1)))
 
-        self.item.committed.connect(lambda value: self._commit("품목", value))
+        self.item.committed.connect(lambda value: self._commit(MaterialKeys.ITEM, value))
         self.qty.committed.connect(self._on_qty_committed)
         self.qty.textChanged.connect(lambda _t: self._recalc_total())
         self.price.textChanged.connect(lambda _t: self._on_price_changed())
-        self.total.textChanged.connect(lambda _t: None if self._block_total else self._commit("총액", self.total.text()))
+        self.total.textChanged.connect(lambda _t: None if self._block_total else self._commit(MaterialKeys.TOTAL, self.total.text()))
 
         self.setTabOrder(self.btn_vendor_partner, self.item)
         self.setTabOrder(self.item, self.qty)
@@ -141,14 +142,14 @@ class PostItCard(_PostItCardBase):
     def _open_vendor_picker(self):
         def _apply(partner):
             self.vendor.set_text_silent(partner.name)
-            self.data["거래처_id"] = partner.id
-            self._commit("거래처", partner.name)
+            self.data[MaterialKeys.VENDOR_ID] = partner.id
+            self._commit(MaterialKeys.VENDOR, partner.name)
 
         show_partner_picker(self.btn_vendor_partner, partner_type=self._partner_type_for_picker(), on_selected=_apply)
 
     def _on_vendor_committed(self, value: str):
-        self.data["거래처_id"] = ""
-        self._commit("거래처", value)
+        self.data[MaterialKeys.VENDOR_ID] = ""
+        self._commit(MaterialKeys.VENDOR, value)
 
     def _apply_unit_button_text(self):
         self.unit_btn.setText((self._unit_value or "").strip())
@@ -163,7 +164,7 @@ class PostItCard(_PostItCardBase):
         self._unit_value = unit or ""
         self._unit_label = label or ""
         self._apply_unit_button_text()
-        self._commit("단위", self._unit_value)
+        self._commit(MaterialKeys.UNIT, self._unit_value)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete and self.unit_btn.hasFocus():
@@ -196,17 +197,17 @@ class PostItCard(_PostItCardBase):
         self._syncing_data = True
         try:
             self.data = dict(data or {})
-            self._unit_value = (self.data.get("단위") or "").strip()
+            self._unit_value = (self.data.get(MaterialKeys.UNIT) or "").strip()
             self._unit_label = unit_label_for_value(self._unit_value, self._units)
             widgets = (self.vendor, self.item, self.qty, self.price, self.total)
             blocked = [(widget, widget.blockSignals(True)) for widget in widgets]
             try:
-                self.vendor.set_text_silent(self.data.get("거래처", ""))
-                self.data["거래처_id"] = self.data.get("거래처_id", "")
-                self.item.set_text_silent(self.data.get("품목", ""))
-                self.qty.set_text_silent(digits_only(self.data.get("수량", "")))
-                self.price.setText(self.data.get("단가", ""))
-                self.total.setText(self.data.get("총액", ""))
+                self.vendor.set_text_silent(self.data.get(MaterialKeys.VENDOR, ""))
+                self.data[MaterialKeys.VENDOR_ID] = self.data.get(MaterialKeys.VENDOR_ID, "")
+                self.item.set_text_silent(self.data.get(MaterialKeys.ITEM, ""))
+                self.qty.set_text_silent(digits_only(self.data.get(MaterialKeys.QTY, "")))
+                self.price.setText(self.data.get(MaterialKeys.UNIT_PRICE, ""))
+                self.total.setText(self.data.get(MaterialKeys.TOTAL, ""))
                 self._apply_unit_button_text()
             finally:
                 for widget, old in blocked:
@@ -221,16 +222,16 @@ class PostItCard(_PostItCardBase):
         if self._syncing_data:
             return
         payload = {key: value}
-        if key == "거래처":
-            payload["거래처_id"] = str(self.data.get("거래처_id", "") or "")
+        if key == MaterialKeys.VENDOR:
+            payload[MaterialKeys.VENDOR_ID] = str(self.data.get(MaterialKeys.VENDOR_ID, "") or "")
         self.data_changed.emit(self.index, payload)
 
     def _on_qty_committed(self, value: str):
-        self._commit("수량", value)
+        self._commit(MaterialKeys.QTY, value)
         self._recalc_total()
 
     def _on_price_changed(self):
-        self._commit("단가", self.price.text())
+        self._commit(MaterialKeys.UNIT_PRICE, self.price.text())
         self._recalc_total()
 
     def _recalc_total(self, *, commit: bool = True):
@@ -245,7 +246,7 @@ class PostItCard(_PostItCardBase):
             finally:
                 self._block_total = False
             if commit:
-                self._commit("총액", "")
+                self._commit(MaterialKeys.TOTAL, "")
             return
         try:
             total = int(qty_digits) * int(price_digits)
@@ -257,4 +258,4 @@ class PostItCard(_PostItCardBase):
         finally:
             self._block_total = False
         if commit:
-            self._commit("총액", self.total.text())
+            self._commit(MaterialKeys.TOTAL, self.total.text())
