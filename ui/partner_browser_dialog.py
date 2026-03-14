@@ -140,7 +140,7 @@ class PartnerDialog(QDialog):
 
     def reload_all(self) -> None:
         self._type_order = self.partner_service.list_types()
-        self._partners = self.repo.load_partners()
+        self._partners = self.partner_service.list_partners()
         self.apply_filter(self.search_edit.text())
 
     def apply_filter(self, text: str) -> None:
@@ -203,12 +203,9 @@ class PartnerDialog(QDialog):
         dialog = PartnerEditDialog(self._type_order, parent=self)
         if dialog.exec() != QDialog.Accepted:
             return
-        record = dialog.to_record()
-        record.id = self.partner_service.next_partner_id(self._partners)
-        self._partners.append(record)
-        self.partner_service.save_partners(self._partners)
+        created = self.partner_service.create_partner(self._partners, dialog.to_record())
         self.reload_all()
-        self._select_partner(record.id)
+        self._select_partner(created.id)
         show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_SAVED)
 
     def on_edit(self) -> None:
@@ -219,15 +216,9 @@ class PartnerDialog(QDialog):
         dialog = PartnerEditDialog(self._type_order, partner=record, parent=self)
         if dialog.exec() != QDialog.Accepted:
             return
-        new_record = dialog.to_record()
-        new_record.id = record.id
-        for idx, item in enumerate(self._partners):
-            if item.id == record.id:
-                self._partners[idx] = new_record
-                break
-        self.partner_service.save_partners(self._partners)
+        updated = self.partner_service.update_partner(self._partners, record.id, dialog.to_record())
         self.reload_all()
-        self._select_partner(new_record.id)
+        self._select_partner(updated.id)
         show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_UPDATED)
 
     def on_delete(self) -> None:
@@ -243,23 +234,14 @@ class PartnerDialog(QDialog):
         )
         if confirm.exec() != QDialog.Accepted:
             return
-        self._partners = [row for row in self._partners if row.id != record.id]
-        self.partner_service.save_partners(self._partners)
+        self.partner_service.delete_partner(self._partners, record.id)
         self.reload_all()
 
     def on_manage_types(self) -> None:
         dialog = PartnerTypeDialog(self.partner_service, parent=self)
         if dialog.exec() != QDialog.Accepted:
             return
-        active_types = set(self.partner_service.list_types())
-        changed = False
-        for row in self._partners:
-            original = list(row.types or [])
-            row.types = [name for name in original if name in active_types]
-            if row.types != original:
-                changed = True
-        if changed:
-            self.partner_service.save_partners(self._partners)
+        self.partner_service.prune_partners_to_active_types(self._partners)
         self.reload_all()
 
     def _select_partner(self, partner_id: str) -> None:
