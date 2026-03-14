@@ -67,6 +67,37 @@ def folder_tab_style(*, active: bool = True, selector: str = "QToolButton") -> s
     return embedded_tab_style(active=active, selector=selector)
 
 
+POSTIT_STANDARD_EXTERNAL_ROW_GAP = POSTIT_EXTERNAL_ROW_GAP_TIGHT
+
+
+def make_postit_footer_spacer(parent=None) -> "FooterSpacer":
+    return FooterSpacer(parent)
+
+
+def make_static_postit_column(
+    title: str,
+    body_widget: QWidget,
+    *,
+    parent=None,
+    body_height: int = POSTIT_BODY_HEIGHT,
+    footer_widget: QWidget | None = None,
+    external_row_widget: QWidget | None = None,
+    spacing: int = POSTIT_TAB_OVERLAP,
+    external_row_gap: int = POSTIT_STANDARD_EXTERNAL_ROW_GAP,
+) -> "PostItSectionColumn":
+    resolved_footer = footer_widget if footer_widget is not None else make_postit_footer_spacer(parent)
+    return PostItSectionColumn(
+        FolderTabHeader(title, parent),
+        body_widget,
+        parent=parent,
+        body_height=body_height,
+        footer_widget=resolved_footer,
+        external_row_widget=external_row_widget,
+        spacing=spacing,
+        external_row_gap=external_row_gap,
+    )
+
+
 class SectionContainer(QWidget):
     def __init__(
         self,

@@ -12,11 +12,11 @@ from ui.postit.layout import (
     FolderTabHeader,
     FooterSpacer,
     POSTIT_BODY_HEIGHT,
-    POSTIT_EXTERNAL_ROW_GAP,
     POSTIT_EXTERNAL_ROW_GAP_TIGHT,
     POSTIT_FOOTER_HEIGHT,
     POSTIT_TAB_OVERLAP,
-    POSTIT_WRAP_HEIGHT_WITH_FOOTER,
+    make_postit_footer_spacer,
+    make_static_postit_column,
     PostItSectionColumn,
 )
 from ui.postit.material_card import PostItCard
@@ -180,24 +180,6 @@ class PostItStack(QWidget):
         self.item_added.emit()
 
 
-class PostItColumn(PostItSectionColumn):
-    def __init__(self, section_wrap: QWidget, row_widget: QWidget | None = None, parent=None):
-        # backward-compatible wrapper for existing call sites
-        super().__init__(
-            QWidget(),
-            QWidget(),
-            parent=parent,
-            body_height=0,
-            footer_widget=None,
-            external_row_widget=row_widget or FooterSpacer(parent),
-        )
-        self.layout().removeWidget(self.section_wrap)
-        self.section_wrap.setParent(None)
-        self.section_wrap = section_wrap
-        self.layout().insertWidget(0, self.section_wrap, 0)
-        self.setFixedHeight(POSTIT_WRAP_HEIGHT_WITH_FOOTER + POSTIT_EXTERNAL_ROW_GAP + POSTIT_FOOTER_HEIGHT)
-
-
 class PartnerTabbedPostIt(PostItSectionColumn):
     TAB_FABRIC = "fabric"
     TAB_TRIM = "trim"
@@ -350,10 +332,9 @@ class PostItBar(QWidget):
 
         self.basic = BasicInfoPostIt(self)
         self.basic.data_changed.connect(self.basic_data_changed.emit)
-        self.basic_title = FolderTabHeader("기본정보", self)
-        self.basic_footer = FooterSpacer(self)
-        self.basic_column = PostItSectionColumn(
-            self.basic_title,
+        self.basic_footer = make_postit_footer_spacer(self)
+        self.basic_column = make_static_postit_column(
+            "기본정보",
             self.basic,
             parent=self,
             body_height=POSTIT_BODY_HEIGHT,

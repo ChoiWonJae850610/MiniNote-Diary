@@ -9,8 +9,8 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import Tooltips
-from ui.postit.layout import FooterSpacer, POSTIT_MEMO_BODY_HEIGHT, PostItSectionColumn
-from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar
+from ui.postit.layout import POSTIT_MEMO_BODY_HEIGHT, make_postit_footer_spacer, make_static_postit_column
+from ui.postit import ChangeNotePostIt, PostItBar
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import make_hint_label, make_nav_button, make_page_title_label, make_toolbar_icon_button
 
@@ -110,10 +110,9 @@ class WorkOrderPageBuilder:
         left_layout.addWidget(image_shell, 1)
 
         change_note_postit = ChangeNotePostIt()
-        change_note_title = FolderTabHeader('메모', page)
-        change_note_footer = FooterSpacer(page)
-        change_note_wrap = PostItSectionColumn(
-            change_note_title,
+        change_note_footer = make_postit_footer_spacer(page)
+        change_note_wrap = make_static_postit_column(
+            '메모',
             change_note_postit,
             parent=page,
             body_height=POSTIT_MEMO_BODY_HEIGHT,
