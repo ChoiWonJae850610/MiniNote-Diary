@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QStackedLayout, QToolButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QToolButton, QWidget
 
 from services.work_order_defaults import empty_material_row
 from ui.postit.basic_info import BasicInfoPostIt
@@ -14,8 +14,11 @@ from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP_TIGHT,
     POSTIT_FOOTER_HEIGHT,
-    POSTIT_TAB_OVERLAP,
+    POSTIT_STANDARD_BODY_HEIGHT,
+    POSTIT_STANDARD_SECTION_SPACING,
     make_postit_footer_spacer,
+    make_postit_pager_host,
+    make_postit_stack_host,
     make_static_postit_column,
     PostItSectionColumn,
 )
@@ -38,10 +41,7 @@ class PostItStack(QWidget):
         self.active_index = 0
         self._suppress_next_new_card_menu = False
 
-        self.stack_host = QWidget(self)
-        self.stack_host.setFixedHeight(POSTIT_BODY_HEIGHT)
-        self.stack = QStackedLayout(self.stack_host)
-        self.stack.setContentsMargins(0, 0, 0, 0)
+        self.stack_host, self.stack = make_postit_stack_host(parent=self, height=POSTIT_STANDARD_BODY_HEIGHT)
 
         self.footer_host = QWidget(self)
         self.footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
@@ -144,7 +144,7 @@ class PostItStack(QWidget):
             button.clicked.connect(lambda _=False, i=idx: self.set_active_card(i))
             self.index_buttons.append(button)
             self.index_row.addWidget(button, 0)
-        self.plus_button = self._make_index_button("+")
+        self.plus_button = self._make_index_button('+')
         self.plus_button.clicked.connect(self._add_item)
         self.index_row.addWidget(self.plus_button, 0)
         self._apply_active()
@@ -181,11 +181,11 @@ class PostItStack(QWidget):
 
 
 class PartnerTabbedPostIt(PostItSectionColumn):
-    TAB_FABRIC = "fabric"
-    TAB_TRIM = "trim"
-    TAB_DYEING = "dyeing"
-    TAB_FINISHING = "finishing"
-    TAB_OTHER = "other"
+    TAB_FABRIC = 'fabric'
+    TAB_TRIM = 'trim'
+    TAB_DYEING = 'dyeing'
+    TAB_FINISHING = 'finishing'
+    TAB_OTHER = 'other'
 
     fabric_deleted = Signal(int)
     trim_deleted = Signal(int)
@@ -205,50 +205,47 @@ class PartnerTabbedPostIt(PostItSectionColumn):
 
     def __init__(self, parent=None):
         self._active_tab = self.TAB_FABRIC
-
         self.tab_header = FolderTabHeader(
             [
-                (self.TAB_FABRIC, "원단"),
-                (self.TAB_TRIM, "부자재"),
-                (self.TAB_DYEING, "염색"),
-                (self.TAB_FINISHING, "마감"),
-                (self.TAB_OTHER, "기타"),
+                (self.TAB_FABRIC, '원단'),
+                (self.TAB_TRIM, '부자재'),
+                (self.TAB_DYEING, '염색'),
+                (self.TAB_FINISHING, '마감'),
+                (self.TAB_OTHER, '기타'),
             ],
             active_key=self.TAB_FABRIC,
             interactive=True,
         )
-        self.body_host = QWidget()
-        self.body_host.setFixedHeight(POSTIT_BODY_HEIGHT)
-        self.body_stack = QStackedLayout(self.body_host)
-        self.body_stack.setContentsMargins(0, 0, 0, 0)
-        self.body_stack.setSpacing(0)
 
+        self.body_host, self.body_stack = make_postit_stack_host(height=POSTIT_STANDARD_BODY_HEIGHT)
         self.fabric = PostItStack(self.TAB_FABRIC)
         self.trim = PostItStack(self.TAB_TRIM)
         self.dyeing = PostItStack(self.TAB_DYEING)
         self.finishing = PostItStack(self.TAB_FINISHING)
         self.other = PostItStack(self.TAB_OTHER)
-        for stack in (self.fabric, self.trim, self.dyeing, self.finishing, self.other):
+        self._tab_stacks = {
+            self.TAB_FABRIC: self.fabric,
+            self.TAB_TRIM: self.trim,
+            self.TAB_DYEING: self.dyeing,
+            self.TAB_FINISHING: self.finishing,
+            self.TAB_OTHER: self.other,
+        }
+        for stack in self._tab_stacks.values():
             self.body_stack.addWidget(stack.body_widget())
 
         self.footer_spacer = FooterSpacer()
-
-        self.pager_host = QWidget()
-        self.pager_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
-        self.pager_stack = QStackedLayout(self.pager_host)
-        self.pager_stack.setContentsMargins(0, 0, 0, 0)
-        self.pager_stack.setSpacing(0)
-        for stack in (self.fabric, self.trim, self.dyeing, self.finishing, self.other):
+        self.pager_host, self.pager_stack = make_postit_pager_host()
+        for stack in self._tab_stacks.values():
             self.pager_stack.addWidget(stack.footer_widget())
 
         super().__init__(
             self.tab_header,
             self.body_host,
             parent=parent,
-            body_height=POSTIT_BODY_HEIGHT,
+            body_height=POSTIT_STANDARD_BODY_HEIGHT,
             footer_widget=self.footer_spacer,
             external_row_widget=self.pager_host,
-            spacing=POSTIT_TAB_OVERLAP,
+            spacing=POSTIT_STANDARD_SECTION_SPACING,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -276,15 +273,8 @@ class PartnerTabbedPostIt(PostItSectionColumn):
         self.set_active_tab(self.TAB_FABRIC)
 
     def set_active_tab(self, tab_key: str):
-        tab_map = {
-            self.TAB_FABRIC: self.fabric,
-            self.TAB_TRIM: self.trim,
-            self.TAB_DYEING: self.dyeing,
-            self.TAB_FINISHING: self.finishing,
-            self.TAB_OTHER: self.other,
-        }
-        self._active_tab = tab_key if tab_key in tab_map else self.TAB_FABRIC
-        current = tab_map[self._active_tab]
+        self._active_tab = tab_key if tab_key in self._tab_stacks else self.TAB_FABRIC
+        current = self._tab_stacks[self._active_tab]
         self.tab_header.set_active_tab(self._active_tab)
         self.body_stack.setCurrentWidget(current.body_widget())
         self.pager_stack.setCurrentWidget(current.footer_widget())
@@ -334,10 +324,10 @@ class PostItBar(QWidget):
         self.basic.data_changed.connect(self.basic_data_changed.emit)
         self.basic_footer = make_postit_footer_spacer(self)
         self.basic_column = make_static_postit_column(
-            "기본정보",
+            '기본정보',
             self.basic,
             parent=self,
-            body_height=POSTIT_BODY_HEIGHT,
+            body_height=POSTIT_STANDARD_BODY_HEIGHT,
             footer_widget=self.basic_footer,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )

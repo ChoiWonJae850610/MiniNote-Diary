@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QStackedLayout, QToolButton, QVBoxLayout, QWidget
 
 from ui.theme import THEME, title_badge_style
 
@@ -68,10 +68,30 @@ def folder_tab_style(*, active: bool = True, selector: str = "QToolButton") -> s
 
 
 POSTIT_STANDARD_EXTERNAL_ROW_GAP = POSTIT_EXTERNAL_ROW_GAP_TIGHT
+POSTIT_STANDARD_SECTION_SPACING = POSTIT_TAB_OVERLAP
+POSTIT_STANDARD_BODY_HEIGHT = POSTIT_BODY_HEIGHT
 
 
 def make_postit_footer_spacer(parent=None) -> "FooterSpacer":
     return FooterSpacer(parent)
+
+
+def make_postit_stack_host(*, parent=None, height: int = POSTIT_STANDARD_BODY_HEIGHT) -> tuple[QWidget, QStackedLayout]:
+    host = QWidget(parent)
+    host.setFixedHeight(height)
+    stack = QStackedLayout(host)
+    stack.setContentsMargins(0, 0, 0, 0)
+    stack.setSpacing(0)
+    return host, stack
+
+
+def make_postit_pager_host(*, parent=None) -> tuple[QWidget, QStackedLayout]:
+    host = QWidget(parent)
+    host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+    stack = QStackedLayout(host)
+    stack.setContentsMargins(0, 0, 0, 0)
+    stack.setSpacing(0)
+    return host, stack
 
 
 def make_static_postit_column(

@@ -3,10 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QPushButton, QWidget
 
+from ui.page_builders_common import make_standard_page_layout
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, make_action_button, make_page_title_label, make_hint_label
+from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_page_title_label
 
 
 @dataclass
@@ -34,9 +35,8 @@ class MenuPageBuilder:
     def build() -> MenuPageRefs:
         page = QWidget()
         page.setObjectName('workOrderPage')
-        layout = QVBoxLayout(page)
+        layout = make_standard_page_layout(page)
         layout.setContentsMargins(THEME.page_padding_x + 4, 22, THEME.page_padding_x + 4, 18)
-        layout.setSpacing(THEME.section_gap)
 
         title = make_page_title_label('업무 메뉴', page)
         title.setAlignment(Qt.AlignCenter)
@@ -58,11 +58,7 @@ class MenuPageBuilder:
         btn_sale = MenuPageBuilder._make_menu_card('판매 등록', '판매 수량 · 수입 반영')
         btn_inventory = MenuPageBuilder._make_menu_card('재고 / 통계', '재고 현황 · 월별 흐름 확인')
 
-        cards = [
-            btn_template, btn_job_start, btn_receipt,
-            btn_complete, btn_sale, btn_inventory,
-        ]
-        for index, button in enumerate(cards):
+        for index, button in enumerate((btn_template, btn_job_start, btn_receipt, btn_complete, btn_sale, btn_inventory)):
             grid.addWidget(button, index // 3, index % 3)
 
         layout.addLayout(grid)

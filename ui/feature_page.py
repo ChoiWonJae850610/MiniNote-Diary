@@ -1,24 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QFrame,
-    QGridLayout,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
-from ui.messages import Tooltips
+from ui.page_builders_common import make_standard_page_header, make_standard_page_layout, make_titled_panel
 from ui.theme import THEME
-from ui.widget_factory import make_action_button, make_hint_label, make_meta_label, make_nav_button, make_page_title_label, make_panel_title_label, make_section_title_label
+from ui.widget_factory import make_action_button, make_hint_label, make_meta_label, make_section_title_label
 
 
 @dataclass(frozen=True)
@@ -74,24 +64,16 @@ class FeaturePageBuilder:
     def build(config: FeaturePageConfig) -> FeaturePageRefs:
         page = QWidget()
         page.setObjectName('featurePage')
-        root = QVBoxLayout(page)
-        root.setContentsMargins(THEME.page_padding_x, THEME.page_top_bottom, THEME.page_padding_x, THEME.page_top_bottom)
-        root.setSpacing(THEME.section_gap)
+        root = make_standard_page_layout(page)
 
-        top_row = QHBoxLayout()
-        top_row.setSpacing(THEME.top_button_spacing)
-        btn_back = make_nav_button(parent=page, tooltip=Tooltips.BACK)
-        title_col = QVBoxLayout()
-        title_col.setSpacing(THEME.title_stack_spacing)
-        title = make_page_title_label(config.title, page)
-        title.setObjectName('featureTitle')
-        subtitle = make_hint_label(config.subtitle, page)
-        subtitle.setObjectName('featureSubtitle')
-        title_col.addWidget(title)
-        title_col.addWidget(subtitle)
-        top_row.addWidget(btn_back, 0, Qt.AlignTop)
-        top_row.addLayout(title_col, 1)
-        root.addLayout(top_row)
+        header_refs = make_standard_page_header(
+            page,
+            title_text=config.title,
+            subtitle_text=config.subtitle,
+            title_object_name='featureTitle',
+            subtitle_object_name='featureSubtitle',
+        )
+        root.addLayout(header_refs.row)
 
         summary_grid = QGridLayout()
         summary_grid.setHorizontalSpacing(THEME.row_spacing)
@@ -106,23 +88,20 @@ class FeaturePageBuilder:
         content_row = QHBoxLayout()
         content_row.setSpacing(THEME.section_gap)
 
-        left_panel = QFrame(page)
+        left_panel, left_layout = make_titled_panel(
+            page,
+            title_text=config.left_title,
+            hint_text=config.left_hint,
+            title_object_name='featurePanelTitle',
+            hint_object_name='featureHint',
+        )
         left_panel.setObjectName('featurePanel')
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        left_layout.setSpacing(THEME.row_spacing)
-        left_title = make_panel_title_label(config.left_title, left_panel)
-        left_title.setObjectName('featurePanelTitle')
-        left_hint = make_hint_label(config.left_hint, left_panel)
-        left_hint.setObjectName('featureHint')
         item_list = QListWidget(left_panel)
         item_list.setObjectName('featureList')
         for item_text in config.list_items:
             QListWidgetItem(item_text, item_list)
         if item_list.count() > 0:
             item_list.setCurrentRow(0)
-        left_layout.addWidget(left_title)
-        left_layout.addWidget(left_hint)
         left_layout.addWidget(item_list, 1)
 
         right_panel = QFrame(page)
@@ -149,10 +128,4 @@ class FeaturePageBuilder:
         bottom_row.addWidget(btn_primary)
         root.addLayout(bottom_row)
 
-        return FeaturePageRefs(
-            page=page,
-            btn_back=btn_back,
-            btn_primary=btn_primary,
-            btn_secondary=btn_secondary,
-            item_list=item_list,
-        )
+        return FeaturePageRefs(page=page, btn_back=header_refs.back_button, btn_primary=btn_primary, btn_secondary=btn_secondary, item_list=item_list)
