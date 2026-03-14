@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
-from ui.messages import Tooltips
+from ui.messages import PageDescriptions, PageTitles, SectionTitles, Tooltips
 from ui.page_builders_common import make_standard_page_header, make_standard_page_layout
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.postit.layout import POSTIT_MEMO_BODY_HEIGHT, make_postit_footer_spacer, make_static_postit_column
@@ -40,8 +40,8 @@ class WorkOrderPageBuilder:
 
         header_refs = make_standard_page_header(
             page,
-            title_text='작업지시서 생성',
-            subtitle_text='작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다.',
+            title_text=PageTitles.WORK_ORDER,
+            subtitle_text=PageDescriptions.WORK_ORDER,
         )
         header_refs.row.addStretch(1)
 
@@ -93,7 +93,7 @@ class WorkOrderPageBuilder:
 
         change_note_postit = ChangeNotePostIt()
         change_note_wrap = make_static_postit_column(
-            '메모',
+            SectionTitles.CHANGE_NOTE,
             change_note_postit,
             parent=page,
             body_height=POSTIT_MEMO_BODY_HEIGHT,

@@ -8,7 +8,8 @@ from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, Q
 from services.partner_repository import PartnerRecord, PartnerRepository
 from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_info, show_warning
-from ui.messages import DialogTitles, InfoMessages, Labels, Placeholders, Tooltips, WarningMessages
+from ui.layout_metrics import PartnerLayout
+from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Tooltips, WarningMessages
 from ui.partner_dialog_common import (
     PartnerListItem,
     ReadOnlyTypeIndicatorGrid,
@@ -73,14 +74,14 @@ class PartnerDialog(QDialog):
         card = QFrame(self)
         card.setObjectName("partnerShell")
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(10)
+        layout.setContentsMargins(PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN)
+        layout.setSpacing(PartnerLayout.CARD_ROW_SPACING)
         title = QLabel(DialogTitles.PARTNER_LIST, card)
         title.setStyleSheet(title_label_style(font_px=THEME.section_title_font_px + 1))
         self.search_edit = QLineEdit(card)
         self.search_edit.setPlaceholderText(Placeholders.PARTNER_SEARCH)
         self.search_edit.setStyleSheet(input_line_edit_style())
-        self.search_edit.setFixedHeight(THEME.field_height + 6)
+        self.search_edit.setFixedHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
         self.list_widget = QListWidget(card)
         self.list_widget.setObjectName("partnerList")
         self.list_widget.setStyleSheet(partner_list_style())
@@ -93,8 +94,8 @@ class PartnerDialog(QDialog):
         card = QFrame(self)
         card.setObjectName("partnerShell")
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN)
+        layout.setSpacing(PartnerLayout.DETAIL_CARD_SPACING)
         title = QLabel(DialogTitles.PARTNER_BASIC_INFO, card)
         title.setStyleSheet(title_label_style(font_px=THEME.section_title_font_px + 1))
         self.detail_name = self._detail_value_label(min_height=42)
@@ -119,9 +120,9 @@ class PartnerDialog(QDialog):
 
     def _detail_row(self, label_text: str, value_widget: QWidget, top_align: bool = False):
         row = QHBoxLayout()
-        row.setSpacing(10)
+        row.setSpacing(PartnerLayout.CARD_ROW_SPACING)
         label = QLabel(label_text, self)
-        label.setFixedWidth(54)
+        label.setFixedWidth(PartnerLayout.DETAIL_LABEL_WIDTH)
         label.setStyleSheet(partner_field_label_style())
         alignment = Qt.AlignTop if top_align else Qt.AlignVCenter
         row.addWidget(label, 0, alignment)
@@ -233,10 +234,10 @@ class PartnerDialog(QDialog):
         if record is None:
             return
         confirm = ConfirmActionDialog(
-            "삭제",
+            Buttons.DELETE,
             f"'{record.name}' {WarningMessages.PARTNER_DELETE_CONFIRM}",
-            confirm_text="삭제",
-            cancel_text="취소",
+            confirm_text=Buttons.DELETE,
+            cancel_text=Buttons.CANCEL,
             parent=self,
         )
         if confirm.exec() != QDialog.Accepted:

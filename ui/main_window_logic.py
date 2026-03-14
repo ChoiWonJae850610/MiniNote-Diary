@@ -9,7 +9,7 @@ from services.field_keys import MaterialTargets
 from services.search_utils import matches_keyword
 from ui.dialogs import show_error, show_info
 from ui.order_page import TemplateListCard
-from ui.messages import Buttons, DialogTitles, FileDialogFilters, InfoMessages, Labels, Warnings
+from ui.messages import Buttons, DefaultTexts, DialogTitles, FileDialogFilters, InfoMessages, Labels, Warnings
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
@@ -107,7 +107,7 @@ class MainWindowOrderLogic:
             if not matches_keyword(keyword, summary.name, summary.factory_name, summary.change_note):
                 continue
             stats = stats_map.get(summary.template_id)
-            subtitle = f"{summary.factory_name or InfoMessages.NO_FACTORY} · 기준일 {summary.date or '-'}"
+            subtitle = f"{summary.factory_name or InfoMessages.NO_FACTORY} · 기준일 {summary.date or DefaultTexts.EMPTY_VALUE}"
             meta_lines = [
                 f"자재: 원단 {summary.fabric_count} / 부자재 {summary.trim_count}",
                 f"재고 {getattr(stats, 'current_stock_qty', 0)} · 진행중 {getattr(stats, 'in_progress_qty', 0)}",
@@ -140,12 +140,12 @@ class MainWindowOrderLogic:
         stats = window.order_repository.aggregate_for_template(template_id)
         summary = detail.summary
         refs.page.setProperty('selected_template_id', template_id)
-        refs.lbl_name.setText(summary.name or '-')
-        refs.lbl_factory.setText(summary.factory_name or '-')
-        refs.lbl_date.setText(summary.date or '-')
-        refs.lbl_cost.setText(summary.cost_display or '-')
-        refs.lbl_labor.setText(summary.labor_display or '-')
-        refs.lbl_sale_price.setText(summary.sale_price_display or '-')
+        refs.lbl_name.setText(summary.name or DefaultTexts.EMPTY_VALUE)
+        refs.lbl_factory.setText(summary.factory_name or DefaultTexts.EMPTY_VALUE)
+        refs.lbl_date.setText(summary.date or DefaultTexts.EMPTY_VALUE)
+        refs.lbl_cost.setText(summary.cost_display or DefaultTexts.EMPTY_VALUE)
+        refs.lbl_labor.setText(summary.labor_display or DefaultTexts.EMPTY_VALUE)
+        refs.lbl_sale_price.setText(summary.sale_price_display or DefaultTexts.EMPTY_VALUE)
         refs.lbl_material_summary.setText(f"원단 {summary.fabric_count} / 부자재 {summary.trim_count}")
         refs.lbl_last_order.setText(stats.last_ordered_at or InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText(str(stats.total_ordered_qty))
@@ -166,13 +166,13 @@ class MainWindowOrderLogic:
     def clear_order_template_detail(window: "MainWindow") -> None:
         refs = window.order_page_refs
         refs.page.setProperty('selected_template_id', '')
-        refs.lbl_name.setText('-')
-        refs.lbl_factory.setText('-')
-        refs.lbl_date.setText('-')
-        refs.lbl_cost.setText('-')
-        refs.lbl_labor.setText('-')
-        refs.lbl_sale_price.setText('-')
-        refs.lbl_material_summary.setText('원단 0 / 부자재 0')
+        refs.lbl_name.setText(DefaultTexts.EMPTY_VALUE)
+        refs.lbl_factory.setText(DefaultTexts.EMPTY_VALUE)
+        refs.lbl_date.setText(DefaultTexts.EMPTY_VALUE)
+        refs.lbl_cost.setText(DefaultTexts.EMPTY_VALUE)
+        refs.lbl_labor.setText(DefaultTexts.EMPTY_VALUE)
+        refs.lbl_sale_price.setText(DefaultTexts.EMPTY_VALUE)
+        refs.lbl_material_summary.setText(DefaultTexts.ORDER_MATERIAL_SUMMARY_EMPTY)
         refs.lbl_last_order.setText(InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText('0')
         refs.lbl_in_progress.setText('0')
@@ -203,8 +203,8 @@ class MainWindowOrderLogic:
             memo=memo,
         )
         MainWindowOrderLogic.refresh_order_page(window)
-        message = f"발주 저장 완료\n\n작업지시서: {detail.summary.name}\n수량: {qty}\n발주일: {ordered_at}"
-        show_info(window, '발주 저장', message)
+        message = DefaultTexts.ORDER_SAVE_SUCCESS_MESSAGE.format(name=detail.summary.name, qty=qty, ordered_at=ordered_at)
+        show_info(window, DefaultTexts.ORDER_SAVE_SUCCESS, message)
 
 
 class MainWindowWorkOrderLogic:

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QCheckBox, QGridLayout, QHBoxLayout, QLabel, QList
 
 from services.partner_repository import PartnerRecord
 from services.partner_utils import color_for_partner_type
+from ui.layout_metrics import PartnerLayout
 from ui.messages import InfoMessages
 from ui.theme import THEME, hex_to_rgba
 
@@ -16,7 +17,7 @@ class TypeBadgeRow(QWidget):
         super().__init__(parent)
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(4)
+        row.setSpacing(PartnerLayout.TYPE_BADGE_ROW_SPACING)
         selected = set(types)
         for idx, type_name in enumerate(all_types[:8]):
             badge = QLabel(type_name[:1], self)
@@ -24,14 +25,14 @@ class TypeBadgeRow(QWidget):
             color = color_for_partner_type(idx)
             if active:
                 badge.setStyleSheet(
-                    f"QLabel{{min-width:16px;max-width:16px;min-height:16px;max-height:16px;"
-                    f"border-radius:4px;background:{color};color:white;font-size:10px;font-weight:700;}}"
+                    f"QLabel{{min-width:{PartnerLayout.TYPE_BADGE_SIZE}px;max-width:{PartnerLayout.TYPE_BADGE_SIZE}px;min-height:{PartnerLayout.TYPE_BADGE_SIZE}px;max-height:{PartnerLayout.TYPE_BADGE_SIZE}px;"
+                    f"border-radius:{PartnerLayout.TYPE_BADGE_RADIUS}px;background:{color};color:white;font-size:{PartnerLayout.TYPE_BADGE_FONT_PX}px;font-weight:700;}}"
                 )
             else:
                 badge.setStyleSheet(
-                    f"QLabel{{min-width:16px;max-width:16px;min-height:16px;max-height:16px;"
-                    f"border-radius:4px;background:{hex_to_rgba(color, 0.12)};border:1px solid {hex_to_rgba(color, 0.32)};"
-                    f"color:{hex_to_rgba(color, 0.86)};font-size:10px;font-weight:700;}}"
+                    f"QLabel{{min-width:{PartnerLayout.TYPE_BADGE_SIZE}px;max-width:{PartnerLayout.TYPE_BADGE_SIZE}px;min-height:{PartnerLayout.TYPE_BADGE_SIZE}px;max-height:{PartnerLayout.TYPE_BADGE_SIZE}px;"
+                    f"border-radius:{PartnerLayout.TYPE_BADGE_RADIUS}px;background:{hex_to_rgba(color, 0.12)};border:1px solid {hex_to_rgba(color, 0.32)};"
+                    f"color:{hex_to_rgba(color, 0.86)};font-size:{PartnerLayout.TYPE_BADGE_FONT_PX}px;font-weight:700;}}"
                 )
             badge.setAlignment(Qt.AlignCenter)
             badge.setToolTip(type_name)
@@ -43,8 +44,8 @@ class PartnerListItem(QWidget):
     def __init__(self, partner: PartnerRecord, all_types: list[str], parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 7, 8, 7)
-        layout.setSpacing(6)
+        layout.setContentsMargins(PartnerLayout.LIST_ITEM_MARGIN_H, PartnerLayout.LIST_ITEM_MARGIN_TOP, PartnerLayout.LIST_ITEM_MARGIN_H, PartnerLayout.LIST_ITEM_MARGIN_BOTTOM)
+        layout.setSpacing(PartnerLayout.LIST_ITEM_SPACING)
         title = QLabel(partner.name, self)
         title.setStyleSheet(f"QLabel{{font-weight:700;color:{THEME.color_text};background:transparent;}}")
         layout.addWidget(title)
@@ -56,8 +57,8 @@ class ReadOnlyTypeIndicatorGrid(QWidget):
         super().__init__(parent)
         self.layout_grid = QGridLayout(self)
         self.layout_grid.setContentsMargins(0, 0, 0, 0)
-        self.layout_grid.setHorizontalSpacing(10)
-        self.layout_grid.setVerticalSpacing(8)
+        self.layout_grid.setHorizontalSpacing(PartnerLayout.TYPE_GRID_HORIZONTAL_SPACING)
+        self.layout_grid.setVerticalSpacing(PartnerLayout.TYPE_GRID_VERTICAL_SPACING)
 
     def set_types(self, all_types: Iterable[str], selected_types: Iterable[str]) -> None:
         selected = set(selected_types)

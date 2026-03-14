@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QLineEdit, QMenu, QWidget
 
 from services.partner_repository import PartnerRepository, PartnerRecord
 from services.partner_utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER, PARTNER_TYPE_TRIM
+from ui.messages import InfoMessages
 from ui.partner_dialog import PartnerDialog
 from ui.theme import menu_style
 
@@ -62,7 +63,7 @@ def show_partner_picker(anchor: QWidget, *, partner_type: str, on_selected: Call
     menu = QMenu(anchor)
     menu.setStyleSheet(menu_style())
     if not partners:
-        empty = menu.addAction('(목록 없음)')
+        empty = menu.addAction(InfoMessages.PARTNER_EMPTY_LIST)
         empty.setEnabled(False)
     else:
         for partner in partners:

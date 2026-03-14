@@ -176,3 +176,29 @@ class FeaturePageTexts:
     COMING_SOON_SUBTITLE = "이 기능은 아직 연결되지 않았습니다."
     PRIMARY_ACTION = "기능 준비"
     SECONDARY_ACTION = "메뉴로"
+
+
+class PageTitles:
+    WORK_ORDER = "작업지시서 생성"
+    ORDER = DialogTitles.ORDER
+
+
+class PageDescriptions:
+    WORK_ORDER = "작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다."
+    ORDER = "저장된 작업지시서 템플릿을 선택하고 발주 수량을 입력합니다."
+    ORDER_LIST = "월별 필터와 검색으로 템플릿을 찾고, 예전 작업지시서도 다시 발주할 수 있습니다."
+
+
+class SectionTitles:
+    ORDER_TEMPLATE_LIST = "작업지시서 목록"
+    ORDER_TEMPLATE_DETAIL = "선택 작업지시서"
+    ORDER_TEMPLATE_MEMO = "작업지시서 메모"
+    ORDER_INPUT = "신규 발주 입력"
+    CHANGE_NOTE = "메모"
+
+
+class DefaultTexts:
+    EMPTY_VALUE = "-"
+    ORDER_MATERIAL_SUMMARY_EMPTY = "원단 0 / 부자재 0"
+    ORDER_SAVE_SUCCESS = "발주 저장"
+    ORDER_SAVE_SUCCESS_MESSAGE = "발주 저장 완료\n\n작업지시서: {name}\n수량: {qty}\n발주일: {ordered_at}"
