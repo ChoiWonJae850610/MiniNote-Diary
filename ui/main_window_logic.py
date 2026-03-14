@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QListWidgetItem
+from PySide6.QtWidgets import QFileDialog, QListWidgetItem, QWidget
 
 from services.field_keys import MaterialTargets
 from services.search_utils import matches_keyword
@@ -13,6 +13,17 @@ from ui.messages import Buttons, DefaultTexts, DialogTitles, FileDialogFilters, 
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
+
+
+MATERIAL_TARGET_CONFIGS = {
+    MaterialTargets.FABRIC: ('fabric_deleted', 'fabric_item_changed', 'fabric_item_added', 'fabric'),
+    MaterialTargets.TRIM: ('trim_deleted', 'trim_item_changed', 'trim_item_added', 'trim'),
+    MaterialTargets.DYEING: ('dyeing_deleted', 'dyeing_item_changed', 'dyeing_item_added', 'dyeing'),
+    MaterialTargets.FINISHING: ('finishing_deleted', 'finishing_item_changed', 'finishing_item_added', 'finishing'),
+    MaterialTargets.OTHER: ('other_deleted', 'other_item_changed', 'other_item_added', 'other'),
+}
+
+MATERIAL_STACK_NAMES = {target: stack_name for target, (_, _, _, stack_name) in MATERIAL_TARGET_CONFIGS.items()}
 
 
 class MainWindowEventBinder:
@@ -61,21 +72,10 @@ class MainWindowEventBinder:
 
         window.change_note_postit.text_changed.connect(window.on_change_note_changed)
         bar = window.postit_bar
-        bar.fabric_deleted.connect(window.on_fabric_deleted)
-        bar.trim_deleted.connect(window.on_trim_deleted)
-        bar.dyeing_deleted.connect(window.on_dyeing_deleted)
-        bar.finishing_deleted.connect(window.on_finishing_deleted)
-        bar.other_deleted.connect(window.on_other_deleted)
-        bar.fabric_item_changed.connect(window.on_fabric_postit_changed)
-        bar.trim_item_changed.connect(window.on_trim_postit_changed)
-        bar.dyeing_item_changed.connect(window.on_dyeing_postit_changed)
-        bar.finishing_item_changed.connect(window.on_finishing_postit_changed)
-        bar.other_item_changed.connect(window.on_other_postit_changed)
-        bar.fabric_item_added.connect(window.on_add_fabric_clicked)
-        bar.trim_item_added.connect(window.on_add_trim_clicked)
-        bar.dyeing_item_added.connect(window.on_add_dyeing_clicked)
-        bar.finishing_item_added.connect(window.on_add_finishing_clicked)
-        bar.other_item_added.connect(window.on_add_other_clicked)
+        for target, (deleted_signal, changed_signal, added_signal, _) in MATERIAL_TARGET_CONFIGS.items():
+            getattr(bar, deleted_signal).connect(lambda idx, material_target=target: window.on_material_deleted(material_target, idx))
+            getattr(bar, changed_signal).connect(lambda idx, patch, material_target=target: window.on_material_changed(material_target, idx, patch))
+            getattr(bar, added_signal).connect(lambda material_target=target: window.on_add_material_clicked(material_target))
         bar.basic_data_changed.connect(window.on_basic_postit_changed)
 
 
@@ -207,6 +207,39 @@ class MainWindowOrderLogic:
         show_info(window, DefaultTexts.ORDER_SAVE_SUCCESS, message)
 
 
+class MainWindowFeatureLogic:
+    PRIMARY_MESSAGE_BY_PAGE = {
+        'page_partner': (DialogTitles.PARTNER_MANAGE, InfoMessages.FEATURE_PARTNER_PENDING),
+        'page_inventory': (DialogTitles.INVENTORY, InfoMessages.FEATURE_INVENTORY_PENDING),
+    }
+    SECONDARY_MESSAGE_BY_PAGE = {
+        'page_receipt': (DialogTitles.RECEIPT, InfoMessages.FEATURE_RECEIPT_EXTEND),
+    }
+
+    @staticmethod
+    def show_primary(window: "MainWindow", page: QWidget) -> None:
+        title, message = MainWindowFeatureLogic.PRIMARY_MESSAGE_BY_PAGE.get(
+            MainWindowFeatureLogic._page_name(window, page),
+            (DialogTitles.COMING_SOON, InfoMessages.FEATURE_GENERIC_PENDING),
+        )
+        show_info(window, title, message)
+
+    @staticmethod
+    def show_secondary(window: "MainWindow", page: QWidget) -> None:
+        title, message = MainWindowFeatureLogic.SECONDARY_MESSAGE_BY_PAGE.get(
+            MainWindowFeatureLogic._page_name(window, page),
+            (DialogTitles.SCREEN_REVIEW, InfoMessages.FEATURE_SCREEN_REVIEW),
+        )
+        show_info(window, title, message)
+
+    @staticmethod
+    def _page_name(window: "MainWindow", page: QWidget) -> str:
+        for name, current_page in window.pages.items():
+            if current_page is page:
+                return name
+        return ''
+
+
 class MainWindowWorkOrderLogic:
     @staticmethod
     def reset_form(window: "MainWindow") -> None:
@@ -251,12 +284,12 @@ class MainWindowWorkOrderLogic:
         window._update_window_title()
 
     @staticmethod
-    def add_material(window: "MainWindow", target: str, stack_name: str) -> None:
+    def add_material(window: "MainWindow", target: str) -> None:
         new_index = window.state.add_material_item(target)
         if new_index is None:
             return
         MainWindowWorkOrderLogic.refresh_postits(window, force_rebuild=True)
-        getattr(window.postit_bar, stack_name).set_active_card(new_index)
+        getattr(window.postit_bar, MATERIAL_STACK_NAMES[target]).set_active_card(new_index)
         window._update_window_title()
 
     @staticmethod
@@ -280,12 +313,3 @@ class MainWindowWorkOrderLogic:
         window.btn_delete_image.setEnabled(False)
         window.mark_dirty()
         window._show_feedback(InfoMessages.IMAGE_REMOVED)
-
-
-MATERIAL_STACK_NAMES = {
-    MaterialTargets.FABRIC: 'fabric',
-    MaterialTargets.TRIM: 'trim',
-    MaterialTargets.DYEING: 'dyeing',
-    MaterialTargets.FINISHING: 'finishing',
-    MaterialTargets.OTHER: 'other',
-}

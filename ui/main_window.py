@@ -16,16 +16,15 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from services.field_keys import MaterialTargets
 from services.order_repository import OrderRepository
 from services.work_order_controller import WorkOrderController
 from services.work_order_state import WorkOrderState
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, show_error, show_info
 from ui.feature_page import FeaturePageBuilder
 from ui.menu_page import MenuPageBuilder
-from ui.messages import Buttons, DialogTitles, InfoMessages, UiTiming, Warnings
+from ui.messages import Buttons, DialogTitles, UiTiming, Warnings
 from ui.main_window_features import build_feature_page_configs
-from ui.main_window_logic import MainWindowEventBinder, MainWindowOrderLogic, MainWindowWorkOrderLogic
+from ui.main_window_logic import MainWindowEventBinder, MainWindowFeatureLogic, MainWindowOrderLogic, MainWindowWorkOrderLogic
 from ui.theme import THEME, build_app_stylesheet
 from ui.unit_dialog import UnitDialog
 from ui.partner_dialog import PartnerDialog
@@ -81,51 +80,46 @@ class MainWindow(QMainWindow):
     def _build_pages(self) -> None:
         menu_refs = MenuPageBuilder.build()
         work_refs = WorkOrderPageBuilder.build(self)
-        order_refs = OrderPageBuilder.build()
-        feature_pages = self._build_feature_pages()
+        self.order_page_refs = OrderPageBuilder.build()
+        self.feature_pages = self._build_feature_pages()
 
-        self.page_menu = menu_refs.page
-        self.page_work_order = work_refs.page
-        self.page_job_start = order_refs.page
-        self.page_receipt = feature_pages['receipt'].page
-        self.page_complete = feature_pages['complete'].page
-        self.page_sale = feature_pages['sale'].page
-        self.page_inventory = feature_pages['inventory'].page
-        self.page_partner = feature_pages['partner'].page
-
-        self.btn_template = menu_refs.btn_template
-        self.btn_job_start_menu = menu_refs.btn_job_start
-        self.btn_receipt_menu = menu_refs.btn_receipt
-        self.btn_complete_menu = menu_refs.btn_complete
-        self.btn_sale_menu = menu_refs.btn_sale
-        self.btn_inventory_menu = menu_refs.btn_inventory
-        self.btn_partner_mgmt = menu_refs.btn_partner_mgmt
-        self.btn_unit_mgmt = menu_refs.btn_unit_mgmt
-
-        self.btn_back = work_refs.btn_back
-        self.btn_reset = work_refs.btn_reset
-        self.btn_load = work_refs.btn_load
-        self.btn_save = work_refs.btn_save
-        self.btn_upload = work_refs.btn_upload
-        self.btn_delete_image = work_refs.btn_delete_image
-        self.feedback_label = work_refs.feedback_label
-        self.image_preview = work_refs.image_preview
-        self.change_note_postit = work_refs.change_note_postit
-        self.postit_bar = work_refs.postit_bar
-
-        self.order_page_refs = order_refs
-
-        self.feature_pages = feature_pages
-
-        self.stack.addWidget(self.page_menu)
-        self.stack.addWidget(self.page_work_order)
-        self.stack.addWidget(self.page_job_start)
-        self.stack.addWidget(self.page_receipt)
-        self.stack.addWidget(self.page_complete)
-        self.stack.addWidget(self.page_sale)
-        self.stack.addWidget(self.page_inventory)
-        self.stack.addWidget(self.page_partner)
+        self._apply_menu_refs(menu_refs)
+        self._apply_work_order_refs(work_refs)
+        self.pages = {
+            'page_menu': menu_refs.page,
+            'page_work_order': work_refs.page,
+            'page_job_start': self.order_page_refs.page,
+            'page_receipt': self.feature_pages['receipt'].page,
+            'page_complete': self.feature_pages['complete'].page,
+            'page_sale': self.feature_pages['sale'].page,
+            'page_inventory': self.feature_pages['inventory'].page,
+            'page_partner': self.feature_pages['partner'].page,
+        }
+        for page in self.pages.values():
+            self.stack.addWidget(page)
         self.stack.setCurrentIndex(self.PAGE_MENU)
+
+    def _apply_menu_refs(self, refs) -> None:
+        self.btn_template = refs.btn_template
+        self.btn_job_start_menu = refs.btn_job_start
+        self.btn_receipt_menu = refs.btn_receipt
+        self.btn_complete_menu = refs.btn_complete
+        self.btn_sale_menu = refs.btn_sale
+        self.btn_inventory_menu = refs.btn_inventory
+        self.btn_partner_mgmt = refs.btn_partner_mgmt
+        self.btn_unit_mgmt = refs.btn_unit_mgmt
+
+    def _apply_work_order_refs(self, refs) -> None:
+        self.btn_back = refs.btn_back
+        self.btn_reset = refs.btn_reset
+        self.btn_load = refs.btn_load
+        self.btn_save = refs.btn_save
+        self.btn_upload = refs.btn_upload
+        self.btn_delete_image = refs.btn_delete_image
+        self.feedback_label = refs.feedback_label
+        self.image_preview = refs.image_preview
+        self.change_note_postit = refs.change_note_postit
+        self.postit_bar = refs.postit_bar
 
     def _bind_page_events(self) -> None:
         MainWindowEventBinder.bind(self)
@@ -172,16 +166,16 @@ class MainWindow(QMainWindow):
                     focused.clearFocus()
         return super().eventFilter(obj, event)
 
+    def _open_modal_dialog(self, dialog_cls):
+        dialog = dialog_cls(project_root=self.project_root, parent=self)
+        dialog.setWindowModality(Qt.ApplicationModal)
+        dialog.exec()
 
     def on_partner_mgmt_clicked(self):
-        dlg = PartnerDialog(project_root=self.project_root, parent=self)
-        dlg.setWindowModality(Qt.ApplicationModal)
-        dlg.exec()
+        self._open_modal_dialog(PartnerDialog)
 
     def on_unit_mgmt_clicked(self):
-        dlg = UnitDialog(project_root=self.project_root, parent=self)
-        dlg.setWindowModality(Qt.ApplicationModal)
-        dlg.exec()
+        self._open_modal_dialog(UnitDialog)
 
     def _show_feedback(self, message: str, timeout_ms: int = UiTiming.FEEDBACK_TIMEOUT_MS):
         self.feedback_label.setText(message)
@@ -217,19 +211,10 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(page_index)
 
     def on_feature_primary(self, page: QWidget) -> None:
-        if page is self.page_partner:
-            show_info(self, DialogTitles.PARTNER_MANAGE, InfoMessages.FEATURE_PARTNER_PENDING)
-            return
-        if page is self.page_inventory:
-            show_info(self, DialogTitles.INVENTORY, InfoMessages.FEATURE_INVENTORY_PENDING)
-            return
-        show_info(self, DialogTitles.COMING_SOON, InfoMessages.FEATURE_GENERIC_PENDING)
+        MainWindowFeatureLogic.show_primary(self, page)
 
     def on_feature_secondary(self, page: QWidget) -> None:
-        if page is self.page_receipt:
-            show_info(self, DialogTitles.RECEIPT, InfoMessages.FEATURE_RECEIPT_EXTEND)
-            return
-        show_info(self, DialogTitles.SCREEN_REVIEW, InfoMessages.FEATURE_SCREEN_REVIEW)
+        MainWindowFeatureLogic.show_secondary(self, page)
 
     def _focus_style_input(self):
         QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
@@ -260,21 +245,8 @@ class MainWindow(QMainWindow):
     def _refresh_basic_postit(self):
         MainWindowWorkOrderLogic.refresh_basic_postit(self)
 
-
-    def on_fabric_deleted(self, idx: int):
-        MainWindowWorkOrderLogic.remove_material(self, MaterialTargets.FABRIC, idx)
-
-    def on_trim_deleted(self, idx: int):
-        MainWindowWorkOrderLogic.remove_material(self, MaterialTargets.TRIM, idx)
-
-    def on_dyeing_deleted(self, idx: int):
-        MainWindowWorkOrderLogic.remove_material(self, MaterialTargets.DYEING, idx)
-
-    def on_finishing_deleted(self, idx: int):
-        MainWindowWorkOrderLogic.remove_material(self, MaterialTargets.FINISHING, idx)
-
-    def on_other_deleted(self, idx: int):
-        MainWindowWorkOrderLogic.remove_material(self, MaterialTargets.OTHER, idx)
+    def on_material_deleted(self, target: str, idx: int):
+        MainWindowWorkOrderLogic.remove_material(self, target, idx)
 
     def on_reset_clicked(self):
         self.reset_work_order_form()
@@ -302,9 +274,9 @@ class MainWindow(QMainWindow):
             show_error(self, DialogTitles.SAVE_FAILED, str(exc))
             return
         self.reset_work_order_form()
-        message = f'저장 완료\n\nJSON: {result.json_path}\nSHA256(평문): {result.sha256_plain}'
+        message = f"저장 완료\n\nJSON: {result.json_path}\nSHA256(평문): {result.sha256_plain}"
         if result.image_path:
-            message += f'\n이미지: {result.image_path}'
+            message += f"\n이미지: {result.image_path}"
         show_info(self, DialogTitles.SAVE, message)
 
     def on_basic_postit_changed(self, data: dict):
@@ -315,20 +287,8 @@ class MainWindow(QMainWindow):
         self.state.update_change_note(text)
         self._update_window_title()
 
-    def on_fabric_postit_changed(self, idx: int, patch: dict):
-        MainWindowWorkOrderLogic.update_material(self, MaterialTargets.FABRIC, idx, patch)
-
-    def on_trim_postit_changed(self, idx: int, patch: dict):
-        MainWindowWorkOrderLogic.update_material(self, MaterialTargets.TRIM, idx, patch)
-
-    def on_dyeing_postit_changed(self, idx: int, patch: dict):
-        MainWindowWorkOrderLogic.update_material(self, MaterialTargets.DYEING, idx, patch)
-
-    def on_finishing_postit_changed(self, idx: int, patch: dict):
-        MainWindowWorkOrderLogic.update_material(self, MaterialTargets.FINISHING, idx, patch)
-
-    def on_other_postit_changed(self, idx: int, patch: dict):
-        MainWindowWorkOrderLogic.update_material(self, MaterialTargets.OTHER, idx, patch)
+    def on_material_changed(self, target: str, idx: int, patch: dict):
+        MainWindowWorkOrderLogic.update_material(self, target, idx, patch)
 
     def upload_image(self):
         MainWindowWorkOrderLogic.upload_image(self)
@@ -336,17 +296,5 @@ class MainWindow(QMainWindow):
     def delete_image(self):
         MainWindowWorkOrderLogic.delete_image(self)
 
-    def on_add_fabric_clicked(self):
-        MainWindowWorkOrderLogic.add_material(self, MaterialTargets.FABRIC, 'fabric')
-
-    def on_add_trim_clicked(self):
-        MainWindowWorkOrderLogic.add_material(self, MaterialTargets.TRIM, 'trim')
-
-    def on_add_dyeing_clicked(self):
-        MainWindowWorkOrderLogic.add_material(self, MaterialTargets.DYEING, 'dyeing')
-
-    def on_add_finishing_clicked(self):
-        MainWindowWorkOrderLogic.add_material(self, MaterialTargets.FINISHING, 'finishing')
-
-    def on_add_other_clicked(self):
-        MainWindowWorkOrderLogic.add_material(self, MaterialTargets.OTHER, 'other')
+    def on_add_material_clicked(self, target: str):
+        MainWindowWorkOrderLogic.add_material(self, target)

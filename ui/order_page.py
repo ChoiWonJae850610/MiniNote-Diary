@@ -2,15 +2,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QDate, Qt
-from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QScrollArea, QSpinBox, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtCore import QDate
+from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QSpinBox, QTextEdit, QVBoxLayout, QWidget
 
 from ui.image_preview import ImagePreview
 from ui.layout_metrics import OrderPageLayout
-from ui.messages import Buttons, DefaultTexts, DialogTitles, InfoMessages, Labels, PageDescriptions, PageTitles, Placeholders, SectionTitles
-from ui.page_builders_common import make_standard_page_header, make_standard_page_layout, make_titled_panel
+from ui.messages import Buttons, DefaultTexts, InfoMessages, Labels, PageDescriptions, PageTitles, Placeholders, SectionTitles
+from ui.page_builders_common import (
+    add_form_row,
+    make_form_grid,
+    make_image_shell,
+    make_right_aligned_button_row,
+    make_scroll_panel,
+    make_standard_page_header,
+    make_standard_page_layout,
+    make_titled_panel,
+)
 from ui.theme import THEME, input_line_edit_style, list_widget_style
-from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_meta_label, make_panel_frame, make_plain_text_editor, make_section_title_label, make_value_label, make_input_line_edit
+from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_input_line_edit, make_meta_label, make_panel_frame, make_plain_text_editor, make_section_title_label, make_value_label
 
 
 @dataclass
@@ -55,22 +64,7 @@ class OrderPageBuilder:
             subtitle_text=PageDescriptions.ORDER,
         )
         root.addLayout(header_refs.row)
-
-        filter_panel = make_panel_frame(page, compact=True)
-        filter_layout = QHBoxLayout(filter_panel)
-        filter_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
-        filter_layout.setSpacing(THEME.row_spacing)
-        month_combo = QComboBox(filter_panel)
-        month_combo.setFixedWidth(OrderPageLayout.MONTH_COMBO_WIDTH)
-        search_edit = make_input_line_edit(filter_panel, placeholder=Placeholders.ORDER_SEARCH)
-        btn_reload = make_action_button(Buttons.REFRESH, filter_panel, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
-        filter_layout.addWidget(make_field_label(Labels.MONTH_FILTER, filter_panel))
-        filter_layout.addWidget(month_combo)
-        filter_layout.addSpacing(OrderPageLayout.FILTER_INLINE_GAP)
-        filter_layout.addWidget(make_field_label(Labels.SEARCH, filter_panel))
-        filter_layout.addWidget(search_edit, 1)
-        filter_layout.addWidget(btn_reload)
-        root.addWidget(filter_panel)
+        root.addWidget(OrderPageBuilder._build_filter_panel(page))
 
         body_row = QHBoxLayout()
         body_row.setSpacing(THEME.section_gap)
@@ -86,16 +80,82 @@ class OrderPageBuilder:
         template_list.setStyleSheet(list_widget_style())
         left_layout.addWidget(template_list, 1)
 
-        right_scroll = QScrollArea(page)
-        right_scroll.setWidgetResizable(True)
-        right_scroll.setFrameShape(QFrame.NoFrame)
-        right_wrap = QWidget()
-        right_scroll.setWidget(right_wrap)
-        right_layout = QVBoxLayout(right_wrap)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(THEME.section_gap)
+        right_refs = OrderPageBuilder._build_right_panels(page)
 
-        summary_panel = make_panel_frame(right_wrap)
+        body_row.addWidget(left_panel, 4)
+        body_row.addWidget(right_refs['scroll_area'], 6)
+        root.addLayout(body_row, 1)
+
+        return OrderPageRefs(
+            page=page,
+            btn_back=header_refs.back_button,
+            btn_reload=page.findChild(QPushButton, 'orderReloadButton'),
+            btn_order=right_refs['btn_order'],
+            month_combo=page.findChild(QComboBox, 'orderMonthCombo'),
+            search_edit=page.findChild(QLineEdit, 'orderSearchEdit'),
+            template_list=template_list,
+            image_preview=right_refs['image_preview'],
+            lbl_name=right_refs['lbl_name'],
+            lbl_factory=right_refs['lbl_factory'],
+            lbl_date=right_refs['lbl_date'],
+            lbl_cost=right_refs['lbl_cost'],
+            lbl_labor=right_refs['lbl_labor'],
+            lbl_sale_price=right_refs['lbl_sale_price'],
+            lbl_material_summary=right_refs['lbl_material_summary'],
+            lbl_last_order=right_refs['lbl_last_order'],
+            lbl_total_ordered=right_refs['lbl_total_ordered'],
+            lbl_in_progress=right_refs['lbl_in_progress'],
+            lbl_current_stock=right_refs['lbl_current_stock'],
+            memo_view=right_refs['memo_view'],
+            order_qty_spin=right_refs['order_qty_spin'],
+            order_date_edit=right_refs['order_date_edit'],
+            order_memo_edit=right_refs['order_memo_edit'],
+            helper_label=right_refs['helper_label'],
+        )
+
+    @staticmethod
+    def _build_filter_panel(page: QWidget) -> QFrame:
+        filter_panel = make_panel_frame(page, compact=True)
+        filter_layout = QHBoxLayout(filter_panel)
+        filter_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
+        filter_layout.setSpacing(THEME.row_spacing)
+
+        month_combo = QComboBox(filter_panel)
+        month_combo.setObjectName('orderMonthCombo')
+        month_combo.setFixedWidth(OrderPageLayout.MONTH_COMBO_WIDTH)
+        search_edit = make_input_line_edit(filter_panel, placeholder=Placeholders.ORDER_SEARCH)
+        search_edit.setObjectName('orderSearchEdit')
+        btn_reload = make_action_button(Buttons.REFRESH, filter_panel, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
+        btn_reload.setObjectName('orderReloadButton')
+
+        filter_layout.addWidget(make_field_label(Labels.MONTH_FILTER, filter_panel))
+        filter_layout.addWidget(month_combo)
+        filter_layout.addSpacing(OrderPageLayout.FILTER_INLINE_GAP)
+        filter_layout.addWidget(make_field_label(Labels.SEARCH, filter_panel))
+        filter_layout.addWidget(search_edit, 1)
+        filter_layout.addWidget(btn_reload)
+        return filter_panel
+
+    @staticmethod
+    def _build_right_panels(page: QWidget) -> dict[str, QWidget]:
+        right_refs = make_scroll_panel(page)
+
+        summary_refs = OrderPageBuilder._build_summary_panel(right_refs.wrap)
+        order_refs = OrderPageBuilder._build_order_panel(right_refs.wrap)
+
+        right_refs.layout.addWidget(summary_refs['panel'])
+        right_refs.layout.addWidget(order_refs['panel'])
+        right_refs.layout.addStretch(1)
+
+        return {
+            'scroll_area': right_refs.scroll_area,
+            **summary_refs,
+            **order_refs,
+        }
+
+    @staticmethod
+    def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
+        summary_panel = make_panel_frame(parent)
         summary_layout = QVBoxLayout(summary_panel)
         summary_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         summary_layout.setSpacing(THEME.section_gap)
@@ -103,18 +163,12 @@ class OrderPageBuilder:
 
         top_summary = QHBoxLayout()
         top_summary.setSpacing(THEME.section_gap)
-        image_shell = QFrame(summary_panel)
-        image_shell.setObjectName('imageShell')
-        image_shell_layout = QVBoxLayout(image_shell)
-        image_shell_layout.setContentsMargins(OrderPageLayout.IMAGE_SHELL_MARGIN, OrderPageLayout.IMAGE_SHELL_MARGIN, OrderPageLayout.IMAGE_SHELL_MARGIN, OrderPageLayout.IMAGE_SHELL_MARGIN)
+
         image_preview = ImagePreview()
         image_preview.setMinimumSize(THEME.image_preview_min_size, THEME.image_preview_min_size)
-        image_shell_layout.addWidget(image_preview)
-        top_summary.addWidget(image_shell, 4)
+        top_summary.addWidget(make_image_shell(summary_panel, image_preview), 4)
 
-        detail_grid = QGridLayout()
-        detail_grid.setHorizontalSpacing(OrderPageLayout.DETAIL_GRID_HORIZONTAL_SPACING)
-        detail_grid.setVerticalSpacing(OrderPageLayout.DETAIL_GRID_VERTICAL_SPACING)
+        detail_grid = make_form_grid()
         lbl_name = OrderPageBuilder._make_value_label(DefaultTexts.EMPTY_VALUE)
         lbl_factory = OrderPageBuilder._make_value_label(DefaultTexts.EMPTY_VALUE)
         lbl_date = OrderPageBuilder._make_value_label(DefaultTexts.EMPTY_VALUE)
@@ -131,27 +185,25 @@ class OrderPageBuilder:
             (Labels.SALE_PRICE, lbl_sale_price),
             (Labels.MATERIAL_SUMMARY, lbl_material_summary),
         ]):
-            detail_grid.addWidget(make_field_label(label_text, summary_panel), row_idx, 0)
-            detail_grid.addWidget(value_widget, row_idx, 1)
+            add_form_row(detail_grid, row_idx, label_text, value_widget, label_parent=summary_panel)
         top_summary.addLayout(detail_grid, 6)
         summary_layout.addLayout(top_summary)
 
         stats_panel = QFrame(summary_panel)
         stats_panel.setObjectName('innerPanelFrame')
-        stats_layout = QGridLayout(stats_panel)
+        stats_layout = make_form_grid(parent=stats_panel)
         stats_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
-        stats_layout.setHorizontalSpacing(OrderPageLayout.DETAIL_GRID_HORIZONTAL_SPACING)
-        stats_layout.setVerticalSpacing(OrderPageLayout.DETAIL_GRID_VERTICAL_SPACING)
         lbl_last_order = OrderPageBuilder._make_value_label(InfoMessages.NO_ORDER_HISTORY)
         lbl_total_ordered = OrderPageBuilder._make_value_label('0')
         lbl_in_progress = OrderPageBuilder._make_value_label('0')
         lbl_current_stock = OrderPageBuilder._make_value_label('0')
-        for row_idx, (label_text, value_widget) in enumerate([
+        stat_rows = [
             (Labels.LAST_ORDER, lbl_last_order),
             (Labels.TOTAL_ORDERED, lbl_total_ordered),
             (Labels.IN_PROGRESS_QTY, lbl_in_progress),
             (Labels.CURRENT_STOCK, lbl_current_stock),
-        ]):
+        ]
+        for row_idx, (label_text, value_widget) in enumerate(stat_rows):
             stats_layout.addWidget(make_field_label(label_text, stats_panel), row_idx // 2, (row_idx % 2) * 2)
             stats_layout.addWidget(value_widget, row_idx // 2, (row_idx % 2) * 2 + 1)
         summary_layout.addWidget(stats_panel)
@@ -159,9 +211,27 @@ class OrderPageBuilder:
         summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_MEMO, summary_panel))
         memo_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.memo_min_height)
         summary_layout.addWidget(memo_view)
-        right_layout.addWidget(summary_panel)
 
-        order_panel = make_panel_frame(right_wrap)
+        return {
+            'panel': summary_panel,
+            'image_preview': image_preview,
+            'lbl_name': lbl_name,
+            'lbl_factory': lbl_factory,
+            'lbl_date': lbl_date,
+            'lbl_cost': lbl_cost,
+            'lbl_labor': lbl_labor,
+            'lbl_sale_price': lbl_sale_price,
+            'lbl_material_summary': lbl_material_summary,
+            'lbl_last_order': lbl_last_order,
+            'lbl_total_ordered': lbl_total_ordered,
+            'lbl_in_progress': lbl_in_progress,
+            'lbl_current_stock': lbl_current_stock,
+            'memo_view': memo_view,
+        }
+
+    @staticmethod
+    def _build_order_panel(parent: QWidget) -> dict[str, QWidget]:
+        order_panel = make_panel_frame(parent)
         order_layout = QVBoxLayout(order_panel)
         order_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         order_layout.setSpacing(THEME.block_spacing)
@@ -169,9 +239,7 @@ class OrderPageBuilder:
         helper_label = make_hint_label('발주 수량은 1 이상이어야 하며, 저장 후에도 작업지시서 템플릿은 계속 남아 다시 발주할 수 있습니다.', order_panel)
         order_layout.addWidget(helper_label)
 
-        order_grid = QGridLayout()
-        order_grid.setHorizontalSpacing(OrderPageLayout.DETAIL_GRID_HORIZONTAL_SPACING)
-        order_grid.setVerticalSpacing(OrderPageLayout.DETAIL_GRID_VERTICAL_SPACING)
+        order_grid = make_form_grid()
         order_qty_spin = QSpinBox(order_panel)
         order_qty_spin.setMinimum(1)
         order_qty_spin.setMaximum(999999)
@@ -186,52 +254,22 @@ class OrderPageBuilder:
         order_date_edit.setStyleSheet(input_line_edit_style())
 
         order_memo_edit = make_plain_text_editor(order_panel, min_height=THEME.order_memo_min_height)
-        order_grid.addWidget(make_field_label(Labels.ORDER_QTY, order_panel), 0, 0)
-        order_grid.addWidget(order_qty_spin, 0, 1)
-        order_grid.addWidget(make_field_label(Labels.ORDER_DATE, order_panel), 1, 0)
-        order_grid.addWidget(order_date_edit, 1, 1)
-        order_grid.addWidget(make_field_label(Labels.ORDER_MEMO, order_panel), 2, 0, Qt.AlignTop)
-        order_grid.addWidget(order_memo_edit, 2, 1)
+        add_form_row(order_grid, 0, Labels.ORDER_QTY, order_qty_spin, label_parent=order_panel)
+        add_form_row(order_grid, 1, Labels.ORDER_DATE, order_date_edit, label_parent=order_panel)
+        add_form_row(order_grid, 2, Labels.ORDER_MEMO, order_memo_edit, align_top=True, label_parent=order_panel)
         order_layout.addLayout(order_grid)
 
-        button_row = QHBoxLayout()
-        button_row.addStretch(1)
         btn_order = make_action_button(Buttons.ORDER_SAVE, order_panel, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
-        button_row.addWidget(btn_order)
-        order_layout.addLayout(button_row)
-        right_layout.addWidget(order_panel)
-        right_layout.addStretch(1)
+        order_layout.addLayout(make_right_aligned_button_row(btn_order))
 
-        body_row.addWidget(left_panel, 4)
-        body_row.addWidget(right_scroll, 6)
-        root.addLayout(body_row, 1)
-
-        return OrderPageRefs(
-            page=page,
-            btn_back=header_refs.back_button,
-            btn_reload=btn_reload,
-            btn_order=btn_order,
-            month_combo=month_combo,
-            search_edit=search_edit,
-            template_list=template_list,
-            image_preview=image_preview,
-            lbl_name=lbl_name,
-            lbl_factory=lbl_factory,
-            lbl_date=lbl_date,
-            lbl_cost=lbl_cost,
-            lbl_labor=lbl_labor,
-            lbl_sale_price=lbl_sale_price,
-            lbl_material_summary=lbl_material_summary,
-            lbl_last_order=lbl_last_order,
-            lbl_total_ordered=lbl_total_ordered,
-            lbl_in_progress=lbl_in_progress,
-            lbl_current_stock=lbl_current_stock,
-            memo_view=memo_view,
-            order_qty_spin=order_qty_spin,
-            order_date_edit=order_date_edit,
-            order_memo_edit=order_memo_edit,
-            helper_label=helper_label,
-        )
+        return {
+            'panel': order_panel,
+            'btn_order': btn_order,
+            'order_qty_spin': order_qty_spin,
+            'order_date_edit': order_date_edit,
+            'order_memo_edit': order_memo_edit,
+            'helper_label': helper_label,
+        }
 
     @staticmethod
     def _make_value_label(text: str) -> QLabel:
