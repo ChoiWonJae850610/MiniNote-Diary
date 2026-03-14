@@ -8,9 +8,9 @@ import shutil
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from services.field_keys import MaterialKeys
+from services.field_keys import MaterialKeys, PayloadKeys
 _WINDOWS_INVALID = r'<>:"/\|?*'
-_VENDOR_SECTION_KEYS: tuple[str, ...] = ('trims', 'fabrics', 'dyeings', 'finishings', 'others')
+_VENDOR_SECTION_KEYS: tuple[str, ...] = (PayloadKeys.TRIMS, PayloadKeys.FABRICS, PayloadKeys.DYEINGS, PayloadKeys.FINISHINGS, PayloadKeys.OTHERS)
 def _sanitize_filename_part(s: str, default: str = "UNKNOWN", max_len: int = 60) -> str:
     s = (s or "").strip()
     if not s:
@@ -44,13 +44,13 @@ def _first_vendor_in_rows(rows: list[dict[str, Any]] | None) -> str:
             return value
     return ""
 def pick_vendor_name(data: Dict[str, Any]) -> str:
-    trims = _first_vendor_in_rows(data.get('trims', []))
+    trims = _first_vendor_in_rows(data.get(PayloadKeys.TRIMS, []))
     if trims:
         return trims
-    fabrics = _first_vendor_in_rows(data.get('fabrics', []))
+    fabrics = _first_vendor_in_rows(data.get(PayloadKeys.FABRICS, []))
     if fabrics:
         return fabrics
-    for row in data.get('fabrics', []):
+    for row in data.get(PayloadKeys.FABRICS, []):
         legacy = (row.get(MaterialKeys.LEGACY_FABRIC_VENDOR) or "").strip()
         if legacy:
             return legacy
@@ -104,15 +104,15 @@ def save_work_order(
     image_src_path: Optional[str] = None,
 ) -> Tuple[str, Optional[str], str]:
     db_dir = ensure_db_dir(base_dir)
-    header = data.get("header", {})
+    header = data.get(PayloadKeys.HEADER, {})
     date_str = str(header.get("date", "") or "")
     style_no = str(header.get("style_no", "") or "")
     vendor_name = pick_vendor_name(data)
     base_name = make_base_filename(date_str, style_no, vendor_name)
     enc_payload = encrypt_data(db_dir, data)
     payload = {
-        "version": 1,
-        "saved_at": datetime.now().isoformat(timespec="seconds"),
+        PayloadKeys.VERSION: 1,
+        PayloadKeys.SAVED_AT: datetime.now().isoformat(timespec="seconds"),
         **enc_payload,
     }
     json_path = os.path.join(db_dir, f"{base_name}.json")

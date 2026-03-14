@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from services.field_keys import DbFilenames, PayloadKeys
 from services.models import WorkOrderDocument
 from services.schema import ORDER_RUNS_DB_FILENAME, PARTNERS_DB_FILENAME, PARTNER_TYPES_DB_FILENAME
 from services.storage import decrypt_payload, ensure_db_dir, save_work_order
@@ -45,7 +46,7 @@ class WorkOrderRepository:
     _SKIP_FILENAMES = {
         PARTNERS_DB_FILENAME,
         PARTNER_TYPES_DB_FILENAME,
-        'units.json',
+        DbFilenames.UNITS,
         ORDER_RUNS_DB_FILENAME,
     }
 
@@ -97,13 +98,13 @@ class WorkOrderRepository:
             return None
 
         document = WorkOrderDocument.from_raw(
-            header=data.get('header'),
-            fabrics=data.get('fabrics'),
-            trims=data.get('trims'),
-            dyeings=data.get('dyeings'),
-            finishings=data.get('finishings'),
-            others=data.get('others'),
-            image_attached=bool(data.get('image_attached')),
+            header=data.get(PayloadKeys.HEADER),
+            fabrics=data.get(PayloadKeys.FABRICS),
+            trims=data.get(PayloadKeys.TRIMS),
+            dyeings=data.get(PayloadKeys.DYEINGS),
+            finishings=data.get(PayloadKeys.FINISHINGS),
+            others=data.get(PayloadKeys.OTHERS),
+            image_attached=bool(data.get(PayloadKeys.IMAGE_ATTACHED)),
         )
         header = document.header
         template_id = os.path.splitext(os.path.basename(json_path))[0]
@@ -120,7 +121,7 @@ class WorkOrderRepository:
             change_note=(header.change_note or '').strip(),
             fabric_count=len([item for item in document.fabrics if item.has_any_value()]),
             trim_count=len([item for item in document.trims if item.has_any_value()]),
-            saved_at=str(payload.get('saved_at', '') or ''),
+            saved_at=str(payload.get(PayloadKeys.SAVED_AT, '') or ''),
         )
         return WorkOrderTemplateDetail(summary=summary, document=document)
 

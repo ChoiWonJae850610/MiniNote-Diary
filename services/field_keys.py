@@ -35,3 +35,24 @@ class MaterialTargets:
     OTHER = "other"
 
     ALL: tuple[str, ...] = (FABRIC, TRIM, DYEING, FINISHING, OTHER)
+
+
+class PayloadKeys:
+    VERSION = "version"
+    UPDATED_AT = "updated_at"
+    SAVED_AT = "saved_at"
+    HEADER = "header"
+    FABRICS = "fabrics"
+    TRIMS = "trims"
+    DYEINGS = "dyeings"
+    FINISHINGS = "finishings"
+    OTHERS = "others"
+    IMAGE_ATTACHED = "image_attached"
+    ORDERS = "orders"
+
+
+class DbFilenames:
+    PARTNERS = "partners.json"
+    PARTNER_TYPES = "partner_types.json"
+    UNITS = "units.json"
+    ORDER_RUNS = "job_orders.json"

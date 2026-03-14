@@ -22,8 +22,9 @@ from PySide6.QtWidgets import (
 )
 
 from ui.image_preview import ImagePreview
+from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Tooltips
 from ui.theme import THEME, display_field_style, field_label_style, hint_label_style, input_line_edit_style, plain_text_edit_style, inner_panel_frame_style, list_widget_style, panel_title_style
-from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics, make_hint_label, make_page_title_label, make_panel_frame, make_panel_title_label, make_value_label
+from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics, make_hint_label, make_page_title_label, make_panel_frame, make_panel_title_label
 
 
 @dataclass
@@ -66,10 +67,10 @@ class OrderPageBuilder:
         top_row = QHBoxLayout()
         top_row.setSpacing(THEME.top_button_spacing)
         btn_back = QPushButton('◀')
-        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip='뒤로가기')
+        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip=Tooltips.BACK)
         title_col = QVBoxLayout()
         title_col.setSpacing(THEME.title_stack_spacing)
-        title = make_page_title_label('발주', page)
+        title = make_page_title_label(DialogTitles.ORDER, page)
         subtitle = make_hint_label('저장된 작업지시서 템플릿을 선택하고 발주 수량을 입력합니다.', page)
         title_col.addWidget(title)
         title_col.addWidget(subtitle)
@@ -84,14 +85,14 @@ class OrderPageBuilder:
         month_combo = QComboBox(filter_panel)
         month_combo.setFixedWidth(150)
         search_edit = QLineEdit(filter_panel)
-        search_edit.setPlaceholderText('작업지시서 검색')
+        search_edit.setPlaceholderText(Placeholders.ORDER_SEARCH)
         search_edit.setStyleSheet(input_line_edit_style())
-        btn_reload = QPushButton('목록 새로고침', filter_panel)
+        btn_reload = QPushButton(Buttons.REFRESH, filter_panel)
         apply_button_metrics(btn_reload, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
-        filter_layout.addWidget(QLabel('기준 월', filter_panel))
+        filter_layout.addWidget(QLabel(Labels.MONTH_FILTER, filter_panel))
         filter_layout.addWidget(month_combo)
         filter_layout.addSpacing(6)
-        filter_layout.addWidget(QLabel('검색', filter_panel))
+        filter_layout.addWidget(QLabel(Labels.SEARCH, filter_panel))
         filter_layout.addWidget(search_edit, 1)
         filter_layout.addWidget(btn_reload)
         root.addWidget(filter_panel)
@@ -151,13 +152,13 @@ class OrderPageBuilder:
         lbl_sale_price = OrderPageBuilder._make_value_label('-')
         lbl_material_summary = OrderPageBuilder._make_value_label('원단 0 / 부자재 0')
         rows = [
-            ('작업지시서', lbl_name),
-            ('공장', lbl_factory),
-            ('기준일', lbl_date),
-            ('재료비', lbl_cost),
-            ('공임', lbl_labor),
-            ('원가', lbl_sale_price),
-            ('자재 요약', lbl_material_summary),
+            (Labels.ORDER_TEMPLATE, lbl_name),
+            (Labels.FACTORY, lbl_factory),
+            (Labels.BASE_DATE, lbl_date),
+            (Labels.COST, lbl_cost),
+            (Labels.LABOR, lbl_labor),
+            (Labels.SALE_PRICE, lbl_sale_price),
+            (Labels.MATERIAL_SUMMARY, lbl_material_summary),
         ]
         for row_idx, (label_text, value_widget) in enumerate(rows):
             label = QLabel(label_text, summary_panel)
@@ -173,15 +174,15 @@ class OrderPageBuilder:
         stats_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
         stats_layout.setHorizontalSpacing(10)
         stats_layout.setVerticalSpacing(8)
-        lbl_last_order = OrderPageBuilder._make_value_label('발주 이력 없음')
+        lbl_last_order = OrderPageBuilder._make_value_label(InfoMessages.NO_ORDER_HISTORY)
         lbl_total_ordered = OrderPageBuilder._make_value_label('0')
         lbl_in_progress = OrderPageBuilder._make_value_label('0')
         lbl_current_stock = OrderPageBuilder._make_value_label('0')
         stat_rows = [
-            ('최근 발주', lbl_last_order),
-            ('누적 발주', lbl_total_ordered),
-            ('진행중 수량', lbl_in_progress),
-            ('현재 재고', lbl_current_stock),
+            (Labels.LAST_ORDER, lbl_last_order),
+            (Labels.TOTAL_ORDERED, lbl_total_ordered),
+            (Labels.IN_PROGRESS_QTY, lbl_in_progress),
+            (Labels.CURRENT_STOCK, lbl_current_stock),
         ]
         for row_idx, (label_text, value_widget) in enumerate(stat_rows):
             label = QLabel(label_text, stats_panel)
@@ -226,17 +227,17 @@ class OrderPageBuilder:
         order_memo_edit.setStyleSheet(plain_text_edit_style())
         order_qty_spin.setStyleSheet(input_line_edit_style())
         order_date_edit.setStyleSheet(input_line_edit_style())
-        order_grid.addWidget(QLabel('발주 수량', order_panel), 0, 0)
+        order_grid.addWidget(QLabel(Labels.ORDER_QTY, order_panel), 0, 0)
         order_grid.addWidget(order_qty_spin, 0, 1)
-        order_grid.addWidget(QLabel('발주일', order_panel), 1, 0)
+        order_grid.addWidget(QLabel(Labels.ORDER_DATE, order_panel), 1, 0)
         order_grid.addWidget(order_date_edit, 1, 1)
-        order_grid.addWidget(QLabel('발주 메모', order_panel), 2, 0, Qt.AlignTop)
+        order_grid.addWidget(QLabel(Labels.ORDER_MEMO, order_panel), 2, 0, Qt.AlignTop)
         order_grid.addWidget(order_memo_edit, 2, 1)
         order_layout.addLayout(order_grid)
 
         button_row = QHBoxLayout()
         button_row.addStretch(1)
-        btn_order = QPushButton('발주 저장', order_panel)
+        btn_order = QPushButton(Buttons.ORDER_SAVE, order_panel)
         apply_button_metrics(btn_order, width=THEME.primary_button_width, height=THEME.primary_button_height)
         btn_order.setObjectName('primaryAction')
         button_row.addWidget(btn_order)

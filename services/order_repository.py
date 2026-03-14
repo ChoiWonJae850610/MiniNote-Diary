@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from services.field_keys import PayloadKeys
 from services.schema import ORDER_RUNS_DB_FILENAME
 from services.storage import ensure_db_dir
 
@@ -44,7 +45,7 @@ class OrderRepository:
 
     def list_orders(self) -> list[OrderRecord]:
         payload = self._read_payload()
-        rows = payload.get('orders', [])
+        rows = payload.get(PayloadKeys.ORDERS, [])
         result: list[OrderRecord] = []
         for row in rows:
             if not isinstance(row, dict):
@@ -68,9 +69,9 @@ class OrderRepository:
             created_at=now,
         )
         payload = self._read_payload()
-        rows = payload.setdefault('orders', [])
+        rows = payload.setdefault(PayloadKeys.ORDERS, [])
         rows.append(asdict(order))
-        payload['updated_at'] = now
+        payload[PayloadKeys.UPDATED_AT] = now
         self._write_payload(payload)
         return order
 
@@ -99,16 +100,16 @@ class OrderRepository:
     def _read_payload(self) -> dict[str, Any]:
         path = self._db_path()
         if not os.path.isfile(path):
-            return {'version': 1, 'orders': []}
+            return {PayloadKeys.VERSION: 1, PayloadKeys.ORDERS: []}
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 payload = json.load(f)
         except Exception:
-            return {'version': 1, 'orders': []}
+            return {PayloadKeys.VERSION: 1, PayloadKeys.ORDERS: []}
         if not isinstance(payload, dict):
-            return {'version': 1, 'orders': []}
-        if not isinstance(payload.get('orders'), list):
-            payload['orders'] = []
+            return {PayloadKeys.VERSION: 1, PayloadKeys.ORDERS: []}
+        if not isinstance(payload.get(PayloadKeys.ORDERS), list):
+            payload[PayloadKeys.ORDERS] = []
         return payload
 
     def _write_payload(self, payload: dict[str, Any]) -> None:

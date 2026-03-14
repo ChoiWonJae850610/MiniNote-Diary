@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ui.messages import Tooltips
 from ui.theme import THEME
 from ui.widget_factory import apply_button_metrics, apply_icon_button_metrics
 
@@ -81,7 +82,7 @@ class FeaturePageBuilder:
         top_row = QHBoxLayout()
         top_row.setSpacing(THEME.top_button_spacing)
         btn_back = QPushButton('◀')
-        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip='뒤로가기')
+        apply_icon_button_metrics(btn_back, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip=Tooltips.BACK)
         title_col = QVBoxLayout()
         title_col.setSpacing(THEME.title_stack_spacing)
         title = QLabel(config.title, page)

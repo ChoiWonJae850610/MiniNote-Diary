@@ -26,9 +26,23 @@ class Buttons:
     DELETE = "삭제"
     LOAD = "불러오기"
     RESET = "초기화"
+    YES = "예"
+    NO = "아니요"
+    REFRESH = "목록 새로고침"
+    IMAGE_ATTACH = "이미지 첨부"
+    REVIEW_BEFORE_COMPLETE = "완료 전 검토"
+    FILTER_OPEN = "필터 열기"
+    SALES_PREVIEW = "판매 미리보기"
+    TYPE_MANAGE = "타입 관리"
+    ORDER_SAVE = "발주 저장"
+    COMPLETE_PROCESS = "작업 완료 처리"
+    STATS_REFRESH = "조회 새로고침"
+    PARTNER_SAVE = "거래처 저장"
+    RECEIPT_SAVE = "영수증 저장"
 
 
 class DialogTitles:
+    APP = "미니노트 다이어리"
     SAVE = "저장"
     SAVE_FAILED = "저장 실패"
     SAVE_BLOCKED = "저장 불가"
@@ -41,6 +55,15 @@ class DialogTitles:
     UNIT_MANAGE = "단위 관리"
     VALIDATION = "검증 결과"
     CONFIRM = "확인"
+    NOTE = "메모"
+    ORDER = "발주"
+    ORDER_SAVE = "발주 저장"
+    TEMP_SAVE = "임시 저장"
+    IMAGE_SELECT = "이미지 선택"
+    RECEIPT = "영수증 등록"
+    INVENTORY = "재고 / 통계"
+    COMING_SOON = "준비중"
+    SCREEN_REVIEW = "화면 검토"
 
 
 class Warnings:
@@ -48,6 +71,9 @@ class Warnings:
     PARTNER_TYPE_REQUIRED = "거래처 타입을 1개 이상 선택하세요."
     PARTNER_SELECT_TO_EDIT = "수정할 거래처를 먼저 선택하세요."
     MATERIAL_VENDOR_OR_ITEM_REQUIRED = "거래처 또는 품목을 1개 이상 입력하세요."
+    ORDER_SELECT_TEMPLATE_FIRST = "발주할 작업지시서를 먼저 선택하세요."
+    ORDER_TEMPLATE_LOAD_FAILED = "선택한 작업지시서를 다시 불러올 수 없습니다."
+    TEMP_SAVE_CONFIRM = "임시 저장 하시겠습니까?"
 
 
 class WarningMessages(Warnings):
@@ -60,6 +86,17 @@ class InfoMessages:
     PARTNER_UPDATED = "거래처가 수정되었습니다."
     UNITS_SAVED = "단위 목록이 저장되었습니다."
     MATERIAL_TOTAL_AUTO = "수량·단가를 입력하면 총액이 자동 계산됩니다."
+    IMAGE_ATTACHED = "이미지 첨부됨"
+    IMAGE_REMOVED = "이미지 제거됨"
+    NO_ORDER_HISTORY = "발주 이력 없음"
+    NO_MEMO = "메모 없음"
+    NO_FACTORY = "공장 미지정"
+    NONE = "없음"
+    FEATURE_PARTNER_PENDING = "거래처 관리 편집 화면은 다음 단계에서 실제 입력 폼과 연결합니다."
+    FEATURE_INVENTORY_PENDING = "통계 화면은 SQLite 전환 후 실제 집계 데이터와 연결합니다."
+    FEATURE_GENERIC_PENDING = "이 화면은 UI 흐름 검토용으로 먼저 배치했습니다. 다음 단계에서 실제 입력/저장 로직을 연결합니다."
+    FEATURE_RECEIPT_EXTEND = "이미지 첨부와 포스트잇 입력을 결합하는 방향으로 화면을 확장할 예정입니다."
+    FEATURE_SCREEN_REVIEW = "현재는 메뉴 구조와 화면 흐름을 먼저 확인하는 단계입니다."
 
 
 class Labels:
@@ -81,6 +118,18 @@ class Labels:
     UNIT_VALUE = "단위"
     UNIT_DISPLAY_NAME = "표시 이름"
     PARTNER_TYPE = "거래처 타입"
+    ORDER_TEMPLATE = "작업지시서"
+    BASE_DATE = "기준일"
+    MATERIAL_SUMMARY = "자재 요약"
+    LAST_ORDER = "최근 발주"
+    TOTAL_ORDERED = "누적 발주"
+    IN_PROGRESS_QTY = "진행중 수량"
+    CURRENT_STOCK = "현재 재고"
+    ORDER_QTY = "발주 수량"
+    ORDER_DATE = "발주일"
+    ORDER_MEMO = "발주 메모"
+    MONTH_FILTER = "기준 월"
+    SEARCH = "검색"
 
 
 class Placeholders:
@@ -89,6 +138,7 @@ class Placeholders:
     STYLE_NO = "제품명을 입력하세요"
     PARTNER_NAME = "상호명을 입력하세요"
     UNIT = "단위를 입력하세요"
+    ORDER_SEARCH = "작업지시서 검색"
 
 
 class FeaturePageTexts:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List
 
-from services.field_keys import MaterialKeys
+from services.field_keys import MaterialKeys, PayloadKeys
 from services.schema import HEADER_FIELDS, MATERIAL_FIELDS, REQUIRED_HEADER_FIELDS, REQUIRED_MATERIAL_FIELDS
 
 
@@ -139,11 +139,11 @@ class WorkOrderDocument:
 
     def to_dict(self) -> Dict[str, object]:
         return {
-            'header': self.header.to_dict(),
-            'fabrics': [item.to_dict() for item in self.fabrics],
-            'trims': [item.to_dict() for item in self.trims],
-            'dyeings': [item.to_dict() for item in self.dyeings],
-            'finishings': [item.to_dict() for item in self.finishings],
-            'others': [item.to_dict() for item in self.others],
-            'image_attached': self.image_attached,
+            PayloadKeys.HEADER: self.header.to_dict(),
+            PayloadKeys.FABRICS: [item.to_dict() for item in self.fabrics],
+            PayloadKeys.TRIMS: [item.to_dict() for item in self.trims],
+            PayloadKeys.DYEINGS: [item.to_dict() for item in self.dyeings],
+            PayloadKeys.FINISHINGS: [item.to_dict() for item in self.finishings],
+            PayloadKeys.OTHERS: [item.to_dict() for item in self.others],
+            PayloadKeys.IMAGE_ATTACHED: self.image_attached,
         }

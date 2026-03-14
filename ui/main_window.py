@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
 )
 
+from services.field_keys import MaterialTargets, PayloadKeys
 from services.order_repository import OrderRepository
 from services.schema import DEFAULT_FEEDBACK_TIMEOUT_MS, ORDER_PAGE_ALL_MONTHS_LABEL, SUPPORTED_IMAGE_FILTER
 from services.work_order_controller import WorkOrderController
@@ -26,6 +27,7 @@ from ui.basic_info_dialog import BasicInfoDialog
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, show_error, show_info
 from ui.feature_page import FeaturePageBuilder, FeaturePageConfig, FeatureSection
 from ui.menu_page import MenuPageBuilder
+from ui.messages import Buttons, DialogTitles, InfoMessages, Warnings
 from ui.theme import THEME, build_app_stylesheet
 from ui.unit_dialog import UnitDialog
 from ui.partner_dialog import PartnerDialog
@@ -45,7 +47,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('미니노트 다이어리')
+        self.setWindowTitle(DialogTitles.APP)
         self.menuBar().hide()
 
         self.project_root = self._project_root()
@@ -235,7 +237,7 @@ class MainWindow(QMainWindow):
 
     def _update_window_title(self):
         suffix = ' *' if self.state.is_dirty else ''
-        self.setWindowTitle(f'미니노트 다이어리{suffix}')
+        self.setWindowTitle(f'{DialogTitles.APP}{suffix}')
 
     def _build_feature_pages(self) -> dict[str, object]:
         configs = [
@@ -358,11 +360,11 @@ class MainWindow(QMainWindow):
             if not matches_keyword(keyword, summary.name, summary.factory_name, summary.change_note):
                 continue
             stats = stats_map.get(summary.template_id)
-            subtitle = f"{summary.factory_name or '공장 미지정'} · 기준일 {summary.date or '-'}"
+            subtitle = f"{summary.factory_name or InfoMessages.NO_FACTORY} · 기준일 {summary.date or '-'}"
             meta_lines = [
                 f"자재: 원단 {summary.fabric_count} / 부자재 {summary.trim_count}",
                 f"재고 {getattr(stats, 'current_stock_qty', 0)} · 진행중 {getattr(stats, 'in_progress_qty', 0)}",
-                f"최근 발주 {getattr(stats, 'last_ordered_at', '') or '없음'}",
+                f"최근 발주 {getattr(stats, 'last_ordered_at', '') or InfoMessages.NONE}",
             ]
             item = QListWidgetItem(refs.template_list)
             item.setData(Qt.UserRole, summary.template_id)
@@ -397,11 +399,11 @@ class MainWindow(QMainWindow):
         refs.lbl_labor.setText(summary.labor_display or '-')
         refs.lbl_sale_price.setText(summary.sale_price_display or '-')
         refs.lbl_material_summary.setText(f"원단 {summary.fabric_count} / 부자재 {summary.trim_count}")
-        refs.lbl_last_order.setText(stats.last_ordered_at or '발주 이력 없음')
+        refs.lbl_last_order.setText(stats.last_ordered_at or InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText(str(stats.total_ordered_qty))
         refs.lbl_in_progress.setText(str(stats.in_progress_qty))
         refs.lbl_current_stock.setText(str(stats.current_stock_qty))
-        refs.memo_view.setPlainText(summary.change_note or '메모 없음')
+        refs.memo_view.setPlainText(summary.change_note or InfoMessages.NO_MEMO)
         refs.order_qty_spin.setValue(max(1, refs.order_qty_spin.value()))
         refs.order_memo_edit.clear()
         try:
@@ -422,7 +424,7 @@ class MainWindow(QMainWindow):
         refs.lbl_labor.setText('-')
         refs.lbl_sale_price.setText('-')
         refs.lbl_material_summary.setText('원단 0 / 부자재 0')
-        refs.lbl_last_order.setText('발주 이력 없음')
+        refs.lbl_last_order.setText(InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText('0')
         refs.lbl_in_progress.setText('0')
         refs.lbl_current_stock.setText('0')
@@ -433,11 +435,11 @@ class MainWindow(QMainWindow):
         refs = self.order_page_refs
         template_id = refs.page.property('selected_template_id') or ''
         if not template_id:
-            show_info(self, '발주', '발주할 작업지시서를 먼저 선택하세요.')
+            show_info(self, DialogTitles.ORDER, Warnings.ORDER_SELECT_TEMPLATE_FIRST)
             return
         detail = self.controller.repository.load_template_detail(template_id)
         if detail is None:
-            show_error(self, '발주 실패', '선택한 작업지시서를 다시 불러올 수 없습니다.')
+            show_error(self, DialogTitles.SAVE_FAILED, Warnings.ORDER_TEMPLATE_LOAD_FAILED)
             return
         qty = max(1, refs.order_qty_spin.value())
         ordered_at = refs.order_date_edit.date().toString('yyyy-MM-dd')
@@ -459,18 +461,18 @@ class MainWindow(QMainWindow):
 
     def on_feature_primary(self, page: QWidget) -> None:
         if page is self.page_partner:
-            show_info(self, '거래처 관리', '거래처 관리 편집 화면은 다음 단계에서 실제 입력 폼과 연결합니다.')
+            show_info(self, DialogTitles.PARTNER_MANAGE, InfoMessages.FEATURE_PARTNER_PENDING)
             return
         if page is self.page_inventory:
-            show_info(self, '재고 / 통계', '통계 화면은 SQLite 전환 후 실제 집계 데이터와 연결합니다.')
+            show_info(self, DialogTitles.INVENTORY, InfoMessages.FEATURE_INVENTORY_PENDING)
             return
-        show_info(self, '준비중', '이 화면은 UI 흐름 검토용으로 먼저 배치했습니다. 다음 단계에서 실제 입력/저장 로직을 연결합니다.')
+        show_info(self, DialogTitles.COMING_SOON, InfoMessages.FEATURE_GENERIC_PENDING)
 
     def on_feature_secondary(self, page: QWidget) -> None:
         if page is self.page_receipt:
-            show_info(self, '영수증 등록', '이미지 첨부와 포스트잇 입력을 결합하는 방향으로 화면을 확장할 예정입니다.')
+            show_info(self, DialogTitles.RECEIPT, InfoMessages.FEATURE_RECEIPT_EXTEND)
             return
-        show_info(self, '화면 검토', '현재는 메뉴 구조와 화면 흐름을 먼저 확인하는 단계입니다.')
+        show_info(self, DialogTitles.SCREEN_REVIEW, InfoMessages.FEATURE_SCREEN_REVIEW)
 
     def _focus_style_input(self):
         QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
@@ -527,27 +529,27 @@ class MainWindow(QMainWindow):
             self._refresh_postits(force_rebuild=True)
 
     def on_fabric_deleted(self, idx: int):
-        if self.state.remove_material_item('fabric', idx):
+        if self.state.remove_material_item(MaterialTargets.FABRIC, idx):
             self._refresh_postits(force_rebuild=True)
             self._update_window_title()
 
     def on_trim_deleted(self, idx: int):
-        if self.state.remove_material_item('trim', idx):
+        if self.state.remove_material_item(MaterialTargets.TRIM, idx):
             self._refresh_postits(force_rebuild=True)
             self._update_window_title()
 
     def on_dyeing_deleted(self, idx: int):
-        if self.state.remove_material_item('dyeing', idx):
+        if self.state.remove_material_item(MaterialTargets.DYEING, idx):
             self._refresh_postits(force_rebuild=True)
             self._update_window_title()
 
     def on_finishing_deleted(self, idx: int):
-        if self.state.remove_material_item('finishing', idx):
+        if self.state.remove_material_item(MaterialTargets.FINISHING, idx):
             self._refresh_postits(force_rebuild=True)
             self._update_window_title()
 
     def on_other_deleted(self, idx: int):
-        if self.state.remove_material_item('other', idx):
+        if self.state.remove_material_item(MaterialTargets.OTHER, idx):
             self._refresh_postits(force_rebuild=True)
             self._update_window_title()
 
@@ -558,7 +560,7 @@ class MainWindow(QMainWindow):
         if not self.has_any_data():
             self.go_menu()
             return
-        dialog = ConfirmActionDialog(title='임시 저장', message='임시 저장 하시겠습니까?', confirm_text='예', cancel_text='아니요', parent=self)
+        dialog = ConfirmActionDialog(title=DialogTitles.TEMP_SAVE, message=Warnings.TEMP_SAVE_CONFIRM, confirm_text=Buttons.YES, cancel_text=Buttons.NO, parent=self)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.go_menu()
@@ -569,18 +571,18 @@ class MainWindow(QMainWindow):
     def on_save_clicked(self):
         statuses = self.controller.get_save_requirement_statuses()
         if not all(ok for _, ok in statuses):
-            ValidationStatusDialog('저장 불가', statuses, parent=self).exec()
+            ValidationStatusDialog(DialogTitles.SAVE_BLOCKED, statuses, parent=self).exec()
             return
         try:
             result = self.controller.save()
         except Exception as exc:
-            show_error(self, '저장 실패', str(exc))
+            show_error(self, DialogTitles.SAVE_FAILED, str(exc))
             return
         self.reset_work_order_form()
         message = f'저장 완료\n\nJSON: {result.json_path}\nSHA256(평문): {result.sha256_plain}'
         if result.image_path:
             message += f'\n이미지: {result.image_path}'
-        show_info(self, '저장', message)
+        show_info(self, DialogTitles.SAVE, message)
 
     def on_basic_postit_changed(self, data: dict):
         self.state.update_header(data)
@@ -591,32 +593,32 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def on_fabric_postit_changed(self, idx: int, patch: dict):
-        self.state.update_material_patch('fabric', idx, patch)
+        self.state.update_material_patch(MaterialTargets.FABRIC, idx, patch)
         self._refresh_basic_postit()
         self._update_window_title()
 
     def on_trim_postit_changed(self, idx: int, patch: dict):
-        self.state.update_material_patch('trim', idx, patch)
+        self.state.update_material_patch(MaterialTargets.TRIM, idx, patch)
         self._refresh_basic_postit()
         self._update_window_title()
 
     def on_dyeing_postit_changed(self, idx: int, patch: dict):
-        self.state.update_material_patch('dyeing', idx, patch)
+        self.state.update_material_patch(MaterialTargets.DYEING, idx, patch)
         self._refresh_basic_postit()
         self._update_window_title()
 
     def on_finishing_postit_changed(self, idx: int, patch: dict):
-        self.state.update_material_patch('finishing', idx, patch)
+        self.state.update_material_patch(MaterialTargets.FINISHING, idx, patch)
         self._refresh_basic_postit()
         self._update_window_title()
 
     def on_other_postit_changed(self, idx: int, patch: dict):
-        self.state.update_material_patch('other', idx, patch)
+        self.state.update_material_patch(MaterialTargets.OTHER, idx, patch)
         self._refresh_basic_postit()
         self._update_window_title()
 
     def upload_image(self):
-        path, _ = QFileDialog.getOpenFileName(self, '이미지 선택', '', SUPPORTED_IMAGE_FILTER)
+        path, _ = QFileDialog.getOpenFileName(self, DialogTitles.IMAGE_SELECT, '', SUPPORTED_IMAGE_FILTER)
         if not path:
             return
         try:
@@ -624,19 +626,19 @@ class MainWindow(QMainWindow):
             self.state.current_image_path = path
             self.btn_delete_image.setEnabled(True)
             self.mark_dirty()
-            self._show_feedback('이미지 첨부됨')
+            self._show_feedback(InfoMessages.IMAGE_ATTACHED)
         except Exception as exc:
-            show_error(self, '오류', str(exc))
+            show_error(self, DialogTitles.ERROR, str(exc))
 
     def delete_image(self):
         self.image_preview.clear_image()
         self.state.current_image_path = None
         self.btn_delete_image.setEnabled(False)
         self.mark_dirty()
-        self._show_feedback('이미지 제거됨')
+        self._show_feedback(InfoMessages.IMAGE_REMOVED)
 
     def on_add_fabric_clicked(self):
-        new_index = self.state.add_material_item('fabric')
+        new_index = self.state.add_material_item(MaterialTargets.FABRIC)
         if new_index is None:
             return
         self._refresh_postits(force_rebuild=True)
@@ -644,7 +646,7 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def on_add_trim_clicked(self):
-        new_index = self.state.add_material_item('trim')
+        new_index = self.state.add_material_item(MaterialTargets.TRIM)
         if new_index is None:
             return
         self._refresh_postits(force_rebuild=True)
@@ -652,7 +654,7 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def on_add_dyeing_clicked(self):
-        new_index = self.state.add_material_item('dyeing')
+        new_index = self.state.add_material_item(MaterialTargets.DYEING)
         if new_index is None:
             return
         self._refresh_postits(force_rebuild=True)
@@ -660,7 +662,7 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def on_add_finishing_clicked(self):
-        new_index = self.state.add_material_item('finishing')
+        new_index = self.state.add_material_item(MaterialTargets.FINISHING)
         if new_index is None:
             return
         self._refresh_postits(force_rebuild=True)
@@ -668,7 +670,7 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def on_add_other_clicked(self):
-        new_index = self.state.add_material_item('other')
+        new_index = self.state.add_material_item(MaterialTargets.OTHER)
         if new_index is None:
             return
         self._refresh_postits(force_rebuild=True)
