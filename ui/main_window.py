@@ -1,12 +1,11 @@
 import os
 
-from PySide6.QtCore import QEvent, QTimer, Qt
+from PySide6.QtCore import QEvent, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QApplication,
     QComboBox,
-    QDialog,
     QLineEdit,
     QMainWindow,
     QPlainTextEdit,
@@ -17,19 +16,23 @@ from PySide6.QtWidgets import (
 )
 
 from services.order_repository import OrderRepository
+from services.partner_lookup_service import PartnerLookupService
 from services.work_order_controller import WorkOrderController
 from services.work_order_state import WorkOrderState
-from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, show_error, show_info
-from ui.feature_page import FeaturePageBuilder
-from ui.menu_page import MenuPageBuilder
-from ui.messages import Buttons, DialogTitles, UiTiming, Warnings
+from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
 from ui.main_window_features import build_feature_page_configs
-from ui.main_window_logic import MainWindowEventBinder, MainWindowFeatureLogic, MainWindowOrderLogic, MainWindowWorkOrderLogic
+from ui.main_window_logic import (
+    MainWindowDialogLogic,
+    MainWindowEventBinder,
+    MainWindowFeatureLogic,
+    MainWindowNavigationLogic,
+    MainWindowOrderLogic,
+    MainWindowPageCoordinator,
+    MainWindowSaveLogic,
+    MainWindowWorkOrderLogic,
+)
+from ui.messages import Buttons, DialogTitles, UiTiming, Warnings
 from ui.theme import THEME, build_app_stylesheet
-from ui.unit_dialog import UnitDialog
-from ui.partner_dialog import PartnerDialog
-from ui.order_page import OrderPageBuilder
-from ui.work_order_page import WorkOrderPageBuilder
 
 
 class MainWindow(QMainWindow):
@@ -51,6 +54,7 @@ class MainWindow(QMainWindow):
         self.state = WorkOrderState()
         self.controller = WorkOrderController(self.state, self.project_root)
         self.order_repository = OrderRepository(self.project_root)
+        self.partner_lookup_service = PartnerLookupService(self.project_root)
         self._suppress_dirty = False
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -78,48 +82,7 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(self.stack)
 
     def _build_pages(self) -> None:
-        menu_refs = MenuPageBuilder.build()
-        work_refs = WorkOrderPageBuilder.build(self)
-        self.order_page_refs = OrderPageBuilder.build()
-        self.feature_pages = self._build_feature_pages()
-
-        self._apply_menu_refs(menu_refs)
-        self._apply_work_order_refs(work_refs)
-        self.pages = {
-            'page_menu': menu_refs.page,
-            'page_work_order': work_refs.page,
-            'page_job_start': self.order_page_refs.page,
-            'page_receipt': self.feature_pages['receipt'].page,
-            'page_complete': self.feature_pages['complete'].page,
-            'page_sale': self.feature_pages['sale'].page,
-            'page_inventory': self.feature_pages['inventory'].page,
-            'page_partner': self.feature_pages['partner'].page,
-        }
-        for page in self.pages.values():
-            self.stack.addWidget(page)
-        self.stack.setCurrentIndex(self.PAGE_MENU)
-
-    def _apply_menu_refs(self, refs) -> None:
-        self.btn_template = refs.btn_template
-        self.btn_job_start_menu = refs.btn_job_start
-        self.btn_receipt_menu = refs.btn_receipt
-        self.btn_complete_menu = refs.btn_complete
-        self.btn_sale_menu = refs.btn_sale
-        self.btn_inventory_menu = refs.btn_inventory
-        self.btn_partner_mgmt = refs.btn_partner_mgmt
-        self.btn_unit_mgmt = refs.btn_unit_mgmt
-
-    def _apply_work_order_refs(self, refs) -> None:
-        self.btn_back = refs.btn_back
-        self.btn_reset = refs.btn_reset
-        self.btn_load = refs.btn_load
-        self.btn_save = refs.btn_save
-        self.btn_upload = refs.btn_upload
-        self.btn_delete_image = refs.btn_delete_image
-        self.feedback_label = refs.feedback_label
-        self.image_preview = refs.image_preview
-        self.change_note_postit = refs.change_note_postit
-        self.postit_bar = refs.postit_bar
+        MainWindowPageCoordinator.build_pages(self)
 
     def _bind_page_events(self) -> None:
         MainWindowEventBinder.bind(self)
@@ -166,16 +129,11 @@ class MainWindow(QMainWindow):
                     focused.clearFocus()
         return super().eventFilter(obj, event)
 
-    def _open_modal_dialog(self, dialog_cls):
-        dialog = dialog_cls(project_root=self.project_root, parent=self)
-        dialog.setWindowModality(Qt.ApplicationModal)
-        dialog.exec()
-
     def on_partner_mgmt_clicked(self):
-        self._open_modal_dialog(PartnerDialog)
+        MainWindowDialogLogic.open_partner_management(self)
 
     def on_unit_mgmt_clicked(self):
-        self._open_modal_dialog(UnitDialog)
+        MainWindowDialogLogic.open_unit_management(self)
 
     def _show_feedback(self, message: str, timeout_ms: int = UiTiming.FEEDBACK_TIMEOUT_MS):
         self.feedback_label.setText(message)
@@ -188,12 +146,11 @@ class MainWindow(QMainWindow):
         suffix = ' *' if self.state.is_dirty else ''
         self.setWindowTitle(f'{DialogTitles.APP}{suffix}')
 
-    def _build_feature_pages(self) -> dict[str, object]:
-        return {config.key: FeaturePageBuilder.build(config) for config in build_feature_page_configs()}
+    def build_feature_page_configs(self):
+        return build_feature_page_configs()
 
     def open_order_page(self) -> None:
-        self.refresh_order_page()
-        self.stack.setCurrentIndex(self.PAGE_JOB_START)
+        MainWindowNavigationLogic.open_order_page(self)
 
     def refresh_order_page(self) -> None:
         MainWindowOrderLogic.refresh_order_page(self)
@@ -208,7 +165,7 @@ class MainWindow(QMainWindow):
         MainWindowOrderLogic.on_order_create_clicked(self)
 
     def open_feature_page(self, page_index: int) -> None:
-        self.stack.setCurrentIndex(page_index)
+        MainWindowNavigationLogic.open_feature_page(self, page_index)
 
     def on_feature_primary(self, page: QWidget) -> None:
         MainWindowFeatureLogic.show_primary(self, page)
@@ -220,12 +177,10 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
 
     def go_work_order(self):
-        self._refresh_postits(force_rebuild=True)
-        self.stack.setCurrentIndex(self.PAGE_WORK_ORDER)
-        self._focus_style_input()
+        MainWindowNavigationLogic.go_work_order(self)
 
     def go_menu(self):
-        self.stack.setCurrentIndex(self.PAGE_MENU)
+        MainWindowNavigationLogic.go_menu(self)
 
     def mark_dirty(self):
         if self._suppress_dirty:
@@ -251,33 +206,34 @@ class MainWindow(QMainWindow):
     def on_reset_clicked(self):
         self.reset_work_order_form()
 
-    def on_back_clicked(self):
-        if not self.has_any_data():
-            self.go_menu()
-            return
-        dialog = ConfirmActionDialog(title=DialogTitles.TEMP_SAVE, message=Warnings.TEMP_SAVE_CONFIRM, confirm_text=Buttons.YES, cancel_text=Buttons.NO, parent=self)
-        result = dialog.exec()
-        if result == QDialog.Accepted:
-            self.go_menu()
-        else:
-            self.reset_work_order_form()
-            self.go_menu()
+    def create_back_confirm_dialog(self):
+        return ConfirmActionDialog(
+            title=DialogTitles.TEMP_SAVE,
+            message=Warnings.TEMP_SAVE_CONFIRM,
+            confirm_text=Buttons.YES,
+            cancel_text=Buttons.NO,
+            parent=self,
+        )
 
-    def on_save_clicked(self):
-        statuses = self.controller.get_save_requirement_statuses()
-        if not all(ok for _, ok in statuses):
-            ValidationStatusDialog(DialogTitles.SAVE_BLOCKED, statuses, parent=self).exec()
-            return
-        try:
-            result = self.controller.save()
-        except Exception as exc:
-            show_error(self, DialogTitles.SAVE_FAILED, str(exc))
-            return
-        self.reset_work_order_form()
+    @staticmethod
+    def dialog_accept_code() -> int:
+        return ConfirmActionDialog.Accepted
+
+    def show_validation_statuses(self, statuses) -> None:
+        ValidationStatusDialog(DialogTitles.SAVE_BLOCKED, statuses, parent=self).exec()
+
+    @staticmethod
+    def build_save_success_message(result) -> str:
         message = f"저장 완료\n\nJSON: {result.json_path}\nSHA256(평문): {result.sha256_plain}"
         if result.image_path:
             message += f"\n이미지: {result.image_path}"
-        show_info(self, DialogTitles.SAVE, message)
+        return message
+
+    def on_back_clicked(self):
+        MainWindowSaveLogic.handle_back(self)
+
+    def on_save_clicked(self):
+        MainWindowSaveLogic.handle_save(self)
 
     def on_basic_postit_changed(self, data: dict):
         self.state.update_header(data)

@@ -6,8 +6,9 @@ from collections.abc import Callable
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QLineEdit, QMenu, QWidget
 
-from services.partner_repository import PartnerRepository, PartnerRecord
-from services.partner_utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER, PARTNER_TYPE_TRIM
+from services.partner_lookup_service import PartnerLookupService
+from services.partner_repository import PartnerRecord
+from services.partner_utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER
 from ui.messages import InfoMessages
 from ui.partner_dialog import PartnerDialog
 from ui.theme import menu_style
@@ -34,21 +35,19 @@ def open_partner_management(widget: QWidget | None) -> int:
 
 
 
-def _repository_for(widget: QWidget | None) -> PartnerRepository:
-    return PartnerRepository(project_root_from_widget(widget))
+def _service_from_widget(widget: QWidget | None) -> PartnerLookupService:
+    current = widget
+    while current is not None:
+        service = getattr(current, 'partner_lookup_service', None)
+        if isinstance(service, PartnerLookupService):
+            return service
+        current = current.parentWidget()
+    return PartnerLookupService(project_root_from_widget(widget))
 
 
 
 def _partners_for_type(widget: QWidget | None, partner_type: str) -> list[PartnerRecord]:
-    repository = _repository_for(widget)
-    if partner_type == PARTNER_TYPE_OTHER:
-        excluded = {PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_TRIM}
-        return [
-            row
-            for row in repository.load_partners()
-            if not any(partner_type_name in excluded for partner_type_name in (row.types or []))
-        ]
-    return repository.load_partners_by_type(partner_type)
+    return _service_from_widget(widget).partners_for_type(partner_type)
 
 
 

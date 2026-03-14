@@ -8,6 +8,13 @@ from PySide6.QtWidgets import QFileDialog, QListWidgetItem, QWidget
 from services.field_keys import MaterialTargets
 from services.search_utils import matches_keyword
 from ui.dialogs import show_error, show_info
+
+from ui.feature_page import FeaturePageBuilder
+from ui.menu_page import MenuPageBuilder
+from ui.order_page import OrderPageBuilder
+from ui.partner_dialog import PartnerDialog
+from ui.unit_dialog import UnitDialog
+from ui.work_order_page import WorkOrderPageBuilder
 from ui.order_page import TemplateListCard
 from ui.messages import Buttons, DefaultTexts, DialogTitles, FileDialogFilters, HelperTexts, InfoMessages, Labels, Warnings
 
@@ -24,6 +31,136 @@ MATERIAL_TARGET_CONFIGS = {
 }
 
 MATERIAL_STACK_NAMES = {target: stack_name for target, (_, _, _, stack_name) in MATERIAL_TARGET_CONFIGS.items()}
+
+
+class MainWindowPageCoordinator:
+    PAGE_NAMES_BY_FEATURE_KEY = {
+        'receipt': 'page_receipt',
+        'complete': 'page_complete',
+        'sale': 'page_sale',
+        'inventory': 'page_inventory',
+        'partner': 'page_partner',
+    }
+
+    @staticmethod
+    def build_pages(window: "MainWindow") -> None:
+        menu_refs = MenuPageBuilder.build()
+        work_refs = WorkOrderPageBuilder.build(window)
+        order_refs = OrderPageBuilder.build()
+        window.work_order_page_ref = work_refs.page
+        feature_pages = {config.key: FeaturePageBuilder.build(config) for config in window.build_feature_page_configs()}
+
+        MainWindowPageCoordinator._apply_menu_refs(window, menu_refs)
+        MainWindowPageCoordinator._apply_work_order_refs(window, work_refs)
+        window.order_page_refs = order_refs
+        window.feature_pages = feature_pages
+        window.pages = MainWindowPageCoordinator._build_page_map(window, menu_refs, order_refs, feature_pages)
+
+        for page in window.pages.values():
+            window.stack.addWidget(page)
+        window.stack.setCurrentIndex(window.PAGE_MENU)
+
+    @staticmethod
+    def _apply_menu_refs(window: "MainWindow", refs) -> None:
+        window.btn_template = refs.btn_template
+        window.btn_job_start_menu = refs.btn_job_start
+        window.btn_receipt_menu = refs.btn_receipt
+        window.btn_complete_menu = refs.btn_complete
+        window.btn_sale_menu = refs.btn_sale
+        window.btn_inventory_menu = refs.btn_inventory
+        window.btn_partner_mgmt = refs.btn_partner_mgmt
+        window.btn_unit_mgmt = refs.btn_unit_mgmt
+
+    @staticmethod
+    def _apply_work_order_refs(window: "MainWindow", refs) -> None:
+        window.btn_back = refs.btn_back
+        window.btn_reset = refs.btn_reset
+        window.btn_load = refs.btn_load
+        window.btn_save = refs.btn_save
+        window.btn_upload = refs.btn_upload
+        window.btn_delete_image = refs.btn_delete_image
+        window.feedback_label = refs.feedback_label
+        window.image_preview = refs.image_preview
+        window.change_note_postit = refs.change_note_postit
+        window.postit_bar = refs.postit_bar
+
+    @staticmethod
+    def _build_page_map(window: "MainWindow", menu_refs, order_refs, feature_pages: dict[str, object]) -> dict[str, QWidget]:
+        pages = {
+            'page_menu': menu_refs.page,
+            'page_work_order': window.work_order_page_ref,
+            'page_job_start': order_refs.page,
+        }
+        for key, page_name in MainWindowPageCoordinator.PAGE_NAMES_BY_FEATURE_KEY.items():
+            pages[page_name] = feature_pages[key].page
+        return pages
+
+
+class MainWindowNavigationLogic:
+    @staticmethod
+    def open_order_page(window: "MainWindow") -> None:
+        window.refresh_order_page()
+        window.stack.setCurrentIndex(window.PAGE_JOB_START)
+
+    @staticmethod
+    def open_feature_page(window: "MainWindow", page_index: int) -> None:
+        window.stack.setCurrentIndex(page_index)
+
+    @staticmethod
+    def go_work_order(window: "MainWindow") -> None:
+        window._refresh_postits(force_rebuild=True)
+        window.stack.setCurrentIndex(window.PAGE_WORK_ORDER)
+        window._focus_style_input()
+
+    @staticmethod
+    def go_menu(window: "MainWindow") -> None:
+        window.stack.setCurrentIndex(window.PAGE_MENU)
+
+
+class MainWindowDialogLogic:
+    @staticmethod
+    def open_modal_dialog(window: "MainWindow", dialog_cls) -> int:
+        dialog = dialog_cls(project_root=window.project_root, parent=window)
+        dialog.setWindowModality(Qt.ApplicationModal)
+        return dialog.exec()
+
+    @staticmethod
+    def open_partner_management(window: "MainWindow") -> int:
+        return MainWindowDialogLogic.open_modal_dialog(window, PartnerDialog)
+
+    @staticmethod
+    def open_unit_management(window: "MainWindow") -> int:
+        return MainWindowDialogLogic.open_modal_dialog(window, UnitDialog)
+
+
+class MainWindowSaveLogic:
+    @staticmethod
+    def handle_back(window: "MainWindow") -> None:
+        if not window.has_any_data():
+            MainWindowNavigationLogic.go_menu(window)
+            return
+        dialog = window.create_back_confirm_dialog()
+        result = dialog.exec()
+        if result == window.dialog_accept_code():
+            MainWindowNavigationLogic.go_menu(window)
+        else:
+            window.reset_work_order_form()
+            MainWindowNavigationLogic.go_menu(window)
+
+    @staticmethod
+    def handle_save(window: "MainWindow") -> None:
+        statuses = window.controller.get_save_requirement_statuses()
+        if not all(ok for _, ok in statuses):
+            window.show_validation_statuses(statuses)
+            return
+        try:
+            result = window.controller.save()
+        except Exception as exc:
+            show_error(window, DialogTitles.SAVE_FAILED, str(exc))
+            return
+        window.reset_work_order_form()
+        show_info(window, DialogTitles.SAVE, window.build_save_success_message(result))
+
 
 
 class MainWindowEventBinder:
