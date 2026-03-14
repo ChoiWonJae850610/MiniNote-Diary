@@ -172,10 +172,10 @@ class ValidationStatusDialog(_BaseThemedDialog):
 
         layout = QHBoxLayout(row)
         layout.setContentsMargins(*status_row_margins())
-        layout.setSpacing(THEME.row_spacing + DialogLayout.INLINE_ROW_SPACING - 4)
+        layout.setSpacing(DialogLayout.STATUS_ROW_SPACING)
 
         icon = QLabel("V" if ok else "X", row)
-        icon.setFixedWidth(DialogLayout.BUTTON_ICON_SIZE + 4)
+        icon.setFixedWidth(DialogLayout.STATUS_ICON_WIDTH)
         icon.setAlignment(Qt.AlignCenter)
         icon.setObjectName("statusIconOk" if ok else "statusIconFail")
 

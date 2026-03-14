@@ -4,13 +4,14 @@ from typing import Dict
 
 from PySide6.QtCore import Qt, QDate, QRegularExpression, QSize, QPoint, Signal
 from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
-from PySide6.QtWidgets import QCalendarWidget, QDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCalendarWidget, QDialog, QGridLayout, QLabel, QLineEdit, QToolButton
 
 from services.formatters import digits_only, format_commas_from_digits
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.messages import Buttons, DialogTitles, Labels, Tooltips
-from ui.theme import THEME, compact_popup_margins, dialog_layout_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
+from ui.theme import THEME, compact_popup_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button, set_widget_tooltip
+from ui.page_builders_common import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 
@@ -72,14 +73,9 @@ class BasicInfoDialog(QDialog):
         self.setModal(True)
         self.setMinimumWidth(DialogLayout.MIN_WIDTH_STANDARD)
         initial = initial or {}
-        root = QVBoxLayout(self)
-        root.setContentsMargins(*dialog_layout_margins())
-        root.setSpacing(THEME.block_spacing)
+        root = make_dialog_root_layout(self)
 
-        form = QFormLayout()
-        form.setLabelAlignment(Qt.AlignLeft)
-        form.setHorizontalSpacing(DialogLayout.FORM_HORIZONTAL_SPACING)
-        form.setVerticalSpacing(DialogLayout.FORM_VERTICAL_SPACING)
+        form = make_dialog_form_layout()
 
         initial_date = QDate.fromString(initial.get("date", ""), "yyyy-MM-dd")
         if not initial_date.isValid():
@@ -101,13 +97,7 @@ class BasicInfoDialog(QDialog):
         self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
 
-        date_row = QWidget(self)
-        date_h = QHBoxLayout(date_row)
-        date_h.setContentsMargins(0, 0, 0, 0)
-        date_h.setSpacing(DialogLayout.INLINE_ROW_SPACING)
-        date_h.addWidget(self.date_text)
-        date_h.addWidget(self.btn_calendar)
-        date_h.addStretch(1)
+        date_row = make_dialog_inline_row(self, self.date_text, self.btn_calendar)
 
         self.style_no = QLineEdit(self)
         self.factory = QLineEdit(self)
@@ -126,12 +116,7 @@ class BasicInfoDialog(QDialog):
             size=THEME.dialog_field_height,
         )
         self.btn_factory_partner.clicked.connect(self._open_factory_picker)
-        factory_row = QWidget(self)
-        factory_h = QHBoxLayout(factory_row)
-        factory_h.setContentsMargins(0, 0, 0, 0)
-        factory_h.setSpacing(DialogLayout.INLINE_ROW_SPACING)
-        factory_h.addWidget(self.factory, 1)
-        factory_h.addWidget(self.btn_factory_partner, 0)
+        factory_row = make_dialog_inline_row(self, self.factory, self.btn_factory_partner, stretch=False)
 
         price_row = QWidget(self)
         grid = QGridLayout(price_row)
@@ -150,8 +135,8 @@ class BasicInfoDialog(QDialog):
         self.cost.setFocusPolicy(Qt.NoFocus)
 
         for edit in (self.cost, self.labor, self.loss, self.sale_price):
-            edit.setMinimumWidth(90)
-            edit.setMaximumWidth(140)
+            edit.setMinimumWidth(DialogLayout.PRICE_FIELD_MIN_WIDTH)
+            edit.setMaximumWidth(DialogLayout.PRICE_FIELD_MAX_WIDTH)
 
         pairs = [(Labels.COST, self.cost), (Labels.LABOR, self.labor), (Labels.LOSS, self.loss), (Labels.SALE_PRICE, self.sale_price)]
         col = 0
@@ -189,7 +174,7 @@ class BasicInfoDialog(QDialog):
 
         popup.datePicked.connect(_apply_date)
         anchor = self.date_text
-        global_pos = anchor.mapToGlobal(QPoint(0, anchor.height() + 2))
+        global_pos = anchor.mapToGlobal(QPoint(0, anchor.height() + DialogLayout.CALENDAR_POPUP_OFFSET_Y))
         screen = QGuiApplication.screenAt(global_pos) or QGuiApplication.primaryScreen()
         avail = screen.availableGeometry() if screen else None
         popup.adjustSize()
@@ -199,7 +184,7 @@ class BasicInfoDialog(QDialog):
             if x + width > avail.right():
                 x = max(avail.left(), avail.right() - width)
             if y + height > avail.bottom():
-                y = max(avail.top(), anchor.mapToGlobal(QPoint(0, 0)).y() - height - 2)
+                y = max(avail.top(), anchor.mapToGlobal(QPoint(0, 0)).y() - height - DialogLayout.CALENDAR_POPUP_OFFSET_Y)
         popup.move(x, y)
         popup.show()
 

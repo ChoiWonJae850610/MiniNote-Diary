@@ -1,47 +1,44 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QAbstractItemView, QDialog, QHeaderView, QTableWidget, QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QHeaderView, QTableWidget, QTableWidgetItem
 
 from services.partner_repository import PartnerRepository
 from ui.dialogs import show_info
-from ui.messages import DialogTitles, InfoMessages, Tooltips
-from ui.theme import THEME, dialog_layout_margins
+from ui.messages import DialogTitles, InfoMessages, TableHeaders, Tooltips
+from ui.theme import THEME, table_widget_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
+from ui.page_builders_common import make_dialog_root_layout
+from ui.layout_metrics import PartnerTypeDialogLayout
 
 
 class PartnerTypeDialog(QDialog):
     def __init__(self, repo: PartnerRepository, parent=None):
         super().__init__(parent)
         self.setWindowTitle(DialogTitles.PARTNER_TYPE_MANAGE)
-        self.resize(540, 420)
+        self.resize(PartnerTypeDialogLayout.WIDTH, PartnerTypeDialogLayout.HEIGHT)
         self.repo = repo
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(*dialog_layout_margins())
-        root.setSpacing(THEME.block_spacing)
+        root = make_dialog_root_layout(self)
 
         self.table = QTableWidget(0, 1, self)
-        self.table.setHorizontalHeaderLabels([DialogTitles.PARTNER_TYPE])
+        self.table.setHorizontalHeaderLabels(list(TableHeaders.PARTNER_TYPE))
         self.table.verticalHeader().setVisible(False)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.SelectedClicked | QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
         self.table.itemClicked.connect(lambda it: self.table.editItem(it))
-        self.table.setStyleSheet(
-            f"QTableWidget{{background:{THEME.color_window};border:1px solid {THEME.color_border};border-radius:12px;padding:4px;}}"
-            f"QHeaderView::section{{background:{THEME.color_surface};border:none;border-bottom:1px solid {THEME.color_border_soft};padding:8px 10px;font-weight:600;color:{THEME.color_text_soft};}}"
-        )
+        self.table.setStyleSheet(table_widget_style())
         self.table.verticalHeader().setDefaultSectionSize(THEME.table_row_height)
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         root.addWidget(self.table)
 
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text="✓", font_px=18)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=18)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=18)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=18)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text="✓", font_px=PartnerTypeDialogLayout.ICON_FONT_PX)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=PartnerTypeDialogLayout.ICON_FONT_PX)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=PartnerTypeDialogLayout.ICON_FONT_PX)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=PartnerTypeDialogLayout.ICON_FONT_PX)
         root.addLayout(make_dialog_button_row([self.btn_save, self.btn_add, self.btn_delete, self.btn_close]))
 
         self.btn_save.clicked.connect(self.on_save)
@@ -49,7 +46,7 @@ class PartnerTypeDialog(QDialog):
         self.btn_delete.clicked.connect(self.on_delete)
         self.btn_close.clicked.connect(self.reject)
 
-        self._ensure_rows(16)
+        self._ensure_rows(PartnerTypeDialogLayout.MIN_ROWS)
         self.load_types()
 
     def _ensure_rows(self, target: int) -> None:
@@ -62,7 +59,7 @@ class PartnerTypeDialog(QDialog):
         types = self.repo.load_types()
         self.table.clearContents()
         self.table.setRowCount(0)
-        self._ensure_rows(max(16, len(types) + 1))
+        self._ensure_rows(max(PartnerTypeDialogLayout.MIN_ROWS, len(types) + 1))
         for row, type_name in enumerate(types):
             self.table.setItem(row, 0, QTableWidgetItem(type_name))
 

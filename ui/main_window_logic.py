@@ -9,7 +9,7 @@ from services.field_keys import MaterialTargets
 from services.search_utils import matches_keyword
 from ui.dialogs import show_error, show_info
 from ui.order_page import TemplateListCard
-from ui.messages import Buttons, DefaultTexts, DialogTitles, FileDialogFilters, InfoMessages, Labels, Warnings
+from ui.messages import Buttons, DefaultTexts, DialogTitles, FileDialogFilters, HelperTexts, InfoMessages, Labels, Warnings
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
@@ -109,9 +109,9 @@ class MainWindowOrderLogic:
             stats = stats_map.get(summary.template_id)
             subtitle = f"{summary.factory_name or InfoMessages.NO_FACTORY} · 기준일 {summary.date or DefaultTexts.EMPTY_VALUE}"
             meta_lines = [
-                f"자재: 원단 {summary.fabric_count} / 부자재 {summary.trim_count}",
-                f"재고 {getattr(stats, 'current_stock_qty', 0)} · 진행중 {getattr(stats, 'in_progress_qty', 0)}",
-                f"최근 발주 {getattr(stats, 'last_ordered_at', '') or InfoMessages.NONE}",
+                HelperTexts.ORDER_TEMPLATE_META_MATERIAL.format(fabric=summary.fabric_count, trim=summary.trim_count),
+                HelperTexts.ORDER_TEMPLATE_META_STOCK.format(stock=getattr(stats, 'current_stock_qty', 0), in_progress=getattr(stats, 'in_progress_qty', 0)),
+                HelperTexts.ORDER_TEMPLATE_META_LAST_ORDER.format(last_order=getattr(stats, 'last_ordered_at', '') or InfoMessages.NONE),
             ]
             item = QListWidgetItem(refs.template_list)
             item.setData(Qt.UserRole, summary.template_id)
@@ -146,7 +146,7 @@ class MainWindowOrderLogic:
         refs.lbl_cost.setText(summary.cost_display or DefaultTexts.EMPTY_VALUE)
         refs.lbl_labor.setText(summary.labor_display or DefaultTexts.EMPTY_VALUE)
         refs.lbl_sale_price.setText(summary.sale_price_display or DefaultTexts.EMPTY_VALUE)
-        refs.lbl_material_summary.setText(f"원단 {summary.fabric_count} / 부자재 {summary.trim_count}")
+        refs.lbl_material_summary.setText(HelperTexts.ORDER_DETAIL_MATERIAL_SUMMARY.format(fabric=summary.fabric_count, trim=summary.trim_count))
         refs.lbl_last_order.setText(stats.last_ordered_at or InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText(str(stats.total_ordered_qty))
         refs.lbl_in_progress.setText(str(stats.in_progress_qty))

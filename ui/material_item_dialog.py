@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, QRegularExpression, QEvent
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLabel, QLineEdit, QVBoxLayout, QWidget, QHBoxLayout
+from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit
 
 from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units
-from ui.theme import THEME, combo_box_style, dialog_layout_margins, hint_label_style, input_line_edit_style, read_only_line_edit_style
+from ui.theme import THEME, combo_box_style, hint_label_style, input_line_edit_style, read_only_line_edit_style
 from ui.icon_factory import make_partner_link_icon
 from ui.messages import Buttons, InfoMessages, Labels, Tooltips, Warnings
 from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
+from ui.page_builders_common import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 
@@ -69,22 +70,16 @@ class MaterialItemDialog(QDialog):
         self.setModal(True)
         self.setMinimumWidth(DialogLayout.MIN_WIDTH_NARROW)
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(*dialog_layout_margins())
-        root.setSpacing(THEME.block_spacing)
+        root = make_dialog_root_layout(self)
 
-        form = QFormLayout()
-        form.setLabelAlignment(Qt.AlignLeft)
-        form.setFormAlignment(Qt.AlignTop)
-        form.setHorizontalSpacing(DialogLayout.FORM_HORIZONTAL_SPACING)
-        form.setVerticalSpacing(DialogLayout.FORM_VERTICAL_SPACING)
+        form = make_dialog_form_layout()
 
         self.vendor = QLineEdit(self)
         self.item = QLineEdit(self)
         self.qty = CommaIntEdit(self)
         self.unit = ClearableComboBox(self)
         self.unit.setFixedHeight(DialogLayout.FIELD_HEIGHT)
-        self.unit.setMinimumWidth(160)
+        self.unit.setMinimumWidth(DialogLayout.UNIT_COMBO_MIN_WIDTH)
         self.unit.addItem("", "")
         for unit, label in load_units():
             if unit or label:
@@ -107,12 +102,7 @@ class MaterialItemDialog(QDialog):
             size=DialogLayout.FIELD_HEIGHT,
         )
         self.btn_vendor_partner.clicked.connect(self._open_vendor_picker)
-        vendor_row = QWidget(self)
-        vendor_h = QHBoxLayout(vendor_row)
-        vendor_h.setContentsMargins(0, 0, 0, 0)
-        vendor_h.setSpacing(DialogLayout.INLINE_ROW_SPACING)
-        vendor_h.addWidget(self.vendor, 1)
-        vendor_h.addWidget(self.btn_vendor_partner, 0)
+        vendor_row = make_dialog_inline_row(self, self.vendor, self.btn_vendor_partner, stretch=False)
 
         form.addRow(Labels.VENDOR, vendor_row)
         form.addRow(Labels.ITEM, self.item)

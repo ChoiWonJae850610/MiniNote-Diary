@@ -10,6 +10,12 @@ class DialogLayout:
     PRICE_GRID_SPACING = 10
     FIELD_HEIGHT = 30
     BUTTON_ICON_SIZE = 14
+    STATUS_ICON_WIDTH = 18
+    STATUS_ROW_SPACING = 6
+    CALENDAR_POPUP_OFFSET_Y = 2
+    PRICE_FIELD_MIN_WIDTH = 90
+    PRICE_FIELD_MAX_WIDTH = 140
+    UNIT_COMBO_MIN_WIDTH = 160
 
 
 class OrderPageLayout:
@@ -55,6 +61,14 @@ class MenuLayout:
 
 class UnitDialogLayout:
     ICON_FONT_PX = 18
+    MIN_ROWS = 20
+
+
+class PartnerTypeDialogLayout:
+    WIDTH = 540
+    HEIGHT = 420
+    ICON_FONT_PX = 18
+    MIN_ROWS = 16
 
 
 class PostItLayout:

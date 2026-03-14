@@ -3,13 +3,14 @@ import os
 from typing import List, Dict
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QAbstractItemView, QHeaderView
+from PySide6.QtWidgets import QDialog, QTableWidget, QAbstractItemView, QHeaderView
 
 from ui.dialogs import show_info, show_warning
 from ui.layout_metrics import UnitDialogLayout
 from ui.messages import DialogTitles, InfoMessages, TableHeaders, Tooltips
-from ui.theme import THEME, dialog_layout_margins, table_widget_style
+from ui.theme import THEME, table_widget_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
+from ui.page_builders_common import make_dialog_root_layout
 
 
 class UnitDialog(QDialog):
@@ -23,9 +24,7 @@ class UnitDialog(QDialog):
         os.makedirs(self.db_dir, exist_ok=True)
         self.units_path = os.path.join(self.db_dir, "units.json")
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(*dialog_layout_margins())
-        layout.setSpacing(THEME.block_spacing)
+        layout = make_dialog_root_layout(self)
 
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(list(TableHeaders.UNIT))
@@ -56,7 +55,7 @@ class UnitDialog(QDialog):
         self.btn_delete.clicked.connect(self.on_delete)
         self.btn_close.clicked.connect(self.close)
 
-        self._ensure_empty_row_count(20)
+        self._ensure_empty_row_count(UnitDialogLayout.MIN_ROWS)
         self.load_units()
 
     def load_units(self):
@@ -75,7 +74,7 @@ class UnitDialog(QDialog):
         try:
             self.table.clearContents()
             self.table.setRowCount(0)
-            self._ensure_empty_row_count(max(20, len(units) + 1))
+            self._ensure_empty_row_count(max(UnitDialogLayout.MIN_ROWS, len(units) + 1))
             for r, u in enumerate(units):
                 if not isinstance(u, dict):
                     continue
