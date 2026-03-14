@@ -7,19 +7,14 @@ from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QLabel, QSizePolicy, QToolButton
 
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
+from ui.layout_metrics import PostItLayout
 from ui.messages import Labels, Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, InlineCalendarPopup
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
-from ui.postit.layout import (
-    POSTIT_BASIC_CARD_MIN_WIDTH,
-    POSTIT_BODY_HEIGHT,
-    POSTIT_CALENDAR_ICON_SIZE,
-    POSTIT_CALENDAR_POPUP_OFFSET_Y,
-    POSTIT_PARTNER_LINK_ICON_SIZE,
-)
+from ui.postit.layout import POSTIT_BODY_HEIGHT
 from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
 
@@ -29,7 +24,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(POSTIT_BASIC_CARD_MIN_WIDTH, POSTIT_BODY_HEIGHT))
+        self.setMinimumSize(QSize(320, POSTIT_BODY_HEIGHT))
         self.setFixedHeight(POSTIT_BODY_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -40,11 +35,11 @@ class BasicInfoPostIt(_PostItCardBase):
         self.date_text.setFixedHeight(FIELD_H)
         self.date_text.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.date_text.setStyleSheet(display_field_style())
-        self.date_text.setMinimumWidth(THEME.calendar_display_width + 8)
+        self.date_text.setMinimumWidth(THEME.calendar_display_width + PostItLayout.DATE_MIN_WIDTH_EXTRA)
 
         self.btn_calendar = QToolButton(self)
-        self.btn_calendar.setIcon(make_calendar_icon(POSTIT_CALENDAR_ICON_SIZE))
-        self.btn_calendar.setIconSize(QSize(POSTIT_CALENDAR_ICON_SIZE, POSTIT_CALENDAR_ICON_SIZE))
+        self.btn_calendar.setIcon(make_calendar_icon(PostItLayout.CALENDAR_ICON_SIZE))
+        self.btn_calendar.setIconSize(QSize(PostItLayout.CALENDAR_ICON_SIZE, PostItLayout.CALENDAR_ICON_SIZE))
         self.btn_calendar.setFixedSize(FIELD_H, FIELD_H)
         self.btn_calendar.setCursor(Qt.PointingHandCursor)
         set_widget_tooltip(self.btn_calendar, Tooltips.OPEN_CALENDAR)
@@ -58,8 +53,8 @@ class BasicInfoPostIt(_PostItCardBase):
         self.style_no = _ClickToEditLineEdit(self)
         self.factory = _ClickToEditLineEdit(self)
         self.btn_factory_partner = QToolButton(self)
-        self.btn_factory_partner.setIcon(make_partner_link_icon(POSTIT_PARTNER_LINK_ICON_SIZE))
-        self.btn_factory_partner.setIconSize(QSize(POSTIT_PARTNER_LINK_ICON_SIZE, POSTIT_PARTNER_LINK_ICON_SIZE))
+        self.btn_factory_partner.setIcon(make_partner_link_icon(PostItLayout.PARTNER_LINK_ICON_SIZE))
+        self.btn_factory_partner.setIconSize(QSize(PostItLayout.PARTNER_LINK_ICON_SIZE, PostItLayout.PARTNER_LINK_ICON_SIZE))
         self.btn_factory_partner.setFixedSize(FIELD_H, FIELD_H)
         self.btn_factory_partner.setCursor(Qt.PointingHandCursor)
         set_widget_tooltip(self.btn_factory_partner, Tooltips.PARTNER_MANAGE)
@@ -182,7 +177,7 @@ class BasicInfoPostIt(_PostItCardBase):
         popup = InlineCalendarPopup(self._date_value, parent=self)
         popup.datePicked.connect(self._on_date_picked)
         popup.moveNextRequested.connect(self.style_no.activate_for_input)
-        anchor = self.btn_calendar.mapToGlobal(QPoint(0, self.btn_calendar.height() + POSTIT_CALENDAR_POPUP_OFFSET_Y))
+        anchor = self.btn_calendar.mapToGlobal(QPoint(0, self.btn_calendar.height() + PostItLayout.CALENDAR_POPUP_OFFSET_Y))
         popup.move(anchor)
         popup.show()
         popup.cal.setFocus(Qt.PopupFocusReason)

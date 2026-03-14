@@ -3,7 +3,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QDialog, QTextEdit, QVBoxLayout
 
 from ui.messages import Buttons, DialogTitles, Placeholders
-from ui.theme import THEME
+from ui.theme import THEME, dialog_layout_margins
 from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
 
@@ -14,7 +14,7 @@ class ChangeNoteDialog(QDialog):
         self.setModal(True)
         self.setMinimumSize(THEME.note_dialog_min_width, THEME.note_dialog_min_height)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(THEME.page_padding, THEME.page_padding, THEME.page_padding, THEME.page_padding)
+        layout.setContentsMargins(*dialog_layout_margins())
         layout.setSpacing(THEME.block_spacing)
         self.edit = QTextEdit(self)
         self.edit.setPlainText(initial_text or '')

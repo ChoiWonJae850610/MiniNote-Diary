@@ -9,23 +9,14 @@ from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
 from ui.icon_factory import make_partner_link_icon
-from ui.messages import Labels, Tooltips
+from ui.layout_metrics import PostItLayout
+from ui.messages import Labels, PostItTexts, Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
-from ui.postit.layout import (
-    POSTIT_CARD_HEIGHT,
-    POSTIT_DELETE_BUTTON_MARGIN_RIGHT,
-    POSTIT_DELETE_BUTTON_MARGIN_TOP,
-    POSTIT_MATERIAL_CARD_MIN_WIDTH,
-    POSTIT_PARTNER_LINK_ICON_SIZE,
-    POSTIT_ROW_ACTION_GAP,
-    POSTIT_UNIT_DOWN_ICON_SIZE,
-    POSTIT_UNIT_MENU_CLEAR_LABEL,
-    POSTIT_UNIT_MENU_EMPTY_LABEL,
-)
+from ui.postit.layout import POSTIT_CARD_HEIGHT, POSTIT_ROW_ACTION_GAP
 from ui.theme import THEME, delete_button_style, input_line_edit_style, menu_style, unit_button_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
 
@@ -58,8 +49,8 @@ class PostItCard(_PostItCardBase):
         self.vendor = _ClickToEditLineEdit(self)
         self.item = _ClickToEditLineEdit(self)
         self.btn_vendor_partner = QToolButton(self)
-        self.btn_vendor_partner.setIcon(make_partner_link_icon(POSTIT_PARTNER_LINK_ICON_SIZE))
-        self.btn_vendor_partner.setIconSize(QSize(POSTIT_PARTNER_LINK_ICON_SIZE, POSTIT_PARTNER_LINK_ICON_SIZE))
+        self.btn_vendor_partner.setIcon(make_partner_link_icon(PostItLayout.PARTNER_LINK_ICON_SIZE))
+        self.btn_vendor_partner.setIconSize(QSize(PostItLayout.PARTNER_LINK_ICON_SIZE, PostItLayout.PARTNER_LINK_ICON_SIZE))
         self.btn_vendor_partner.setFixedSize(FIELD_H, FIELD_H)
         self.btn_vendor_partner.setCursor(Qt.PointingHandCursor)
         set_widget_tooltip(self.btn_vendor_partner, Tooltips.PARTNER_MANAGE)
@@ -82,8 +73,8 @@ class PostItCard(_PostItCardBase):
 
         self.unit_btn = QToolButton(self)
         self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.unit_btn.setIcon(make_down_icon(POSTIT_UNIT_DOWN_ICON_SIZE))
-        self.unit_btn.setIconSize(QSize(POSTIT_UNIT_DOWN_ICON_SIZE, POSTIT_UNIT_DOWN_ICON_SIZE))
+        self.unit_btn.setIcon(make_down_icon(PostItLayout.UNIT_ICON_SIZE))
+        self.unit_btn.setIconSize(QSize(PostItLayout.UNIT_ICON_SIZE, PostItLayout.UNIT_ICON_SIZE))
         self.unit_btn.setCursor(Qt.PointingHandCursor)
         self.unit_btn.setFixedHeight(FIELD_H)
         self.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
@@ -92,13 +83,13 @@ class PostItCard(_PostItCardBase):
         self._unit_menu = QMenu(self.unit_btn)
         self._unit_menu.setStyleSheet(menu_style())
         self._unit_actions: Dict[str, object] = {}
-        self._act_clear_unit = self._unit_menu.addAction(POSTIT_UNIT_MENU_CLEAR_LABEL)
+        self._act_clear_unit = self._unit_menu.addAction(PostItTexts.CLEAR_UNIT)
         self._act_clear_unit.setCheckable(True)
         self._act_clear_unit.triggered.connect(lambda: self._set_unit("", ""))
         if self._units:
             self._unit_menu.addSeparator()
         else:
-            hint = self._unit_menu.addAction(POSTIT_UNIT_MENU_EMPTY_LABEL)
+            hint = self._unit_menu.addAction(PostItTexts.EMPTY_UNIT_LIST)
             hint.setEnabled(False)
         for unit, label in self._units:
             action = self._unit_menu.addAction(label)
@@ -142,7 +133,7 @@ class PostItCard(_PostItCardBase):
         self.setTabOrder(self.unit_btn, self.price)
         self.price._pending_prev_widget = self.unit_btn
 
-        self.setMinimumSize(QSize(POSTIT_MATERIAL_CARD_MIN_WIDTH, POSTIT_CARD_HEIGHT))
+        self.setMinimumSize(QSize(320, POSTIT_CARD_HEIGHT))
         self.setMaximumHeight(POSTIT_CARD_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -200,7 +191,7 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = True
 
     def resizeEvent(self, event):
-        self.btn_delete.move(self.width() - (THEME.delete_button_size + POSTIT_DELETE_BUTTON_MARGIN_RIGHT), POSTIT_DELETE_BUTTON_MARGIN_TOP)
+        self.btn_delete.move(self.width() - (THEME.delete_button_size + PostItLayout.DELETE_BUTTON_MARGIN_RIGHT), PostItLayout.DELETE_BUTTON_MARGIN_TOP)
         super().resizeEvent(event)
 
     def update_data(self, data: Dict[str, str]):

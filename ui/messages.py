@@ -194,13 +194,13 @@ class SectionTitles:
     ORDER_TEMPLATE_DETAIL = "선택 작업지시서"
     ORDER_TEMPLATE_MEMO = "작업지시서 메모"
     ORDER_INPUT = "신규 발주 입력"
+    CHANGE_NOTE = "메모"
     BASIC_INFO = "기본정보"
     FABRIC = "원단"
     TRIM = "부자재"
     DYEING = "염색"
     FINISHING = "마감"
     OTHER = "기타"
-    CHANGE_NOTE = "메모"
 
 
 class DefaultTexts:
@@ -208,3 +208,33 @@ class DefaultTexts:
     ORDER_MATERIAL_SUMMARY_EMPTY = "원단 0 / 부자재 0"
     ORDER_SAVE_SUCCESS = "발주 저장"
     ORDER_SAVE_SUCCESS_MESSAGE = "발주 저장 완료\n\n작업지시서: {name}\n수량: {qty}\n발주일: {ordered_at}"
+
+
+class MenuPageTexts:
+    TITLE = "업무 메뉴"
+    SUBTITLE = "작업지시서 관리부터 작업 시작, 영수증 등록, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다."
+    TEMPLATE_TITLE = "작업지시서 관리"
+    TEMPLATE_SUBTITLE = "기준 문서 생성 · 수정"
+    ORDER_TITLE = "발주"
+    ORDER_SUBTITLE = "템플릿 선택 후 발주 수량 입력"
+    RECEIPT_TITLE = "원단/부자재 등록"
+    RECEIPT_SUBTITLE = "영수증 첨부 · 실제 지출 기록"
+    COMPLETE_TITLE = "작업 완료"
+    COMPLETE_SUBTITLE = "완료 수량 반영 · 재고 생성"
+    SALE_TITLE = "판매 등록"
+    SALE_SUBTITLE = "판매 수량 · 수입 반영"
+    INVENTORY_TITLE = "재고 / 통계"
+    INVENTORY_SUBTITLE = "재고 현황 · 월별 흐름 확인"
+
+
+class TableHeaders:
+    UNIT = (Labels.UNIT_VALUE, Labels.UNIT_DISPLAY_NAME)
+
+
+class PostItTexts:
+    CLEAR_UNIT = "(비움)"
+    EMPTY_UNIT_LIST = "(단위 목록 없음)"
+
+
+class HelperTexts:
+    ORDER_SAVE_HINT = "발주 수량은 1 이상이어야 하며, 저장 후에도 작업지시서 템플릿은 계속 남아 다시 발주할 수 있습니다."

@@ -5,6 +5,7 @@ from typing import Sequence, Tuple
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons
 from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba, status_row_margins
 from ui.widget_factory import make_dialog_button, make_dialog_button_row
@@ -171,10 +172,10 @@ class ValidationStatusDialog(_BaseThemedDialog):
 
         layout = QHBoxLayout(row)
         layout.setContentsMargins(*status_row_margins())
-        layout.setSpacing(THEME.row_spacing + 2)
+        layout.setSpacing(THEME.row_spacing + DialogLayout.INLINE_ROW_SPACING - 4)
 
         icon = QLabel("V" if ok else "X", row)
-        icon.setFixedWidth(18)
+        icon.setFixedWidth(DialogLayout.BUTTON_ICON_SIZE + 4)
         icon.setAlignment(Qt.AlignCenter)
         icon.setObjectName("statusIconOk" if ok else "statusIconFail")
 

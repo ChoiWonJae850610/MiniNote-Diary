@@ -22,8 +22,8 @@ from ui.postit.layout import (
     make_static_postit_column,
     PostItSectionColumn,
 )
-from ui.postit.material_card import PostItCard
 from ui.messages import SectionTitles
+from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
 
@@ -129,7 +129,7 @@ class PostItStack(QWidget):
         button = QToolButton(self)
         button.setText(text)
         button.setCursor(Qt.PointingHandCursor)
-        button.setFixedSize(THEME.postit_index_button_size, THEME.postit_index_button_size)
+        button.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
         button.setFocusPolicy(Qt.NoFocus)
         return button
 

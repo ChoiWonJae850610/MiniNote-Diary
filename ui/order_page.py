@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QHBoxLayout, QLabel,
 
 from ui.image_preview import ImagePreview
 from ui.layout_metrics import OrderPageLayout
-from ui.messages import Buttons, DefaultTexts, InfoMessages, Labels, PageDescriptions, PageTitles, Placeholders, SectionTitles
+from ui.messages import Buttons, DefaultTexts, HelperTexts, InfoMessages, Labels, PageDescriptions, PageTitles, Placeholders, SectionTitles
 from ui.page_builders_common import (
     add_form_row,
     make_form_grid,
@@ -236,7 +236,7 @@ class OrderPageBuilder:
         order_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         order_layout.setSpacing(THEME.block_spacing)
         order_layout.addWidget(make_section_title_label(SectionTitles.ORDER_INPUT, order_panel))
-        helper_label = make_hint_label('발주 수량은 1 이상이어야 하며, 저장 후에도 작업지시서 템플릿은 계속 남아 다시 발주할 수 있습니다.', order_panel)
+        helper_label = make_hint_label(HelperTexts.ORDER_SAVE_HINT, order_panel)
         order_layout.addWidget(helper_label)
 
         order_grid = make_form_grid()
