@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QTimer
+
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
 
@@ -17,10 +19,14 @@ class MainWindowNavigationLogic:
         window.stack.setCurrentIndex(page_index)
 
     @staticmethod
+    def focus_style_input(window: "MainWindow") -> None:
+        QTimer.singleShot(0, lambda: window.postit_bar.basic.style_no.activate_for_input())
+
+    @staticmethod
     def go_work_order(window: "MainWindow") -> None:
         window._refresh_postits(force_rebuild=True)
         window.stack.setCurrentIndex(window.PAGE_WORK_ORDER)
-        window._focus_style_input()
+        MainWindowNavigationLogic.focus_style_input(window)
 
     @staticmethod
     def go_menu(window: "MainWindow") -> None:

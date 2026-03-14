@@ -1,26 +1,12 @@
-import os
-
-from PySide6.QtCore import QEvent, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import (
-    QAbstractSpinBox,
-    QApplication,
-    QComboBox,
-    QLineEdit,
-    QMainWindow,
-    QPlainTextEdit,
-    QStackedWidget,
-    QTextEdit,
-    QWidget,
-    QVBoxLayout,
-)
+from PySide6.QtWidgets import QMainWindow, QWidget
 
-from services.order_repository import OrderRepository
-from services.partner_lookup_service import PartnerLookupService
-from services.work_order_controller import WorkOrderController
-from services.work_order_state import WorkOrderState
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
+from ui.main_window_bootstrap import MainWindowBootstrap
+from ui.main_window_constants import MainWindowPages
 from ui.main_window_features import build_feature_page_configs
+from ui.main_window_feedback import MainWindowFeedback
+from ui.main_window_focus_logic import MainWindowFocusLogic
 from ui.main_window_logic import (
     MainWindowDialogLogic,
     MainWindowEventBinder,
@@ -31,75 +17,39 @@ from ui.main_window_logic import (
     MainWindowSaveLogic,
     MainWindowWorkOrderLogic,
 )
-from ui.messages import Buttons, DialogTitles, UiTiming, Warnings
-from ui.theme import THEME, build_app_stylesheet
+from ui.messages import Buttons, DialogTitles, Warnings
 
 
 class MainWindow(QMainWindow):
-    PAGE_MENU = 0
-    PAGE_WORK_ORDER = 1
-    PAGE_JOB_START = 2
-    PAGE_RECEIPT = 3
-    PAGE_COMPLETE = 4
-    PAGE_SALE = 5
-    PAGE_INVENTORY = 6
-    PAGE_PARTNER = 7
+    PAGE_MENU = MainWindowPages.MENU
+    PAGE_WORK_ORDER = MainWindowPages.WORK_ORDER
+    PAGE_JOB_START = MainWindowPages.JOB_START
+    PAGE_RECEIPT = MainWindowPages.RECEIPT
+    PAGE_COMPLETE = MainWindowPages.COMPLETE
+    PAGE_SALE = MainWindowPages.SALE
+    PAGE_INVENTORY = MainWindowPages.INVENTORY
+    PAGE_PARTNER = MainWindowPages.PARTNER
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle(DialogTitles.APP)
         self.menuBar().hide()
-
-        self.project_root = self._project_root()
-        self.state = WorkOrderState()
-        self.controller = WorkOrderController(self.state, self.project_root)
-        self.order_repository = OrderRepository(self.project_root)
-        self.partner_lookup_service = PartnerLookupService(self.project_root)
-        self._suppress_dirty = False
-        self._feedback_timer = QTimer(self)
-        self._feedback_timer.setSingleShot(True)
-        self._feedback_timer.timeout.connect(self._clear_feedback)
-
-        self._build_root()
+        MainWindowBootstrap.initialize_services(self)
+        MainWindowFeedback.initialize(self)
+        MainWindowBootstrap.build_root(self)
         self._build_pages()
         self._bind_page_events()
-        self._apply_window_defaults()
-
-    @staticmethod
-    def _project_root() -> str:
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        MainWindowBootstrap.apply_defaults(self)
 
     @property
     def is_dirty(self) -> bool:
         return self.state.is_dirty
-
-    def _build_root(self) -> None:
-        root = QWidget()
-        self.setCentralWidget(root)
-        root_layout = QVBoxLayout(root)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        self.stack = QStackedWidget()
-        root_layout.addWidget(self.stack)
 
     def _build_pages(self) -> None:
         MainWindowPageCoordinator.build_pages(self)
 
     def _bind_page_events(self) -> None:
         MainWindowEventBinder.bind(self)
-
-    def _apply_window_defaults(self) -> None:
-        self.setMinimumSize(THEME.window_min_width, THEME.window_min_height)
-        self.resize(THEME.window_min_width, THEME.window_min_height)
-        self.setStyleSheet(build_app_stylesheet())
-        self._install_global_focus_clear()
-        self._install_shortcuts()
-        self._refresh_postits(force_rebuild=True)
-        self._update_window_title()
-
-    def _install_global_focus_clear(self):
-        app = QApplication.instance()
-        if app is not None:
-            app.installEventFilter(self)
 
     def _install_shortcuts(self):
         self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
@@ -109,24 +59,8 @@ class MainWindow(QMainWindow):
         if self.stack.currentIndex() == self.PAGE_WORK_ORDER:
             self.on_save_clicked()
 
-    def _is_text_input_widget(self, widget) -> bool:
-        return isinstance(widget, (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QAbstractSpinBox))
-
-    def _has_input_ancestor(self, widget) -> bool:
-        current = widget
-        while current is not None:
-            if self._is_text_input_widget(current):
-                return True
-            current = current.parentWidget()
-        return False
-
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.MouseButtonPress:
-            focused = QApplication.focusWidget()
-            target = obj if isinstance(obj, QWidget) else None
-            if focused is not None and target is not None and self._is_text_input_widget(focused):
-                if target is not focused and not focused.isAncestorOf(target) and not self._has_input_ancestor(target):
-                    focused.clearFocus()
+        MainWindowFocusLogic.handle_event_filter(self, obj, event)
         return super().eventFilter(obj, event)
 
     def on_partner_mgmt_clicked(self):
@@ -135,16 +69,17 @@ class MainWindow(QMainWindow):
     def on_unit_mgmt_clicked(self):
         MainWindowDialogLogic.open_unit_management(self)
 
-    def _show_feedback(self, message: str, timeout_ms: int = UiTiming.FEEDBACK_TIMEOUT_MS):
-        self.feedback_label.setText(message)
-        self._feedback_timer.start(timeout_ms)
+    def _show_feedback(self, message: str, timeout_ms=None):
+        if timeout_ms is None:
+            MainWindowFeedback.show_feedback(self, message)
+            return
+        MainWindowFeedback.show_feedback(self, message, timeout_ms=timeout_ms)
 
     def _clear_feedback(self):
-        self.feedback_label.clear()
+        MainWindowFeedback.clear_feedback(self)
 
     def _update_window_title(self):
-        suffix = ' *' if self.state.is_dirty else ''
-        self.setWindowTitle(f'{DialogTitles.APP}{suffix}')
+        MainWindowFeedback.update_window_title(self)
 
     def build_feature_page_configs(self):
         return build_feature_page_configs()
@@ -174,7 +109,7 @@ class MainWindow(QMainWindow):
         MainWindowFeatureLogic.show_secondary(self, page)
 
     def _focus_style_input(self):
-        QTimer.singleShot(0, lambda: self.postit_bar.basic.style_no.activate_for_input())
+        MainWindowNavigationLogic.focus_style_input(self)
 
     def go_work_order(self):
         MainWindowNavigationLogic.go_work_order(self)
@@ -224,10 +159,7 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def build_save_success_message(result) -> str:
-        message = f"저장 완료\n\nJSON: {result.json_path}\nSHA256(평문): {result.sha256_plain}"
-        if result.image_path:
-            message += f"\n이미지: {result.image_path}"
-        return message
+        return MainWindowFeedback.build_save_success_message(result)
 
     def on_back_clicked(self):
         MainWindowSaveLogic.handle_back(self)
