@@ -41,6 +41,17 @@ class Buttons:
     RECEIPT_SAVE = "영수증 저장"
 
 
+
+
+class Symbols:
+    BACK = "◀"
+    TYPE_MANAGE = "≡"
+    ADD = "+"
+    SAVE = "✓"
+    DELETE = "−"
+    CLOSE = "×"
+    STATUS_OK = "V"
+    STATUS_FAIL = "X"
 class DialogTitles:
     APP = "미니노트 다이어리"
     SAVE = "저장"

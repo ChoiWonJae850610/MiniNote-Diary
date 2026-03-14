@@ -6,6 +6,8 @@ from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QWidget
 
+from ui.messages import Symbols
+from ui.layout_metrics import CommonSymbolsLayout
 from ui.theme import (
     THEME,
     combo_box_style,
@@ -207,8 +209,8 @@ def make_value_label(text: str = '-', parent=None, *, min_height: int = 32, padd
 
 
 def make_nav_button(*, parent=None, tooltip: str = '') -> QPushButton:
-    button = QPushButton('◀', parent)
-    return apply_icon_button_metrics(button, font_px=THEME.icon_button_font_px + 2, object_name='navButton', tooltip=tooltip)
+    button = QPushButton(Symbols.BACK, parent)
+    return apply_icon_button_metrics(button, font_px=CommonSymbolsLayout.NAV_BUTTON_FONT_PX, object_name='navButton', tooltip=tooltip)
 
 
 def make_toolbar_icon_button(*, parent=None, object_name: str = 'iconAction', tooltip: str = '', icon: QIcon | None = None, font_px: int | None = None) -> QPushButton:

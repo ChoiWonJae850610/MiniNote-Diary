@@ -174,7 +174,7 @@ def make_dialog_inline_row(parent: QWidget, *widgets: QWidget, stretch: bool = T
     row = QWidget(parent)
     layout = QHBoxLayout(row)
     layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(6)
+    layout.setSpacing(CommonSymbolsLayout.PANEL_INLINE_SPACING)
     for index, widget in enumerate(widgets):
         layout.addWidget(widget, 1 if index == 0 else 0)
     if stretch:

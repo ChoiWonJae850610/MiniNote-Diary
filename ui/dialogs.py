@@ -5,8 +5,8 @@ from typing import Sequence, Tuple
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from ui.layout_metrics import DialogLayout
-from ui.messages import Buttons
+from ui.layout_metrics import CommonSymbolsLayout, DialogLayout
+from ui.messages import Buttons, Symbols
 from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba, status_row_margins
 from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
@@ -101,7 +101,7 @@ class _BaseThemedDialog(QDialog):
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle(title)
-        self.setMinimumWidth(360)
+        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
         self.setStyleSheet(_dialog_stylesheet())
 
         root = QVBoxLayout(self)
@@ -123,7 +123,7 @@ class _BaseThemedDialog(QDialog):
 class SimpleMessageDialog(_BaseThemedDialog):
     def __init__(self, title: str, message: str, *, button_text: str = Buttons.OK, parent=None):
         super().__init__(title=title, parent=parent)
-        self.setMinimumWidth(330)
+        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_SM)
         message_label = QLabel(message, self.card)
         message_label.setObjectName("dialogMessage")
         message_label.setWordWrap(True)
@@ -137,7 +137,7 @@ class SimpleMessageDialog(_BaseThemedDialog):
 class ConfirmActionDialog(_BaseThemedDialog):
     def __init__(self, title: str, message: str, confirm_text: str = Buttons.OK, cancel_text: str = Buttons.CANCEL, parent=None):
         super().__init__(title=title, parent=parent)
-        self.setMinimumWidth(330)
+        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_SM)
 
         message_label = QLabel(message, self.card)
         message_label.setObjectName("dialogMessage")
@@ -157,7 +157,7 @@ class ConfirmActionDialog(_BaseThemedDialog):
 class ValidationStatusDialog(_BaseThemedDialog):
     def __init__(self, title: str, items: Sequence[Tuple[str, bool]], parent=None):
         super().__init__(title=title, parent=parent)
-        self.setMinimumWidth(340)
+        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_MD)
 
         for label, ok in items:
             self.body.addWidget(self._make_status_row(label, ok))
@@ -174,7 +174,7 @@ class ValidationStatusDialog(_BaseThemedDialog):
         layout.setContentsMargins(*status_row_margins())
         layout.setSpacing(DialogLayout.STATUS_ROW_SPACING)
 
-        icon = QLabel("V" if ok else "X", row)
+        icon = QLabel(Symbols.STATUS_OK if ok else Symbols.STATUS_FAIL, row)
         icon.setFixedWidth(DialogLayout.STATUS_ICON_WIDTH)
         icon.setAlignment(Qt.AlignCenter)
         icon.setObjectName("statusIconOk" if ok else "statusIconFail")

@@ -9,8 +9,8 @@ from services.partner_management_service import PartnerManagementService
 from services.partner_repository import PartnerRecord
 from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_info, show_warning
-from ui.layout_metrics import PartnerLayout
-from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Tooltips, WarningMessages
+from ui.layout_metrics import CommonSymbolsLayout, PartnerLayout
+from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Symbols, Tooltips, WarningMessages
 from ui.partner_dialog_common import (
     PartnerListItem,
     ReadOnlyTypeIndicatorGrid,
@@ -51,11 +51,11 @@ class PartnerDialog(QDialog):
         right_card = self._build_right_card()
         body.addWidget(right_card, 6)
 
-        self.btn_type = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.TYPE_MANAGE, text="≡", font_px=15)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=18)
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.EDIT, text="✓", font_px=18)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=18)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=18)
+        self.btn_type = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.TYPE_MANAGE, text=Symbols.TYPE_MANAGE, font_px=CommonSymbolsLayout.TYPE_BUTTON_FONT_PX)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text=Symbols.ADD, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.EDIT, text=Symbols.SAVE, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text=Symbols.DELETE, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text=Symbols.CLOSE, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
         root.addLayout(make_dialog_button_row([self.btn_type, self.btn_add, self.btn_save, self.btn_delete, self.btn_close]))
 
         self.setStyleSheet(self.styleSheet() + partner_shell_style() + partner_detail_value_style())

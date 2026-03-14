@@ -5,8 +5,8 @@ from PySide6.QtWidgets import QDialog, QTableWidget, QAbstractItemView, QHeaderV
 
 from services.unit_service import UnitService
 from ui.dialogs import show_info, show_warning
-from ui.layout_metrics import UnitDialogLayout
-from ui.messages import DialogTitles, InfoMessages, TableHeaders, Tooltips
+from ui.layout_metrics import CommonSymbolsLayout, UnitDialogLayout
+from ui.messages import DialogTitles, InfoMessages, Symbols, TableHeaders, Tooltips
 from ui.theme import THEME, table_widget_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 from ui.page_builders_common import make_dialog_root_layout
@@ -41,10 +41,10 @@ class UnitDialog(QDialog):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         layout.addWidget(self.table)
 
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text="✓", font_px=UnitDialogLayout.ICON_FONT_PX)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text="+", font_px=UnitDialogLayout.ICON_FONT_PX)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text="−", font_px=UnitDialogLayout.ICON_FONT_PX)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text="×", font_px=UnitDialogLayout.ICON_FONT_PX)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.SAVE, text=Symbols.SAVE, font_px=UnitDialogLayout.ICON_FONT_PX)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text=Symbols.ADD, font_px=UnitDialogLayout.ICON_FONT_PX)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text=Symbols.DELETE, font_px=UnitDialogLayout.ICON_FONT_PX)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text=Symbols.CLOSE, font_px=UnitDialogLayout.ICON_FONT_PX)
         layout.addLayout(make_dialog_button_row([self.btn_save, self.btn_add, self.btn_delete, self.btn_close]))
 
         self.btn_save.clicked.connect(self.on_save)
