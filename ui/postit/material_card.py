@@ -9,7 +9,7 @@ from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units, unit_label_for_value
 from ui.icon_factory import make_partner_link_icon
-from ui.layout_metrics import PostItLayout
+from ui.postit.metrics import PostItLayout
 from ui.messages import Labels, PostItTexts, Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.base import _PostItCardBase

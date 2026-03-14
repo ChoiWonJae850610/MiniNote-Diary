@@ -7,7 +7,7 @@ from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QWidget
 
 from ui.messages import Symbols
-from ui.layout_metrics import CommonSymbolsLayout
+from ui.ui_metrics import CommonSymbolsLayout
 from ui.theme import (
     THEME,
     combo_box_style,

@@ -9,7 +9,8 @@ from services.partner_management_service import PartnerManagementService
 from services.partner_repository import PartnerRecord
 from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_info, show_warning
-from ui.layout_metrics import CommonSymbolsLayout, PartnerLayout
+from ui.ui_metrics import CommonSymbolsLayout
+from ui.layout_metrics import PartnerLayout
 from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Symbols, Tooltips, WarningMessages
 from ui.partner_dialog_common import (
     PartnerListItem,

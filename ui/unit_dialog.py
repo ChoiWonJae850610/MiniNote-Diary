@@ -5,7 +5,8 @@ from PySide6.QtWidgets import QDialog, QTableWidget, QAbstractItemView, QHeaderV
 
 from services.unit_service import UnitService
 from ui.dialogs import show_info, show_warning
-from ui.layout_metrics import CommonSymbolsLayout, UnitDialogLayout
+from ui.ui_metrics import CommonSymbolsLayout
+from ui.layout_metrics import UnitDialogLayout
 from ui.messages import DialogTitles, InfoMessages, Symbols, TableHeaders, Tooltips
 from ui.theme import THEME, table_widget_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button

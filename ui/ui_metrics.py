@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+
+class CommonSymbolsLayout:
+    NAV_BUTTON_FONT_PX = 11
+    TYPE_BUTTON_FONT_PX = 15
+    ACTION_ICON_FONT_PX = 18
+    DIALOG_MIN_WIDTH_SM = 330
+    DIALOG_MIN_WIDTH_MD = 340
+    DIALOG_MIN_WIDTH_LG = 360
+    PANEL_INLINE_SPACING = 6
+    POSTIT_CONTENT_MARGIN = 8

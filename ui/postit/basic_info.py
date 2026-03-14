@@ -7,7 +7,7 @@ from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QLabel, QSizePolicy, QToolButton
 
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
-from ui.layout_metrics import PostItLayout
+from ui.postit.metrics import PostItLayout
 from ui.messages import Labels, Tooltips
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
 from ui.postit.base import _PostItCardBase

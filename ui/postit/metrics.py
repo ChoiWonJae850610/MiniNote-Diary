@@ -1,0 +1,11 @@
+from __future__ import annotations
+
+
+class PostItLayout:
+    DATE_MIN_WIDTH_EXTRA = 8
+    CALENDAR_ICON_SIZE = 16
+    PARTNER_LINK_ICON_SIZE = 14
+    UNIT_ICON_SIZE = 12
+    CALENDAR_POPUP_OFFSET_Y = 4
+    DELETE_BUTTON_MARGIN_RIGHT = 4
+    DELETE_BUTTON_MARGIN_TOP = 6

@@ -1,4 +1,5 @@
-from ui.messages_common import Actions, Buttons, FileDialogFilters, Labels, Placeholders, Symbols, Tooltips, UiTiming
+from ui.messages_common import Actions, Buttons, FileDialogFilters, Labels, Placeholders, UiTiming
+from ui.messages_symbols import Symbols, Tooltips
 from ui.messages_dialogs import DialogTitles, InfoMessages, WarningMessages, Warnings
 from ui.messages_pages import (
     DefaultTexts,
