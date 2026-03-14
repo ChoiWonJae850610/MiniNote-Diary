@@ -51,6 +51,11 @@ class DialogTitles:
     BASIC_INFO_INPUT = "기본정보 입력"
     PARTNER_MANAGE = "거래처 관리"
     PARTNER_TYPE_MANAGE = "거래처 타입 관리"
+    PARTNER_ADD = "거래처 추가"
+    PARTNER_EDIT = "거래처 수정"
+    PARTNER_LIST = "거래처 목록"
+    PARTNER_BASIC_INFO = "거래처 기본 정보"
+    PARTNER_TYPE = "거래처 타입"
     MATERIAL_ITEM_INPUT = "자재 입력"
     UNIT_MANAGE = "단위 관리"
     VALIDATION = "검증 결과"
@@ -74,6 +79,7 @@ class Warnings:
     ORDER_SELECT_TEMPLATE_FIRST = "발주할 작업지시서를 먼저 선택하세요."
     ORDER_TEMPLATE_LOAD_FAILED = "선택한 작업지시서를 다시 불러올 수 없습니다."
     TEMP_SAVE_CONFIRM = "임시 저장 하시겠습니까?"
+    PARTNER_DELETE_CONFIRM = "거래처를 삭제하시겠습니까?"
 
 
 class WarningMessages(Warnings):
@@ -97,6 +103,11 @@ class InfoMessages:
     FEATURE_GENERIC_PENDING = "이 화면은 UI 흐름 검토용으로 먼저 배치했습니다. 다음 단계에서 실제 입력/저장 로직을 연결합니다."
     FEATURE_RECEIPT_EXTEND = "이미지 첨부와 포스트잇 입력을 결합하는 방향으로 화면을 확장할 예정입니다."
     FEATURE_SCREEN_REVIEW = "현재는 메뉴 구조와 화면 흐름을 먼저 확인하는 단계입니다."
+    PARTNER_TYPE_SELECT_HINT = "최소 1개 이상 선택"
+    PARTNER_MEMO_HINT = "간단한 메모"
+    PARTNER_SEARCH_PLACEHOLDER = "검색"
+    PARTNER_EMPTY_VALUE = "-"
+    PARTNER_EMPTY_LIST = "(목록 없음)"
 
 
 class Labels:
@@ -130,6 +141,12 @@ class Labels:
     ORDER_MEMO = "발주 메모"
     MONTH_FILTER = "기준 월"
     SEARCH = "검색"
+    ALL_MONTHS = "전체 월"
+    PARTNER_NAME = "상호명"
+    OWNER_NAME = "사장명"
+    PHONE = "연락처"
+    ADDRESS = "주소"
+    MEMO = "메모"
 
 
 class Placeholders:
@@ -139,6 +156,19 @@ class Placeholders:
     PARTNER_NAME = "상호명을 입력하세요"
     UNIT = "단위를 입력하세요"
     ORDER_SEARCH = "작업지시서 검색"
+    OWNER_NAME = "사장명"
+    PHONE = "연락처"
+    ADDRESS = "주소"
+    SHORT_MEMO = "간단한 메모"
+    PARTNER_SEARCH = "검색"
+
+
+class FileDialogFilters:
+    IMAGES = "Images (*.png *.jpg *.jpeg *.bmp)"
+
+
+class UiTiming:
+    FEEDBACK_TIMEOUT_MS = 2200
 
 
 class FeaturePageTexts:

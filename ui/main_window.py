@@ -20,14 +20,13 @@ from PySide6.QtWidgets import (
 
 from services.field_keys import MaterialTargets, PayloadKeys
 from services.order_repository import OrderRepository
-from services.schema import DEFAULT_FEEDBACK_TIMEOUT_MS, ORDER_PAGE_ALL_MONTHS_LABEL, SUPPORTED_IMAGE_FILTER
 from services.work_order_controller import WorkOrderController
 from services.work_order_state import WorkOrderState
 from ui.basic_info_dialog import BasicInfoDialog
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, show_error, show_info
 from ui.feature_page import FeaturePageBuilder, FeaturePageConfig, FeatureSection
 from ui.menu_page import MenuPageBuilder
-from ui.messages import Buttons, DialogTitles, InfoMessages, Warnings
+from ui.messages import Buttons, DialogTitles, FileDialogFilters, InfoMessages, Labels, UiTiming, Warnings
 from ui.theme import THEME, build_app_stylesheet
 from ui.unit_dialog import UnitDialog
 from ui.partner_dialog import PartnerDialog
@@ -228,7 +227,7 @@ class MainWindow(QMainWindow):
         dlg.setWindowModality(Qt.ApplicationModal)
         dlg.exec()
 
-    def _show_feedback(self, message: str, timeout_ms: int = DEFAULT_FEEDBACK_TIMEOUT_MS):
+    def _show_feedback(self, message: str, timeout_ms: int = UiTiming.FEEDBACK_TIMEOUT_MS):
         self.feedback_label.setText(message)
         self._feedback_timer.start(timeout_ms)
 
@@ -337,11 +336,11 @@ class MainWindow(QMainWindow):
         refs = self.order_page_refs
         summaries = self.controller.repository.list_template_summaries()
         month_combo = refs.month_combo
-        selected_month = month_combo.currentData() if month_combo.count() else ORDER_PAGE_ALL_MONTHS_LABEL
+        selected_month = month_combo.currentData() if month_combo.count() else Labels.ALL_MONTHS
         months = sorted({summary.date[:7] for summary in summaries if summary.date[:7]}, reverse=True)
         month_combo.blockSignals(True)
         month_combo.clear()
-        month_combo.addItem(ORDER_PAGE_ALL_MONTHS_LABEL, ORDER_PAGE_ALL_MONTHS_LABEL)
+        month_combo.addItem(Labels.ALL_MONTHS, Labels.ALL_MONTHS)
         for month in months:
             month_combo.addItem(month, month)
         restore_index = month_combo.findData(selected_month)
@@ -350,12 +349,12 @@ class MainWindow(QMainWindow):
         month_combo.blockSignals(False)
 
         keyword = refs.search_edit.text().strip()
-        month_filter = month_combo.currentData() or ORDER_PAGE_ALL_MONTHS_LABEL
+        month_filter = month_combo.currentData() or Labels.ALL_MONTHS
         stats_map = self.order_repository.aggregate_by_template()
         refs.template_list.clear()
         from services.search_utils import matches_keyword
         for summary in summaries:
-            if month_filter != ORDER_PAGE_ALL_MONTHS_LABEL and not str(summary.date or '').startswith(str(month_filter)):
+            if month_filter != Labels.ALL_MONTHS and not str(summary.date or '').startswith(str(month_filter)):
                 continue
             if not matches_keyword(keyword, summary.name, summary.factory_name, summary.change_note):
                 continue
@@ -618,7 +617,7 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def upload_image(self):
-        path, _ = QFileDialog.getOpenFileName(self, DialogTitles.IMAGE_SELECT, '', SUPPORTED_IMAGE_FILTER)
+        path, _ = QFileDialog.getOpenFileName(self, DialogTitles.IMAGE_SELECT, '', FileDialogFilters.IMAGES)
         if not path:
             return
         try:

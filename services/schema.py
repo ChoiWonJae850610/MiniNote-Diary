@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Iterable
 
 from services.field_keys import DbFilenames, HeaderKeys, MaterialKeys
-from ui.messages import Tooltips
 
 HEADER_FIELDS: tuple[str, ...] = (
     HeaderKeys.DATE,
@@ -48,8 +47,6 @@ REQUIRED_MATERIAL_FIELDS: tuple[str, ...] = (
 )
 
 MAX_MATERIAL_ITEMS = 15
-SUPPORTED_IMAGE_FILTER = 'Images (*.png *.jpg *.jpeg *.bmp)'
-DEFAULT_FEEDBACK_TIMEOUT_MS = 2200
 
 
 def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:
@@ -58,6 +55,4 @@ def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:
 
 PARTNERS_DB_FILENAME = DbFilenames.PARTNERS
 PARTNER_TYPES_DB_FILENAME = DbFilenames.PARTNER_TYPES
-PARTNER_PICKER_TOOLTIP = Tooltips.PARTNER_MANAGE
 ORDER_RUNS_DB_FILENAME = DbFilenames.ORDER_RUNS
-ORDER_PAGE_ALL_MONTHS_LABEL = '전체 월'
