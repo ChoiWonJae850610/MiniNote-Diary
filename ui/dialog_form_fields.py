@@ -5,9 +5,9 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QPlainTextEdit, QFrame, QGridLa
 
 from ui.messages import Buttons
 from ui.layout_metrics import DialogLayout
-from ui.page_builders_common import make_dialog_button_row, make_dialog_form_layout, make_dialog_inline_row
+from ui.page_builders_common import make_dialog_form_layout, make_dialog_inline_row
 from ui.theme import THEME, hint_label_style, input_line_edit_style, title_label_style
-from ui.widget_factory import make_dialog_button
+from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
 
 def configure_text_field(field: QLineEdit) -> QLineEdit:
