@@ -3,10 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional
 
-from services.formatters import format_commas_from_digits, int_from_any
 from services.field_keys import HeaderKeys, MaterialTargets
 from services.models import MaterialItem, WorkOrderDocument, WorkOrderHeader
 from services.schema import MAX_MATERIAL_ITEMS
+from services.work_order_state_helpers import (
+    clone_items,
+    coerce_items,
+    items_have_value,
+    items_to_dicts,
+    needs_price_recompute,
+    recompute_header_prices,
+    target_attr,
+)
 
 
 @dataclass
@@ -93,12 +101,12 @@ class WorkOrderState:
             self.is_dirty
             or self.current_image_path
             or self.header.has_any_value()
-            or any(self._items_have_value(self._target_items(target)) for target in self._TARGET_ATTRS)
+            or any(items_have_value(self._target_items(target)) for target in self._TARGET_ATTRS)
         )
 
     def update_header(self, patch: Dict[str, str]) -> None:
         self.header.patch(patch)
-        if self._needs_price_recompute(patch):
+        if needs_price_recompute(patch):
             self._recompute_sale_price()
         self.mark_dirty()
 
@@ -165,52 +173,24 @@ class WorkOrderState:
         return self._items_to_dicts(MaterialTargets.OTHER)
 
     def _set_items(self, target: str, value: List[Dict[str, str]] | None) -> None:
-        setattr(self, self._target_attr(target), self._coerce_items(value))
+        setattr(self, self._target_attr(target), coerce_items(value))
         self._recompute_sale_price()
 
     def _target_attr(self, target: str) -> str:
-        return self._TARGET_ATTRS.get(target, 'trims')
+        return target_attr(target)
 
     def _target_items(self, target: str) -> List[MaterialItem]:
         return getattr(self, self._target_attr(target))
 
     def _items_to_dicts(self, target: str) -> List[Dict[str, str]]:
-        return [item.to_dict() for item in self._target_items(target)]
+        return items_to_dicts(self._target_items(target))
 
     def _clone_items(self, target: str) -> List[MaterialItem]:
-        return [MaterialItem.from_dict(item.to_dict()) for item in self._target_items(target)]
-
-    @staticmethod
-    def _coerce_items(items: List[Dict[str, str]] | None) -> List[MaterialItem]:
-        coerced = [MaterialItem.from_dict(item) for item in (items or [])]
-        return coerced or [MaterialItem()]
+        return clone_items(self._target_items(target))
 
     def _material_groups(self) -> Iterable[List[MaterialItem]]:
         for target in self._TARGET_ATTRS:
             yield self._target_items(target)
 
     def _recompute_sale_price(self) -> None:
-        material_total = sum(self._sum_material_totals(items) for items in self._material_groups())
-        material_text = str(material_total) if material_total else ''
-        self.header.cost = material_text
-        self.header.cost_display = format_commas_from_digits(material_text) if material_text else ''
-
-        sale_total = material_total + int_from_any(self.header.labor) + int_from_any(self.header.loss)
-        sale_text = str(sale_total) if sale_total else ''
-        self.header.sale_price = sale_text
-        self.header.sale_price_display = format_commas_from_digits(sale_text) if sale_text else ''
-
-    @staticmethod
-    def _needs_price_recompute(patch: Dict[str, str] | None) -> bool:
-        if not isinstance(patch, dict) or not patch:
-            return False
-        watched_keys = {HeaderKeys.LABOR, HeaderKeys.LABOR_DISPLAY, HeaderKeys.LOSS, HeaderKeys.LOSS_DISPLAY}
-        return any(key in watched_keys for key in patch)
-
-    @staticmethod
-    def _sum_material_totals(items: List[MaterialItem] | None) -> int:
-        return sum(int_from_any(item.total) for item in (items or []))
-
-    @staticmethod
-    def _items_have_value(items: List[MaterialItem] | None) -> bool:
-        return any(item.has_any_value() for item in (items or []))
+        recompute_header_prices(self.header, self._material_groups())

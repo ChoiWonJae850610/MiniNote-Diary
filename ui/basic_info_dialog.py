@@ -4,14 +4,15 @@ from typing import Dict
 
 from PySide6.QtCore import Qt, QDate, QRegularExpression, QSize, QPoint, Signal
 from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
-from PySide6.QtWidgets import QCalendarWidget, QDialog, QGridLayout, QLabel, QLineEdit, QToolButton
+from PySide6.QtWidgets import QCalendarWidget, QDialog, QGridLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
 from services.formatters import digits_only, format_commas_from_digits
+from ui.dialog_form_fields import build_dialog_actions, configure_text_field, make_dialog_form_layout, make_dialog_inline_row
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.messages import Buttons, DialogTitles, Labels, Tooltips
 from ui.theme import THEME, compact_popup_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
-from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button, set_widget_tooltip
-from ui.page_builders_common import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
+from ui.widget_factory import make_inline_icon_button, set_widget_tooltip
+from ui.page_builders_common import make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 
@@ -74,7 +75,6 @@ class BasicInfoDialog(QDialog):
         self.setMinimumWidth(DialogLayout.MIN_WIDTH_STANDARD)
         initial = initial or {}
         root = make_dialog_root_layout(self)
-
         form = make_dialog_form_layout()
 
         initial_date = QDate.fromString(initial.get("date", ""), "yyyy-MM-dd")
@@ -96,14 +96,12 @@ class BasicInfoDialog(QDialog):
         self.btn_calendar.setIconSize(QSize(THEME.icon_size_md, THEME.icon_size_md))
         self.btn_calendar.setStyleSheet(tool_button_style())
         self.btn_calendar.clicked.connect(self._open_calendar)
-
         date_row = make_dialog_inline_row(self, self.date_text, self.btn_calendar)
 
-        self.style_no = QLineEdit(self)
-        self.factory = QLineEdit(self)
+        self.style_no = configure_text_field(QLineEdit(self))
+        self.factory = configure_text_field(QLineEdit(self))
         for widget in (self.style_no, self.factory):
             widget.setFixedHeight(THEME.dialog_field_height)
-            widget.setStyleSheet(input_line_edit_style())
         self.style_no.setText(initial.get("style_no", ""))
         self.factory.setText(initial.get("factory", ""))
         self.factory.setProperty("factory_partner_id", initial.get("factory_partner_id", ""))
@@ -154,11 +152,10 @@ class BasicInfoDialog(QDialog):
         form.addRow("", price_row)
         root.addLayout(form)
 
-        btn_cancel = make_dialog_button(Buttons.CANCEL, self, role="cancel")
-        btn_ok = make_dialog_button(Buttons.OK, self, role="confirm")
+        btn_cancel, btn_ok, button_row = build_dialog_actions(self, confirm_text=Buttons.OK)
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
-        root.addLayout(make_dialog_button_row([btn_cancel, btn_ok]))
+        root.addLayout(button_row)
 
     def _open_calendar(self):
         if getattr(self, "_calendar_popup", None) is not None:
@@ -187,7 +184,6 @@ class BasicInfoDialog(QDialog):
                 y = max(avail.top(), anchor.mapToGlobal(QPoint(0, 0)).y() - height - DialogLayout.CALENDAR_POPUP_OFFSET_Y)
         popup.move(x, y)
         popup.show()
-
 
     def _open_factory_picker(self):
         show_partner_picker(

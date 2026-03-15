@@ -4,11 +4,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List
 
 from services.field_keys import MaterialKeys, PayloadKeys
+from services.model_utils import to_text
 from services.schema import HEADER_FIELDS, MATERIAL_FIELDS, REQUIRED_HEADER_FIELDS, REQUIRED_MATERIAL_FIELDS
-
-
-def _to_text(value: Any) -> str:
-    return '' if value is None else str(value)
 
 
 @dataclass
@@ -29,18 +26,18 @@ class WorkOrderHeader:
     @classmethod
     def from_dict(cls, data: Dict[str, Any] | None) -> 'WorkOrderHeader':
         data = data or {}
-        payload = {name: _to_text(data.get(name, '')) for name in HEADER_FIELDS}
+        payload = {name: to_text(data.get(name, '')) for name in HEADER_FIELDS}
         return cls(**payload)
 
     def to_dict(self) -> Dict[str, str]:
-        return {name: _to_text(getattr(self, name, '')) for name in HEADER_FIELDS}
+        return {name: to_text(getattr(self, name, '')) for name in HEADER_FIELDS}
 
     def patch(self, patch: Dict[str, Any] | None) -> None:
         if not isinstance(patch, dict):
             return
         for name in HEADER_FIELDS:
             if name in patch:
-                setattr(self, name, _to_text(patch.get(name, '')))
+                setattr(self, name, to_text(patch.get(name, '')))
 
     def has_required_fields(self) -> bool:
         data = self.to_dict()
@@ -86,17 +83,17 @@ class MaterialItem:
     @classmethod
     def from_dict(cls, data: Dict[str, Any] | None) -> 'MaterialItem':
         data = data or {}
-        return cls(**{name: _to_text(data.get(name, '')) for name in MATERIAL_FIELDS})
+        return cls(**{name: to_text(data.get(name, '')) for name in MATERIAL_FIELDS})
 
     def to_dict(self) -> Dict[str, str]:
-        return {name: _to_text(getattr(self, name, '')) for name in MATERIAL_FIELDS}
+        return {name: to_text(getattr(self, name, '')) for name in MATERIAL_FIELDS}
 
     def patch(self, patch: Dict[str, Any] | None) -> None:
         if not isinstance(patch, dict):
             return
         for name in MATERIAL_FIELDS:
             if name in patch:
-                setattr(self, name, _to_text(patch.get(name, '')))
+                setattr(self, name, to_text(patch.get(name, '')))
 
     def has_any_value(self) -> bool:
         return any(value.strip() for value in self.to_dict().values())

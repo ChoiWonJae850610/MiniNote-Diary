@@ -3,13 +3,14 @@ from __future__ import annotations
 from typing import Sequence, Tuple
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QWidget
 
 from ui.ui_metrics import CommonSymbolsLayout
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, Symbols
-from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba, status_row_margins
+from ui.theme import THEME, hex_to_rgba, status_row_margins
 from ui.widget_factory import make_dialog_button, make_dialog_button_row
+from ui.dialog_shell import build_dialog_shell
 
 
 def _dialog_stylesheet() -> str:
@@ -100,25 +101,9 @@ def _dialog_stylesheet() -> str:
 class _BaseThemedDialog(QDialog):
     def __init__(self, title: str, parent=None):
         super().__init__(parent)
-        self.setModal(True)
-        self.setWindowTitle(title)
-        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
         self.setStyleSheet(_dialog_stylesheet())
-
-        root = QVBoxLayout(self)
-        root.setContentsMargins(*dialog_layout_margins())
-
-        self.card = QFrame(self)
-        self.card.setObjectName("dialogCard")
-        root.addWidget(self.card)
-
-        self.body = QVBoxLayout(self.card)
-        self.body.setContentsMargins(*dialog_inner_margins())
-        self.body.setSpacing(THEME.section_gap)
-
-        self.title_label = QLabel(title, self.card)
-        self.title_label.setObjectName("dialogTitle")
-        self.title_label.hide()
+        self.card, self.body, self.title_label = build_dialog_shell(self, title)
+        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
 
 
 class SimpleMessageDialog(_BaseThemedDialog):

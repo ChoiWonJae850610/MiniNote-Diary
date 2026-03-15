@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, QRegularExpression, QEvent
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QLineEdit
+from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit
 
 from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units
-from ui.theme import THEME, combo_box_style, hint_label_style, input_line_edit_style, read_only_line_edit_style
+from ui.dialog_form_fields import build_dialog_actions, build_hint_label, configure_text_field, make_dialog_form_layout, make_dialog_inline_row
+from ui.theme import combo_box_style, input_line_edit_style, read_only_line_edit_style
 from ui.icon_factory import make_partner_link_icon
-from ui.messages import Buttons, InfoMessages, Labels, Tooltips, Warnings
-from ui.widget_factory import make_dialog_button, make_dialog_button_row, make_inline_icon_button
-from ui.page_builders_common import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
+from ui.messages import Buttons, InfoMessages, Labels, Tooltips
+from ui.widget_factory import make_inline_icon_button
+from ui.page_builders_common import make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 
@@ -71,11 +72,10 @@ class MaterialItemDialog(QDialog):
         self.setMinimumWidth(DialogLayout.MIN_WIDTH_NARROW)
 
         root = make_dialog_root_layout(self)
-
         form = make_dialog_form_layout()
 
-        self.vendor = QLineEdit(self)
-        self.item = QLineEdit(self)
+        self.vendor = configure_text_field(QLineEdit(self))
+        self.item = configure_text_field(QLineEdit(self))
         self.qty = CommaIntEdit(self)
         self.unit = ClearableComboBox(self)
         self.unit.setFixedHeight(DialogLayout.FIELD_HEIGHT)
@@ -89,10 +89,8 @@ class MaterialItemDialog(QDialog):
         self.total = MoneyEdit(self)
         self.total.setReadOnly(True)
         self.total.setStyleSheet(read_only_line_edit_style())
-
         for widget in (self.vendor, self.item):
             widget.setFixedHeight(DialogLayout.FIELD_HEIGHT)
-            widget.setStyleSheet(input_line_edit_style())
         self.vendor.textEdited.connect(lambda _text: self.vendor.setProperty("vendor_partner_id", ""))
 
         self.btn_vendor_partner = make_inline_icon_button(
@@ -111,19 +109,14 @@ class MaterialItemDialog(QDialog):
         form.addRow(Labels.UNIT_PRICE, self.unit_price)
         form.addRow(Labels.TOTAL, self.total)
         root.addLayout(form)
+        root.addWidget(build_hint_label(InfoMessages.MATERIAL_TOTAL_AUTO, self))
 
-        tip = QLabel(InfoMessages.MATERIAL_TOTAL_AUTO, self)
-        tip.setStyleSheet(hint_label_style())
-        root.addWidget(tip)
-
-        self.btn_cancel = make_dialog_button(Buttons.CANCEL, self, role="cancel")
-        self.btn_ok = make_dialog_button(Buttons.ADD, self, role="confirm")
-        root.addLayout(make_dialog_button_row([self.btn_cancel, self.btn_ok]))
+        self.btn_cancel, self.btn_ok, button_row = build_dialog_actions(self, confirm_text=Buttons.ADD)
+        root.addLayout(button_row)
         self.btn_cancel.clicked.connect(self.reject)
         self.btn_ok.clicked.connect(self._on_ok)
         self.qty.textChanged.connect(self._recalc_total)
         self.unit_price.textChanged.connect(self._recalc_total)
-
 
     def _open_vendor_picker(self):
         show_partner_picker(
