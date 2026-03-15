@@ -10,7 +10,7 @@ from ui.postit.metrics import PostItLayout
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import InlineCalendarPopup
 from ui.postit.forms import PostItBodyLayout
-from ui.postit.layout import POSTIT_BODY_HEIGHT
+from ui.postit.layout import POSTIT_BASIC_CARD_MIN_WIDTH, POSTIT_BODY_HEIGHT, POSTIT_CALENDAR_POPUP_OFFSET_Y
 from ui.postit.basic_info_sections import (
     build_date_row,
     build_partner_rows,
@@ -27,7 +27,7 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def __init__(self, parent=None):
         super().__init__("basic", parent=parent)
-        self.setMinimumSize(QSize(320, POSTIT_BODY_HEIGHT))
+        self.setMinimumSize(QSize(POSTIT_BASIC_CARD_MIN_WIDTH, POSTIT_BODY_HEIGHT))
         self.setFixedHeight(POSTIT_BODY_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -88,7 +88,7 @@ class BasicInfoPostIt(_PostItCardBase):
         popup = InlineCalendarPopup(self._date_value, parent=self)
         popup.datePicked.connect(self._on_date_picked)
         popup.moveNextRequested.connect(self.style_no.activate_for_input)
-        anchor = self.btn_calendar.mapToGlobal(QPoint(0, self.btn_calendar.height() + PostItLayout.CALENDAR_POPUP_OFFSET_Y))
+        anchor = self.btn_calendar.mapToGlobal(QPoint(0, self.btn_calendar.height() + POSTIT_CALENDAR_POPUP_OFFSET_Y))
         popup.move(anchor)
         popup.show()
         popup.cal.setFocus(Qt.PopupFocusReason)

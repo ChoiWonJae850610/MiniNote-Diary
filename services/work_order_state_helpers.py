@@ -6,17 +6,8 @@ from services.formatters import format_commas_from_digits, int_from_any
 from services.field_keys import HeaderKeys, MaterialTargets
 from services.models import MaterialItem
 
-_TARGET_ATTRS = {
-    MaterialTargets.FABRIC: 'fabrics',
-    MaterialTargets.TRIM: 'trims',
-    MaterialTargets.DYEING: 'dyeings',
-    MaterialTargets.FINISHING: 'finishings',
-    MaterialTargets.OTHER: 'others',
-}
-
-
 def target_attr(target: str) -> str:
-    return _TARGET_ATTRS.get(target, 'trims')
+    return MaterialTargets.ATTRS.get(target, MaterialTargets.DEFAULT_ATTR)
 
 
 def items_to_dicts(items: List[MaterialItem]) -> List[Dict[str, str]]:

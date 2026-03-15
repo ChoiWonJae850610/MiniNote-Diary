@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication, QCalendarWidget, QDialog, QWidget
 from services.formatters import digits_only, format_commas_from_digits, int_from_any
 from services.unit_repository import load_units, unit_label_for_value
 from services.schema import MAX_MATERIAL_ITEMS
+from ui.postit.layout import POSTIT_POPUP_MARGIN
 from ui.theme import THEME
 
 FIELD_H = THEME.field_height
@@ -119,11 +120,9 @@ class InlineCalendarPopup(QDialog):
 
     def __init__(self, initial: QDate, parent=None):
         super().__init__(parent, Qt.Popup)
-        lay = QWidget(self)
-        root = None
         from PySide6.QtWidgets import QVBoxLayout
         root = QVBoxLayout(self)
-        root.setContentsMargins(8, 8, 8, 8)
+        root.setContentsMargins(POSTIT_POPUP_MARGIN, POSTIT_POPUP_MARGIN, POSTIT_POPUP_MARGIN, POSTIT_POPUP_MARGIN)
         self.cal = QCalendarWidget(self)
         self.cal.setGridVisible(True)
         self.cal.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)

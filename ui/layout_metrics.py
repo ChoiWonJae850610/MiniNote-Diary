@@ -16,6 +16,8 @@ class DialogLayout:
     PRICE_FIELD_MIN_WIDTH = 90
     PRICE_FIELD_MAX_WIDTH = 140
     UNIT_COMBO_MIN_WIDTH = 160
+    CARD_MARGIN = 18
+    CARD_ROW_SPACING = 10
 
 
 class OrderPageLayout:

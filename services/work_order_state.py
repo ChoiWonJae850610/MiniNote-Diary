@@ -28,13 +28,6 @@ class WorkOrderState:
     current_image_path: Optional[str] = None
     is_dirty: bool = False
 
-    _TARGET_ATTRS = {
-        MaterialTargets.FABRIC: 'fabrics',
-        MaterialTargets.TRIM: 'trims',
-        MaterialTargets.DYEING: 'dyeings',
-        MaterialTargets.FINISHING: 'finishings',
-        MaterialTargets.OTHER: 'others',
-    }
 
     @property
     def header_data(self) -> Dict[str, str]:
@@ -87,7 +80,7 @@ class WorkOrderState:
 
     def reset(self) -> None:
         self.header = WorkOrderHeader()
-        for attr in self._TARGET_ATTRS.values():
+        for attr in MaterialTargets.ATTRS.values():
             setattr(self, attr, [MaterialItem()])
         self.current_image_path = None
         self._recompute_sale_price()
@@ -101,7 +94,7 @@ class WorkOrderState:
             self.is_dirty
             or self.current_image_path
             or self.header.has_any_value()
-            or any(items_have_value(self._target_items(target)) for target in self._TARGET_ATTRS)
+            or any(items_have_value(self._target_items(target)) for target in MaterialTargets.ALL)
         )
 
     def update_header(self, patch: Dict[str, str]) -> None:
@@ -189,7 +182,7 @@ class WorkOrderState:
         return clone_items(self._target_items(target))
 
     def _material_groups(self) -> Iterable[List[MaterialItem]]:
-        for target in self._TARGET_ATTRS:
+        for target in MaterialTargets.ALL:
             yield self._target_items(target)
 
     def _recompute_sale_price(self) -> None:

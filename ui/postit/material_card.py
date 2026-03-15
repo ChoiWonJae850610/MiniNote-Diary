@@ -13,7 +13,7 @@ from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
-from ui.postit.layout import POSTIT_CARD_HEIGHT
+from ui.postit.layout import POSTIT_CARD_HEIGHT, POSTIT_DELETE_BUTTON_MARGIN_RIGHT, POSTIT_DELETE_BUTTON_MARGIN_TOP, POSTIT_MATERIAL_CARD_MIN_WIDTH
 from ui.postit.material_card_logic import (
     commit_material_value,
     on_price_changed,
@@ -55,7 +55,7 @@ class PostItCard(_PostItCardBase):
         connect_material_signals(self)
         configure_material_tab_order(self)
 
-        self.setMinimumSize(QSize(320, POSTIT_CARD_HEIGHT))
+        self.setMinimumSize(QSize(POSTIT_MATERIAL_CARD_MIN_WIDTH, POSTIT_CARD_HEIGHT))
         self.setMaximumHeight(POSTIT_CARD_HEIGHT)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -102,7 +102,7 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = True
 
     def resizeEvent(self, event):
-        self.btn_delete.move(self.width() - (THEME.delete_button_size + PostItLayout.DELETE_BUTTON_MARGIN_RIGHT), PostItLayout.DELETE_BUTTON_MARGIN_TOP)
+        self.btn_delete.move(self.width() - (THEME.delete_button_size + POSTIT_DELETE_BUTTON_MARGIN_RIGHT), POSTIT_DELETE_BUTTON_MARGIN_TOP)
         super().resizeEvent(event)
 
     def update_data(self, data: Dict[str, str]):

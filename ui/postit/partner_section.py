@@ -9,9 +9,9 @@ from ui.postit.basic_info import BasicInfoPostIt
 from ui.postit.layout import (
     FolderTabHeader,
     FooterSpacer,
+    POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP_TIGHT,
-    POSTIT_STANDARD_BODY_HEIGHT,
-    POSTIT_STANDARD_SECTION_SPACING,
+    POSTIT_TAB_OVERLAP,
     make_postit_footer_spacer,
     make_postit_pager_host,
     make_postit_stack_host,
@@ -60,7 +60,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             interactive=True,
         )
 
-        self.body_host, self.body_stack = make_postit_stack_host(height=POSTIT_STANDARD_BODY_HEIGHT)
+        self.body_host, self.body_stack = make_postit_stack_host(height=POSTIT_BODY_HEIGHT)
         self.fabric = PostItStack(self.TAB_FABRIC)
         self.trim = PostItStack(self.TAB_TRIM)
         self.dyeing = PostItStack(self.TAB_DYEING)
@@ -85,10 +85,10 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             self.tab_header,
             self.body_host,
             parent=parent,
-            body_height=POSTIT_STANDARD_BODY_HEIGHT,
+            body_height=POSTIT_BODY_HEIGHT,
             footer_widget=self.footer_spacer,
             external_row_widget=self.pager_host,
-            spacing=POSTIT_STANDARD_SECTION_SPACING,
+            spacing=POSTIT_TAB_OVERLAP,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -170,7 +170,7 @@ class PostItBar(QWidget):
             SectionTitles.BASIC_INFO,
             self.basic,
             parent=self,
-            body_height=POSTIT_STANDARD_BODY_HEIGHT,
+            body_height=POSTIT_BODY_HEIGHT,
             footer_widget=self.basic_footer,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )

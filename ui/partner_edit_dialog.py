@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QCheckBox, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QPlainTextEdit, QHBoxLayout, QVBoxLayout
 
 from services.partner_repository import PartnerRecord
 from ui.dialogs import show_warning
 from ui.messages import DialogTitles, InfoMessages, Labels, Placeholders, Tooltips, WarningMessages
 from ui.partner_dialog_common import partner_card_style, partner_field_label_style, partner_type_check_style
+from ui.dialog_form_fields import add_dialog_grid_row, build_dialog_card, build_dialog_grid, build_hint_label, build_section_title, configure_text_field
 from ui.layout_metrics import DialogLayout, PartnerLayout
-from ui.theme import THEME, dialog_layout_margins, input_line_edit_style, plain_text_edit_style, title_label_style
+from ui.theme import THEME, dialog_layout_margins, plain_text_edit_style, title_label_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 
 
@@ -32,12 +33,9 @@ class PartnerEditDialog(QDialog):
         body.setSpacing(THEME.section_gap)
         root.addLayout(body, 1)
 
-        form_card = QFrame(self)
-        form_card.setObjectName("partnerCard")
-        form_layout = QGridLayout(form_card)
-        form_layout.setContentsMargins(PartnerLayout.FORM_MARGIN, PartnerLayout.FORM_MARGIN, PartnerLayout.FORM_MARGIN, PartnerLayout.FORM_MARGIN)
-        form_layout.setHorizontalSpacing(DialogLayout.FORM_HORIZONTAL_SPACING)
-        form_layout.setVerticalSpacing(DialogLayout.FORM_VERTICAL_SPACING)
+        form_card, form_card_layout = build_dialog_card(self, object_name="partnerCard")
+        form_layout = build_dialog_grid()
+        form_card_layout.addLayout(form_layout)
         body.addWidget(form_card, 7)
 
         self.name_edit = self._make_line_edit(Placeholders.PARTNER_NAME)
@@ -49,28 +47,16 @@ class PartnerEditDialog(QDialog):
         self.memo_edit.setStyleSheet(plain_text_edit_style())
         self.memo_edit.setFixedHeight(PartnerLayout.MEMO_HEIGHT)
 
-        form_layout.addWidget(self._make_label(Labels.PARTNER_NAME), 0, 0)
-        form_layout.addWidget(self.name_edit, 0, 1)
-        form_layout.addWidget(self._make_label(Labels.OWNER_NAME), 1, 0)
-        form_layout.addWidget(self.owner_edit, 1, 1)
-        form_layout.addWidget(self._make_label(Labels.PHONE), 2, 0)
-        form_layout.addWidget(self.phone_edit, 2, 1)
-        form_layout.addWidget(self._make_label(Labels.ADDRESS), 3, 0)
-        form_layout.addWidget(self.address_edit, 3, 1)
-        form_layout.addWidget(self._make_label(Labels.MEMO), 4, 0, Qt.AlignTop)
-        form_layout.addWidget(self.memo_edit, 4, 1)
+        add_dialog_grid_row(form_layout, 0, self._make_label(Labels.PARTNER_NAME), self.name_edit)
+        add_dialog_grid_row(form_layout, 1, self._make_label(Labels.OWNER_NAME), self.owner_edit)
+        add_dialog_grid_row(form_layout, 2, self._make_label(Labels.PHONE), self.phone_edit)
+        add_dialog_grid_row(form_layout, 3, self._make_label(Labels.ADDRESS), self.address_edit)
+        add_dialog_grid_row(form_layout, 4, self._make_label(Labels.MEMO), self.memo_edit, top_align=True)
 
-        type_card = QFrame(self)
-        type_card.setObjectName("partnerCard")
-        type_layout = QVBoxLayout(type_card)
-        type_layout.setContentsMargins(PartnerLayout.FORM_MARGIN, PartnerLayout.FORM_MARGIN, PartnerLayout.FORM_MARGIN, PartnerLayout.FORM_MARGIN)
+        type_card, type_layout = build_dialog_card(self, object_name="partnerCard")
         type_layout.setSpacing(PartnerLayout.TYPE_SECTION_SPACING)
-        type_title = QLabel(DialogTitles.PARTNER_TYPE, type_card)
-        type_title.setStyleSheet(title_label_style(font_px=THEME.section_title_font_px + 1))
-        type_layout.addWidget(type_title)
-        type_hint = QLabel(InfoMessages.PARTNER_TYPE_SELECT_HINT, type_card)
-        type_hint.setStyleSheet(f"QLabel{{color:{THEME.color_text_muted};background:transparent;}}")
-        type_layout.addWidget(type_hint)
+        type_layout.addWidget(build_section_title(DialogTitles.PARTNER_TYPE, type_card))
+        type_layout.addWidget(build_hint_label(InfoMessages.PARTNER_TYPE_SELECT_HINT, type_card))
         self.type_checks: list[QCheckBox] = []
         for idx, type_name in enumerate(all_types):
             check = QCheckBox(type_name, type_card)
@@ -98,9 +84,8 @@ class PartnerEditDialog(QDialog):
         return label
 
     def _make_line_edit(self, placeholder: str) -> QLineEdit:
-        edit = QLineEdit(self)
+        edit = configure_text_field(QLineEdit(self))
         edit.setPlaceholderText(placeholder)
-        edit.setStyleSheet(input_line_edit_style())
         edit.setFixedHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
         return edit
 

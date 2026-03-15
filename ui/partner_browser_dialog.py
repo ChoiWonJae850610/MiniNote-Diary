@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
 from services.partner_management_service import PartnerManagementService
+from ui.dialog_form_fields import build_dialog_card, build_labeled_value_row, build_section_title, configure_text_field
 from ui.layout_metrics import PartnerLayout
 from ui.messages import Buttons, DialogTitles, Labels, Placeholders, Symbols, Tooltips
 from ui.partner_browser_actions import on_add, on_delete, on_edit, on_manage_types
@@ -16,7 +17,7 @@ from ui.partner_dialog_common import (
     partner_list_style,
     partner_shell_style,
 )
-from ui.theme import THEME, dialog_layout_margins, input_line_edit_style, title_label_style
+from ui.theme import THEME, dialog_layout_margins, title_label_style
 from ui.ui_metrics import CommonSymbolsLayout
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 
@@ -69,17 +70,11 @@ class PartnerDialog(QDialog):
 
         self.reload_all()
 
-    def _build_left_card(self) -> QFrame:
-        card = QFrame(self)
-        card.setObjectName("partnerShell")
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN)
-        layout.setSpacing(PartnerLayout.CARD_ROW_SPACING)
-        title = QLabel(DialogTitles.PARTNER_LIST, card)
-        title.setStyleSheet(title_label_style(font_px=THEME.section_title_font_px + 1))
-        self.search_edit = QLineEdit(card)
+    def _build_left_card(self):
+        card, layout = build_dialog_card(self, object_name="partnerShell")
+        title = build_section_title(DialogTitles.PARTNER_LIST, card)
+        self.search_edit = configure_text_field(QLineEdit(card))
         self.search_edit.setPlaceholderText(Placeholders.PARTNER_SEARCH)
-        self.search_edit.setStyleSheet(input_line_edit_style())
         self.search_edit.setFixedHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
         self.list_widget = QListWidget(card)
         self.list_widget.setObjectName("partnerList")
@@ -89,14 +84,10 @@ class PartnerDialog(QDialog):
         layout.addWidget(self.list_widget, 1)
         return card
 
-    def _build_right_card(self) -> QFrame:
-        card = QFrame(self)
-        card.setObjectName("partnerShell")
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN, PartnerLayout.CARD_MARGIN)
+    def _build_right_card(self):
+        card, layout = build_dialog_card(self, object_name="partnerShell")
         layout.setSpacing(PartnerLayout.DETAIL_CARD_SPACING)
-        title = QLabel(DialogTitles.PARTNER_BASIC_INFO, card)
-        title.setStyleSheet(title_label_style(font_px=THEME.section_title_font_px + 1))
+        title = build_section_title(DialogTitles.PARTNER_BASIC_INFO, card)
         self.detail_name = self._detail_value_label(min_height=42)
         self.detail_owner = self._detail_value_label()
         self.detail_phone = self._detail_value_label()
@@ -118,15 +109,20 @@ class PartnerDialog(QDialog):
         return card
 
     def _detail_row(self, label_text: str, value_widget: QWidget, top_align: bool = False):
-        row = QHBoxLayout()
-        row.setSpacing(PartnerLayout.CARD_ROW_SPACING)
-        label = QLabel(label_text, self)
-        label.setFixedWidth(PartnerLayout.DETAIL_LABEL_WIDTH)
+        return build_labeled_value_row(
+            self,
+            label_text,
+            value_widget,
+            label_width=PartnerLayout.DETAIL_LABEL_WIDTH,
+            spacing=PartnerLayout.CARD_ROW_SPACING,
+            label_builder=self._make_detail_label,
+            top_align=top_align,
+        )
+
+    def _make_detail_label(self, text: str, parent: QWidget) -> QLabel:
+        label = QLabel(text, parent)
         label.setStyleSheet(partner_field_label_style())
-        alignment = Qt.AlignTop if top_align else Qt.AlignVCenter
-        row.addWidget(label, 0, alignment)
-        row.addWidget(value_widget, 1)
-        return row
+        return label
 
     def _detail_value_label(self, min_height: int = 34, wrap: bool = False, align_top: bool = False) -> QLabel:
         label = QLabel(detail_value_fallback(), self)

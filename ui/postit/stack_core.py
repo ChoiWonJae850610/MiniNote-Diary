@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QToolButton, QWidget
 from services.work_order_defaults import empty_material_row
 from ui.messages import Symbols
 from ui.postit.common import MAX_POSTIT_CARDS
-from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_HEIGHT, POSTIT_STANDARD_BODY_HEIGHT, make_postit_stack_host
+from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_GAP, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
@@ -28,13 +28,13 @@ class PostItStack(QWidget):
         self.active_index = 0
         self._suppress_next_new_card_menu = False
 
-        self.stack_host, self.stack = make_postit_stack_host(parent=self, height=POSTIT_STANDARD_BODY_HEIGHT)
+        self.stack_host, self.stack = make_postit_stack_host(parent=self, height=POSTIT_BODY_HEIGHT)
 
         self.footer_host = QWidget(self)
         self.footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
         self.index_row = QHBoxLayout(self.footer_host)
         self.index_row.setContentsMargins(0, 0, 0, 0)
-        self.index_row.setSpacing(THEME.top_button_spacing)
+        self.index_row.setSpacing(POSTIT_FOOTER_GAP)
         self.index_row.addStretch(1)
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)

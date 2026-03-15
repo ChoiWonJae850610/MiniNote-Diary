@@ -35,6 +35,14 @@ class MaterialTargets:
     OTHER = "other"
 
     ALL: tuple[str, ...] = (FABRIC, TRIM, DYEING, FINISHING, OTHER)
+    ATTRS: dict[str, str] = {
+        FABRIC: "fabrics",
+        TRIM: "trims",
+        DYEING: "dyeings",
+        FINISHING: "finishings",
+        OTHER: "others",
+    }
+    DEFAULT_ATTR = ATTRS[TRIM]
 
 
 class PayloadKeys:
