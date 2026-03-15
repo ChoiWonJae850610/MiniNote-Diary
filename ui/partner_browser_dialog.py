@@ -1,25 +1,29 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
 from services.partner_management_service import PartnerManagementService
 from services.partner_repository import PartnerRecord
-from services.search_utils import matches_keyword
 from ui.dialogs import ConfirmActionDialog, show_info, show_warning
 from ui.ui_metrics import CommonSymbolsLayout
 from ui.layout_metrics import PartnerLayout
 from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Symbols, Tooltips, WarningMessages
 from ui.partner_dialog_common import (
-    PartnerListItem,
     ReadOnlyTypeIndicatorGrid,
     detail_value_fallback,
     partner_detail_value_style,
     partner_field_label_style,
     partner_list_style,
     partner_shell_style,
+)
+from ui.partner_browser_helpers import (
+    clear_partner_detail,
+    filter_partners,
+    find_partner_by_id,
+    populate_partner_list,
+    select_partner_in_list,
+    show_partner_detail,
 )
 from ui.partner_edit_dialog import PartnerEditDialog
 from ui.partner_type_dialog import PartnerTypeDialog
@@ -145,32 +149,18 @@ class PartnerDialog(QDialog):
         self.apply_filter(self.search_edit.text())
 
     def apply_filter(self, text: str) -> None:
-        self._filtered = [
-            row
-            for row in self._partners
-            if matches_keyword(text, row.name, row.owner, row.phone, row.address, ' '.join(row.types or []))
-        ]
+        self._filtered = filter_partners(self._partners, text)
         self._populate_list()
 
     def _populate_list(self) -> None:
-        self.list_widget.clear()
-        for partner in self._filtered:
-            item = QListWidgetItem(self.list_widget)
-            item.setData(Qt.UserRole, partner.id)
-            widget = PartnerListItem(partner, self._type_order, self.list_widget)
-            item.setSizeHint(widget.sizeHint())
-            self.list_widget.addItem(item)
-            self.list_widget.setItemWidget(item, widget)
+        populate_partner_list(self.list_widget, self._filtered, self._type_order)
         if self._filtered:
             self.list_widget.setCurrentRow(0)
         else:
             self._clear_detail()
 
     def _find_by_id(self, partner_id: str) -> PartnerRecord | None:
-        for row in self._partners:
-            if row.id == partner_id:
-                return row
-        return None
+        return find_partner_by_id(self._partners, partner_id)
 
     def _on_current_row_changed(self, row: int) -> None:
         if row < 0 or row >= len(self._filtered):
@@ -185,20 +175,10 @@ class PartnerDialog(QDialog):
             self.on_edit()
 
     def _show_partner(self, partner: PartnerRecord) -> None:
-        fallback = detail_value_fallback()
-        self.detail_name.setText(partner.name or fallback)
-        self.detail_owner.setText(partner.owner or fallback)
-        self.detail_phone.setText(partner.phone or fallback)
-        self.detail_address.setText(partner.address or fallback)
-        self.detail_memo.setText(partner.memo or fallback)
-        self.type_indicator_grid.set_types(self._type_order, partner.types or [])
+        show_partner_detail(self, partner)
 
     def _clear_detail(self) -> None:
-        self._current_partner_id = ""
-        fallback = detail_value_fallback()
-        for label in [self.detail_name, self.detail_owner, self.detail_phone, self.detail_address, self.detail_memo]:
-            label.setText(fallback)
-        self.type_indicator_grid.set_types(self._type_order, [])
+        clear_partner_detail(self)
 
     def on_add(self) -> None:
         dialog = PartnerEditDialog(self._type_order, parent=self)
@@ -246,8 +226,4 @@ class PartnerDialog(QDialog):
         self.reload_all()
 
     def _select_partner(self, partner_id: str) -> None:
-        for row in range(self.list_widget.count()):
-            item = self.list_widget.item(row)
-            if item and item.data(Qt.UserRole) == partner_id:
-                self.list_widget.setCurrentRow(row)
-                return
+        select_partner_in_list(self.list_widget, partner_id)
