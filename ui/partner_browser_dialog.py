@@ -4,11 +4,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
 from services.partner_management_service import PartnerManagementService
-from services.partner_repository import PartnerRecord
-from ui.dialogs import ConfirmActionDialog, show_info, show_warning
-from ui.ui_metrics import CommonSymbolsLayout
 from ui.layout_metrics import PartnerLayout
-from ui.messages import Buttons, DialogTitles, InfoMessages, Labels, Placeholders, Symbols, Tooltips, WarningMessages
+from ui.messages import Buttons, DialogTitles, Labels, Placeholders, Symbols, Tooltips
+from ui.partner_browser_actions import on_add, on_delete, on_edit, on_manage_types
+from ui.partner_browser_selection import apply_filter, clear_detail, reload_all, show_partner
 from ui.partner_dialog_common import (
     ReadOnlyTypeIndicatorGrid,
     detail_value_fallback,
@@ -17,57 +16,51 @@ from ui.partner_dialog_common import (
     partner_list_style,
     partner_shell_style,
 )
-from ui.partner_browser_helpers import (
-    clear_partner_detail,
-    filter_partners,
-    find_partner_by_id,
-    populate_partner_list,
-    select_partner_in_list,
-    show_partner_detail,
-)
-from ui.partner_edit_dialog import PartnerEditDialog
-from ui.partner_type_dialog import PartnerTypeDialog
 from ui.theme import THEME, dialog_layout_margins, input_line_edit_style, title_label_style
+from ui.ui_metrics import CommonSymbolsLayout
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 
 
 class PartnerDialog(QDialog):
-    def __init__(self, project_root: str, parent=None):
+    def __init__(self, project_root, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(DialogTitles.PARTNER_MANAGE)
-        self.resize(880, 580)
+        self.project_root = project_root
         self.partner_service = PartnerManagementService(project_root)
-        self._partners: list[PartnerRecord] = []
-        self._filtered: list[PartnerRecord] = []
-        self._type_order = self.partner_service.list_types()
+        self.setWindowTitle(DialogTitles.PARTNER_MANAGE)
+        self.resize(PartnerLayout.DIALOG_WIDTH, PartnerLayout.DIALOG_HEIGHT)
+
+        self._type_order: list[str] = []
+        self._partners = []
+        self._filtered = []
         self._current_partner_id = ""
 
         root = QVBoxLayout(self)
         root.setContentsMargins(*dialog_layout_margins())
-        root.setSpacing(THEME.block_spacing)
+        root.setSpacing(THEME.section_spacing)
 
-        body = QHBoxLayout()
-        body.setSpacing(THEME.section_gap)
-        root.addLayout(body, 1)
+        title = QLabel(DialogTitles.PARTNER_MANAGEMENT, self)
+        title.setStyleSheet(title_label_style())
+        root.addWidget(title)
 
-        left_card = self._build_left_card()
-        body.addWidget(left_card, 5)
+        content = QHBoxLayout()
+        content.setSpacing(PartnerLayout.CONTENT_SPACING)
+        root.addLayout(content, 1)
 
-        right_card = self._build_right_card()
-        body.addWidget(right_card, 6)
+        content.addWidget(self._build_left_card(), 1)
+        content.addWidget(self._build_right_card(), 1)
 
-        self.btn_type = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.TYPE_MANAGE, text=Symbols.TYPE_MANAGE, font_px=CommonSymbolsLayout.TYPE_BUTTON_FONT_PX)
-        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text=Symbols.ADD, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
-        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.EDIT, text=Symbols.SAVE, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
-        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text=Symbols.DELETE, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
-        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text=Symbols.CLOSE, font_px=CommonSymbolsLayout.ACTION_ICON_FONT_PX)
+        self.btn_type = make_icon_button(Symbols.MENU, Tooltips.PARTNER_TYPE_MANAGE, self)
+        self.btn_add = make_icon_button(Symbols.ADD, Tooltips.ADD, self)
+        self.btn_save = make_icon_button(Symbols.SAVE, Tooltips.EDIT_SAVE, self)
+        self.btn_delete = make_icon_button(Symbols.DELETE, Tooltips.DELETE, self)
+        self.btn_close = make_icon_button(Symbols.CLOSE, Tooltips.CLOSE, self)
         root.addLayout(make_dialog_button_row([self.btn_type, self.btn_add, self.btn_save, self.btn_delete, self.btn_close]))
 
         self.setStyleSheet(self.styleSheet() + partner_shell_style() + partner_detail_value_style())
 
-        self.search_edit.textChanged.connect(self.apply_filter)
+        self.search_edit.textChanged.connect(lambda text: apply_filter(self, text))
         self.list_widget.currentRowChanged.connect(self._on_current_row_changed)
-        self.list_widget.itemDoubleClicked.connect(self._on_item_double_clicked)
+        self.list_widget.itemDoubleClicked.connect(lambda item: self.on_edit())
         self.btn_add.clicked.connect(self.on_add)
         self.btn_save.clicked.connect(self.on_edit)
         self.btn_delete.clicked.connect(self.on_delete)
@@ -144,86 +137,27 @@ class PartnerDialog(QDialog):
         return label
 
     def reload_all(self) -> None:
-        self._type_order = self.partner_service.list_types()
-        self._partners = self.partner_service.list_partners()
-        self.apply_filter(self.search_edit.text())
+        reload_all(self)
 
     def apply_filter(self, text: str) -> None:
-        self._filtered = filter_partners(self._partners, text)
-        self._populate_list()
-
-    def _populate_list(self) -> None:
-        populate_partner_list(self.list_widget, self._filtered, self._type_order)
-        if self._filtered:
-            self.list_widget.setCurrentRow(0)
-        else:
-            self._clear_detail()
-
-    def _find_by_id(self, partner_id: str) -> PartnerRecord | None:
-        return find_partner_by_id(self._partners, partner_id)
+        apply_filter(self, text)
 
     def _on_current_row_changed(self, row: int) -> None:
         if row < 0 or row >= len(self._filtered):
-            self._clear_detail()
+            clear_detail(self)
             return
         partner = self._filtered[row]
         self._current_partner_id = partner.id
-        self._show_partner(partner)
-
-    def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
-        if item is not None:
-            self.on_edit()
-
-    def _show_partner(self, partner: PartnerRecord) -> None:
-        show_partner_detail(self, partner)
-
-    def _clear_detail(self) -> None:
-        clear_partner_detail(self)
+        show_partner(self, partner)
 
     def on_add(self) -> None:
-        dialog = PartnerEditDialog(self._type_order, parent=self)
-        if dialog.exec() != QDialog.Accepted:
-            return
-        created = self.partner_service.create_partner(self._partners, dialog.to_record())
-        self.reload_all()
-        self._select_partner(created.id)
-        show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_SAVED)
+        on_add(self)
 
     def on_edit(self) -> None:
-        record = self._find_by_id(self._current_partner_id)
-        if record is None:
-            show_warning(self, DialogTitles.EDIT, WarningMessages.PARTNER_SELECT_TO_EDIT)
-            return
-        dialog = PartnerEditDialog(self._type_order, partner=record, parent=self)
-        if dialog.exec() != QDialog.Accepted:
-            return
-        updated = self.partner_service.update_partner(self._partners, record.id, dialog.to_record())
-        self.reload_all()
-        self._select_partner(updated.id)
-        show_info(self, DialogTitles.SAVE, InfoMessages.PARTNER_UPDATED)
+        on_edit(self)
 
     def on_delete(self) -> None:
-        record = self._find_by_id(self._current_partner_id)
-        if record is None:
-            return
-        confirm = ConfirmActionDialog(
-            Buttons.DELETE,
-            f"'{record.name}' {WarningMessages.PARTNER_DELETE_CONFIRM}",
-            confirm_text=Buttons.DELETE,
-            cancel_text=Buttons.CANCEL,
-            parent=self,
-        )
-        if confirm.exec() != QDialog.Accepted:
-            return
-        self.partner_service.delete_partner(self._partners, record.id)
-        self.reload_all()
+        on_delete(self)
 
     def on_manage_types(self) -> None:
-        dialog = PartnerTypeDialog(self.partner_service, parent=self)
-        if dialog.exec() != QDialog.Accepted:
-            return
-        self.partner_service.prune_partners_to_active_types(self._partners)
-        self.reload_all()
-
-    def _select_partner(self, partner_id: str) -> None:
-        select_partner_in_list(self.list_widget, partner_id)
+        on_manage_types(self)
