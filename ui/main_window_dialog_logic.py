@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 
-from ui.partner_dialog import PartnerBrowserDialog
+from ui.partner_dialog import PartnerDialog
 from ui.unit_dialog import UnitDialog
 
 if TYPE_CHECKING:
