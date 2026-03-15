@@ -1,137 +1,40 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QPushButton, QWidget
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QPushButton
 
+from ui.button_icon_utils import apply_glyph_icon, build_centered_glyph_icon
+from ui.button_style_utils import (
+    apply_button_metrics,
+    apply_button_role_style,
+    apply_icon_button_metrics,
+    refresh_style,
+    set_widget_tooltip,
+)
 from ui.messages import Symbols
-from ui.ui_metrics import CommonSymbolsLayout
 from ui.theme import THEME, icon_button_override
+from ui.ui_metrics import CommonSymbolsLayout
 
 
-def refresh_style(widget: QWidget) -> QWidget:
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
-    return widget
+def make_button(text: str, parent=None, *, primary: bool = False, width: int | None = None, height: int | None = None) -> QPushButton:
+    return make_action_button(text, parent, primary=primary, width=width, height=height)
 
 
-def set_widget_tooltip(widget: QWidget, tooltip: str | None) -> QWidget:
-    if tooltip:
-        widget.setToolTip(tooltip.strip())
-        widget.setToolTipDuration(3000)
-    else:
-        widget.setToolTip("")
-    return refresh_style(widget)
-
-
-def apply_button_role_style(button: QPushButton, *, object_name: str | None = None, extra_style: str = "") -> QPushButton:
-    if object_name:
-        button.setObjectName(object_name)
-    if extra_style:
-        button.setStyleSheet(extra_style)
-    return refresh_style(button)
-
-
-def apply_button_metrics(button: QPushButton, *, width: int | None = None, height: int | None = None, font_px: int | None = None, bold: bool = True, point_cursor: bool = True) -> QPushButton:
-    if width is not None and height is not None:
-        button.setFixedSize(width, height)
-    elif width is not None:
-        button.setFixedWidth(width)
-    elif height is not None:
-        button.setFixedHeight(height)
-
-    font = button.font()
-    if font_px is not None:
-        font.setPixelSize(font_px)
-    font.setBold(bold)
-    button.setFont(font)
-
-    if point_cursor:
-        button.setCursor(QCursor(Qt.PointingHandCursor))
-    return button
-
-
-def make_button(text: str, parent=None, *, width: int | None = None, height: int | None = None, object_name: str | None = None, font_px: int | None = None) -> QPushButton:
+def make_icon_button(*, text: str = '', parent=None, object_name: str = 'iconAction', tooltip: str = '') -> QPushButton:
     button = QPushButton(text, parent)
-    apply_button_metrics(button, width=width, height=height, font_px=font_px)
-    apply_button_role_style(button, object_name=object_name)
-    return button
-
-
-def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name: str | None = None, tooltip: str | None = None, extra_style: str = "") -> QPushButton:
-    apply_button_metrics(button, width=THEME.icon_button_size, height=THEME.icon_button_size, font_px=font_px, bold=True, point_cursor=True)
-    button.setContentsMargins(0, 0, 0, 0)
-    apply_button_role_style(button, object_name=object_name)
-    set_widget_tooltip(button, tooltip)
-    button.setStyleSheet(icon_button_override(font_px) + "QPushButton{text-align:center;padding:0;margin:0;}" + extra_style)
-    return refresh_style(button)
-
-
-def make_icon_button(*args, parent=None, object_name: str | None = None, tooltip: str = "", icon: QIcon | None = None, text: str = "", font_px: int | None = None, icon_size: int | None = None) -> QPushButton:
-    """Create an icon-style button.
-
-    Backward compatible with older positional calls such as
-    make_icon_button(text, tooltip, parent).
-    """
-    if args:
-        if len(args) > 3:
-            raise TypeError("make_icon_button() accepts at most 3 positional arguments")
-        if len(args) >= 1:
-            text = args[0]
-        if len(args) >= 2:
-            tooltip = args[1]
-        if len(args) == 3:
-            parent = args[2]
-        if object_name is None:
-            object_name = 'iconAction'
-
-    if object_name is None:
-        raise TypeError("make_icon_button() missing required keyword argument: 'object_name'")
-
-    button = QPushButton(text, parent)
-    apply_icon_button_metrics(button, font_px=font_px or (THEME.icon_button_font_px + 2), object_name=object_name, tooltip=tooltip)
-    if icon is not None and not icon.isNull():
-        button.setText("")
-        button.setIcon(icon)
-        size = icon_size or THEME.icon_size_md
-        button.setIconSize(button.iconSize().__class__(size, size))
-    return button
-
-
-def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, canvas_size: int | None = None) -> QIcon:
-    size = canvas_size or THEME.icon_button_size
-    pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.transparent)
-
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.Antialiasing, True)
-    painter.setRenderHint(QPainter.TextAntialiasing, True)
-    font = QFont()
-    font.setPixelSize(font_px)
-    font.setBold(True)
-    painter.setFont(font)
-    painter.setPen(QColor(color))
-    painter.drawText(QRectF(0, 0, size, size), Qt.AlignCenter, glyph)
-    painter.end()
-    return QIcon(pixmap)
-
-
-def apply_glyph_icon(button: QPushButton, glyph: str, *, font_px: int, color: str) -> QPushButton:
-    button.setText("")
-    button.setIcon(build_centered_glyph_icon(glyph, font_px=font_px, color=color))
-    button.setIconSize(button.size())
-    return button
+    return apply_icon_button_metrics(button, object_name=object_name, tooltip=tooltip)
 
 
 def make_dialog_button(text: str, parent=None, *, role: str | None = None) -> QPushButton:
     button = QPushButton(text, parent)
     apply_button_metrics(button, height=THEME.dialog_button_height)
-    if role == "confirm":
-        apply_button_role_style(button, object_name="dialogConfirm")
-    elif role == "cancel":
-        apply_button_role_style(button, object_name="dialogCancel")
-    elif role == "close":
-        apply_button_role_style(button, object_name="dialogClose")
+    role_to_object = {
+        'confirm': 'dialogConfirm',
+        'cancel': 'dialogCancel',
+        'close': 'dialogClose',
+    }
+    apply_button_role_style(button, object_name=role_to_object.get(role))
     return button
 
 
@@ -144,7 +47,7 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
     if icon is not None and not icon.isNull():
         button.setIcon(icon)
         icon_dim = max(12, button_size - 10)
-        button.setIconSize(button.iconSize().__class__(icon_dim, icon_dim))
+        button.setIconSize(QSize(icon_dim, icon_dim))
     apply_button_role_style(button, object_name='iconAction')
     button.setStyleSheet(icon_button_override(THEME.base_font_px) + 'QPushButton{text-align:center;padding:0;margin:0;}')
     return refresh_style(button)
@@ -168,3 +71,21 @@ def make_action_button(text: str, parent=None, *, primary: bool = False, width: 
     apply_button_metrics(button, width=width, height=height)
     apply_button_role_style(button, object_name='primaryAction' if primary else None)
     return button
+
+
+__all__ = [
+    'apply_button_metrics',
+    'apply_button_role_style',
+    'apply_glyph_icon',
+    'apply_icon_button_metrics',
+    'build_centered_glyph_icon',
+    'make_action_button',
+    'make_button',
+    'make_dialog_button',
+    'make_icon_button',
+    'make_inline_icon_button',
+    'make_nav_button',
+    'make_toolbar_icon_button',
+    'refresh_style',
+    'set_widget_tooltip',
+]

@@ -8,7 +8,8 @@ from ui.layout_metrics import OrderPageLayout
 from ui.messages import Buttons, DefaultTexts, HelperTexts, InfoMessages, Labels, Placeholders, SectionTitles
 from ui.page_builders_common import add_form_row, make_form_grid, make_image_shell, make_right_aligned_button_row, make_scroll_panel
 from ui.theme import THEME, input_line_edit_style
-from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_input_line_edit, make_meta_label, make_panel_frame, make_plain_text_editor, make_section_title_label, make_value_label
+from ui.order_page_panel_builders import add_panel_title, create_order_panel, make_order_value_label, TemplateListCard
+from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_input_line_edit, make_panel_frame, make_plain_text_editor, make_section_title_label
 
 
 def build_filter_panel(page: QWidget) -> QFrame:
@@ -46,11 +47,8 @@ def build_right_panels(page: QWidget) -> dict[str, QWidget]:
 
 
 def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
-    summary_panel = make_panel_frame(parent)
-    summary_layout = QVBoxLayout(summary_panel)
-    summary_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-    summary_layout.setSpacing(THEME.section_gap)
-    summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_DETAIL, summary_panel))
+    summary_panel, summary_layout = create_order_panel(parent, spacing=THEME.section_gap)
+    add_panel_title(summary_layout, summary_panel, SectionTitles.ORDER_TEMPLATE_DETAIL)
 
     top_summary = QHBoxLayout()
     top_summary.setSpacing(THEME.section_gap)
@@ -121,11 +119,8 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
 def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
-    order_panel = make_panel_frame(parent)
-    order_layout = QVBoxLayout(order_panel)
-    order_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-    order_layout.setSpacing(THEME.block_spacing)
-    order_layout.addWidget(make_section_title_label(SectionTitles.ORDER_INPUT, order_panel))
+    order_panel, order_layout = create_order_panel(parent, spacing=THEME.block_spacing)
+    add_panel_title(order_layout, order_panel, SectionTitles.ORDER_INPUT)
     helper_label = make_hint_label(HelperTexts.ORDER_SAVE_HINT, order_panel)
     order_layout.addWidget(helper_label)
 
@@ -162,20 +157,5 @@ def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     }
 
 
-def make_order_value_label(text: str) -> QLabel:
-    label = make_value_label(text, min_height=THEME.order_input_height - 2)
-    label.setWordWrap(True)
-    return label
 
-
-class TemplateListCard(QFrame):
-    def __init__(self, *, title: str, subtitle: str, meta_lines: list[str], parent=None):
-        super().__init__(parent)
-        self.setObjectName('listCard')
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(OrderPageLayout.TEMPLATE_CARD_MARGIN, OrderPageLayout.TEMPLATE_CARD_MARGIN, OrderPageLayout.TEMPLATE_CARD_MARGIN, OrderPageLayout.TEMPLATE_CARD_MARGIN)
-        layout.setSpacing(OrderPageLayout.TEMPLATE_CARD_SPACING)
-        layout.addWidget(make_section_title_label(title, self))
-        layout.addWidget(make_hint_label(subtitle, self))
-        for line in meta_lines:
-            layout.addWidget(make_meta_label(line, self))
+__all__ = ['TemplateListCard', 'build_filter_panel', 'build_right_panels', 'build_summary_panel', 'build_order_panel']
