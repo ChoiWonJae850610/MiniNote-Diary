@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ui.postit.layout_constants import (
     POSTIT_BODY_HEIGHT,
+    POSTIT_CARD_HEIGHT,
     POSTIT_BODY_TOP_PADDING,
     POSTIT_CALENDAR_ICON_SIZE,
     POSTIT_CALENDAR_POPUP_OFFSET_Y,
@@ -66,6 +67,7 @@ __all__ = [
     "FooterSpacer",
     "POSTIT_BASIC_CARD_MIN_WIDTH",
     "POSTIT_BODY_HEIGHT",
+    "POSTIT_CARD_HEIGHT",
     "POSTIT_BODY_TOP_PADDING",
     "POSTIT_CALENDAR_ICON_SIZE",
     "POSTIT_CALENDAR_POPUP_OFFSET_Y",
