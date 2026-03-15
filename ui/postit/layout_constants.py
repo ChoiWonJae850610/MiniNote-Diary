@@ -36,6 +36,12 @@ class PostItMetrics:
     calendar_icon_size: int = 16
     partner_link_icon_size: int = 14
     unit_down_icon_size: int = 12
+    zero_margin: int = 0
+    zero_spacing: int = 0
+    zero_stretch: int = 0
+    single_stretch: int = 1
+    partner_bar_basic_stretch: int = 1
+    partner_bar_material_stretch: int = 2
     unit_menu_empty_label: str = "(단위 목록 없음)"
     unit_menu_clear_label: str = "(비움)"
 
@@ -98,3 +104,10 @@ POSTIT_PARTNER_LINK_ICON_SIZE = POSTIT_METRICS.partner_link_icon_size
 POSTIT_UNIT_DOWN_ICON_SIZE = POSTIT_METRICS.unit_down_icon_size
 POSTIT_UNIT_MENU_EMPTY_LABEL = POSTIT_METRICS.unit_menu_empty_label
 POSTIT_UNIT_MENU_CLEAR_LABEL = POSTIT_METRICS.unit_menu_clear_label
+
+POSTIT_ZERO_MARGIN = POSTIT_METRICS.zero_margin
+POSTIT_ZERO_SPACING = POSTIT_METRICS.zero_spacing
+POSTIT_ZERO_STRETCH = POSTIT_METRICS.zero_stretch
+POSTIT_SINGLE_STRETCH = POSTIT_METRICS.single_stretch
+POSTIT_PARTNER_BAR_BASIC_STRETCH = POSTIT_METRICS.partner_bar_basic_stretch
+POSTIT_PARTNER_BAR_MATERIAL_STRETCH = POSTIT_METRICS.partner_bar_material_stretch

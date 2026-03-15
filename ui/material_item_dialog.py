@@ -12,7 +12,7 @@ from ui.theme import combo_box_style, input_line_edit_style, read_only_line_edit
 from ui.icon_factory import make_partner_link_icon
 from ui.messages import Buttons, InfoMessages, Labels, Tooltips
 from ui.widget_factory import make_inline_icon_button
-from ui.page_builders_common import make_dialog_root_layout
+from ui.dialog_layout_utils import make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 

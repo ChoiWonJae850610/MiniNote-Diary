@@ -22,7 +22,7 @@ from ui.ui_metrics import CommonSymbolsLayout
 from ui.widget_factory import make_dialog_button_row, make_icon_button
 
 
-class PartnerDialog(QDialog):
+class PartnerBrowserDialog(QDialog):
     def __init__(self, project_root, parent=None):
         super().__init__(parent)
         self.project_root = project_root
@@ -157,3 +157,8 @@ class PartnerDialog(QDialog):
 
     def on_manage_types(self) -> None:
         on_manage_types(self)
+
+
+PartnerDialog = PartnerBrowserDialog
+
+__all__ = ["PartnerBrowserDialog", "PartnerDialog"]

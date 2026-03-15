@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QToolButton, QWidget
 from services.work_order_defaults import empty_material_row
 from ui.messages import Symbols
 from ui.postit.common import MAX_POSTIT_CARDS
-from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_GAP, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
+from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_GAP, POSTIT_FOOTER_HEIGHT, POSTIT_SINGLE_STRETCH, POSTIT_ZERO_MARGIN, POSTIT_ZERO_STRETCH, make_postit_stack_host
 from ui.postit.material_card import PostItCard
 from ui.theme import THEME, disabled_index_button_style, index_button_style
 
@@ -33,9 +33,9 @@ class PostItStack(QWidget):
         self.footer_host = QWidget(self)
         self.footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
         self.index_row = QHBoxLayout(self.footer_host)
-        self.index_row.setContentsMargins(0, 0, 0, 0)
+        self.index_row.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
         self.index_row.setSpacing(POSTIT_FOOTER_GAP)
-        self.index_row.addStretch(1)
+        self.index_row.addStretch(POSTIT_SINGLE_STRETCH)
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setFixedHeight(POSTIT_BODY_HEIGHT + POSTIT_FOOTER_HEIGHT)
@@ -130,10 +130,10 @@ class PostItStack(QWidget):
             button = self._make_index_button(str(idx + 1))
             button.clicked.connect(lambda _=False, i=idx: self.set_active_card(i))
             self.index_buttons.append(button)
-            self.index_row.addWidget(button, 0)
+            self.index_row.addWidget(button, POSTIT_ZERO_STRETCH)
         self.plus_button = self._make_index_button(Symbols.ADD)
         self.plus_button.clicked.connect(self._add_item)
-        self.index_row.addWidget(self.plus_button, 0)
+        self.index_row.addWidget(self.plus_button, POSTIT_ZERO_STRETCH)
         self._apply_active()
 
     def _apply_active(self):

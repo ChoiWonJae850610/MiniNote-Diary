@@ -12,6 +12,9 @@ from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP_TIGHT,
     POSTIT_TAB_OVERLAP,
+    POSTIT_ZERO_MARGIN,
+    POSTIT_PARTNER_BAR_BASIC_STRETCH,
+    POSTIT_PARTNER_BAR_MATERIAL_STRETCH,
     make_postit_footer_spacer,
     make_postit_pager_host,
     make_postit_stack_host,
@@ -159,7 +162,7 @@ class PostItBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         lay = QHBoxLayout(self)
-        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
         lay.setSpacing(THEME.section_gap)
         lay.setAlignment(Qt.AlignTop)
 
@@ -201,8 +204,8 @@ class PostItBar(QWidget):
         self.finishing = self.partner.finishing
         self.other = self.partner.other
 
-        lay.addWidget(self.basic_column, 1)
-        lay.addWidget(self.partner, 2)
+        lay.addWidget(self.basic_column, POSTIT_PARTNER_BAR_BASIC_STRETCH)
+        lay.addWidget(self.partner, POSTIT_PARTNER_BAR_MATERIAL_STRETCH)
 
     def set_data(
         self,

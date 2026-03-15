@@ -10,6 +10,8 @@ from ui.postit.layout import (
     POSTIT_INNER_SIDE_PADDING,
     POSTIT_INNER_TOP_PADDING,
     POSTIT_UNIFORM_ROW_SPACING,
+    POSTIT_ZERO_MARGIN,
+    POSTIT_ZERO_STRETCH,
 )
 from ui.theme import THEME, field_label_style
 
@@ -38,10 +40,10 @@ class PostItBodyLayout(QVBoxLayout):
 class PostItFormRow(QHBoxLayout):
     def __init__(self):
         super().__init__()
-        self.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
         self.setSpacing(POSTIT_GRID_H_SPACING)
 
-    def add_item(self, widget, stretch: int = 0):
+    def add_item(self, widget, stretch: int = POSTIT_ZERO_STRETCH):
         self.addWidget(widget, stretch)
         return widget
 
@@ -59,5 +61,5 @@ def make_form_row(*items) -> PostItFormRow:
             widget, stretch = item
             row.addWidget(widget, stretch)
         else:
-            row.addWidget(item, 0)
+            row.addWidget(item, POSTIT_ZERO_STRETCH)
     return row

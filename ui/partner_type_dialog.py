@@ -7,7 +7,7 @@ from ui.dialogs import show_info
 from ui.messages import DialogTitles, InfoMessages, TableHeaders, Tooltips
 from ui.theme import THEME, table_widget_style
 from ui.widget_factory import make_dialog_button_row, make_icon_button
-from ui.page_builders_common import make_dialog_root_layout
+from ui.dialog_layout_utils import make_dialog_root_layout
 from ui.layout_metrics import PartnerTypeDialogLayout
 
 

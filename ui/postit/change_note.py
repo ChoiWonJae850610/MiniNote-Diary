@@ -11,6 +11,7 @@ from ui.postit.layout import (
     POSTIT_INNER_SIDE_PADDING,
     POSTIT_INNER_TOP_PADDING,
     POSTIT_MEMO_BODY_HEIGHT,
+    POSTIT_ZERO_SPACING,
 )
 from ui.theme import plain_text_edit_style
 
@@ -26,7 +27,7 @@ class ChangeNotePostIt(_PostItCardBase):
         self._block = False
         root = QVBoxLayout(self)
         root.setContentsMargins(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_BOTTOM_PADDING)
-        root.setSpacing(0)
+        root.setSpacing(POSTIT_ZERO_SPACING)
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())

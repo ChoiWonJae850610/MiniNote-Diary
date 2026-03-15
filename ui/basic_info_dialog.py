@@ -12,7 +12,7 @@ from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.messages import Buttons, DialogTitles, Labels, Tooltips
 from ui.theme import THEME, compact_popup_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_inline_icon_button, set_widget_tooltip
-from ui.page_builders_common import make_dialog_root_layout
+from ui.dialog_layout_utils import make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 

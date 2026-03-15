@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
-from ui.ui_metrics import CommonSymbolsLayout
-from ui.theme import THEME, dialog_layout_margins
+from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
+from ui.theme import THEME
 from ui.widget_factory import make_hint_label, make_nav_button, make_page_title_label, make_panel_frame, make_panel_title_label, make_field_label
 
 
@@ -155,29 +155,4 @@ def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
     return row
 
 
-def make_dialog_root_layout(dialog: QDialog) -> QVBoxLayout:
-    layout = QVBoxLayout(dialog)
-    layout.setContentsMargins(*dialog_layout_margins())
-    layout.setSpacing(THEME.block_spacing)
-    return layout
 
-
-def make_dialog_form_layout() -> QFormLayout:
-    form = QFormLayout()
-    form.setLabelAlignment(Qt.AlignLeft)
-    form.setFormAlignment(Qt.AlignTop)
-    form.setHorizontalSpacing(OrderPageLayout.DETAIL_GRID_HORIZONTAL_SPACING + 2)
-    form.setVerticalSpacing(OrderPageLayout.DETAIL_GRID_VERTICAL_SPACING + 2)
-    return form
-
-
-def make_dialog_inline_row(parent: QWidget, *widgets: QWidget, stretch: bool = True) -> QWidget:
-    row = QWidget(parent)
-    layout = QHBoxLayout(row)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(CommonSymbolsLayout.PANEL_INLINE_SPACING)
-    for index, widget in enumerate(widgets):
-        layout.addWidget(widget, 1 if index == 0 else 0)
-    if stretch:
-        layout.addStretch(1)
-    return row

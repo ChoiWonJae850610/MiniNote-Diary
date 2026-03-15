@@ -11,6 +11,10 @@ from ui.postit.layout_constants import (
     POSTIT_HEADER_HEIGHT,
     POSTIT_STANDARD_EXTERNAL_ROW_GAP,
     POSTIT_TAB_GROUP_GAP,
+    POSTIT_ZERO_MARGIN,
+    POSTIT_ZERO_SPACING,
+    POSTIT_ZERO_STRETCH,
+    POSTIT_SINGLE_STRETCH,
     POSTIT_TAB_INSET_LEFT,
     POSTIT_TAB_OVERLAP,
 )
@@ -33,16 +37,16 @@ class SectionContainer(QWidget):
     ):
         super().__init__(parent)
         root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
+        root.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
         root.setSpacing(spacing)
         if header_alignment is None:
             root.addWidget(header_widget)
         else:
-            root.addWidget(header_widget, 0, header_alignment)
-        root.addWidget(body_widget, 0)
+            root.addWidget(header_widget, POSTIT_ZERO_STRETCH, header_alignment)
+        root.addWidget(body_widget, POSTIT_ZERO_STRETCH)
         if footer_widget is not None:
             root.addSpacing(footer_gap)
-            root.addWidget(footer_widget, 0)
+            root.addWidget(footer_widget, POSTIT_ZERO_STRETCH)
 
         height = body_height if body_height is not None else body_widget.sizeHint().height()
         if height > 0:
@@ -85,10 +89,10 @@ class PostItSectionColumn(QWidget):
         self.external_row_widget.setFixedHeight(POSTIT_FOOTER_HEIGHT)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
+        root.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
         root.setSpacing(external_row_gap)
-        root.addWidget(self.section_wrap, 0)
-        root.addWidget(self.external_row_widget, 0)
+        root.addWidget(self.section_wrap, POSTIT_ZERO_STRETCH)
+        root.addWidget(self.external_row_widget, POSTIT_ZERO_STRETCH)
 
         has_footer = footer_widget is not None
         section_height = postit_section_height(body_height=body_height or body_widget.sizeHint().height(), has_footer=has_footer)
@@ -146,7 +150,7 @@ class FolderTabHeader(QWidget):
                 button.setAttribute(Qt.WA_TransparentForMouseEvents, True)
             self._buttons[key] = button
             root.addWidget(button, 0, Qt.AlignLeft)
-        root.addStretch(1)
+        root.addStretch(POSTIT_SINGLE_STRETCH)
 
     def button(self, key: str) -> PostItTabButton | None:
         return self._buttons.get(key)
@@ -170,8 +174,8 @@ def make_postit_stack_host(*, parent=None, height: int = POSTIT_BODY_HEIGHT) -> 
     host = QWidget(parent)
     host.setFixedHeight(height)
     stack = QStackedLayout(host)
-    stack.setContentsMargins(0, 0, 0, 0)
-    stack.setSpacing(0)
+    stack.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
+    stack.setSpacing(POSTIT_ZERO_SPACING)
     return host, stack
 
 
@@ -179,8 +183,8 @@ def make_postit_pager_host(*, parent=None) -> tuple[QWidget, QStackedLayout]:
     host = QWidget(parent)
     host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
     stack = QStackedLayout(host)
-    stack.setContentsMargins(0, 0, 0, 0)
-    stack.setSpacing(0)
+    stack.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
+    stack.setSpacing(POSTIT_ZERO_SPACING)
     return host, stack
 
 
