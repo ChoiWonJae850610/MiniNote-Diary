@@ -9,7 +9,8 @@ from ui.ui_metrics import CommonSymbolsLayout
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, Symbols
 from ui.theme import THEME, hex_to_rgba, status_row_margins
-from ui.widget_factory import make_dialog_button, make_dialog_button_row
+from ui.button_layout_utils import make_dialog_button_row
+from ui.widget_factory_buttons import make_dialog_button
 from ui.dialog_shell import build_dialog_shell
 
 

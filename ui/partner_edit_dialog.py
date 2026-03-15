@@ -10,7 +10,8 @@ from ui.partner_dialog_common import partner_card_style, partner_field_label_sty
 from ui.dialog_form_fields import add_dialog_grid_row, build_dialog_card, build_dialog_grid, build_hint_label, build_section_title, configure_text_field
 from ui.layout_metrics import DialogLayout, PartnerLayout
 from ui.theme import THEME, dialog_layout_margins, plain_text_edit_style, title_label_style
-from ui.widget_factory import make_dialog_button_row, make_icon_button
+from ui.button_layout_utils import make_dialog_button_row
+from ui.widget_factory_buttons import make_icon_button
 
 
 class PartnerEditDialog(QDialog):

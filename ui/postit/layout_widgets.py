@@ -18,7 +18,7 @@ from ui.postit.layout_constants import (
     POSTIT_TAB_INSET_LEFT,
     POSTIT_TAB_OVERLAP,
 )
-from ui.postit.layout_helpers import folder_tab_style, postit_section_height
+from ui.postit.layout import folder_tab_style, postit_section_height
 from ui.theme import THEME, title_badge_style
 
 

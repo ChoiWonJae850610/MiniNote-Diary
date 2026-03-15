@@ -9,7 +9,8 @@ from ui.ui_metrics import CommonSymbolsLayout
 from ui.layout_metrics import UnitDialogLayout
 from ui.messages import DialogTitles, InfoMessages, Symbols, TableHeaders, Tooltips
 from ui.theme import THEME, table_widget_style
-from ui.widget_factory import make_dialog_button_row, make_icon_button
+from ui.button_layout_utils import make_dialog_button_row
+from ui.widget_factory_buttons import make_icon_button
 from ui.dialog_layout_utils import make_dialog_root_layout
 
 

@@ -9,7 +9,7 @@ from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
 from ui.postit.common import FIELD_H
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.postit.forms import make_field_label, make_form_row
-from ui.postit.metrics import PostItLayout
+from ui.postit.layout import PostItLayout
 from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
 

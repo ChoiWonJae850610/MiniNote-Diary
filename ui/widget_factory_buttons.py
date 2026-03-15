@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from typing import Iterable
-
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QCursor, QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from PySide6.QtWidgets import QPushButton, QWidget
 
 from ui.messages import Symbols
 from ui.ui_metrics import CommonSymbolsLayout
@@ -135,16 +133,6 @@ def make_dialog_button(text: str, parent=None, *, role: str | None = None) -> QP
     elif role == "close":
         apply_button_role_style(button, object_name="dialogClose")
     return button
-
-
-def make_dialog_button_row(buttons: Iterable[QPushButton], *, stretch: bool = True, spacing: int | None = None) -> QHBoxLayout:
-    row = QHBoxLayout()
-    row.setSpacing(THEME.row_spacing if spacing is None else spacing)
-    if stretch:
-        row.addStretch(1)
-    for button in buttons:
-        row.addWidget(button)
-    return row
 
 
 def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | None = None, size: int | None = None) -> QPushButton:

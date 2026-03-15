@@ -4,7 +4,8 @@ from PySide6.QtWidgets import QDialog, QTextEdit
 
 from ui.messages import Buttons, DialogTitles, Placeholders
 from ui.theme import THEME
-from ui.widget_factory import make_dialog_button, make_dialog_button_row
+from ui.button_layout_utils import make_dialog_button_row
+from ui.widget_factory_buttons import make_dialog_button
 from ui.dialog_layout_utils import make_dialog_root_layout
 
 

@@ -13,8 +13,7 @@ from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import make_field_label, make_form_row
-from ui.postit.layout import POSTIT_ROW_ACTION_GAP
-from ui.postit.metrics import PostItLayout
+from ui.postit.layout import POSTIT_ROW_ACTION_GAP, PostItLayout
 from ui.theme import delete_button_style, menu_style, tool_button_style, unit_button_style, THEME, input_line_edit_style
 from ui.widget_factory import set_widget_tooltip
 

@@ -19,7 +19,8 @@ from ui.partner_dialog_common import (
 )
 from ui.theme import THEME, dialog_layout_margins, title_label_style
 from ui.ui_metrics import CommonSymbolsLayout
-from ui.widget_factory import make_dialog_button_row, make_icon_button
+from ui.button_layout_utils import make_dialog_button_row
+from ui.widget_factory_buttons import make_icon_button
 
 
 class PartnerBrowserDialog(QDialog):
