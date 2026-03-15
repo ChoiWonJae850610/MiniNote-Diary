@@ -10,6 +10,7 @@ class DialogTitles:
     EDIT = "수정"
     BASIC_INFO_INPUT = "기본정보 입력"
     PARTNER_MANAGE = "거래처 관리"
+    PARTNER_MANAGEMENT = PARTNER_MANAGE
     PARTNER_TYPE_MANAGE = "거래처 타입 관리"
     PARTNER_ADD = "거래처 추가"
     PARTNER_EDIT = "거래처 수정"

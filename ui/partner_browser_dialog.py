@@ -27,7 +27,7 @@ class PartnerDialog(QDialog):
         self.project_root = project_root
         self.partner_service = PartnerManagementService(project_root)
         self.setWindowTitle(DialogTitles.PARTNER_MANAGE)
-        self.resize(PartnerLayout.DIALOG_WIDTH, PartnerLayout.DIALOG_HEIGHT)
+        self.resize(PartnerLayout.BROWSER_WIDTH, PartnerLayout.BROWSER_HEIGHT)
 
         self._type_order: list[str] = []
         self._partners = []
@@ -38,7 +38,7 @@ class PartnerDialog(QDialog):
         root.setContentsMargins(*dialog_layout_margins())
         root.setSpacing(THEME.section_spacing)
 
-        title = QLabel(DialogTitles.PARTNER_MANAGEMENT, self)
+        title = QLabel(DialogTitles.PARTNER_MANAGE, self)
         title.setStyleSheet(title_label_style())
         root.addWidget(title)
 
