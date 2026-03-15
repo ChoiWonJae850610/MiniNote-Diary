@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 from services.field_keys import HeaderKeys, MaterialTargets
-from services.models import MaterialItem, WorkOrderDocument, WorkOrderHeader
+from services.models import MaterialItem, WorkOrderHeader
 from services.schema import MAX_MATERIAL_ITEMS
 from services.work_order_state_helpers import (
-    clone_items,
     coerce_items,
     items_have_value,
-    items_to_dicts,
     needs_price_recompute,
     recompute_header_prices,
     target_attr,
 )
+from services.work_order_state_views import build_document, iter_material_groups, normalized_items
 
 
 @dataclass
@@ -28,7 +27,6 @@ class WorkOrderState:
     current_image_path: Optional[str] = None
     is_dirty: bool = False
 
-
     @property
     def header_data(self) -> Dict[str, str]:
         return self.header.to_dict()
@@ -40,7 +38,7 @@ class WorkOrderState:
 
     @property
     def fabric_items(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.FABRIC)
+        return self._normalized_items(MaterialTargets.FABRIC)
 
     @fabric_items.setter
     def fabric_items(self, value: List[Dict[str, str]] | None) -> None:
@@ -48,7 +46,7 @@ class WorkOrderState:
 
     @property
     def trim_items(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.TRIM)
+        return self._normalized_items(MaterialTargets.TRIM)
 
     @trim_items.setter
     def trim_items(self, value: List[Dict[str, str]] | None) -> None:
@@ -56,7 +54,7 @@ class WorkOrderState:
 
     @property
     def dyeing_items(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.DYEING)
+        return self._normalized_items(MaterialTargets.DYEING)
 
     @dyeing_items.setter
     def dyeing_items(self, value: List[Dict[str, str]] | None) -> None:
@@ -64,7 +62,7 @@ class WorkOrderState:
 
     @property
     def finishing_items(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.FINISHING)
+        return self._normalized_items(MaterialTargets.FINISHING)
 
     @finishing_items.setter
     def finishing_items(self, value: List[Dict[str, str]] | None) -> None:
@@ -72,7 +70,7 @@ class WorkOrderState:
 
     @property
     def other_items(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.OTHER)
+        return self._normalized_items(MaterialTargets.OTHER)
 
     @other_items.setter
     def other_items(self, value: List[Dict[str, str]] | None) -> None:
@@ -136,14 +134,14 @@ class WorkOrderState:
             return True
         return False
 
-    def to_document(self) -> WorkOrderDocument:
-        return WorkOrderDocument(
-            header=WorkOrderHeader.from_dict(self.header.to_dict()),
-            fabrics=self._clone_items(MaterialTargets.FABRIC),
-            trims=self._clone_items(MaterialTargets.TRIM),
-            dyeings=self._clone_items(MaterialTargets.DYEING),
-            finishings=self._clone_items(MaterialTargets.FINISHING),
-            others=self._clone_items(MaterialTargets.OTHER),
+    def to_document(self):
+        return build_document(
+            self.header,
+            fabrics=self.fabrics,
+            trims=self.trims,
+            dyeings=self.dyeings,
+            finishings=self.finishings,
+            others=self.others,
             image_attached=bool(self.current_image_path),
         )
 
@@ -151,39 +149,29 @@ class WorkOrderState:
         return self.header.to_dict()
 
     def normalized_fabrics(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.FABRIC)
+        return self._normalized_items(MaterialTargets.FABRIC)
 
     def normalized_trims(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.TRIM)
+        return self._normalized_items(MaterialTargets.TRIM)
 
     def normalized_dyeings(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.DYEING)
+        return self._normalized_items(MaterialTargets.DYEING)
 
     def normalized_finishings(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.FINISHING)
+        return self._normalized_items(MaterialTargets.FINISHING)
 
     def normalized_others(self) -> List[Dict[str, str]]:
-        return self._items_to_dicts(MaterialTargets.OTHER)
+        return self._normalized_items(MaterialTargets.OTHER)
 
     def _set_items(self, target: str, value: List[Dict[str, str]] | None) -> None:
-        setattr(self, self._target_attr(target), coerce_items(value))
+        setattr(self, target_attr(target), coerce_items(value))
         self._recompute_sale_price()
 
-    def _target_attr(self, target: str) -> str:
-        return target_attr(target)
-
     def _target_items(self, target: str) -> List[MaterialItem]:
-        return getattr(self, self._target_attr(target))
+        return getattr(self, target_attr(target))
 
-    def _items_to_dicts(self, target: str) -> List[Dict[str, str]]:
-        return items_to_dicts(self._target_items(target))
-
-    def _clone_items(self, target: str) -> List[MaterialItem]:
-        return clone_items(self._target_items(target))
-
-    def _material_groups(self) -> Iterable[List[MaterialItem]]:
-        for target in MaterialTargets.ALL:
-            yield self._target_items(target)
+    def _normalized_items(self, target: str) -> List[Dict[str, str]]:
+        return normalized_items(self._target_items(target))
 
     def _recompute_sale_price(self) -> None:
-        recompute_header_prices(self.header, self._material_groups())
+        recompute_header_prices(self.header, iter_material_groups(self._target_items))

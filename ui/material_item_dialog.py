@@ -7,12 +7,13 @@ from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit
 from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units
-from ui.dialog_form_fields import build_dialog_actions, build_hint_label, configure_text_field
+from ui.dialog_form_fields import build_hint_label, configure_text_field
 from ui.theme import combo_box_style, input_line_edit_style, read_only_line_edit_style
 from ui.icon_factory import make_partner_link_icon
 from ui.messages import Buttons, InfoMessages, Labels, Tooltips
 from ui.widget_factory import make_inline_icon_button
-from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
+from ui.dialog_form_templates import add_dialog_action_row, setup_form_dialog, wire_dialog_reject
+from ui.dialog_layout_utils import make_dialog_inline_row
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 
@@ -67,12 +68,11 @@ class MoneyEdit(CommaIntEdit):
 class MaterialItemDialog(QDialog):
     def __init__(self, title: str, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setModal(True)
-        self.setMinimumWidth(DialogLayout.MIN_WIDTH_NARROW)
-
-        root = make_dialog_root_layout(self)
-        form = make_dialog_form_layout()
+        root, form = setup_form_dialog(
+            self,
+            title=title,
+            min_width=DialogLayout.MIN_WIDTH_NARROW,
+        )
 
         self.vendor = configure_text_field(QLineEdit(self))
         self.item = configure_text_field(QLineEdit(self))
@@ -111,9 +111,13 @@ class MaterialItemDialog(QDialog):
         root.addLayout(form)
         root.addWidget(build_hint_label(InfoMessages.MATERIAL_TOTAL_AUTO, self))
 
-        self.btn_cancel, self.btn_ok, button_row = build_dialog_actions(self, confirm_text=Buttons.ADD)
-        root.addLayout(button_row)
-        self.btn_cancel.clicked.connect(self.reject)
+        self.btn_cancel, self.btn_ok = add_dialog_action_row(
+            self,
+            root,
+            confirm_text=Buttons.ADD,
+            cancel_text=Buttons.CANCEL,
+        )
+        wire_dialog_reject([self.btn_cancel], self.reject)
         self.btn_ok.clicked.connect(self._on_ok)
         self.qty.textChanged.connect(self._recalc_total)
         self.unit_price.textChanged.connect(self._recalc_total)

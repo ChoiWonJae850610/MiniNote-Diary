@@ -11,6 +11,7 @@ from ui.messages import DialogTitles, InfoMessages, Symbols, TableHeaders, Toolt
 from ui.theme import THEME, table_widget_style
 from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_icon_button
+from ui.dialog_form_templates import wire_dialog_reject
 from ui.dialog_layout_utils import make_dialog_root_layout
 
 
@@ -49,10 +50,10 @@ class UnitDialog(QDialog):
         self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text=Symbols.CLOSE, font_px=UnitDialogLayout.ICON_FONT_PX)
         layout.addLayout(make_dialog_button_row([self.btn_save, self.btn_add, self.btn_delete, self.btn_close]))
 
+        wire_dialog_reject([self.btn_close], self.close)
         self.btn_save.clicked.connect(self.on_save)
         self.btn_add.clicked.connect(self.on_add)
         self.btn_delete.clicked.connect(self.on_delete)
-        self.btn_close.clicked.connect(self.close)
 
         self._ensure_empty_row_count(UnitDialogLayout.MIN_ROWS)
         self.load_units()
