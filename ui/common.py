@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QDate, QEvent, QObject, QPoint, QRectF, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import QApplication, QCalendarWidget, QDialog, QWidget
+from PySide6.QtWidgets import QApplication, QWidget
 
-from services.formatters import digits_only, format_commas_from_digits, int_from_any
-from services.unit_repository import load_units, unit_label_for_value
 from services.schema import MAX_MATERIAL_ITEMS
-from ui.ui_metrics import CommonSymbolsLayout
 from ui.theme import THEME
 
 FIELD_H = THEME.field_height
@@ -114,44 +111,14 @@ def make_down_icon(size: int = 12) -> QIcon:
     return QIcon(pm)
 
 
-class InlineCalendarPopup(QDialog):
-    datePicked = Signal(QDate)
-    moveNextRequested = Signal()
-
-    def __init__(self, initial: QDate, parent=None):
-        super().__init__(parent, Qt.Popup)
-        lay = QWidget(self)
-        root = None
-        from PySide6.QtWidgets import QVBoxLayout
-        root = QVBoxLayout(self)
-        root.setContentsMargins(CommonSymbolsLayout.POSTIT_CONTENT_MARGIN, CommonSymbolsLayout.POSTIT_CONTENT_MARGIN, CommonSymbolsLayout.POSTIT_CONTENT_MARGIN, CommonSymbolsLayout.POSTIT_CONTENT_MARGIN)
-        self.cal = QCalendarWidget(self)
-        self.cal.setGridVisible(True)
-        self.cal.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
-        if initial and initial.isValid():
-            self.cal.setSelectedDate(initial)
-        self.cal.activated.connect(self._on_activated)
-        root.addWidget(self.cal)
-
-    def _on_activated(self, date: QDate):
-        if date and date.isValid():
-            self.datePicked.emit(date)
-        self.close()
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Tab:
-            date = self.cal.selectedDate()
-            if date and date.isValid():
-                self.datePicked.emit(date)
-            self.moveNextRequested.emit()
-            self.close()
-            event.accept()
-            return
-        if event.key() == Qt.Key_Backtab:
-            date = self.cal.selectedDate()
-            if date and date.isValid():
-                self.datePicked.emit(date)
-            self.close()
-            event.accept()
-            return
-        super().keyPressEvent(event)
+__all__ = [
+    "CARD_RADIUS",
+    "FIELD_H",
+    "MAX_POSTIT_CARDS",
+    "PENDING_TAB_FILTER",
+    "PendingTabFocusFilter",
+    "ensure_pending_tab_filter",
+    "make_down_icon",
+    "next_focusable_widget",
+    "prev_focusable_widget",
+]

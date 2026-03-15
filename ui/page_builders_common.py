@@ -6,7 +6,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
-from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
 from ui.theme import THEME
 from ui.widget_factory import make_hint_label, make_nav_button, make_page_title_label, make_panel_frame, make_panel_title_label, make_field_label
 

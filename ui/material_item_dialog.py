@@ -7,12 +7,12 @@ from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit
 from services.field_keys import MaterialKeys
 from services.formatters import digits_only, format_commas_from_digits
 from services.unit_repository import load_units
-from ui.dialog_form_fields import build_dialog_actions, build_hint_label, configure_text_field, make_dialog_form_layout, make_dialog_inline_row
+from ui.dialog_form_fields import build_dialog_actions, build_hint_label, configure_text_field
 from ui.theme import combo_box_style, input_line_edit_style, read_only_line_edit_style
 from ui.icon_factory import make_partner_link_icon
 from ui.messages import Buttons, InfoMessages, Labels, Tooltips
 from ui.widget_factory import make_inline_icon_button
-from ui.dialog_layout_utils import make_dialog_root_layout
+from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 

@@ -159,6 +159,4 @@ class PartnerBrowserDialog(QDialog):
         on_manage_types(self)
 
 
-PartnerDialog = PartnerBrowserDialog
-
-__all__ = ["PartnerBrowserDialog", "PartnerDialog"]
+__all__ = ["PartnerBrowserDialog"]

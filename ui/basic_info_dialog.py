@@ -7,12 +7,12 @@ from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
 from PySide6.QtWidgets import QCalendarWidget, QDialog, QGridLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout, QWidget
 
 from services.formatters import digits_only, format_commas_from_digits
-from ui.dialog_form_fields import build_dialog_actions, configure_text_field, make_dialog_form_layout, make_dialog_inline_row
+from ui.dialog_form_fields import build_dialog_actions, configure_text_field
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.messages import Buttons, DialogTitles, Labels, Tooltips
 from ui.theme import THEME, compact_popup_margins, display_field_style, field_label_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_inline_icon_button, set_widget_tooltip
-from ui.dialog_layout_utils import make_dialog_root_layout
+from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_inline_row, make_dialog_root_layout
 from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 from ui.layout_metrics import DialogLayout
 

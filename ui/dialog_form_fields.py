@@ -5,7 +5,6 @@ from PySide6.QtWidgets import QLabel, QLineEdit, QPlainTextEdit, QFrame, QGridLa
 
 from ui.messages import Buttons
 from ui.layout_metrics import DialogLayout
-from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_inline_row
 from ui.theme import THEME, hint_label_style, input_line_edit_style, title_label_style
 from ui.widget_factory import make_dialog_button, make_dialog_button_row
 
@@ -85,7 +84,5 @@ __all__ = [
     "build_labeled_value_row",
     "build_section_title",
     "configure_plain_text_field",
-    "configure_text_field",
-    "make_dialog_form_layout",
-    "make_dialog_inline_row",
+    "configure_text_field"
 ]

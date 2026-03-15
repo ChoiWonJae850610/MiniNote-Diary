@@ -10,7 +10,7 @@ from services.partner_lookup_service import PartnerLookupService
 from services.partner_repository import PartnerRecord
 from services.partner_utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER
 from ui.messages import InfoMessages
-from ui.partner_dialog import PartnerBrowserDialog
+from ui.partner_dialog import PartnerDialog
 from ui.theme import menu_style
 
 PARTNER_PICKER_TYPE_FACTORY = PARTNER_TYPE_FACTORY
@@ -30,7 +30,7 @@ def project_root_from_widget(widget: QWidget | None) -> str:
 
 
 def open_partner_management(widget: QWidget | None) -> int:
-    dialog = PartnerBrowserDialog(project_root=project_root_from_widget(widget), parent=widget)
+    dialog = PartnerDialog(project_root=project_root_from_widget(widget), parent=widget)
     return dialog.exec()
 
 
