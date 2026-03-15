@@ -1,34 +1,12 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import QDialog, QFrame, QLabel, QVBoxLayout
-from ui.theme import THEME, hex_to_rgba
+
 from ui.ui_metrics import CommonSymbolsLayout
+from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba
 
 
-
-
-def build_dialog_shell(dialog: QDialog, title: str) -> tuple[QFrame, QVBoxLayout, QLabel]:
-    dialog.setModal(True)
-    dialog.setWindowTitle(title)
-    dialog.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
-
-    root = QVBoxLayout(dialog)
-    root.setContentsMargins(*dialog_layout_margins())
-
-    card = QFrame(dialog)
-    card.setObjectName("dialogCard")
-    root.addWidget(card)
-
-    body = QVBoxLayout(card)
-    body.setContentsMargins(*dialog_inner_margins())
-    body.setSpacing(THEME.section_gap)
-
-    title_label = QLabel(title, card)
-    title_label.setObjectName("dialogTitle")
-    title_label.hide()
-    return card, body, title_label
-
-def dialog_stylesheet() -> str:
+def _dialog_stylesheet() -> str:
     t = THEME
     success = "#1d8f4e"
     danger = "#c23b3b"
@@ -113,12 +91,44 @@ def dialog_stylesheet() -> str:
     """
 
 
-class _BaseThemedDialog(QDialog):
-    def __init__(self, title: str, parent=None, *, minimum_width: int = CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG):
+
+def build_dialog_shell(dialog: QDialog, title: str) -> tuple[QFrame, QVBoxLayout, QLabel]:
+    dialog.setModal(True)
+    dialog.setWindowTitle(title)
+    dialog.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
+
+    root = QVBoxLayout(dialog)
+    root.setContentsMargins(*dialog_layout_margins())
+
+    card = QFrame(dialog)
+    card.setObjectName("dialogCard")
+    root.addWidget(card)
+
+    body = QVBoxLayout(card)
+    body.setContentsMargins(*dialog_inner_margins())
+    body.setSpacing(THEME.section_gap)
+
+    title_label = QLabel(title, card)
+    title_label.setObjectName("dialogTitle")
+    title_label.hide()
+    return card, body, title_label
+
+
+class BaseThemedDialog(QDialog):
+    def __init__(self, title: str, parent=None):
         super().__init__(parent)
-        self.setStyleSheet(dialog_stylesheet())
+        self.setStyleSheet(_dialog_stylesheet())
         self.card, self.body, self.title_label = build_dialog_shell(self, title)
-        self.setMinimumWidth(minimum_width)
+        self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
 
 
-__all__ = ["_BaseThemedDialog", "build_dialog_shell", "dialog_stylesheet"]
+# Backward-compatible alias used by some dialog modules.
+class _BaseThemedDialog(BaseThemedDialog):
+    pass
+
+
+__all__ = [
+    "BaseThemedDialog",
+    "_BaseThemedDialog",
+    "build_dialog_shell",
+]
