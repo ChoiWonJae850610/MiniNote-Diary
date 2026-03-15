@@ -16,7 +16,7 @@ from ui.postit.layout import (
     make_postit_pager_host,
     make_postit_stack_host,
 )
-from ui.postit.stack_core import PostItStack
+from ui.postit.stack import PostItStack
 
 
 class PartnerTabbedPostIt(PostItSectionColumn):

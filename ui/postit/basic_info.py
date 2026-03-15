@@ -6,7 +6,7 @@ from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
-from ui.postit.metrics import PostItLayout
+from ui.postit.layout import PostItLayout
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import InlineCalendarPopup
 from ui.postit.forms import PostItBodyLayout
