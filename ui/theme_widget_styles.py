@@ -245,7 +245,7 @@ def table_line_edit_style(prefix: str = "") -> str:
 def table_widget_style() -> str:
     t = THEME
     return (
-        "QTableWidget{" 
+        "QTableWidget{"
         f"background:{t.color_window};"
         f"border:1px solid {t.color_border};"
         "border-radius:12px;"
@@ -254,25 +254,23 @@ def table_widget_style() -> str:
         f"selection-color:{t.color_text};"
         "padding:4px;"
         "}"
-        "QHeaderView::section{" 
+        "QHeaderView::section{"
         f"background:{t.color_surface};"
         f"color:{t.color_text_soft};"
         "border:none;"
         f"border-bottom:1px solid {t.color_border_soft};"
-        "padding:8px 10px;"
+        "padding:8px;"
         "font-weight:600;"
         "}"
-        "QTableWidget::item{" 
+        "QTableWidget::item{"
         "border:1px solid transparent;"
-        "padding:4px 6px;"
+        "padding:4px;"
         "}"
-        "QTableWidget::item:selected{" 
+        "QTableWidget::item:selected{"
         f"background:{t.color_surface_alt};"
         f"color:{t.color_text};"
         f"border:1px solid {t.color_border_soft};"
         "}"
-        "}"
-        "QTableWidget::item:focus{outline:none;}"
         + table_line_edit_style(prefix="QTableWidget ")
     )
 
