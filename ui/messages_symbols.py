@@ -4,6 +4,7 @@ from __future__ import annotations
 class Symbols:
     BACK = "◀"
     TYPE_MANAGE = "≡"
+    MENU = TYPE_MANAGE
     ADD = "+"
     SAVE = "✓"
     DELETE = "−"
@@ -21,7 +22,9 @@ class Tooltips:
     OPEN_CALENDAR = "달력 열기"
     PARTNER_MANAGE = "거래처 관리"
     TYPE_MANAGE = "타입 관리"
+    PARTNER_TYPE_MANAGE = TYPE_MANAGE
     ADD = "추가"
     EDIT = "수정"
+    EDIT_SAVE = "수정/저장"
     DELETE = "삭제"
     CLOSE = "닫기"

@@ -36,7 +36,7 @@ class PartnerDialog(QDialog):
 
         root = QVBoxLayout(self)
         root.setContentsMargins(*dialog_layout_margins())
-        root.setSpacing(THEME.section_spacing)
+        root.setSpacing(PartnerLayout.TYPE_SECTION_SPACING)
 
         title = QLabel(DialogTitles.PARTNER_MANAGE, self)
         title.setStyleSheet(title_label_style())
@@ -49,11 +49,11 @@ class PartnerDialog(QDialog):
         content.addWidget(self._build_left_card(), 1)
         content.addWidget(self._build_right_card(), 1)
 
-        self.btn_type = make_icon_button(Symbols.MENU, Tooltips.PARTNER_TYPE_MANAGE, self)
-        self.btn_add = make_icon_button(Symbols.ADD, Tooltips.ADD, self)
-        self.btn_save = make_icon_button(Symbols.SAVE, Tooltips.EDIT_SAVE, self)
-        self.btn_delete = make_icon_button(Symbols.DELETE, Tooltips.DELETE, self)
-        self.btn_close = make_icon_button(Symbols.CLOSE, Tooltips.CLOSE, self)
+        self.btn_type = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.PARTNER_TYPE_MANAGE, text=Symbols.MENU)
+        self.btn_add = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.ADD, text=Symbols.ADD)
+        self.btn_save = make_icon_button(parent=self, object_name="iconPrimary", tooltip=Tooltips.EDIT_SAVE, text=Symbols.SAVE)
+        self.btn_delete = make_icon_button(parent=self, object_name="iconDanger", tooltip=Tooltips.DELETE, text=Symbols.DELETE)
+        self.btn_close = make_icon_button(parent=self, object_name="iconAction", tooltip=Tooltips.CLOSE, text=Symbols.CLOSE)
         root.addLayout(make_dialog_button_row([self.btn_type, self.btn_add, self.btn_save, self.btn_delete, self.btn_close]))
 
         self.setStyleSheet(self.styleSheet() + partner_shell_style() + partner_detail_value_style())

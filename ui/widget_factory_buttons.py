@@ -69,7 +69,27 @@ def apply_icon_button_metrics(button: QPushButton, *, font_px: int, object_name:
     return refresh_style(button)
 
 
-def make_icon_button(*, parent=None, object_name: str, tooltip: str = "", icon: QIcon | None = None, text: str = "", font_px: int | None = None, icon_size: int | None = None) -> QPushButton:
+def make_icon_button(*args, parent=None, object_name: str | None = None, tooltip: str = "", icon: QIcon | None = None, text: str = "", font_px: int | None = None, icon_size: int | None = None) -> QPushButton:
+    """Create an icon-style button.
+
+    Backward compatible with older positional calls such as
+    make_icon_button(text, tooltip, parent).
+    """
+    if args:
+        if len(args) > 3:
+            raise TypeError("make_icon_button() accepts at most 3 positional arguments")
+        if len(args) >= 1:
+            text = args[0]
+        if len(args) >= 2:
+            tooltip = args[1]
+        if len(args) == 3:
+            parent = args[2]
+        if object_name is None:
+            object_name = 'iconAction'
+
+    if object_name is None:
+        raise TypeError("make_icon_button() missing required keyword argument: 'object_name'")
+
     button = QPushButton(text, parent)
     apply_icon_button_metrics(button, font_px=font_px or (THEME.icon_button_font_px + 2), object_name=object_name, tooltip=tooltip)
     if icon is not None and not icon.isNull():
