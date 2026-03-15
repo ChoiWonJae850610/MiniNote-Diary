@@ -21,9 +21,16 @@ def make_button(text: str, parent=None, *, primary: bool = False, width: int | N
     return make_action_button(text, parent, primary=primary, width=width, height=height)
 
 
-def make_icon_button(*, text: str = '', parent=None, object_name: str = 'iconAction', tooltip: str = '') -> QPushButton:
+def make_icon_button(
+    *,
+    text: str = '',
+    parent=None,
+    object_name: str = 'iconAction',
+    tooltip: str = '',
+    font_px: int | None = None,
+) -> QPushButton:
     button = QPushButton(text, parent)
-    return apply_icon_button_metrics(button, object_name=object_name, tooltip=tooltip)
+    return apply_icon_button_metrics(button, font_px=font_px, object_name=object_name, tooltip=tooltip)
 
 
 def make_dialog_button(text: str, parent=None, *, role: str | None = None) -> QPushButton:
