@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidgetItem
 
 from services.common.search_utils import matches_keyword
+from services.work_order.summary_service import build_work_order_summary_view
 from ui.dialogs import show_error, show_info
 from ui.pages.order_page import TemplateListCard
 from ui.messages import DefaultTexts, DialogTitles, HelperTexts, InfoMessages, Labels, Warnings
@@ -81,11 +82,14 @@ class MainWindowOrderLogic:
         refs.lbl_cost.setText(summary.cost_display or DefaultTexts.EMPTY_VALUE)
         refs.lbl_labor.setText(summary.labor_display or DefaultTexts.EMPTY_VALUE)
         refs.lbl_sale_price.setText(summary.sale_price_display or DefaultTexts.EMPTY_VALUE)
-        refs.lbl_material_summary.setText(HelperTexts.ORDER_DETAIL_MATERIAL_SUMMARY.format(fabric=summary.fabric_count, trim=summary.trim_count))
+        summary_view = build_work_order_summary_view(detail, order_stats=stats)
+        refs.lbl_material_summary.setText(HelperTexts.ORDER_DETAIL_MATERIAL_SUMMARY.format(summary=summary_view.material_summary_text))
         refs.lbl_last_order.setText(stats.last_ordered_at or InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText(str(stats.total_ordered_qty))
         refs.lbl_in_progress.setText(str(stats.in_progress_qty))
         refs.lbl_current_stock.setText(str(stats.current_stock_qty))
+        refs.material_detail_view.setPlainText(summary_view.to_detail_text())
+        refs.lbl_total_material_cost.setText(HelperTexts.ORDER_DETAIL_TOTAL_MATERIAL_COST.format(total=f"{summary_view.total_amount:,}"))
         refs.memo_view.setPlainText(summary.change_note or InfoMessages.NO_MEMO)
         refs.order_qty_spin.setValue(max(1, refs.order_qty_spin.value()))
         refs.order_memo_edit.clear()
@@ -108,6 +112,8 @@ class MainWindowOrderLogic:
         refs.lbl_labor.setText(DefaultTexts.EMPTY_VALUE)
         refs.lbl_sale_price.setText(DefaultTexts.EMPTY_VALUE)
         refs.lbl_material_summary.setText(DefaultTexts.ORDER_MATERIAL_SUMMARY_EMPTY)
+        refs.material_detail_view.clear()
+        refs.lbl_total_material_cost.setText(DefaultTexts.EMPTY_VALUE)
         refs.lbl_last_order.setText(InfoMessages.NO_ORDER_HISTORY)
         refs.lbl_total_ordered.setText('0')
         refs.lbl_in_progress.setText('0')

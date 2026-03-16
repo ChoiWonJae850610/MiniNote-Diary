@@ -56,11 +56,12 @@ class MenuPageBuilder:
         btn_template = MenuPageBuilder._make_menu_card(MenuPageTexts.TEMPLATE_TITLE, MenuPageTexts.TEMPLATE_SUBTITLE)
         btn_job_start = MenuPageBuilder._make_menu_card(MenuPageTexts.ORDER_TITLE, MenuPageTexts.ORDER_SUBTITLE)
         btn_receipt = MenuPageBuilder._make_menu_card(MenuPageTexts.RECEIPT_TITLE, MenuPageTexts.RECEIPT_SUBTITLE)
+        btn_receipt.hide()
         btn_complete = MenuPageBuilder._make_menu_card(MenuPageTexts.COMPLETE_TITLE, MenuPageTexts.COMPLETE_SUBTITLE)
         btn_sale = MenuPageBuilder._make_menu_card(MenuPageTexts.SALE_TITLE, MenuPageTexts.SALE_SUBTITLE)
         btn_inventory = MenuPageBuilder._make_menu_card(MenuPageTexts.INVENTORY_TITLE, MenuPageTexts.INVENTORY_SUBTITLE)
 
-        for index, button in enumerate((btn_template, btn_job_start, btn_receipt, btn_complete, btn_sale, btn_inventory)):
+        for index, button in enumerate((btn_template, btn_job_start, btn_complete, btn_sale, btn_inventory)):
             grid.addWidget(button, index // 3, index % 3)
 
         layout.addLayout(grid)

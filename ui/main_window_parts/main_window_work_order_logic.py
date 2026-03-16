@@ -1,4 +1,7 @@
 from ui.main_window_parts.main_window_work_order_image_logic import MainWindowWorkOrderImageLogic
+from ui.dialogs import show_error
+from ui.dialogs.work_order_load_dialog import WorkOrderLoadDialog
+from ui.messages import DialogTitles, InfoMessages, Warnings
 from ui.main_window_parts.main_window_work_order_material_logic import MainWindowWorkOrderMaterialLogic
 from ui.main_window_parts.main_window_work_order_postit_logic import MainWindowWorkOrderPostItLogic
 from ui.main_window_parts.main_window_work_order_shared import MATERIAL_STACK_NAMES, MATERIAL_TARGET_CONFIGS
@@ -36,6 +39,42 @@ class MainWindowWorkOrderLogic:
     @staticmethod
     def delete_image(window) -> None:
         MainWindowWorkOrderImageLogic.delete_image(window)
+
+    @staticmethod
+    def open_load_dialog(window) -> None:
+        dialog = WorkOrderLoadDialog(window.controller.repository, window.order_repository, parent=window)
+        if dialog.exec() != dialog.Accepted or dialog.selected_result is None:
+            return
+        try:
+            MainWindowWorkOrderLogic.load_template_into_form(window, dialog.selected_result.detail)
+        except Exception as exc:
+            show_error(window, DialogTitles.LOAD_TEMPLATE, str(exc) or Warnings.WORK_ORDER_LOAD_FAILED)
+
+    @staticmethod
+    def load_template_into_form(window, detail) -> None:
+        document = detail.document
+        window._suppress_dirty = True
+        try:
+            window.state.reset()
+            window.state.header_data = document.header.to_dict()
+            window.state.fabric_items = [item.to_dict() for item in document.fabrics] or [dict()]
+            window.state.trim_items = [item.to_dict() for item in document.trims] or [dict()]
+            window.state.dyeing_items = [item.to_dict() for item in document.dyeings] or [dict()]
+            window.state.finishing_items = [item.to_dict() for item in document.finishings] or [dict()]
+            window.state.other_items = [item.to_dict() for item in document.others] or [dict()]
+            window.state.current_image_path = detail.summary.image_path
+            MainWindowWorkOrderPostItLogic.refresh_postits(window, force_rebuild=True)
+            if detail.summary.image_path:
+                window.image_preview.set_image(detail.summary.image_path)
+                window.btn_delete_image.setEnabled(True)
+            else:
+                window.image_preview.clear_image()
+                window.btn_delete_image.setEnabled(False)
+            window._show_feedback(InfoMessages.WORK_ORDER_LOADED)
+        finally:
+            window._suppress_dirty = False
+        window.state.is_dirty = False
+        window._update_window_title()
 
 
 __all__ = [

@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QDialog
 from ui.dialogs.base import _BaseThemedDialog
 from ui.dialogs.message_boxes import ConfirmActionDialog, SimpleMessageDialog
 from ui.dialogs.status_dialogs import ValidationStatusDialog
+from ui.dialogs.work_order_load_dialog import WorkOrderLoadDialog
 from ui.messages import Buttons
 
 
@@ -29,6 +30,7 @@ __all__ = [
     "ConfirmActionDialog",
     "SimpleMessageDialog",
     "ValidationStatusDialog",
+    "WorkOrderLoadDialog",
     "ask_confirm",
     "show_error",
     "show_info",

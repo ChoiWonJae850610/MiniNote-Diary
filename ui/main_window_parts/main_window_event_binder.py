@@ -50,6 +50,7 @@ class MainWindowEventBinder:
         window.btn_back.clicked.connect(window.on_back_clicked)
         window.btn_reset.clicked.connect(window.on_reset_clicked)
         window.btn_save.clicked.connect(window.on_save_clicked)
+        window.btn_load.clicked.connect(window.on_load_clicked)
         window.btn_upload.clicked.connect(window.upload_image)
         window.btn_delete_image.clicked.connect(window.delete_image)
 

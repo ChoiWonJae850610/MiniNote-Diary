@@ -35,6 +35,8 @@ class OrderPageRefs:
     lbl_in_progress: QLabel
     lbl_current_stock: QLabel
     memo_view: QTextEdit
+    material_detail_view: QTextEdit
+    lbl_total_material_cost: QLabel
     order_qty_spin: QSpinBox
     order_date_edit: QDateEdit
     order_memo_edit: QTextEdit
@@ -89,6 +91,8 @@ class OrderPageBuilder:
             lbl_in_progress=right_refs['lbl_in_progress'],
             lbl_current_stock=right_refs['lbl_current_stock'],
             memo_view=right_refs['memo_view'],
+            material_detail_view=right_refs['material_detail_view'],
+            lbl_total_material_cost=right_refs['lbl_total_material_cost'],
             order_qty_spin=right_refs['order_qty_spin'],
             order_date_edit=right_refs['order_date_edit'],
             order_memo_edit=right_refs['order_memo_edit'],

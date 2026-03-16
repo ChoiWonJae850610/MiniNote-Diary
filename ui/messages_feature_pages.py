@@ -13,13 +13,11 @@ class FeaturePageTexts:
 
 class MenuPageTexts:
     TITLE = "업무 메뉴"
-    SUBTITLE = "작업지시서 관리부터 작업 시작, 영수증 등록, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다."
+    SUBTITLE = "작업지시서 관리부터 발주, 완료, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다."
     TEMPLATE_TITLE = "작업지시서 관리"
     TEMPLATE_SUBTITLE = "기준 문서 생성 · 수정"
     ORDER_TITLE = "발주"
     ORDER_SUBTITLE = "템플릿 선택 후 발주 수량 입력"
-    RECEIPT_TITLE = "원단 / 부자재 등록"
-    RECEIPT_SUBTITLE = "영수증 첨부 · 실제 지출 기록"
     COMPLETE_TITLE = "작업 완료"
     COMPLETE_SUBTITLE = "완료 수량 반영 · 재고 생성"
     SALE_TITLE = "판매 등록"
@@ -30,16 +28,16 @@ class MenuPageTexts:
 
 
 class FeatureConfigTexts:
-    RECEIPT_TITLE = "원단 / 부자재 등록"
-    RECEIPT_SUBTITLE = "진행 중인 작업을 선택하고 영수증 이미지를 첨부한 뒤 실제 매입 내용을 입력하는 흐름입니다."
+    RECEIPT_TITLE = "자재 검토"
+    RECEIPT_SUBTITLE = "원단/부자재 영수증 등록 흐름은 발주 화면 자재 요약으로 통합했습니다."
     RECEIPT_LEFT_TITLE = "진행중 작업 선택"
     RECEIPT_LEFT_HINT = "이미 생성된 작업 중 지출을 등록할 대상을 선택합니다."
     RECEIPT_LIST_ITEMS = ("JOB-0001 하늘색 저지 자켓", "JOB-0002 테스트 원단 샘플")
     RECEIPT_SUMMARY_ITEMS = ("영수증 이미지 첨부", "실제 원단 · 부자재 입력", "지출 금액 기록")
     RECEIPT_SECTIONS = (("영수증 등록", ("이미지 파일 첨부", "거래처 선택 또는 입력", "등록 일자 / 메모")), ("자재 입력", ("원단 포스트잇 입력", "부자재 포스트잇 입력", "실제 단가 · 총액 반영")), ("향후 DB 포인트", ("job_id 연결", "receipt_image_path 저장", "expense transaction 생성")))
-    RECEIPT_PRIMARY = "영수증 저장"
-    RECEIPT_SECONDARY = "이미지 첨부"
-    RECEIPT_HELPER = "현재는 클릭 가능한 화면 뼈대만 배치했고, 실제 입력 위젯은 다음 단계에서 연결하면 됩니다."
+    RECEIPT_PRIMARY = "발주 화면 보기"
+    RECEIPT_SECONDARY = "메뉴로"
+    RECEIPT_HELPER = "이 기능은 발주 화면의 자재 상세 요약으로 통합했습니다."
 
     COMPLETE_TITLE = "작업 완료"
     COMPLETE_SUBTITLE = "작업 완료 처리 시 실제 완료 수량을 확정하고 재고 생성 흐름으로 연결하는 화면입니다."

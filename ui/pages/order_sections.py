@@ -112,6 +112,21 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     )
     summary_layout.addWidget(stats_panel)
 
+
+    summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_MATERIAL_DETAIL, summary_panel))
+    material_detail_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.order_memo_min_height + 70)
+    summary_layout.addWidget(material_detail_view)
+
+    lbl_total_material_cost = make_order_value_label(DefaultTexts.EMPTY_VALUE)
+    total_grid = make_form_grid()
+    add_labeled_field_rows(
+        total_grid,
+        [
+            LabeledFieldRow(Labels.TOTAL_MATERIAL_COST, lbl_total_material_cost, label_parent=summary_panel),
+        ],
+    )
+    summary_layout.addLayout(total_grid)
+
     summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_MEMO, summary_panel))
     memo_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.memo_min_height)
     summary_layout.addWidget(memo_view)
@@ -130,6 +145,8 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
         'lbl_total_ordered': lbl_total_ordered,
         'lbl_in_progress': lbl_in_progress,
         'lbl_current_stock': lbl_current_stock,
+        'material_detail_view': material_detail_view,
+        'lbl_total_material_cost': lbl_total_material_cost,
         'memo_view': memo_view,
     }
 

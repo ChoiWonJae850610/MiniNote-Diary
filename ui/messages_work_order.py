@@ -11,15 +11,18 @@ class PageTitles:
 
 class PageDescriptions:
     WORK_ORDER = "작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다."
-    ORDER = "저장된 작업지시서 템플릿을 선택하고 발주 수량을 입력합니다."
+    ORDER = "저장된 작업지시서 템플릿을 선택하고 발주 수량을 입력합니다. 자재 상세 요약으로 영수증과 비교하기 쉽게 구성합니다."
+    WORK_ORDER_LOAD = "저장된 작업지시서를 요약과 함께 확인한 뒤 불러와 수정하고 새 문서로 재생성할 수 있습니다."
     ORDER_LIST = "월별 필터와 검색으로 템플릿을 찾고, 예전 작업지시서도 다시 발주할 수 있습니다."
 
 
 class SectionTitles:
     ORDER_TEMPLATE_LIST = "작업지시서 목록"
     ORDER_TEMPLATE_DETAIL = "선택 작업지시서"
+    ORDER_TEMPLATE_MATERIAL_DETAIL = "자재 상세 내역"
     ORDER_TEMPLATE_MEMO = "작업지시서 메모"
     ORDER_INPUT = "신규 발주 입력"
+    WORK_ORDER_LOAD_PREVIEW = "선택 작업지시서 요약"
     CHANGE_NOTE = "메모"
     BASIC_INFO = "기본정보"
     FABRIC = "원단"
@@ -31,7 +34,9 @@ class SectionTitles:
 
 class DefaultTexts:
     EMPTY_VALUE = "-"
-    ORDER_MATERIAL_SUMMARY_EMPTY = "원단 0 / 부자재 0"
+    ORDER_MATERIAL_SUMMARY_EMPTY = "자재 내역 없음"
+    NO_SAVED_WORK_ORDER = "저장된 작업지시서가 없습니다."
+    WORK_ORDER_LOAD_FAILED = "선택한 작업지시서를 미리보기할 수 없습니다."
     ORDER_SAVE_SUCCESS = "발주 저장"
     ORDER_SAVE_SUCCESS_MESSAGE = "발주 저장 완료\n\n작업지시서: {name}\n수량: {qty}\n발주일: {ordered_at}"
 
@@ -46,7 +51,8 @@ class HelperTexts:
     ORDER_TEMPLATE_META_MATERIAL = "자재: 원단 {fabric} / 부자재 {trim}"
     ORDER_TEMPLATE_META_STOCK = "재고 {stock} · 진행중 {in_progress}"
     ORDER_TEMPLATE_META_LAST_ORDER = "최근 발주 {last_order}"
-    ORDER_DETAIL_MATERIAL_SUMMARY = "원단 {fabric} / 부자재 {trim}"
+    ORDER_DETAIL_MATERIAL_SUMMARY = "{summary}"
+    ORDER_DETAIL_TOTAL_MATERIAL_COST = "총 재료비 {total}"
 
 
 class DomainTexts:

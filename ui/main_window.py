@@ -165,6 +165,9 @@ class MainWindow(QMainWindow):
     def on_save_clicked(self):
         MainWindowSaveLogic.handle_save(self)
 
+    def on_load_clicked(self):
+        MainWindowWorkOrderLogic.open_load_dialog(self)
+
     def upload_image(self):
         MainWindowWorkOrderLogic.upload_image(self)
 

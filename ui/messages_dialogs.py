@@ -24,6 +24,7 @@ class DialogTitles:
     NOTE = "메모"
     ORDER = "발주"
     ORDER_SAVE = "발주 저장"
+    LOAD_TEMPLATE = "작업지시서 불러오기"
     TEMP_SAVE = "임시 저장"
     IMAGE_SELECT = "이미지 선택"
     RECEIPT = "영수증 등록"
@@ -39,8 +40,10 @@ class Warnings:
     MATERIAL_VENDOR_OR_ITEM_REQUIRED = "거래처 또는 품목을 1개 이상 입력하세요."
     ORDER_SELECT_TEMPLATE_FIRST = "발주할 작업지시서를 먼저 선택하세요."
     ORDER_TEMPLATE_LOAD_FAILED = "선택한 작업지시서를 다시 불러올 수 없습니다."
+    WORK_ORDER_LOAD_FAILED = "작업지시서 내용을 불러오지 못했습니다."
     TEMP_SAVE_CONFIRM = "임시 저장 하시겠습니까?"
     PARTNER_DELETE_CONFIRM = "거래처를 삭제하시겠습니까?"
+    WORK_ORDER_LOAD_FAILED = "선택한 작업지시서를 현재 화면으로 불러오지 못했습니다."
 
 
 class WarningMessages(Warnings):
@@ -69,3 +72,4 @@ class InfoMessages:
     PARTNER_SEARCH_PLACEHOLDER = "검색"
     PARTNER_EMPTY_VALUE = "-"
     PARTNER_EMPTY_LIST = "(목록 없음)"
+    WORK_ORDER_LOADED = "작업지시서를 불러왔습니다. 필요한 부분을 수정한 뒤 새로 저장하세요."
