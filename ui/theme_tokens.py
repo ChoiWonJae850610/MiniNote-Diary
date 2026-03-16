@@ -80,13 +80,15 @@ class ThemeTokens:
     page_top_bottom: int = 20
     page_header_top_margin: int = 20
     page_header_block_gap: int = 14
-    page_header_row_min_height: int = 36
+    page_header_row_min_height: int = 40
     block_spacing: int = 10
     row_spacing: int = 8
     top_button_spacing: int = 6
     section_gap: int = 14
     card_inner_spacing: int = 8
     title_stack_spacing: int = 2
+    page_header_safe_padding_top: int = 2
+    page_header_safe_padding_bottom: int = 2
     filter_panel_margin_h: int = 14
     filter_panel_margin_v: int = 12
     image_shell_margin: int = 18

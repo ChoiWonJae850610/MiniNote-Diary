@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QRect, Qt, QSize
+from PySide6.QtCore import QRect, Qt, QSize
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QPushButton
 
 
 def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: int = 20) -> QIcon:
-    canvas_size = max(size_px, font_px + 10)
+    canvas_size = max(size_px + 2, font_px + 12)
     pixmap = QPixmap(canvas_size, canvas_size)
     pixmap.fill(Qt.GlobalColor.transparent)
 
@@ -20,10 +20,10 @@ def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: 
     font.setBold(True)
     painter.setFont(font)
 
-    inset = 2
+    inset = 3
     target_rect = QRect(inset, inset, canvas_size - (inset * 2), canvas_size - (inset * 2))
     text_rect = painter.boundingRect(target_rect, Qt.AlignmentFlag.AlignCenter, glyph)
-    text_rect.moveCenter(target_rect.center() + QPoint(0, 1))
+    text_rect.moveCenter(target_rect.center())
     painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, glyph)
     painter.end()
     return QIcon(pixmap)

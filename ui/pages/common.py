@@ -68,11 +68,17 @@ def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
 
 def _apply_standard_header_policy(title_col: QVBoxLayout, title: QLabel, subtitle: QLabel, *, has_subtitle: bool) -> None:
     title_col.setSpacing(THEME.title_stack_spacing if has_subtitle else 0)
-    title_min_height = max(title.minimumHeight(), THEME.page_header_row_min_height, THEME.page_title_font_px + 18, THEME.nav_button_size)
+    title_min_height = max(
+        title.minimumHeight(),
+        THEME.page_header_row_min_height,
+        THEME.page_title_font_px + 20,
+        THEME.nav_button_size + 6,
+    )
     title.setMinimumHeight(title_min_height)
-    title.setContentsMargins(0, 1, 0, 1)
+    title.setContentsMargins(0, THEME.page_header_safe_padding_top, 0, THEME.page_header_safe_padding_bottom)
     title.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
     subtitle.setVisible(has_subtitle)
+    subtitle.setContentsMargins(0, 0, 0, 0)
     subtitle.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
 
@@ -128,7 +134,7 @@ def make_standard_page_header(
     title_min_height: int | None = None,
 ) -> PageHeaderRefs:
     row = QHBoxLayout()
-    row.setContentsMargins(0, 0, 0, 0)
+    row.setContentsMargins(0, THEME.page_header_safe_padding_top, 0, THEME.page_header_safe_padding_bottom)
     row.setSpacing(THEME.top_button_spacing)
     row.setAlignment(Qt.AlignVCenter)
 

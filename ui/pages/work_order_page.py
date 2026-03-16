@@ -168,15 +168,17 @@ class WorkOrderPageBuilder:
             + (THEME.image_shell_margin * 2)
             + THEME.image_preview_min_height
         )
-        postit_bar_height = (
+
+        # The upper post-it block visually ends at its visible pager row.
+        # Reserve alignment height against that visible block so the memo area
+        # reaches the same bottom line as the image shell.
+        postit_bar_visual_height = (
             POSTIT_HEADER_HEIGHT
             + POSTIT_TAB_OVERLAP
             + POSTIT_BODY_HEIGHT
-            + THEME.top_button_spacing
-            + POSTIT_FOOTER_HEIGHT
-            + POSTIT_EXTERNAL_ROW_GAP
             + POSTIT_FOOTER_HEIGHT
         )
+
         change_note_fixed_overhead = (
             POSTIT_HEADER_HEIGHT
             + POSTIT_TAB_OVERLAP
@@ -185,7 +187,7 @@ class WorkOrderPageBuilder:
             + POSTIT_EXTERNAL_ROW_GAP
             + POSTIT_FOOTER_HEIGHT
         )
-        aligned_height = image_column_height - postit_bar_height - THEME.section_gap - change_note_fixed_overhead
+        aligned_height = image_column_height - postit_bar_visual_height - THEME.section_gap - change_note_fixed_overhead
         return max(180, min(POSTIT_MEMO_BODY_HEIGHT, aligned_height))
 
     @staticmethod
