@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow
 
 from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
 from ui.main_window_parts.main_window_bootstrap import MainWindowBootstrap
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         return super().eventFilter(obj, event)
 
     def _handle_mouse_back_navigation(self) -> None:
-        if self.activeModalWidget() is not None:
+        if QApplication.activeModalWidget() is not None:
             return
         current_index = self.stack.currentIndex()
         if current_index == self.PAGE_WORK_ORDER:
