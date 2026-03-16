@@ -162,24 +162,23 @@ class WorkOrderPageBuilder:
 
     @staticmethod
     def _aligned_change_note_body_height() -> int:
-        image_column_height = (
+        image_column_total_height = (
             THEME.icon_button_size
             + THEME.row_spacing
             + (THEME.image_shell_margin * 2)
             + THEME.image_preview_min_height
         )
 
-        # The upper post-it block visually ends at its visible pager row.
-        # Reserve alignment height against that visible block so the memo area
-        # reaches the same bottom line as the image shell.
-        postit_bar_visual_height = (
+        postit_bar_total_height = (
             POSTIT_HEADER_HEIGHT
             + POSTIT_TAB_OVERLAP
             + POSTIT_BODY_HEIGHT
+            + THEME.top_button_spacing
+            + POSTIT_FOOTER_HEIGHT
             + POSTIT_FOOTER_HEIGHT
         )
 
-        change_note_fixed_overhead = (
+        change_note_wrap_overhead = (
             POSTIT_HEADER_HEIGHT
             + POSTIT_TAB_OVERLAP
             + THEME.top_button_spacing
@@ -187,8 +186,10 @@ class WorkOrderPageBuilder:
             + POSTIT_EXTERNAL_ROW_GAP
             + POSTIT_FOOTER_HEIGHT
         )
-        aligned_height = image_column_height - postit_bar_visual_height - THEME.section_gap - change_note_fixed_overhead
-        return max(180, min(POSTIT_MEMO_BODY_HEIGHT, aligned_height))
+
+        target_change_note_wrap_height = image_column_total_height - THEME.section_gap - postit_bar_total_height
+        body_height = target_change_note_wrap_height - change_note_wrap_overhead
+        return max(THEME.memo_min_height, body_height)
 
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
