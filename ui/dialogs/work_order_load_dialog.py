@@ -114,11 +114,11 @@ class WorkOrderLoadDialog(_BaseThemedDialog):
         stats = self.order_repository.aggregate_for_template(template_id)
         summary_view = build_work_order_summary_view(detail, order_stats=stats)
         self.preview.setHtml(summary_view.to_detail_html())
+        self.selected_result = WorkOrderLoadResult(template_id=template_id, detail=detail)
+        self.btn_load.setEnabled(True)
 
     def _on_item_activated(self, _item: QListWidgetItem) -> None:
         self._accept_selected()
-        self.selected_result = WorkOrderLoadResult(template_id=template_id, detail=detail)
-        self.btn_load.setEnabled(True)
 
     def _accept_selected(self) -> None:
         if self.selected_result is None:

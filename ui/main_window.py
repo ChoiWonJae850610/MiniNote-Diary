@@ -68,6 +68,8 @@ class MainWindow(QMainWindow):
         return super().eventFilter(obj, event)
 
     def _handle_mouse_back_navigation(self) -> None:
+        if self.activeModalWidget() is not None:
+            return
         current_index = self.stack.currentIndex()
         if current_index == self.PAGE_WORK_ORDER:
             self.on_back_clicked()
