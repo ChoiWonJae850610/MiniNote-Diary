@@ -53,6 +53,7 @@ class MainWindowEventBinder:
         refs.btn_back.clicked.connect(window.go_menu)
         refs.btn_reload.clicked.connect(window.refresh_inbound_page)
         refs.order_list.currentRowChanged.connect(window.on_inbound_order_selected)
+        refs.btn_toggle_memo.toggled.connect(window.on_inbound_memo_toggled)
         refs.btn_apply.clicked.connect(window.on_inbound_apply_clicked)
 
     @staticmethod

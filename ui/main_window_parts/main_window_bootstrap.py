@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QApplication, QStackedWidget, QVBoxLayout, QWidget
 
 from services.common.project_paths import project_root_str
+from services.inbound.repository import InboundRepository
 from services.order.repository import OrderRepository
 from services.partner.lookup_service import PartnerLookupService
 from services.work_order.controller import WorkOrderController
@@ -26,6 +27,7 @@ class MainWindowBootstrap:
         window.state = WorkOrderState()
         window.controller = WorkOrderController(window.state, window.project_root)
         window.order_repository = OrderRepository(window.project_root)
+        window.inbound_repository = InboundRepository(window.project_root)
         window.partner_lookup_service = PartnerLookupService(window.project_root)
         window._suppress_dirty = False
 

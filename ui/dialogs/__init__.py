@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QDialog
 
 from ui.dialogs.base import _BaseThemedDialog
+from ui.dialogs.inbound_inspection_dialog import InboundInspectionDialog, InboundInspectionResult
 from ui.dialogs.message_boxes import ConfirmActionDialog, SimpleMessageDialog
 from ui.dialogs.status_dialogs import ValidationStatusDialog
 from ui.dialogs.work_order_load_dialog import WorkOrderLoadDialog
@@ -31,6 +32,8 @@ __all__ = [
     "SimpleMessageDialog",
     "ValidationStatusDialog",
     "WorkOrderLoadDialog",
+    "InboundInspectionDialog",
+    "InboundInspectionResult",
     "ask_confirm",
     "show_error",
     "show_info",

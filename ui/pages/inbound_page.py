@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QDateEdit, QHBoxLayout, QListWidget, QPushButton, QSpinBox, QTextEdit, QWidget
+from PySide6.QtCore import QDate, Qt
+from PySide6.QtWidgets import QDateEdit, QHBoxLayout, QListWidget, QPushButton, QSpinBox, QTextEdit, QToolButton, QWidget
 
 from ui.image_preview import ImagePreview
 from ui.messages import Buttons, DefaultTexts, Labels, Placeholders, SectionTitles
@@ -41,6 +41,7 @@ class InboundPageRefs:
     lbl_remaining_qty: QWidget
     lbl_status: QWidget
     lbl_lead_days: QWidget
+    btn_toggle_memo: QToolButton
     order_memo_view: QTextEdit
     inbound_date_edit: QDateEdit
     inbound_qty_spin: QSpinBox
@@ -97,6 +98,7 @@ class InboundPageBuilder:
             lbl_remaining_qty=right_refs['lbl_remaining_qty'],
             lbl_status=right_refs['lbl_status'],
             lbl_lead_days=right_refs['lbl_lead_days'],
+            btn_toggle_memo=right_refs['btn_toggle_memo'],
             order_memo_view=right_refs['order_memo_view'],
             inbound_date_edit=right_refs['inbound_date_edit'],
             inbound_qty_spin=right_refs['inbound_qty_spin'],
@@ -162,8 +164,20 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     )
     summary_layout.addWidget(stats_panel)
 
-    add_panel_title(summary_layout, summary_panel, SectionTitles.ORDER_TEMPLATE_MEMO)
+    memo_row = QHBoxLayout()
+    memo_row.setContentsMargins(0, 0, 0, 0)
+    memo_row.setSpacing(THEME.row_spacing)
+    add_panel_title(memo_row, summary_panel, SectionTitles.ORDER_TEMPLATE_MEMO)
+    btn_toggle_memo = QToolButton(summary_panel)
+    btn_toggle_memo.setText('메모 보기 ▾')
+    btn_toggle_memo.setCheckable(True)
+    btn_toggle_memo.setToolButtonStyle(Qt.ToolButtonTextOnly)
+    memo_row.addStretch(1)
+    memo_row.addWidget(btn_toggle_memo)
+    summary_layout.addLayout(memo_row)
+
     order_memo_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.memo_min_height)
+    order_memo_view.hide()
     summary_layout.addWidget(order_memo_view)
 
     return {
@@ -177,6 +191,7 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
         'lbl_remaining_qty': lbl_remaining_qty,
         'lbl_status': lbl_status,
         'lbl_lead_days': lbl_lead_days,
+        'btn_toggle_memo': btn_toggle_memo,
         'order_memo_view': order_memo_view,
     }
 

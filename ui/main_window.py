@@ -128,13 +128,16 @@ class MainWindow(QMainWindow):
 
     def open_inbound_page(self) -> None:
         self.refresh_inbound_page()
-        self.stack.setCurrentWidget(self.inbound_page_refs.page)
+        self.stack.setCurrentIndex(self.PAGE_COMPLETE)
 
     def refresh_inbound_page(self) -> None:
         MainWindowInboundLogic.refresh_inbound_page(self)
 
     def on_inbound_order_selected(self, row: int) -> None:
         MainWindowInboundLogic.on_inbound_order_selected(self, row)
+
+    def on_inbound_memo_toggled(self, checked: bool) -> None:
+        MainWindowInboundLogic.toggle_order_memo(self, checked)
 
     def on_inbound_apply_clicked(self) -> None:
         MainWindowInboundLogic.show_apply_preview(self)

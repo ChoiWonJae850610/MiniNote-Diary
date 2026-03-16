@@ -39,7 +39,7 @@ class Buttons:
     STATS_REFRESH = "조회 새로고침"
     PARTNER_SAVE = "거래처 저장"
     RECEIPT_SAVE = "영수증 저장"
-    INBOUND_APPLY = "입고 반영"
+    INBOUND_APPLY = "입고하기"
 
 
 class Labels:
@@ -80,12 +80,14 @@ class Labels:
     PHONE = "연락처"
     ADDRESS = "주소"
     MEMO = "메모"
-    COMPLETED_QTY = "누적 입고"
+    COMPLETED_QTY = "지금까지 입고"
     REMAINING_QTY = "잔여 수량"
     ORDER_STATUS = "상태"
-    LEAD_DAYS = "경과일"
+    LEAD_DAYS = "소요일"
     INBOUND_DATE = "입고일"
     INBOUND_QTY = "입고 수량"
+    DEFECT_QTY = "불량 수량"
+    GOOD_QTY = "정상 반영 수량"
 
 
 class Placeholders:

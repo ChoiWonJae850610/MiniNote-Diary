@@ -22,7 +22,7 @@ class SectionTitles:
     INBOUND_FILTER = "입고 대상 새로고침"
     INBOUND_ORDER_LIST = "발주 의뢰 목록"
     INBOUND_SELECTED_ORDER = "선택 발주 의뢰"
-    INBOUND_INPUT = "입고 처리 입력"
+    INBOUND_INPUT = "입고 · 검수 입력"
     ORDER_TEMPLATE_DETAIL = "선택 작업지시서"
     ORDER_TEMPLATE_MATERIAL_DETAIL = "자재 상세 내역"
     ORDER_TEMPLATE_MEMO = "작업지시서 메모"
