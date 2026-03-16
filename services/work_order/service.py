@@ -20,7 +20,14 @@ class WorkOrderService:
         return get_document_save_requirement_statuses(self.current_document())
 
     def save_current(self) -> SaveResult:
-        return self.repository.save_template(self.current_document(), image_src_path=self.state.current_image_path)
+        overwrite_template_id = None
+        if self.state.loaded_template_id and not self.state.loaded_has_order_history:
+            overwrite_template_id = self.state.loaded_template_id
+        return self.repository.save_template(
+            self.current_document(),
+            image_src_path=self.state.current_image_path,
+            overwrite_template_id=overwrite_template_id,
+        )
 
     def list_templates(self) -> list[WorkOrderTemplateSummary]:
         return self.repository.list_templates()

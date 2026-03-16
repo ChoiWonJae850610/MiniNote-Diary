@@ -57,16 +57,29 @@ class WorkOrderRepository:
     def db_dir(self) -> Path:
         return db_dir_path(self.base_dir)
 
-    def save_template(self, document: WorkOrderDocument, *, image_src_path: str | None = None) -> SaveResult:
+    def save_template(
+        self,
+        document: WorkOrderDocument,
+        *,
+        image_src_path: str | None = None,
+        overwrite_template_id: str | None = None,
+    ) -> SaveResult:
         json_path, image_path, sha256_plain = save_work_order(
             base_dir=str(self.base_dir),
             data=document.to_dict(),
             image_src_path=image_src_path,
+            overwrite_template_id=overwrite_template_id,
         )
         return SaveResult(json_path=json_path, image_path=image_path, sha256_plain=sha256_plain)
 
-    def save_document(self, document: WorkOrderDocument, *, image_src_path: str | None = None) -> SaveResult:
-        return self.save_template(document, image_src_path=image_src_path)
+    def save_document(
+        self,
+        document: WorkOrderDocument,
+        *,
+        image_src_path: str | None = None,
+        overwrite_template_id: str | None = None,
+    ) -> SaveResult:
+        return self.save_template(document, image_src_path=image_src_path, overwrite_template_id=overwrite_template_id)
 
     def list_templates(self) -> list[WorkOrderTemplateSummary]:
         items: list[WorkOrderTemplateSummary] = []

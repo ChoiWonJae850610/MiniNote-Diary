@@ -29,6 +29,8 @@ class WorkOrderState:
     others: List[MaterialItem] = field(default_factory=lambda: [MaterialItem()])
     current_image_path: Optional[str] = None
     is_dirty: bool = False
+    loaded_template_id: Optional[str] = None
+    loaded_has_order_history: bool = False
 
     @property
     def header_data(self) -> Dict[str, str]:

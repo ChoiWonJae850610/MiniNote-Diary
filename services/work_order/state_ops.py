@@ -18,6 +18,8 @@ def reset_state(state) -> None:
     for target in MaterialTargets.ALL:
         set_target_items(state, target, [MaterialItem()])
     state.current_image_path = None
+    state.loaded_template_id = None
+    state.loaded_has_order_history = False
     recompute_sale_price(state)
     state.is_dirty = False
 

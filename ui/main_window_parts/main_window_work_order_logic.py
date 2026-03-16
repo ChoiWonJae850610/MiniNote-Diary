@@ -66,6 +66,9 @@ class MainWindowWorkOrderLogic:
             window.state.finishing_items = [item.to_dict() for item in document.finishings] or [dict()]
             window.state.other_items = [item.to_dict() for item in document.others] or [dict()]
             window.state.current_image_path = detail.summary.image_path
+            window.state.loaded_template_id = detail.summary.template_id
+            stats = window.order_repository.aggregate_for_template(detail.summary.template_id)
+            window.state.loaded_has_order_history = stats.order_count > 0
             MainWindowWorkOrderPostItLogic.refresh_postits(window, force_rebuild=True)
             if detail.summary.image_path:
                 window.image_preview.set_image(detail.summary.image_path)

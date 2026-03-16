@@ -21,6 +21,7 @@ def save_work_order(
     base_dir: str | None,
     data: Dict[str, Any],
     image_src_path: Optional[str] = None,
+    overwrite_template_id: Optional[str] = None,
 ) -> Tuple[str, Optional[str], str]:
     db_dir = ensure_db_dir(base_dir)
     header = data.get(PayloadKeys.HEADER, {})
@@ -29,7 +30,7 @@ def save_work_order(
         str(header.get('style_no', '') or ''),
         pick_vendor_name(data),
     )
-    unique_name = unique_available_stem(db_dir, base_name)
+    unique_name = overwrite_template_id or unique_available_stem(db_dir, base_name)
 
     payload = _build_payload(data, encrypt_data(db_dir, data))
     json_path = os.path.join(db_dir, f'{unique_name}.json')
@@ -37,9 +38,26 @@ def save_work_order(
         json.dump(payload, f, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
 
     image_dst_path = None
+    existing_prefix = os.path.join(db_dir, unique_name)
+    if overwrite_template_id:
+        for ext in ('.png', '.jpg', '.jpeg', '.bmp'):
+            existing_image = f'{existing_prefix}{ext}'
+            if os.path.isfile(existing_image):
+                try:
+                    os.remove(existing_image)
+                except OSError:
+                    pass
     if image_src_path and os.path.isfile(image_src_path):
         image_dst_path = os.path.join(db_dir, f'{unique_name}{image_extension(image_src_path)}')
-        shutil.copy2(image_src_path, image_dst_path)
+        same_file = False
+        try:
+            same_file = os.path.samefile(image_src_path, image_dst_path)
+        except Exception:
+            same_file = os.path.abspath(image_src_path) == os.path.abspath(image_dst_path)
+        if not same_file:
+            shutil.copy2(image_src_path, image_dst_path)
+        else:
+            image_dst_path = image_src_path
 
     return json_path, image_dst_path, payload['sha256_plain']
 
