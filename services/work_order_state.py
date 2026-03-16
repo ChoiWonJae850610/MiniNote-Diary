@@ -6,14 +6,9 @@ from typing import Dict, List, Optional
 from services.field_keys import HeaderKeys, MaterialTargets
 from services.models import MaterialItem, WorkOrderHeader
 from services.schema import MAX_MATERIAL_ITEMS
-from services.work_order_state_helpers import (
-    coerce_items,
-    items_have_value,
-    needs_price_recompute,
-    recompute_header_prices,
-    target_attr,
-)
-from services.work_order_state_views import build_document, iter_material_groups, normalized_items
+from services.work_order_state_helpers import coerce_items, target_attr
+from services.work_order_state_ops import add_material_item_to_state, recompute_sale_price, remove_material_item_from_state, reset_state, state_has_any_data, update_header_fields, update_material_patch_fields
+from services.work_order_state_views import build_document, normalized_items_for_target
 
 
 @dataclass
@@ -34,144 +29,97 @@ class WorkOrderState:
     @header_data.setter
     def header_data(self, value: Dict[str, str] | None) -> None:
         self.header = WorkOrderHeader.from_dict(value)
-        self._recompute_sale_price()
+        recompute_sale_price(self)
 
     @property
     def fabric_items(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.FABRIC)
+        return normalized_items_for_target(self, MaterialTargets.FABRIC)
 
     @fabric_items.setter
     def fabric_items(self, value: List[Dict[str, str]] | None) -> None:
-        self._set_items(MaterialTargets.FABRIC, value)
+        self.fabrics = coerce_items(value)
+        recompute_sale_price(self)
 
     @property
     def trim_items(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.TRIM)
+        return normalized_items_for_target(self, MaterialTargets.TRIM)
 
     @trim_items.setter
     def trim_items(self, value: List[Dict[str, str]] | None) -> None:
-        self._set_items(MaterialTargets.TRIM, value)
+        self.trims = coerce_items(value)
+        recompute_sale_price(self)
 
     @property
     def dyeing_items(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.DYEING)
+        return normalized_items_for_target(self, MaterialTargets.DYEING)
 
     @dyeing_items.setter
     def dyeing_items(self, value: List[Dict[str, str]] | None) -> None:
-        self._set_items(MaterialTargets.DYEING, value)
+        self.dyeings = coerce_items(value)
+        recompute_sale_price(self)
 
     @property
     def finishing_items(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.FINISHING)
+        return normalized_items_for_target(self, MaterialTargets.FINISHING)
 
     @finishing_items.setter
     def finishing_items(self, value: List[Dict[str, str]] | None) -> None:
-        self._set_items(MaterialTargets.FINISHING, value)
+        self.finishings = coerce_items(value)
+        recompute_sale_price(self)
 
     @property
     def other_items(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.OTHER)
+        return normalized_items_for_target(self, MaterialTargets.OTHER)
 
     @other_items.setter
     def other_items(self, value: List[Dict[str, str]] | None) -> None:
-        self._set_items(MaterialTargets.OTHER, value)
+        self.others = coerce_items(value)
+        recompute_sale_price(self)
 
     def reset(self) -> None:
-        self.header = WorkOrderHeader()
-        for attr in MaterialTargets.ATTRS.values():
-            setattr(self, attr, [MaterialItem()])
-        self.current_image_path = None
-        self._recompute_sale_price()
-        self.is_dirty = False
+        reset_state(self)
 
     def mark_dirty(self) -> None:
         self.is_dirty = True
 
     def has_any_data(self) -> bool:
-        return bool(
-            self.is_dirty
-            or self.current_image_path
-            or self.header.has_any_value()
-            or any(items_have_value(self._target_items(target)) for target in MaterialTargets.ALL)
-        )
+        return state_has_any_data(self)
 
     def update_header(self, patch: Dict[str, str]) -> None:
-        self.header.patch(patch)
-        if needs_price_recompute(patch):
-            self._recompute_sale_price()
-        self.mark_dirty()
+        update_header_fields(self, patch)
 
     def update_change_note(self, text: str) -> None:
         self.update_header({HeaderKeys.CHANGE_NOTE: (text or '').rstrip()})
 
     def update_material_patch(self, target: str, idx: int, patch: Dict[str, str]) -> None:
-        if idx < 0 or not isinstance(patch, dict):
-            return
-        items = self._target_items(target)
-        while len(items) <= idx:
-            items.append(MaterialItem())
-        items[idx].patch(patch)
-        self._recompute_sale_price()
-        self.mark_dirty()
+        update_material_patch_fields(self, target, idx, patch)
 
     def add_material_item(self, target: str, max_items: int = MAX_MATERIAL_ITEMS) -> int | None:
-        items = self._target_items(target)
-        if len(items) >= max_items:
-            return None
-        items.append(MaterialItem())
-        self._recompute_sale_price()
-        self.mark_dirty()
-        return len(items) - 1
+        return add_material_item_to_state(self, target, max_items=max_items)
 
     def remove_material_item(self, target: str, idx: int) -> bool:
-        items = self._target_items(target)
-        if 0 <= idx < len(items):
-            del items[idx]
-            if not items:
-                items.append(MaterialItem())
-            self._recompute_sale_price()
-            self.mark_dirty()
-            return True
-        return False
+        return remove_material_item_from_state(self, target, idx)
 
     def to_document(self):
-        return build_document(
-            self.header,
-            fabrics=self.fabrics,
-            trims=self.trims,
-            dyeings=self.dyeings,
-            finishings=self.finishings,
-            others=self.others,
-            image_attached=bool(self.current_image_path),
-        )
+        return build_document(self)
 
     def normalized_header(self) -> Dict[str, str]:
         return self.header.to_dict()
 
     def normalized_fabrics(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.FABRIC)
+        return normalized_items_for_target(self, MaterialTargets.FABRIC)
 
     def normalized_trims(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.TRIM)
+        return normalized_items_for_target(self, MaterialTargets.TRIM)
 
     def normalized_dyeings(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.DYEING)
+        return normalized_items_for_target(self, MaterialTargets.DYEING)
 
     def normalized_finishings(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.FINISHING)
+        return normalized_items_for_target(self, MaterialTargets.FINISHING)
 
     def normalized_others(self) -> List[Dict[str, str]]:
-        return self._normalized_items(MaterialTargets.OTHER)
-
-    def _set_items(self, target: str, value: List[Dict[str, str]] | None) -> None:
-        setattr(self, target_attr(target), coerce_items(value))
-        self._recompute_sale_price()
+        return normalized_items_for_target(self, MaterialTargets.OTHER)
 
     def _target_items(self, target: str) -> List[MaterialItem]:
         return getattr(self, target_attr(target))
-
-    def _normalized_items(self, target: str) -> List[Dict[str, str]]:
-        return normalized_items(self._target_items(target))
-
-    def _recompute_sale_price(self) -> None:
-        recompute_header_prices(self.header, iter_material_groups(self._target_items))

@@ -6,13 +6,10 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from services.work_order_defaults import empty_material_row
-from ui.postit.layout import (
-    POSTIT_BODY_HEIGHT,
-    POSTIT_FOOTER_HEIGHT,
-    make_postit_stack_host,
-)
+from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
 from ui.postit.material_card import PostItCard
 from ui.postit.stack_index_controls import PostItIndexControls
+from ui.postit.stack_runtime import clamp_active_index, normalized_stack_items, should_update_in_place
 
 
 class PostItStack(QWidget):
@@ -29,7 +26,6 @@ class PostItStack(QWidget):
         self._suppress_next_new_card_menu = False
 
         self.stack_host, self.stack = make_postit_stack_host(parent=self, height=POSTIT_BODY_HEIGHT)
-
         self.footer_host = QWidget(self)
         self.footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
         self.index_controls = PostItIndexControls(self, self.footer_host)
@@ -38,7 +34,6 @@ class PostItStack(QWidget):
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setFixedHeight(POSTIT_BODY_HEIGHT + POSTIT_FOOTER_HEIGHT)
-
         self._rebuild_index_buttons()
 
     def body_widget(self) -> QWidget:
@@ -48,28 +43,25 @@ class PostItStack(QWidget):
         return self.footer_host
 
     def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
-        items = list(items or []) or [empty_material_row()]
+        items = normalized_stack_items(items)
         if force_rebuild or not self.cards:
             self.items = items
-            if self.active_index >= len(self.items):
-                self.active_index = max(0, len(self.items) - 1)
+            self.active_index = clamp_active_index(self.active_index, self.items)
             self._rebuild()
             return
-        if len(items) == len(self.items) == len(self.cards):
+        if should_update_in_place(items, self.items, self.cards):
             self.items = items
             for idx, item in enumerate(self.items):
                 self.cards[idx].index = idx
                 self.cards[idx].update_data(item)
-            if self.active_index >= len(self.items):
-                self.active_index = max(0, len(self.items) - 1)
+            self.active_index = clamp_active_index(self.active_index, self.items)
             self.stack.setCurrentIndex(self.active_index)
             self._refresh_delete_buttons()
             self._apply_active()
             self._rebuild_index_buttons()
             return
         self.items = items
-        if self.active_index >= len(self.items):
-            self.active_index = max(0, len(self.items) - 1)
+        self.active_index = clamp_active_index(self.active_index, self.items)
         self._rebuild()
 
     def _create_card(self, idx: int, item: Dict[str, str]) -> PostItCard:
@@ -129,6 +121,7 @@ class PostItStack(QWidget):
         if self.plus_button is not None and not self.plus_button.isEnabled():
             return
         self._suppress_next_new_card_menu = True
+        self.items = normalized_stack_items(self.items)
         self.items.append(empty_material_row())
         idx = len(self.items) - 1
         self._append_card(self.items[idx], idx)
@@ -140,4 +133,4 @@ class PostItStack(QWidget):
         self.item_added.emit()
 
 
-__all__ = ["PostItStack"]
+__all__ = ['PostItStack']
