@@ -13,15 +13,15 @@ class FeaturePageTexts:
 
 class MenuPageTexts:
     TITLE = "업무 메뉴"
-    SUBTITLE = "작업지시서 관리부터 발주, 완료, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다."
+    SUBTITLE = "작업지시서 관리부터 발주 의뢰, 입고&검수, 판매/재고 확인까지 흐름 기준으로 화면을 구성합니다."
     TEMPLATE_TITLE = "작업지시서 관리"
     TEMPLATE_SUBTITLE = "기준 문서 생성 · 수정"
-    ORDER_TITLE = "발주"
-    ORDER_SUBTITLE = "템플릿 선택 후 발주 수량 입력"
+    ORDER_TITLE = "발주 의뢰"
+    ORDER_SUBTITLE = "템플릿 선택 후 의뢰 수량 입력"
     RECEIPT_TITLE = "자재 검토"
     RECEIPT_SUBTITLE = "발주 화면 자재 요약으로 통합"
-    COMPLETE_TITLE = "작업 완료"
-    COMPLETE_SUBTITLE = "완료 수량 반영 · 재고 생성"
+    COMPLETE_TITLE = "입고&검수"
+    COMPLETE_SUBTITLE = "입고 수량 입력 · 재고 반영 준비"
     SALE_TITLE = "판매 등록"
     SALE_SUBTITLE = "판매 수량 · 수입 반영"
     INVENTORY_TITLE = "재고 / 통계"
@@ -41,15 +41,15 @@ class FeatureConfigTexts:
     RECEIPT_SECONDARY = "메뉴로"
     RECEIPT_HELPER = "이 기능은 발주 화면의 자재 상세 요약으로 통합했습니다."
 
-    COMPLETE_TITLE = "작업 완료"
-    COMPLETE_SUBTITLE = "작업 완료 처리 시 실제 완료 수량을 확정하고 재고 생성 흐름으로 연결하는 화면입니다."
-    COMPLETE_LEFT_TITLE = "완료 대상 작업"
-    COMPLETE_LEFT_HINT = "진행 중 상태의 작업을 골라 완료 처리합니다."
+    COMPLETE_TITLE = "입고&검수"
+    COMPLETE_SUBTITLE = "발주 의뢰 이력을 기준으로 입고일, 수량, 메모를 확인하는 화면입니다."
+    COMPLETE_LEFT_TITLE = "입고 대상 발주 의뢰"
+    COMPLETE_LEFT_HINT = "발주 의뢰 목록에서 입고 처리할 건을 선택합니다."
     COMPLETE_LIST_ITEMS = ("JOB-0001 하늘색 저지 자켓", "JOB-0004 기본 상의 템플릿")
     COMPLETE_SUMMARY_ITEMS = ("완료 수량 입력", "불량 / 누락 반영", "재고 생성")
     COMPLETE_SECTIONS = (("완료 입력", ("완료 일자", "실제 완료 수량", "불량 / 추가 메모")), ("재고 반영", ("현재고 생성 또는 증가", "완료 후 작업 상태 변경", "필요 시 수량 조정 허용")), ("향후 DB 포인트", ("job status update", "inventory movement create", "completed_at 기록")))
-    COMPLETE_PRIMARY = "작업 완료 처리"
-    COMPLETE_SECONDARY = "완료 전 검토"
+    COMPLETE_PRIMARY = "입고 반영"
+    COMPLETE_SECONDARY = "화면 검토"
     COMPLETE_HELPER = "재고는 별도 테이블보다 이동 이력 기반으로 보는 방향을 염두에 둔 화면입니다."
 
     SALE_TITLE = "판매 등록"

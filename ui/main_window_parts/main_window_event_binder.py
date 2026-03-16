@@ -15,6 +15,7 @@ class MainWindowEventBinder:
         MainWindowEventBinder._bind_menu(window)
         MainWindowEventBinder._bind_feature_pages(window)
         MainWindowEventBinder._bind_order_page(window)
+        MainWindowEventBinder._bind_inbound_page(window)
         MainWindowEventBinder._bind_work_order(window)
 
     @staticmethod
@@ -22,7 +23,7 @@ class MainWindowEventBinder:
         window.btn_template.clicked.connect(window.go_work_order)
         window.btn_job_start_menu.clicked.connect(window.open_order_page)
         window.btn_receipt_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_RECEIPT))
-        window.btn_complete_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_COMPLETE))
+        window.btn_complete_menu.clicked.connect(window.open_inbound_page)
         window.btn_sale_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_SALE))
         window.btn_inventory_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_INVENTORY))
         window.btn_partner_mgmt.clicked.connect(window.on_partner_mgmt_clicked)
@@ -44,6 +45,15 @@ class MainWindowEventBinder:
         refs.search_edit.textChanged.connect(window.refresh_order_page)
         refs.month_combo.currentIndexChanged.connect(window.refresh_order_page)
         refs.template_list.currentRowChanged.connect(window.on_order_template_selected)
+
+
+    @staticmethod
+    def _bind_inbound_page(window: "MainWindow") -> None:
+        refs = window.inbound_page_refs
+        refs.btn_back.clicked.connect(window.go_menu)
+        refs.btn_reload.clicked.connect(window.refresh_inbound_page)
+        refs.order_list.currentRowChanged.connect(window.on_inbound_order_selected)
+        refs.btn_apply.clicked.connect(window.on_inbound_apply_clicked)
 
     @staticmethod
     def _bind_work_order(window: "MainWindow") -> None:

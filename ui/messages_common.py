@@ -33,12 +33,13 @@ class Buttons:
     FILTER_OPEN = "필터 열기"
     SALES_PREVIEW = "판매 미리보기"
     TYPE_MANAGE = "타입 관리"
-    ORDER_SAVE = "발주 저장"
+    ORDER_SAVE = "발주 의뢰 저장"
     LOAD_TO_EDIT = "불러와서 수정"
-    COMPLETE_PROCESS = "작업 완료 처리"
+    COMPLETE_PROCESS = "입고 반영"
     STATS_REFRESH = "조회 새로고침"
     PARTNER_SAVE = "거래처 저장"
     RECEIPT_SAVE = "영수증 저장"
+    INBOUND_APPLY = "입고 반영"
 
 
 class Labels:
@@ -67,9 +68,9 @@ class Labels:
     TOTAL_ORDERED = "누적 발주"
     IN_PROGRESS_QTY = "진행중 수량"
     CURRENT_STOCK = "현재 재고"
-    ORDER_QTY = "발주 수량"
-    ORDER_DATE = "발주일"
-    ORDER_MEMO = "발주 메모"
+    ORDER_QTY = "의뢰 수량"
+    ORDER_DATE = "의뢰일"
+    ORDER_MEMO = "추가 메모"
     TOTAL_MATERIAL_COST = "총 재료비"
     MONTH_FILTER = "기준 월"
     SEARCH = "검색"
@@ -79,6 +80,12 @@ class Labels:
     PHONE = "연락처"
     ADDRESS = "주소"
     MEMO = "메모"
+    COMPLETED_QTY = "누적 입고"
+    REMAINING_QTY = "잔여 수량"
+    ORDER_STATUS = "상태"
+    LEAD_DAYS = "경과일"
+    INBOUND_DATE = "입고일"
+    INBOUND_QTY = "입고 수량"
 
 
 class Placeholders:
@@ -88,6 +95,7 @@ class Placeholders:
     PARTNER_NAME = "상호명을 입력하세요"
     UNIT = "단위를 입력하세요"
     ORDER_SEARCH = "작업지시서 검색"
+    INBOUND_FILTER_HINT = "발주 의뢰 이력 중 입고/검수할 대상을 선택합니다."
     OWNER_NAME = "사장명"
     PHONE = "연락처"
     ADDRESS = "주소"

@@ -6,8 +6,7 @@ from PySide6.QtWidgets import QWidget
 
 from ui.feature_page import FeaturePageBuilder
 from ui.menu_page import MenuPageBuilder
-from ui.pages import OrderPageBuilder
-from ui.pages import WorkOrderPageBuilder
+from ui.pages import InboundPageBuilder, OrderPageBuilder, WorkOrderPageBuilder
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
@@ -27,14 +26,16 @@ class MainWindowPageCoordinator:
         menu_refs = MenuPageBuilder.build()
         work_refs = WorkOrderPageBuilder.build(window)
         order_refs = OrderPageBuilder.build()
+        inbound_refs = InboundPageBuilder.build()
         window.work_order_page_ref = work_refs.page
         feature_pages = {config.key: FeaturePageBuilder.build(config) for config in window.build_feature_page_configs()}
 
         MainWindowPageCoordinator._apply_menu_refs(window, menu_refs)
         MainWindowPageCoordinator._apply_work_order_refs(window, work_refs)
         window.order_page_refs = order_refs
+        window.inbound_page_refs = inbound_refs
         window.feature_pages = feature_pages
-        window.pages = MainWindowPageCoordinator._build_page_map(window, menu_refs, order_refs, feature_pages)
+        window.pages = MainWindowPageCoordinator._build_page_map(window, menu_refs, order_refs, inbound_refs, feature_pages)
 
         for page in window.pages.values():
             window.stack.addWidget(page)
@@ -65,12 +66,15 @@ class MainWindowPageCoordinator:
         window.postit_bar = refs.postit_bar
 
     @staticmethod
-    def _build_page_map(window: "MainWindow", menu_refs, order_refs, feature_pages: dict[str, object]) -> dict[str, QWidget]:
+    def _build_page_map(window: "MainWindow", menu_refs, order_refs, inbound_refs, feature_pages: dict[str, object]) -> dict[str, QWidget]:
         pages = {
             'page_menu': menu_refs.page,
             'page_work_order': window.work_order_page_ref,
             'page_job_start': order_refs.page,
+            'page_complete': inbound_refs.page,
         }
         for key, page_name in MainWindowPageCoordinator.PAGE_NAMES_BY_FEATURE_KEY.items():
+            if key == 'complete':
+                continue
             pages[page_name] = feature_pages[key].page
         return pages

@@ -8,6 +8,7 @@ from ui.main_window_parts.main_window_constants import MainWindowPages
 from ui.main_window_parts.main_window_dialog_logic import MainWindowDialogLogic
 from ui.main_window_parts.main_window_event_binder import MainWindowEventBinder
 from ui.main_window_parts.main_window_feature_logic import MainWindowFeatureLogic
+from ui.main_window_parts.main_window_inbound_logic import MainWindowInboundLogic
 from ui.main_window_parts.main_window_features import build_feature_page_configs
 from ui.main_window_parts.main_window_feedback import MainWindowFeedback
 from ui.main_window_parts.main_window_focus_logic import MainWindowFocusLogic
@@ -124,6 +125,19 @@ class MainWindow(QMainWindow):
 
     def open_feature_page(self, page_index: int) -> None:
         MainWindowNavigationLogic.open_feature_page(self, page_index)
+
+    def open_inbound_page(self) -> None:
+        self.refresh_inbound_page()
+        self.stack.setCurrentIndex(self.PAGE_COMPLETE)
+
+    def refresh_inbound_page(self) -> None:
+        MainWindowInboundLogic.refresh_inbound_page(self)
+
+    def on_inbound_order_selected(self, row: int) -> None:
+        MainWindowInboundLogic.on_inbound_order_selected(self, row)
+
+    def on_inbound_apply_clicked(self) -> None:
+        MainWindowInboundLogic.show_apply_preview(self)
 
     def on_feature_primary(self, page) -> None:
         MainWindowFeatureLogic.show_primary(self, page)
