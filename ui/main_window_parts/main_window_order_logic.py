@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidgetItem
 
-from services.search_utils import matches_keyword
+from services.common.search_utils import matches_keyword
 from ui.dialogs import show_error, show_info
 from ui.pages.order_page import TemplateListCard
 from ui.messages import DefaultTexts, DialogTitles, HelperTexts, InfoMessages, Labels, Warnings

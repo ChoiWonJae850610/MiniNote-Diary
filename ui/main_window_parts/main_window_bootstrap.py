@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QApplication, QStackedWidget, QVBoxLayout, QWidget
 
-from services.order_repository import OrderRepository
-from services.partner_lookup_service import PartnerLookupService
-from services.work_order_controller import WorkOrderController
-from services.work_order_state import WorkOrderState
+from services.order.repository import OrderRepository
+from services.partner.lookup_service import PartnerLookupService
+from services.work_order.controller import WorkOrderController
+from services.work_order.state import WorkOrderState
 from ui.theme import THEME, build_app_stylesheet
 
 if TYPE_CHECKING:

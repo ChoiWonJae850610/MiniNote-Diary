@@ -4,7 +4,7 @@ from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication, QWidget
 
-from services.schema import MAX_MATERIAL_ITEMS
+from services.common.schema import MAX_MATERIAL_ITEMS
 from ui.theme import THEME
 
 FIELD_H = THEME.field_height

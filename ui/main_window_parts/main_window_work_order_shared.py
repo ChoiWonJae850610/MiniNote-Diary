@@ -1,4 +1,4 @@
-from services.field_keys import MaterialTargets
+from services.common.field_keys import MaterialTargets
 
 MATERIAL_TARGET_CONFIGS = {
     MaterialTargets.FABRIC: ('fabric_deleted', 'fabric_item_changed', 'fabric_item_added', 'fabric'),

@@ -3,7 +3,7 @@ from typing import List, Dict
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QTableWidget, QAbstractItemView, QHeaderView
 
-from services.unit_service import UnitService
+from services.unit.service import UnitService
 from ui.dialogs import show_info, show_warning
 from ui.ui_metrics import CommonSymbolsLayout
 from ui.layout_metrics import UnitDialogLayout

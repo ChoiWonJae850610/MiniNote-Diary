@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Dict
 
-from services.field_keys import MaterialKeys
-from services.formatters import digits_only, format_commas_from_digits
-from services.unit_repository import unit_label_for_value
+from services.common.field_keys import MaterialKeys
+from services.common.formatters import digits_only, format_commas_from_digits
+from services.unit.repository import unit_label_for_value
 
 
 def sync_unit_menu_checks(card) -> None:

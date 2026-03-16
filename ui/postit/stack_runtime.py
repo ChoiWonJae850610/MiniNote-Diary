@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from services.work_order_defaults import empty_material_row
+from services.work_order.defaults import empty_material_row
 
 
 def normalized_stack_items(items):

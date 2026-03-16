@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QToolButton, QSizePolicy
 
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.messages import Labels, Tooltips
-from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
+from ui.partners.ui_utils import PARTNER_PICKER_TYPE_FACTORY, show_partner_picker
 from ui.postit.common import FIELD_H
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.postit.forms import make_field_label, make_form_row

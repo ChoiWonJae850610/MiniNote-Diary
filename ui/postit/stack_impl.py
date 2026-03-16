@@ -5,7 +5,7 @@ from typing import Dict, List
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
-from services.work_order_defaults import empty_material_row
+from services.work_order.defaults import empty_material_row
 from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
 from ui.postit.material_card import PostItCard
 from ui.postit.stack_index_controls import PostItIndexControls

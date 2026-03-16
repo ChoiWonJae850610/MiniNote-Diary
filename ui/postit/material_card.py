@@ -5,8 +5,8 @@ from typing import Dict
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtWidgets import QSizePolicy
 
-from services.field_keys import MaterialKeys
-from services.unit_repository import unit_label_for_value
+from services.common.field_keys import MaterialKeys
+from services.unit.repository import unit_label_for_value
 from ui.postit.layout import PostItLayout
 from ui.messages import Labels
 from ui.postit.base import _PostItCardBase

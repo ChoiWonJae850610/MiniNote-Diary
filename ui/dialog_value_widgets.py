@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QRegularExpression, QDate, QPoint, Signal, QSize,
 from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
 from PySide6.QtWidgets import QCalendarWidget, QComboBox, QDialog, QLineEdit, QLabel, QToolButton, QVBoxLayout
 
-from services.formatters import digits_only, format_commas_from_digits
+from services.common.formatters import digits_only, format_commas_from_digits
 from ui.dialog_layout_utils import make_dialog_inline_row
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from ui.layout_metrics import DialogLayout

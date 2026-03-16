@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, Signal, QRegularExpression
 from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import QLineEdit
 
-from services.formatters import digits_only, format_commas_from_digits
+from services.common.formatters import digits_only, format_commas_from_digits
 from ui.postit.common import FIELD_H
 from ui.theme import editing_line_edit_style, read_only_line_edit_style
 

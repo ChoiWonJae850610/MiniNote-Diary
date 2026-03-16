@@ -5,11 +5,11 @@ from typing import Dict
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QMenu, QToolButton
 
-from services.field_keys import MaterialKeys
-from services.unit_repository import load_units, unit_label_for_value
+from services.common.field_keys import MaterialKeys
+from services.unit.repository import load_units, unit_label_for_value
 from ui.icon_factory import make_partner_link_icon
 from ui.messages import Labels, PostItTexts, Tooltips
-from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
+from ui.partners.ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import make_field_label, make_form_row

@@ -10,7 +10,7 @@ from ui.dialog_form_templates import add_action_row, add_form_to_root, setup_for
 from ui.dialog_value_widgets import build_calendar_row, show_calendar_popup
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, DialogTitles, Labels
-from ui.partner_ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
+from ui.partners.ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker
 
 
 class BasicInfoDialog(QDialog):
