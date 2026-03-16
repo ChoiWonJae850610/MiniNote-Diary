@@ -9,7 +9,7 @@ UnitOption = Tuple[str, str]
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parent.parent
+    return Path(__file__).resolve().parent.parent.parent
 
 
 def unit_file_path(base_dir: str | Path | None = None) -> Path:
