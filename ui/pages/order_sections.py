@@ -76,6 +76,7 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     lbl_material_summary = make_order_value_label(DefaultTexts.ORDER_MATERIAL_SUMMARY_EMPTY)
 
     detail_grid = make_form_grid()
+    detail_grid.setColumnStretch(1, 1)
     add_labeled_field_rows(
         detail_grid,
         [
@@ -85,10 +86,9 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
             LabeledFieldRow(Labels.COST, lbl_cost, label_parent=summary_panel),
             LabeledFieldRow(Labels.LABOR, lbl_labor, label_parent=summary_panel),
             LabeledFieldRow(Labels.SALE_PRICE, lbl_sale_price, label_parent=summary_panel),
-            LabeledFieldRow(Labels.MATERIAL_SUMMARY, lbl_material_summary, label_parent=summary_panel),
         ],
     )
-    top_summary.addLayout(detail_grid, 6)
+    top_summary.addLayout(detail_grid, 7)
     summary_layout.addLayout(top_summary)
 
     stats_panel = QFrame(summary_panel)
@@ -118,14 +118,6 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     summary_layout.addWidget(material_detail_view)
 
     lbl_total_material_cost = make_order_value_label(DefaultTexts.EMPTY_VALUE)
-    total_grid = make_form_grid()
-    add_labeled_field_rows(
-        total_grid,
-        [
-            LabeledFieldRow(Labels.TOTAL_MATERIAL_COST, lbl_total_material_cost, label_parent=summary_panel),
-        ],
-    )
-    summary_layout.addLayout(total_grid)
 
     summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_MEMO, summary_panel))
     memo_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.memo_min_height)

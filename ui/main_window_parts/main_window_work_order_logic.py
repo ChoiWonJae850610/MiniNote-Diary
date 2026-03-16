@@ -1,3 +1,4 @@
+from datetime import datetime
 from ui.main_window_parts.main_window_work_order_image_logic import MainWindowWorkOrderImageLogic
 from ui.dialogs import show_error
 from ui.dialogs.work_order_load_dialog import WorkOrderLoadDialog
@@ -56,7 +57,9 @@ class MainWindowWorkOrderLogic:
         window._suppress_dirty = True
         try:
             window.state.reset()
-            window.state.header_data = document.header.to_dict()
+            header_data = document.header.to_dict()
+            header_data['date'] = datetime.now().strftime('%Y-%m-%d')
+            window.state.header_data = header_data
             window.state.fabric_items = [item.to_dict() for item in document.fabrics] or [dict()]
             window.state.trim_items = [item.to_dict() for item in document.trims] or [dict()]
             window.state.dyeing_items = [item.to_dict() for item in document.dyeings] or [dict()]

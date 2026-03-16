@@ -54,7 +54,7 @@ class WorkOrderSummaryView:
             counts.append(f"{category.title} {category.item_count}")
         return " / ".join(counts) if counts else "자재 없음"
 
-    def to_detail_text(self) -> str:
+    def to_detail_text(self, *, include_total_amount: bool = True) -> str:
         lines: list[str] = []
         if self.name:
             lines.append(f"작업지시서: {self.name}")
@@ -83,7 +83,8 @@ class WorkOrderSummaryView:
                 lines.append(f"  소계: {_format_amount(partner_summary.subtotal_amount)}")
             lines.append(f"{category.title} 합계: {_format_amount(category.subtotal_amount)}")
             lines.append("")
-        lines.append(f"총 재료비: {_format_amount(self.total_amount)}")
+        if include_total_amount:
+            lines.append(f"총 재료비: {_format_amount(self.total_amount)}")
         if self.change_note:
             lines.append("")
             lines.append("메모")

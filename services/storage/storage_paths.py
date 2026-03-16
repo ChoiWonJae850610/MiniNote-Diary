@@ -65,3 +65,23 @@ def pick_vendor_name(data: Dict[str, Any]) -> str:
 def image_extension(path: str) -> str:
     _, ext = os.path.splitext(path)
     return ext.lower() if ext else _DEFAULT_IMAGE_EXT
+
+
+def unique_available_stem(db_dir: str | os.PathLike[str], base_name: str) -> str:
+    db_path = Path(db_dir)
+    candidate = sanitize_filename_part(base_name, default='UNTITLED', max_len=120)
+    if not _stem_exists(db_path, candidate):
+        return candidate
+    index = 2
+    while True:
+        numbered = sanitize_filename_part(f'{base_name}_{index}', default='UNTITLED', max_len=120)
+        if not _stem_exists(db_path, numbered):
+            return numbered
+        index += 1
+
+
+def _stem_exists(db_path: Path, stem: str) -> bool:
+    for ext in ('.json', '.png', '.jpg', '.jpeg', '.bmp'):
+        if (db_path / f'{stem}{ext}').exists():
+            return True
+    return False

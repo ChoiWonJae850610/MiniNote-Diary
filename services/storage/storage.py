@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from services.common.field_keys import PayloadKeys
 from services.storage.storage_crypto import decrypt_payload, encrypt_data, sha256_bytes
-from services.storage.storage_paths import ensure_db_dir, image_extension, make_base_filename, pick_vendor_name
+from services.storage.storage_paths import ensure_db_dir, image_extension, make_base_filename, pick_vendor_name, unique_available_stem
 
 
 def _build_payload(data: Dict[str, Any], enc_payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -29,15 +29,16 @@ def save_work_order(
         str(header.get('style_no', '') or ''),
         pick_vendor_name(data),
     )
+    unique_name = unique_available_stem(db_dir, base_name)
 
     payload = _build_payload(data, encrypt_data(db_dir, data))
-    json_path = os.path.join(db_dir, f'{base_name}.json')
+    json_path = os.path.join(db_dir, f'{unique_name}.json')
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(payload, f, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
 
     image_dst_path = None
     if image_src_path and os.path.isfile(image_src_path):
-        image_dst_path = os.path.join(db_dir, f'{base_name}{image_extension(image_src_path)}')
+        image_dst_path = os.path.join(db_dir, f'{unique_name}{image_extension(image_src_path)}')
         shutil.copy2(image_src_path, image_dst_path)
 
     return json_path, image_dst_path, payload['sha256_plain']
