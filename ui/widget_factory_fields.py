@@ -24,7 +24,7 @@ def make_page_title_label(
     label = QLabel(text, parent)
     label.setObjectName(object_name)
     label.setAlignment(alignment)
-    label.setMinimumHeight(THEME.page_title_font_px + 10 if min_height is None else min_height)
+    label.setMinimumHeight(THEME.page_title_font_px + 14 if min_height is None else min_height)
     return refresh_style(label)
 
 

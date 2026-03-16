@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
 from ui.theme import THEME
@@ -79,6 +79,7 @@ def make_page_text_header(
     title_min_height: int | None = None,
 ) -> PageTextHeaderRefs:
     title_col = QVBoxLayout()
+    title_col.setContentsMargins(0, 1, 0, 1)
     title_col.setSpacing(THEME.title_stack_spacing)
 
     title = make_page_title_label(
@@ -133,7 +134,9 @@ def make_standard_page_header(
 
     row.setAlignment(Qt.AlignVCenter)
     row.addWidget(btn_back, 0, Qt.AlignVCenter)
-    row.addLayout(title_refs.layout, 1)
+    title_refs.title_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+    title_refs.subtitle_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+    row.addLayout(title_refs.layout, 0)
     if add_trailing_stretch:
         row.addStretch(1)
 
