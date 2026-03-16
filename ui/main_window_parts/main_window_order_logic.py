@@ -125,6 +125,15 @@ class MainWindowOrderLogic:
         MainWindowOrderLogic._sync_template_list_selection(refs.template_list)
 
     @staticmethod
+    def _sync_template_list_selection(template_list) -> None:
+        current_row = template_list.currentRow()
+        for row in range(template_list.count()):
+            item = template_list.item(row)
+            card = template_list.itemWidget(item)
+            if hasattr(card, 'set_selected'):
+                card.set_selected(row == current_row)
+
+    @staticmethod
     def on_order_create_clicked(window: "MainWindow") -> None:
         refs = window.order_page_refs
         template_id = refs.page.property('selected_template_id') or ''
