@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import PageDescriptions, PageTitles, SectionTitles, Tooltips
-from ui.page_builders_common import make_image_shell, make_standard_page_header, make_standard_page_layout
+from ui.pages.common import make_image_shell, make_standard_page_header, make_standard_page_layout
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.postit.layout import POSTIT_MEMO_BODY_HEIGHT, make_postit_footer_spacer, make_static_postit_column
 from ui.theme import THEME, image_preview_style
@@ -51,27 +51,8 @@ class WorkOrderPageBuilder:
         feedback_label.setMinimumHeight(THEME.feedback_label_height)
 
         postit_bar = PostItBar()
-        image_toolbar = WorkOrderPageBuilder._build_image_toolbar(page, toolbar_buttons)
-        image_preview = ImagePreview()
-        image_preview.setMinimumHeight(THEME.image_preview_min_height)
-        image_preview.setStyleSheet(image_preview_style())
-        image_shell = make_image_shell(page, image_preview, margin=THEME.image_shell_margin)
-
-        left_stack = QWidget(page)
-        left_layout = QVBoxLayout(left_stack)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(THEME.row_spacing)
-        left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
-        left_layout.addWidget(image_shell, 1)
-
-        change_note_postit = ChangeNotePostIt()
-        change_note_wrap = make_static_postit_column(
-            SectionTitles.CHANGE_NOTE,
-            change_note_postit,
-            parent=page,
-            body_height=POSTIT_MEMO_BODY_HEIGHT,
-            footer_widget=make_postit_footer_spacer(page),
-        )
+        image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
+        change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(page)
 
         content = QWidget()
         content_layout = QGridLayout(content)
@@ -79,13 +60,7 @@ class WorkOrderPageBuilder:
         content_layout.setHorizontalSpacing(THEME.section_gap)
         content_layout.setVerticalSpacing(THEME.row_spacing)
 
-        right_stack = QWidget()
-        right_layout = QVBoxLayout(right_stack)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(THEME.section_gap)
-        right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
-        right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
-        right_layout.addStretch(1)
+        right_stack = WorkOrderPageBuilder._build_postit_stack(postit_bar, change_note_wrap)
 
         content_layout.addWidget(left_stack, 0, 0)
         content_layout.addWidget(right_stack, 0, 1)
@@ -146,3 +121,45 @@ class WorkOrderPageBuilder:
             image_toolbar_layout.addWidget(toolbar_buttons[key])
         image_toolbar_layout.addStretch(1)
         return image_toolbar
+
+    @staticmethod
+    def _build_image_column(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> tuple[ImagePreview, QWidget, QWidget, QWidget]:
+        image_toolbar = WorkOrderPageBuilder._build_image_toolbar(page, toolbar_buttons)
+        image_preview = ImagePreview()
+        image_preview.setMinimumHeight(THEME.image_preview_min_height)
+        image_preview.setStyleSheet(image_preview_style())
+        image_shell = make_image_shell(page, image_preview, margin=THEME.image_shell_margin)
+
+        left_stack = QWidget(page)
+        left_layout = QVBoxLayout(left_stack)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(THEME.row_spacing)
+        left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
+        left_layout.addWidget(image_shell, 1)
+        return image_preview, image_shell, image_toolbar, left_stack
+
+    @staticmethod
+    def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
+        change_note_postit = ChangeNotePostIt()
+        change_note_wrap = make_static_postit_column(
+            SectionTitles.CHANGE_NOTE,
+            change_note_postit,
+            parent=page,
+            body_height=POSTIT_MEMO_BODY_HEIGHT,
+            footer_widget=make_postit_footer_spacer(page),
+        )
+        return change_note_postit, change_note_wrap
+
+    @staticmethod
+    def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
+        right_stack = QWidget()
+        right_layout = QVBoxLayout(right_stack)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(THEME.section_gap)
+        right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
+        right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
+        right_layout.addStretch(1)
+        return right_stack
+
+
+__all__ = ['WorkOrderPageBuilder', 'WorkOrderPageRefs']

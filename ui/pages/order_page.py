@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QListWidget, QPushButton, QSpinBox, QTextEdit, QHBoxLayout, QWidget
-from PySide6.QtWidgets import QDateEdit
+from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QListWidget, QPushButton, QSpinBox, QTextEdit, QWidget
+from PySide6.QtWidgets import QDateEdit, QHBoxLayout
 
 from ui.image_preview import ImagePreview
 from ui.layout_metrics import OrderPageLayout
 from ui.messages import PageDescriptions, PageTitles, SectionTitles
-from ui.order_page_sections import TemplateListCard, build_filter_panel, build_right_panels
-from ui.page_builders_common import make_standard_page_header, make_standard_page_layout, make_titled_panel
+from ui.pages.common import make_standard_page_header, make_standard_page_layout, make_titled_panel
+from ui.pages.order_sections import TemplateListCard, build_filter_panel, build_right_panels
 from ui.theme import THEME, list_widget_style
 
 
@@ -96,4 +96,4 @@ class OrderPageBuilder:
         )
 
 
-__all__ = ['OrderPageRefs', 'OrderPageBuilder', 'TemplateListCard']
+__all__ = ['OrderPageBuilder', 'OrderPageRefs', 'TemplateListCard']

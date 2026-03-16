@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
 from ui.messages import Buttons
-from ui.page_builders_common import make_standard_page_header, make_standard_page_layout, make_titled_panel
+from ui.pages.common import make_standard_page_header, make_standard_page_layout, make_titled_panel
 from ui.theme import THEME
 from ui.widget_factory import make_action_button, make_hint_label, make_meta_label, make_section_title_label
 

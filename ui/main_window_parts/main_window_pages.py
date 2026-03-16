@@ -6,8 +6,8 @@ from PySide6.QtWidgets import QWidget
 
 from ui.feature_page import FeaturePageBuilder
 from ui.menu_page import MenuPageBuilder
-from ui.order_page import OrderPageBuilder
-from ui.work_order_page import WorkOrderPageBuilder
+from ui.pages import OrderPageBuilder
+from ui.pages import WorkOrderPageBuilder
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow

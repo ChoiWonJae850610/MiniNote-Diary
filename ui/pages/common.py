@@ -7,21 +7,42 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QScrollArea, QVB
 
 from ui.layout_metrics import OrderPageLayout
 from ui.theme import THEME
-from ui.widget_factory import make_hint_label, make_nav_button, make_page_title_label, make_panel_frame, make_panel_title_label, make_field_label
+from ui.widget_factory import (
+    make_field_label,
+    make_hint_label,
+    make_nav_button,
+    make_page_title_label,
+    make_panel_frame,
+    make_panel_title_label,
+)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PageHeaderRefs:
     row: QHBoxLayout
     back_button: QWidget
     title_layout: QVBoxLayout
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScrollPanelRefs:
     scroll_area: QScrollArea
     wrap: QWidget
     layout: QVBoxLayout
+
+
+@dataclass(frozen=True)
+class LabeledFieldRow:
+    label_text: str
+    field: QWidget
+    align_top: bool = False
+    label_parent: QWidget | None = None
+
+
+@dataclass(frozen=True)
+class StatFieldRow:
+    label_text: str
+    field: QWidget
 
 
 def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
@@ -137,12 +158,41 @@ def make_form_grid(*, parent: QWidget | None = None) -> QGridLayout:
 
 
 
-def add_form_row(grid: QGridLayout, row: int, label_text: str, field: QWidget, *, align_top: bool = False, label_parent: QWidget | None = None) -> None:
+def add_form_row(
+    grid: QGridLayout,
+    row: int,
+    label_text: str,
+    field: QWidget,
+    *,
+    align_top: bool = False,
+    label_parent: QWidget | None = None,
+) -> None:
     grid.addWidget(make_field_label(label_text, label_parent), row, 0, Qt.AlignTop if align_top else Qt.Alignment())
     if align_top:
         grid.addWidget(field, row, 1, Qt.AlignTop)
     else:
         grid.addWidget(field, row, 1)
+
+
+
+def add_labeled_field_rows(grid: QGridLayout, rows: list[LabeledFieldRow]) -> None:
+    for row_index, row in enumerate(rows):
+        add_form_row(
+            grid,
+            row_index,
+            row.label_text,
+            row.field,
+            align_top=row.align_top,
+            label_parent=row.label_parent,
+        )
+
+
+
+def add_two_column_stat_rows(grid: QGridLayout, rows: list[StatFieldRow], *, label_parent: QWidget) -> None:
+    for row_index, row in enumerate(rows):
+        base_column = (row_index % 2) * 2
+        grid.addWidget(make_field_label(row.label_text, label_parent), row_index // 2, base_column)
+        grid.addWidget(row.field, row_index // 2, base_column + 1)
 
 
 
@@ -154,4 +204,19 @@ def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
     return row
 
 
-
+__all__ = [
+    'LabeledFieldRow',
+    'PageHeaderRefs',
+    'ScrollPanelRefs',
+    'StatFieldRow',
+    'add_form_row',
+    'add_labeled_field_rows',
+    'add_two_column_stat_rows',
+    'make_form_grid',
+    'make_image_shell',
+    'make_right_aligned_button_row',
+    'make_scroll_panel',
+    'make_standard_page_header',
+    'make_standard_page_layout',
+    'make_titled_panel',
+]

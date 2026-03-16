@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QPushButton, QWidget
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import DialogTitles, MenuPageTexts
-from ui.page_builders_common import make_standard_page_layout
+from ui.pages.common import make_standard_page_layout
 from ui.theme import THEME
 from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_page_title_label
 

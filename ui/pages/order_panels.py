@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
@@ -22,8 +20,10 @@ def create_order_panel(parent: QWidget, *, spacing: int) -> tuple[QWidget, QVBox
     return panel, layout
 
 
+
 def add_panel_title(layout: QVBoxLayout, parent: QWidget, title: str) -> None:
     layout.addWidget(make_section_title_label(title, parent))
+
 
 
 def make_order_value_label(text: str) -> QLabel:

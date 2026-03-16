@@ -1,14 +1,23 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QHBoxLayout, QLabel, QListWidget, QSpinBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QHBoxLayout, QSpinBox, QWidget
 
 from ui.image_preview import ImagePreview
 from ui.layout_metrics import OrderPageLayout
 from ui.messages import Buttons, DefaultTexts, HelperTexts, InfoMessages, Labels, Placeholders, SectionTitles
-from ui.page_builders_common import add_form_row, make_form_grid, make_image_shell, make_right_aligned_button_row, make_scroll_panel
+from ui.pages.common import (
+    LabeledFieldRow,
+    StatFieldRow,
+    add_labeled_field_rows,
+    add_two_column_stat_rows,
+    make_form_grid,
+    make_image_shell,
+    make_right_aligned_button_row,
+    make_scroll_panel,
+)
+from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
 from ui.theme import THEME, input_line_edit_style
-from ui.order_page_panel_builders import add_panel_title, create_order_panel, make_order_value_label, TemplateListCard
 from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_input_line_edit, make_panel_frame, make_plain_text_editor, make_section_title_label
 
 
@@ -35,6 +44,7 @@ def build_filter_panel(page: QWidget) -> QFrame:
     return filter_panel
 
 
+
 def build_right_panels(page: QWidget) -> dict[str, QWidget]:
     right_refs = make_scroll_panel(page)
     summary_refs = build_summary_panel(right_refs.wrap)
@@ -44,6 +54,7 @@ def build_right_panels(page: QWidget) -> dict[str, QWidget]:
     right_refs.layout.addWidget(order_refs['panel'])
     right_refs.layout.addStretch(1)
     return {'scroll_area': right_refs.scroll_area, **summary_refs, **order_refs}
+
 
 
 def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
@@ -56,7 +67,6 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     image_preview.setMinimumSize(THEME.image_preview_min_size, THEME.image_preview_min_size)
     top_summary.addWidget(make_image_shell(summary_panel, image_preview), 4)
 
-    detail_grid = make_form_grid()
     lbl_name = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_factory = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_date = make_order_value_label(DefaultTexts.EMPTY_VALUE)
@@ -64,16 +74,20 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     lbl_labor = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_sale_price = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_material_summary = make_order_value_label(DefaultTexts.ORDER_MATERIAL_SUMMARY_EMPTY)
-    for row_idx, (label_text, value_widget) in enumerate([
-        (Labels.ORDER_TEMPLATE, lbl_name),
-        (Labels.FACTORY, lbl_factory),
-        (Labels.BASE_DATE, lbl_date),
-        (Labels.COST, lbl_cost),
-        (Labels.LABOR, lbl_labor),
-        (Labels.SALE_PRICE, lbl_sale_price),
-        (Labels.MATERIAL_SUMMARY, lbl_material_summary),
-    ]):
-        add_form_row(detail_grid, row_idx, label_text, value_widget, label_parent=summary_panel)
+
+    detail_grid = make_form_grid()
+    add_labeled_field_rows(
+        detail_grid,
+        [
+            LabeledFieldRow(Labels.ORDER_TEMPLATE, lbl_name, label_parent=summary_panel),
+            LabeledFieldRow(Labels.FACTORY, lbl_factory, label_parent=summary_panel),
+            LabeledFieldRow(Labels.BASE_DATE, lbl_date, label_parent=summary_panel),
+            LabeledFieldRow(Labels.COST, lbl_cost, label_parent=summary_panel),
+            LabeledFieldRow(Labels.LABOR, lbl_labor, label_parent=summary_panel),
+            LabeledFieldRow(Labels.SALE_PRICE, lbl_sale_price, label_parent=summary_panel),
+            LabeledFieldRow(Labels.MATERIAL_SUMMARY, lbl_material_summary, label_parent=summary_panel),
+        ],
+    )
     top_summary.addLayout(detail_grid, 6)
     summary_layout.addLayout(top_summary)
 
@@ -81,19 +95,21 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     stats_panel.setObjectName('innerPanelFrame')
     stats_layout = make_form_grid(parent=stats_panel)
     stats_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
+
     lbl_last_order = make_order_value_label(InfoMessages.NO_ORDER_HISTORY)
     lbl_total_ordered = make_order_value_label('0')
     lbl_in_progress = make_order_value_label('0')
     lbl_current_stock = make_order_value_label('0')
-    stat_rows = [
-        (Labels.LAST_ORDER, lbl_last_order),
-        (Labels.TOTAL_ORDERED, lbl_total_ordered),
-        (Labels.IN_PROGRESS_QTY, lbl_in_progress),
-        (Labels.CURRENT_STOCK, lbl_current_stock),
-    ]
-    for row_idx, (label_text, value_widget) in enumerate(stat_rows):
-        stats_layout.addWidget(make_field_label(label_text, stats_panel), row_idx // 2, (row_idx % 2) * 2)
-        stats_layout.addWidget(value_widget, row_idx // 2, (row_idx % 2) * 2 + 1)
+    add_two_column_stat_rows(
+        stats_layout,
+        [
+            StatFieldRow(Labels.LAST_ORDER, lbl_last_order),
+            StatFieldRow(Labels.TOTAL_ORDERED, lbl_total_ordered),
+            StatFieldRow(Labels.IN_PROGRESS_QTY, lbl_in_progress),
+            StatFieldRow(Labels.CURRENT_STOCK, lbl_current_stock),
+        ],
+        label_parent=stats_panel,
+    )
     summary_layout.addWidget(stats_panel)
 
     summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_MEMO, summary_panel))
@@ -118,6 +134,7 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     }
 
 
+
 def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     order_panel, order_layout = create_order_panel(parent, spacing=THEME.block_spacing)
     add_panel_title(order_layout, order_panel, SectionTitles.ORDER_INPUT)
@@ -139,9 +156,14 @@ def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     order_date_edit.setStyleSheet(input_line_edit_style())
 
     order_memo_edit = make_plain_text_editor(order_panel, min_height=THEME.order_memo_min_height)
-    add_form_row(order_grid, 0, Labels.ORDER_QTY, order_qty_spin, label_parent=order_panel)
-    add_form_row(order_grid, 1, Labels.ORDER_DATE, order_date_edit, label_parent=order_panel)
-    add_form_row(order_grid, 2, Labels.ORDER_MEMO, order_memo_edit, align_top=True, label_parent=order_panel)
+    add_labeled_field_rows(
+        order_grid,
+        [
+            LabeledFieldRow(Labels.ORDER_QTY, order_qty_spin, label_parent=order_panel),
+            LabeledFieldRow(Labels.ORDER_DATE, order_date_edit, label_parent=order_panel),
+            LabeledFieldRow(Labels.ORDER_MEMO, order_memo_edit, align_top=True, label_parent=order_panel),
+        ],
+    )
     order_layout.addLayout(order_grid)
 
     btn_order = make_action_button(Buttons.ORDER_SAVE, order_panel, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
@@ -157,5 +179,4 @@ def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     }
 
 
-
-__all__ = ['TemplateListCard', 'build_filter_panel', 'build_right_panels', 'build_summary_panel', 'build_order_panel']
+__all__ = ['TemplateListCard', 'build_filter_panel', 'build_order_panel', 'build_right_panels', 'build_summary_panel']
