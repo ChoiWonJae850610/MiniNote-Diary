@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QApplication, QStackedWidget, QVBoxLayout, QWidget
 
+from services.common.project_paths import project_root_str
 from services.order.repository import OrderRepository
 from services.partner.lookup_service import PartnerLookupService
 from services.work_order.controller import WorkOrderController
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class MainWindowBootstrap:
     @staticmethod
     def project_root() -> str:
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        return project_root_str(__file__)
 
     @staticmethod
     def initialize_services(window: "MainWindow") -> None:

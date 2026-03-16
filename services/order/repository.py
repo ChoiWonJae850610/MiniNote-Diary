@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from services.common.field_keys import PayloadKeys
+from services.common.project_paths import db_file_path, project_root_path
 from services.common.schema import ORDER_RUNS_DB_FILENAME
-from services.storage.storage import ensure_db_dir
 
 
 @dataclass
@@ -40,10 +39,14 @@ class TemplateOrderStats:
 
 
 class OrderRepository:
-    def __init__(self, base_dir: str | Path):
-        self.base_dir = str(base_dir)
+    def __init__(self, base_dir: str | Path | None = None):
+        self.base_dir = Path(base_dir) if base_dir is not None else project_root_path(__file__)
 
-    def list_orders(self) -> list[OrderRecord]:
+    @property
+    def file_path(self) -> Path:
+        return db_file_path(ORDER_RUNS_DB_FILENAME, self.base_dir)
+
+    def load_all(self) -> list[OrderRecord]:
         payload = self._read_payload()
         rows = payload.get(PayloadKeys.ORDERS, [])
         result: list[OrderRecord] = []
@@ -55,6 +58,15 @@ class OrderRepository:
             except TypeError:
                 continue
         return result
+
+    def save_all(self, orders: list[OrderRecord]) -> None:
+        payload = self._read_payload()
+        payload[PayloadKeys.ORDERS] = [asdict(order) for order in orders]
+        payload[PayloadKeys.UPDATED_AT] = datetime.now().isoformat(timespec='seconds')
+        self._write_payload(payload)
+
+    def list_orders(self) -> list[OrderRecord]:
+        return self.load_all()
 
     def create_order(self, *, template_id: str, template_name: str, factory_name: str, ordered_qty: int, ordered_at: str, memo: str = '') -> OrderRecord:
         now = datetime.now().isoformat(timespec='seconds')
@@ -68,16 +80,14 @@ class OrderRepository:
             memo=(memo or '').strip(),
             created_at=now,
         )
-        payload = self._read_payload()
-        rows = payload.setdefault(PayloadKeys.ORDERS, [])
-        rows.append(asdict(order))
-        payload[PayloadKeys.UPDATED_AT] = now
-        self._write_payload(payload)
+        orders = self.load_all()
+        orders.append(order)
+        self.save_all(orders)
         return order
 
     def aggregate_by_template(self) -> dict[str, TemplateOrderStats]:
         grouped: dict[str, TemplateOrderStats] = {}
-        for order in self.list_orders():
+        for order in self.load_all():
             stats = grouped.setdefault(order.template_id, TemplateOrderStats(template_id=order.template_id))
             stats.order_count += 1
             stats.total_ordered_qty += max(0, int(order.ordered_qty or 0))
@@ -94,16 +104,12 @@ class OrderRepository:
     def aggregate_for_template(self, template_id: str) -> TemplateOrderStats:
         return self.aggregate_by_template().get(template_id, TemplateOrderStats(template_id=template_id))
 
-    def _db_path(self) -> str:
-        return os.path.join(ensure_db_dir(self.base_dir), ORDER_RUNS_DB_FILENAME)
-
     def _read_payload(self) -> dict[str, Any]:
-        path = self._db_path()
-        if not os.path.isfile(path):
+        path = self.file_path
+        if not path.is_file():
             return {PayloadKeys.VERSION: 1, PayloadKeys.ORDERS: []}
         try:
-            with open(path, 'r', encoding='utf-8') as f:
-                payload = json.load(f)
+            payload = json.loads(path.read_text(encoding='utf-8'))
         except Exception:
             return {PayloadKeys.VERSION: 1, PayloadKeys.ORDERS: []}
         if not isinstance(payload, dict):
@@ -113,6 +119,6 @@ class OrderRepository:
         return payload
 
     def _write_payload(self, payload: dict[str, Any]) -> None:
-        path = self._db_path()
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
+        path = self.file_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')

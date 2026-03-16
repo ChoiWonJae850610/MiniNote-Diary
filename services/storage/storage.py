@@ -18,7 +18,7 @@ def _build_payload(data: Dict[str, Any], enc_payload: Dict[str, Any]) -> Dict[st
 
 
 def save_work_order(
-    base_dir: str,
+    base_dir: str | None,
     data: Dict[str, Any],
     image_src_path: Optional[str] = None,
 ) -> Tuple[str, Optional[str], str]:

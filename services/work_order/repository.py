@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
 from services.common.field_keys import DbFilenames, PayloadKeys
 from services.common.models import WorkOrderDocument
+from services.common.project_paths import db_dir_path, project_root_path
 from services.common.schema import ORDER_RUNS_DB_FILENAME, PARTNERS_DB_FILENAME, PARTNER_TYPES_DB_FILENAME
 from services.storage.storage import decrypt_payload, ensure_db_dir, save_work_order
 
@@ -50,50 +50,61 @@ class WorkOrderRepository:
         ORDER_RUNS_DB_FILENAME,
     }
 
-    def __init__(self, base_dir: str | Path):
-        self.base_dir = str(base_dir)
+    def __init__(self, base_dir: str | Path | None = None):
+        self.base_dir = Path(base_dir) if base_dir is not None else project_root_path(__file__)
 
-    def save_document(self, document: WorkOrderDocument, *, image_src_path: str | None = None) -> SaveResult:
+    @property
+    def db_dir(self) -> Path:
+        return db_dir_path(self.base_dir)
+
+    def save_template(self, document: WorkOrderDocument, *, image_src_path: str | None = None) -> SaveResult:
         json_path, image_path, sha256_plain = save_work_order(
-            base_dir=self.base_dir,
+            base_dir=str(self.base_dir),
             data=document.to_dict(),
             image_src_path=image_src_path,
         )
         return SaveResult(json_path=json_path, image_path=image_path, sha256_plain=sha256_plain)
 
-    def list_template_summaries(self) -> list[WorkOrderTemplateSummary]:
+    def save_document(self, document: WorkOrderDocument, *, image_src_path: str | None = None) -> SaveResult:
+        return self.save_template(document, image_src_path=image_src_path)
+
+    def list_templates(self) -> list[WorkOrderTemplateSummary]:
         items: list[WorkOrderTemplateSummary] = []
-        db_dir = ensure_db_dir(self.base_dir)
-        for path in self._iter_template_paths(db_dir):
+        for path in self._iter_template_paths():
             detail = self._load_template_detail(path)
             if detail is not None:
                 items.append(detail.summary)
         items.sort(key=lambda item: (item.date or '', item.saved_at or '', item.template_id), reverse=True)
         return items
 
-    def load_template_detail(self, template_id: str) -> WorkOrderTemplateDetail | None:
-        db_dir = ensure_db_dir(self.base_dir)
-        for path in self._iter_template_paths(db_dir):
-            if os.path.splitext(os.path.basename(path))[0] == template_id:
+    def list_template_summaries(self) -> list[WorkOrderTemplateSummary]:
+        return self.list_templates()
+
+    def load_template(self, template_id: str) -> WorkOrderTemplateDetail | None:
+        for path in self._iter_template_paths():
+            if path.stem == template_id:
                 return self._load_template_detail(path)
         return None
 
-    def _iter_template_paths(self, db_dir: str) -> Iterable[str]:
+    def load_template_detail(self, template_id: str) -> WorkOrderTemplateDetail | None:
+        return self.load_template(template_id)
+
+    def _iter_template_paths(self) -> Iterable[Path]:
+        db_dir = self.db_dir
         try:
-            filenames = sorted(os.listdir(db_dir))
+            filenames = sorted(db_dir.iterdir())
         except FileNotFoundError:
             return []
         return [
-            os.path.join(db_dir, name)
-            for name in filenames
-            if name.lower().endswith('.json') and name not in self._SKIP_FILENAMES
+            path
+            for path in filenames
+            if path.is_file() and path.suffix.lower() == '.json' and path.name not in self._SKIP_FILENAMES
         ]
 
-    def _load_template_detail(self, json_path: str) -> WorkOrderTemplateDetail | None:
+    def _load_template_detail(self, json_path: Path) -> WorkOrderTemplateDetail | None:
         try:
-            with open(json_path, 'r', encoding='utf-8') as f:
-                payload = json.load(f)
-            data = decrypt_payload(ensure_db_dir(self.base_dir), payload)
+            payload = json.loads(json_path.read_text(encoding='utf-8'))
+            data = decrypt_payload(ensure_db_dir(str(self.base_dir)), payload)
         except Exception:
             return None
 
@@ -107,10 +118,10 @@ class WorkOrderRepository:
             image_attached=bool(data.get(PayloadKeys.IMAGE_ATTACHED)),
         )
         header = document.header
-        template_id = os.path.splitext(os.path.basename(json_path))[0]
+        template_id = json_path.stem
         summary = WorkOrderTemplateSummary(
             template_id=template_id,
-            json_path=json_path,
+            json_path=str(json_path),
             image_path=self._find_image_path(json_path),
             name=(header.style_no or '').strip() or template_id,
             date=(header.date or '').strip(),
@@ -126,10 +137,10 @@ class WorkOrderRepository:
         return WorkOrderTemplateDetail(summary=summary, document=document)
 
     @staticmethod
-    def _find_image_path(json_path: str) -> str | None:
-        stem, _ = os.path.splitext(json_path)
+    def _find_image_path(json_path: Path) -> str | None:
+        stem = json_path.with_suffix('')
         for ext in ('.png', '.jpg', '.jpeg', '.bmp'):
-            candidate = stem + ext
-            if os.path.isfile(candidate):
-                return candidate
+            candidate = Path(f'{stem}{ext}')
+            if candidate.is_file():
+                return str(candidate)
         return None

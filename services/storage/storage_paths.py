@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 from typing import Any, Dict, Iterable
 
 from services.common.field_keys import MaterialKeys, PayloadKeys
+from services.common.project_paths import db_dir_path
 
-_WINDOWS_INVALID = r'<>:"/\|?*'
+_WINDOWS_INVALID = r'<>:"/\\|?*'
 _VENDOR_SECTION_KEYS: tuple[str, ...] = (
     PayloadKeys.TRIMS,
     PayloadKeys.FABRICS,
@@ -26,10 +28,8 @@ def sanitize_filename_part(s: str, default: str = 'UNKNOWN', max_len: int = 60) 
     return s
 
 
-def ensure_db_dir(base_dir: str) -> str:
-    db_dir = os.path.join(base_dir, 'db')
-    os.makedirs(db_dir, exist_ok=True)
-    return db_dir
+def ensure_db_dir(base_dir: str | os.PathLike[str] | None = None) -> str:
+    return str(db_dir_path(Path(base_dir) if base_dir is not None else None))
 
 
 def make_base_filename(date_str: str, style_no: str, vendor_name: str) -> str:
