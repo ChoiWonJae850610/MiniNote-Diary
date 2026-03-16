@@ -22,6 +22,7 @@ class InboundRecord:
     inbound_qty: int
     defect_qty: int
     good_qty: int
+    inspection_status: str = 'completed'
     inspection_memo: str = ''
     source_memo: str = ''
     lead_days: int = 0
@@ -60,6 +61,7 @@ class InboundRepository:
         inbound_qty: int,
         defect_qty: int,
         good_qty: int,
+        inspection_status: str = 'completed',
         inspection_memo: str = '',
         source_memo: str = '',
         lead_days: int = 0,
@@ -75,6 +77,7 @@ class InboundRepository:
             inbound_qty=max(0, int(inbound_qty or 0)),
             defect_qty=max(0, int(defect_qty or 0)),
             good_qty=max(0, int(good_qty or 0)),
+            inspection_status='pending' if (inspection_status or '').strip() == 'pending' else 'completed',
             inspection_memo=(inspection_memo or '').strip(),
             source_memo=(source_memo or '').strip(),
             lead_days=max(0, int(lead_days or 0)),
@@ -93,6 +96,30 @@ class InboundRepository:
         payload['records'] = [asdict(record) for record in records]
         payload['updated_at'] = datetime.now().isoformat(timespec='seconds')
         self._write_payload(payload)
+
+
+    def pending_records(self, *, template_id: str | None = None) -> list[InboundRecord]:
+        rows = [row for row in self.load_all() if (row.inspection_status or 'completed') == 'pending']
+        if template_id:
+            rows = [row for row in rows if row.template_id == template_id]
+        return sorted(rows, key=lambda row: ((row.inbound_date or ''), (row.created_at or ''), row.inbound_id), reverse=True)
+
+    def update_inspection(self, *, inbound_id: str, defect_qty: int, good_qty: int, inspection_memo: str = '') -> InboundRecord | None:
+        rows = self.load_all()
+        updated_row: InboundRecord | None = None
+        for index, row in enumerate(rows):
+            if row.inbound_id != inbound_id:
+                continue
+            row.defect_qty = max(0, int(defect_qty or 0))
+            row.good_qty = max(0, int(good_qty or 0))
+            row.inspection_status = 'completed'
+            row.inspection_memo = (inspection_memo or '').strip()
+            rows[index] = row
+            updated_row = row
+            break
+        if updated_row is not None:
+            self.save_all(rows)
+        return updated_row
 
     def _read_payload(self) -> dict[str, Any]:
         path = self.file_path

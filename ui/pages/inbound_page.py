@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import QDate, Qt
-from PySide6.QtWidgets import QDateEdit, QHBoxLayout, QListWidget, QPushButton, QSpinBox, QTextEdit, QToolButton, QWidget
+from PySide6.QtWidgets import QComboBox, QDateEdit, QHBoxLayout, QListWidget, QPushButton, QSpinBox, QTextEdit, QToolButton, QWidget
 
 from ui.image_preview import ImagePreview
 from ui.messages import Buttons, DefaultTexts, Labels, Placeholders, SectionTitles
@@ -30,6 +30,7 @@ class InboundPageRefs:
     page: QWidget
     btn_back: QPushButton
     btn_reload: QPushButton
+    status_filter_combo: QComboBox
     btn_apply: QPushButton
     order_list: QListWidget
     image_preview: ImagePreview
@@ -61,10 +62,18 @@ class InboundPageBuilder:
 
         toolbar_panel, toolbar_layout = make_titled_panel(page, title_text=SectionTitles.INBOUND_FILTER, hint_text='', compact=True)
         toolbar_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
+        status_filter_combo = QComboBox(toolbar_panel)
+        status_filter_combo.addItems(['진행중만', '완료 포함', '전체'])
+        status_filter_combo.setCurrentIndex(0)
+        status_filter_combo.setFixedHeight(THEME.primary_button_height - 2)
+        status_filter_combo.setMinimumWidth(140)
+        status_filter_combo.setStyleSheet(input_line_edit_style())
+
         btn_reload = make_action_button(Buttons.REFRESH, toolbar_panel, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
         btn_reload.setObjectName('inboundReloadButton')
         hint = make_hint_label(Placeholders.INBOUND_FILTER_HINT, toolbar_panel)
         toolbar_layout.addWidget(hint, 1)
+        toolbar_layout.addWidget(status_filter_combo)
         toolbar_layout.addWidget(btn_reload)
         root.addWidget(toolbar_panel)
 
@@ -87,6 +96,7 @@ class InboundPageBuilder:
             page=page,
             btn_back=header_refs.back_button,
             btn_reload=btn_reload,
+            status_filter_combo=status_filter_combo,
             btn_apply=right_refs['btn_apply'],
             order_list=order_list,
             image_preview=right_refs['image_preview'],

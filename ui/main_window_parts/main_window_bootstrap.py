@@ -8,6 +8,7 @@ from services.common.project_paths import project_root_str
 from services.inbound.repository import InboundRepository
 from services.order.repository import OrderRepository
 from services.partner.lookup_service import PartnerLookupService
+from services.product.repository import ProductRepository
 from services.work_order.controller import WorkOrderController
 from services.work_order.state import WorkOrderState
 from ui.theme import THEME, build_app_stylesheet
@@ -28,6 +29,7 @@ class MainWindowBootstrap:
         window.controller = WorkOrderController(window.state, window.project_root)
         window.order_repository = OrderRepository(window.project_root)
         window.inbound_repository = InboundRepository(window.project_root)
+        window.product_repository = ProductRepository(window.project_root)
         window.partner_lookup_service = PartnerLookupService(window.project_root)
         window._suppress_dirty = False
 

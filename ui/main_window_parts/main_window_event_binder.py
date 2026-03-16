@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from services.common.field_keys import MaterialTargets
 from ui.main_window_parts.main_window_work_order_logic import MATERIAL_TARGET_CONFIGS
 
 if TYPE_CHECKING:
@@ -16,6 +15,7 @@ class MainWindowEventBinder:
         MainWindowEventBinder._bind_feature_pages(window)
         MainWindowEventBinder._bind_order_page(window)
         MainWindowEventBinder._bind_inbound_page(window)
+        MainWindowEventBinder._bind_product_page(window)
         MainWindowEventBinder._bind_work_order(window)
 
     @staticmethod
@@ -24,7 +24,7 @@ class MainWindowEventBinder:
         window.btn_job_start_menu.clicked.connect(window.open_order_page)
         window.btn_receipt_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_RECEIPT))
         window.btn_complete_menu.clicked.connect(window.open_inbound_page)
-        window.btn_sale_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_SALE))
+        window.btn_sale_menu.clicked.connect(window.open_product_page)
         window.btn_inventory_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_INVENTORY))
         window.btn_partner_mgmt.clicked.connect(window.on_partner_mgmt_clicked)
         window.btn_unit_mgmt.clicked.connect(window.on_unit_mgmt_clicked)
@@ -52,9 +52,20 @@ class MainWindowEventBinder:
         refs = window.inbound_page_refs
         refs.btn_back.clicked.connect(window.go_menu)
         refs.btn_reload.clicked.connect(window.refresh_inbound_page)
+        refs.status_filter_combo.currentIndexChanged.connect(window.refresh_inbound_page)
         refs.order_list.currentRowChanged.connect(window.on_inbound_order_selected)
         refs.btn_toggle_memo.toggled.connect(window.on_inbound_memo_toggled)
         refs.btn_apply.clicked.connect(window.on_inbound_apply_clicked)
+
+
+    @staticmethod
+    def _bind_product_page(window: "MainWindow") -> None:
+        refs = window.product_page_refs
+        refs.btn_back.clicked.connect(window.go_menu)
+        refs.product_list.currentRowChanged.connect(window.on_product_selected)
+        refs.btn_save_product.clicked.connect(window.on_product_save_clicked)
+        refs.btn_apply_pending.clicked.connect(window.on_product_pending_apply_clicked)
+        refs.btn_register_sale.clicked.connect(window.on_product_sale_clicked)
 
     @staticmethod
     def _bind_work_order(window: "MainWindow") -> None:

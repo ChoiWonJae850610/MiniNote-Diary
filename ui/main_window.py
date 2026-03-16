@@ -14,6 +14,7 @@ from ui.main_window_parts.main_window_feedback import MainWindowFeedback
 from ui.main_window_parts.main_window_focus_logic import MainWindowFocusLogic
 from ui.main_window_parts.main_window_navigation import MainWindowNavigationLogic
 from ui.main_window_parts.main_window_order_logic import MainWindowOrderLogic
+from ui.main_window_parts.main_window_product_logic import MainWindowProductLogic
 from ui.main_window_parts.main_window_pages import MainWindowPageCoordinator
 from ui.main_window_parts.main_window_save_logic import MainWindowSaveLogic
 from ui.main_window_parts.main_window_work_order_logic import MainWindowWorkOrderLogic
@@ -130,6 +131,10 @@ class MainWindow(QMainWindow):
         self.refresh_inbound_page()
         self.stack.setCurrentIndex(self.PAGE_COMPLETE)
 
+    def open_product_page(self) -> None:
+        self.refresh_product_page()
+        self.stack.setCurrentIndex(self.PAGE_SALE)
+
     def refresh_inbound_page(self) -> None:
         MainWindowInboundLogic.refresh_inbound_page(self)
 
@@ -141,6 +146,21 @@ class MainWindow(QMainWindow):
 
     def on_inbound_apply_clicked(self) -> None:
         MainWindowInboundLogic.show_apply_preview(self)
+
+    def refresh_product_page(self) -> None:
+        MainWindowProductLogic.refresh_product_page(self)
+
+    def on_product_selected(self, row: int) -> None:
+        MainWindowProductLogic.on_product_selected(self, row)
+
+    def on_product_save_clicked(self) -> None:
+        MainWindowProductLogic.save_product(self)
+
+    def on_product_pending_apply_clicked(self) -> None:
+        MainWindowProductLogic.apply_pending_inspection(self)
+
+    def on_product_sale_clicked(self) -> None:
+        MainWindowProductLogic.register_sale(self)
 
     def on_feature_primary(self, page) -> None:
         MainWindowFeatureLogic.show_primary(self, page)

@@ -7,7 +7,7 @@ from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import QListWidgetItem
 
 from ui.dialogs import InboundInspectionDialog, show_info, show_warning
-from ui.messages import Buttons, DefaultTexts, DialogTitles, InfoMessages, Warnings
+from ui.messages import DefaultTexts, DialogTitles, InfoMessages, Warnings
 from ui.pages.inbound_page import TemplateListCard
 
 if TYPE_CHECKING:
@@ -18,19 +18,27 @@ class MainWindowInboundLogic:
     @staticmethod
     def refresh_inbound_page(window: "MainWindow") -> None:
         refs = window.inbound_page_refs
+        current_order_id = refs.page.property('selected_order_id') or ''
         refs.order_list.clear()
-        orders = sorted(window.order_repository.list_orders(), key=lambda row: ((row.ordered_at or ''), (row.created_at or ''), row.order_id), reverse=True)
+        filter_mode = refs.status_filter_combo.currentIndex()
+        orders = sorted(
+            window.order_repository.list_orders(),
+            key=lambda row: ((row.ordered_at or ''), (row.created_at or ''), row.order_id),
+            reverse=True,
+        )
         for order in orders:
-            completed_qty = max(0, int(order.completed_qty or 0))
+            inbound_qty = max(0, int(order.completed_qty or 0))
             ordered_qty = max(0, int(order.ordered_qty or 0))
-            remaining_qty = max(0, ordered_qty - completed_qty)
-            status_code = MainWindowInboundLogic._status_code(completed_qty=completed_qty, ordered_qty=ordered_qty)
-            if status_code == 'completed':
+            remaining_qty = max(0, ordered_qty - inbound_qty)
+            status_code = MainWindowInboundLogic._status_code(completed_qty=inbound_qty, ordered_qty=ordered_qty)
+            if filter_mode == 0 and status_code == 'completed':
                 continue
-            status_text = MainWindowInboundLogic._display_status(order.status, completed_qty=completed_qty, ordered_qty=ordered_qty)
+            if filter_mode == 1 and status_code not in {'partial_completed', 'completed'}:
+                continue
+            status_text = MainWindowInboundLogic._display_status(order.status, completed_qty=inbound_qty, ordered_qty=ordered_qty)
             meta_lines = [
                 f"상태 {status_text}",
-                f"의뢰 {ordered_qty} · 입고 {completed_qty} · 잔여 {remaining_qty}",
+                f"의뢰 {ordered_qty} · 입고 {inbound_qty} · 잔여 {remaining_qty}",
                 f"의뢰일 {order.ordered_at or DefaultTexts.EMPTY_VALUE}",
             ]
             item = QListWidgetItem(refs.order_list)
@@ -44,7 +52,12 @@ class MainWindowInboundLogic:
             refs.order_list.addItem(item)
             refs.order_list.setItemWidget(item, card)
         if refs.order_list.count() > 0:
-            refs.order_list.setCurrentRow(0)
+            if current_order_id:
+                MainWindowInboundLogic._select_order(window, current_order_id)
+                if refs.order_list.currentRow() < 0:
+                    refs.order_list.setCurrentRow(0)
+            else:
+                refs.order_list.setCurrentRow(0)
             MainWindowInboundLogic._sync_list_selection(refs.order_list)
         else:
             MainWindowInboundLogic.clear_inbound_detail(window)
@@ -68,11 +81,11 @@ class MainWindowInboundLogic:
         refs.lbl_factory.setText(order.factory_name or DefaultTexts.EMPTY_VALUE)
         refs.lbl_order_date.setText(order.ordered_at or DefaultTexts.EMPTY_VALUE)
         refs.lbl_order_qty.setText(str(int(order.ordered_qty or 0)))
-        completed_qty = max(0, int(order.completed_qty or 0))
-        refs.lbl_completed_qty.setText(str(completed_qty))
-        remaining_qty = max(0, int(order.ordered_qty or 0) - completed_qty)
+        inbound_qty = max(0, int(order.completed_qty or 0))
+        refs.lbl_completed_qty.setText(str(inbound_qty))
+        remaining_qty = max(0, int(order.ordered_qty or 0) - inbound_qty)
         refs.lbl_remaining_qty.setText(str(remaining_qty))
-        refs.lbl_status.setText(MainWindowInboundLogic._display_status(order.status, completed_qty=completed_qty, ordered_qty=int(order.ordered_qty or 0)))
+        refs.lbl_status.setText(MainWindowInboundLogic._display_status(order.status, completed_qty=inbound_qty, ordered_qty=int(order.ordered_qty or 0)))
         refs.lbl_lead_days.setText(MainWindowInboundLogic._lead_days_text(order.ordered_at))
         refs.order_memo_view.setPlainText((order.memo or '').strip() or InfoMessages.NO_MEMO)
         refs.inbound_qty_spin.setMaximum(max(0, remaining_qty))
@@ -154,6 +167,7 @@ class MainWindowInboundLogic:
             break
         window.order_repository.save_all(orders)
 
+        inspection_status = 'pending' if result.inspection_exempt else 'completed'
         window.inbound_repository.create_record(
             order_id=order.order_id,
             template_id=order.template_id,
@@ -163,6 +177,7 @@ class MainWindowInboundLogic:
             inbound_qty=inbound_qty,
             defect_qty=result.defect_qty,
             good_qty=result.good_qty,
+            inspection_status=inspection_status,
             inspection_memo=result.inspection_memo,
             source_memo=refs.inbound_memo_edit.toPlainText().strip(),
             lead_days=MainWindowInboundLogic._lead_days_value(order.ordered_at, inbound_date=inbound_date),
@@ -171,15 +186,16 @@ class MainWindowInboundLogic:
         MainWindowInboundLogic.refresh_inbound_page(window)
         if updated_status != 'completed':
             MainWindowInboundLogic._select_order(window, order.order_id)
-        show_info(
-            window,
-            DialogTitles.INBOUND,
-            InfoMessages.INBOUND_APPLIED.format(
+        message = (
+            InfoMessages.INBOUND_APPLIED_PENDING.format(remaining_qty=max(0, int(order.ordered_qty or 0) - updated_inbound_qty))
+            if result.inspection_exempt
+            else InfoMessages.INBOUND_APPLIED.format(
                 good_qty=result.good_qty,
                 defect_qty=result.defect_qty,
                 remaining_qty=max(0, int(order.ordered_qty or 0) - updated_inbound_qty),
-            ),
+            )
         )
+        show_info(window, DialogTitles.INBOUND, message)
 
     @staticmethod
     def _select_order(window: "MainWindow", order_id: str) -> None:
@@ -211,31 +227,33 @@ class MainWindowInboundLogic:
             'partial_completed': '부분입고',
             'completed': '완료',
         }
-        return mapping.get(status_code, DefaultTexts.EMPTY_VALUE)
+        return mapping.get(status_code, '미입고')
 
     @staticmethod
     def _status_code(*, completed_qty: int, ordered_qty: int) -> str:
         if completed_qty <= 0:
             return 'ordered'
-        if completed_qty < max(0, ordered_qty):
-            return 'partial_completed'
-        return 'completed'
+        if completed_qty >= max(0, ordered_qty):
+            return 'completed'
+        return 'partial_completed'
+
+    @staticmethod
+    def _lead_days_value(ordered_at: str, *, inbound_date: str | None = None) -> int:
+        start = MainWindowInboundLogic._parse_date(ordered_at)
+        end = MainWindowInboundLogic._parse_date(inbound_date) if inbound_date else date.today()
+        if start is None or end is None:
+            return 0
+        return max(0, (end - start).days)
 
     @staticmethod
     def _lead_days_text(ordered_at: str) -> str:
-        days = MainWindowInboundLogic._lead_days_value(ordered_at)
-        if days is None:
-            return DefaultTexts.EMPTY_VALUE
-        return f"{days}일"
+        return f"{MainWindowInboundLogic._lead_days_value(ordered_at)}일"
 
     @staticmethod
-    def _lead_days_value(ordered_at: str, *, inbound_date: str | None = None) -> int | None:
-        try:
-            ordered = datetime.strptime(ordered_at, '%Y-%m-%d').date()
-        except Exception:
+    def _parse_date(value: str | None) -> date | None:
+        if not value:
             return None
         try:
-            end_date = datetime.strptime(inbound_date, '%Y-%m-%d').date() if inbound_date else date.today()
+            return datetime.strptime(value[:10], '%Y-%m-%d').date()
         except Exception:
-            end_date = date.today()
-        return max(0, (end_date - ordered).days)
+            return None

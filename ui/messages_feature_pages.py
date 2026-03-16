@@ -22,8 +22,8 @@ class MenuPageTexts:
     RECEIPT_SUBTITLE = "발주 화면 자재 요약으로 통합"
     COMPLETE_TITLE = "입고&검수"
     COMPLETE_SUBTITLE = "입고 수량 입력 · 재고 반영 준비"
-    SALE_TITLE = "판매 등록"
-    SALE_SUBTITLE = "판매 수량 · 수입 반영"
+    SALE_TITLE = "상품관리"
+    SALE_SUBTITLE = "가격 · 재고 · 미검수 · 판매 등록"
     INVENTORY_TITLE = "재고 / 통계"
     INVENTORY_SUBTITLE = "재고 현황 · 월별 흐름 확인"
 
@@ -52,12 +52,12 @@ class FeatureConfigTexts:
     COMPLETE_SECONDARY = "화면 검토"
     COMPLETE_HELPER = "재고는 별도 테이블보다 이동 이력 기반으로 보는 방향을 염두에 둔 화면입니다."
 
-    SALE_TITLE = "판매 등록"
-    SALE_SUBTITLE = "생성된 재고 중 판매 대상을 선택하고 수량과 금액을 기록하는 화면 흐름입니다."
-    SALE_LEFT_TITLE = "판매 대상 선택"
-    SALE_LEFT_HINT = "현재고가 존재하는 품목을 기준으로 판매를 기록합니다."
+    SALE_TITLE = "상품관리"
+    SALE_SUBTITLE = "제품 가격 등록, 재고 확인, 미검수 검수, 판매 등록을 한 화면에서 처리합니다."
+    SALE_LEFT_TITLE = "상품 선택"
+    SALE_LEFT_HINT = "상품별 가격, 재고, 미검수 물량, 판매 등록을 관리합니다."
     SALE_LIST_ITEMS = ("하늘색 저지 자켓 / 현재고 12", "기본 상의 템플릿 / 현재고 4")
-    SALE_SUMMARY_ITEMS = ("판매 수량 입력", "판매 금액 기록", "재고 차감")
+    SALE_SUMMARY_ITEMS = ("판매가 등록", "미검수 검수", "판매 등록")
     SALE_SECTIONS = (("판매 입력", ("판매일", "판매 수량", "판매 단가 / 총액")), ("재고 / 수입 반영", ("판매 후 재고 차감", "수입 거래 생성", "필요 시 메모 기록")), ("향후 DB 포인트", ("inventory decrease", "sale row create", "income transaction 생성")))
     SALE_PRIMARY = "판매 저장"
     SALE_SECONDARY = "판매 미리보기"

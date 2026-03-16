@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget
 
 from ui.feature_page import FeaturePageBuilder
 from ui.menu_page import MenuPageBuilder
-from ui.pages import InboundPageBuilder, OrderPageBuilder, WorkOrderPageBuilder
+from ui.pages import InboundPageBuilder, OrderPageBuilder, ProductPageBuilder, WorkOrderPageBuilder
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
@@ -16,7 +16,6 @@ class MainWindowPageCoordinator:
     PAGE_NAMES_BY_FEATURE_KEY = {
         'receipt': 'page_receipt',
         'complete': 'page_complete',
-        'sale': 'page_sale',
         'inventory': 'page_inventory',
         'partner': 'page_partner',
     }
@@ -27,15 +26,17 @@ class MainWindowPageCoordinator:
         work_refs = WorkOrderPageBuilder.build(window)
         order_refs = OrderPageBuilder.build()
         inbound_refs = InboundPageBuilder.build()
+        product_refs = ProductPageBuilder.build()
         window.work_order_page_ref = work_refs.page
-        feature_pages = {config.key: FeaturePageBuilder.build(config) for config in window.build_feature_page_configs()}
+        feature_pages = {config.key: FeaturePageBuilder.build(config) for config in window.build_feature_page_configs() if config.key != 'sale'}
 
         MainWindowPageCoordinator._apply_menu_refs(window, menu_refs)
         MainWindowPageCoordinator._apply_work_order_refs(window, work_refs)
         window.order_page_refs = order_refs
         window.inbound_page_refs = inbound_refs
+        window.product_page_refs = product_refs
         window.feature_pages = feature_pages
-        window.pages = MainWindowPageCoordinator._build_page_map(window, menu_refs, order_refs, inbound_refs, feature_pages)
+        window.pages = MainWindowPageCoordinator._build_page_map(window, menu_refs, order_refs, inbound_refs, product_refs, feature_pages)
 
         for page in window.pages.values():
             window.stack.addWidget(page)
@@ -66,15 +67,14 @@ class MainWindowPageCoordinator:
         window.postit_bar = refs.postit_bar
 
     @staticmethod
-    def _build_page_map(window: "MainWindow", menu_refs, order_refs, inbound_refs, feature_pages: dict[str, object]) -> dict[str, QWidget]:
-        pages = {
+    def _build_page_map(window: "MainWindow", menu_refs, order_refs, inbound_refs, product_refs, feature_pages: dict[str, object]) -> dict[str, QWidget]:
+        return {
             'page_menu': menu_refs.page,
             'page_work_order': window.work_order_page_ref,
             'page_job_start': order_refs.page,
             'page_receipt': feature_pages['receipt'].page,
             'page_complete': inbound_refs.page,
-            'page_sale': feature_pages['sale'].page,
+            'page_sale': product_refs.page,
             'page_inventory': feature_pages['inventory'].page,
             'page_partner': feature_pages['partner'].page,
         }
-        return pages
