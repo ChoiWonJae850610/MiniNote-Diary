@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class MainWindowBootstrap:
     @staticmethod
     def project_root() -> str:
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
     @staticmethod
     def initialize_services(window: "MainWindow") -> None:
