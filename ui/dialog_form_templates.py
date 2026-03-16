@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+
 from PySide6.QtWidgets import QDialog
 
 from ui.dialog_form_fields import build_dialog_actions
@@ -21,3 +23,16 @@ def add_action_row(dialog: QDialog, root, *, confirm_text: str, cancel_text: str
     btn_cancel, btn_ok, button_row = build_dialog_actions(dialog, confirm_text=confirm_text, cancel_text=cancel_text)
     root.addLayout(button_row)
     return btn_cancel, btn_ok
+
+
+def wire_dialog_reject(buttons: Iterable, reject) -> None:
+    for button in buttons:
+        button.clicked.connect(reject)
+
+
+__all__ = [
+    "setup_form_dialog",
+    "add_form_to_root",
+    "add_action_row",
+    "wire_dialog_reject",
+]
