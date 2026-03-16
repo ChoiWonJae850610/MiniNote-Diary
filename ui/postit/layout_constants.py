@@ -66,17 +66,29 @@ class PostItMetrics:
         return self.row_gap
 
 
+@dataclass(frozen=True)
+class PostItSectionMetrics:
+    tab_overlap: int = PostItMetrics().tab_overlap
+    footer_gap: int = THEME.top_button_spacing
+    external_row_gap: int = THEME.top_button_spacing
+    external_row_gap_tight: int = 0
+    footer_height: int = THEME.section_badge_height
+    zero_margin: int = 0
+    zero_stretch: int = 0
+
+
 POSTIT_METRICS = PostItMetrics()
+POSTIT_SECTION_METRICS = PostItSectionMetrics()
 POSTIT_TAB_INSET_LEFT = POSTIT_METRICS.tab_inset_left
-POSTIT_TAB_OVERLAP = POSTIT_METRICS.tab_overlap
+POSTIT_TAB_OVERLAP = POSTIT_SECTION_METRICS.tab_overlap
 POSTIT_HEADER_HEIGHT = POSTIT_METRICS.header_height
 POSTIT_BODY_HEIGHT = POSTIT_METRICS.body_height
 POSTIT_CARD_HEIGHT = POSTIT_METRICS.card_height
-POSTIT_FOOTER_HEIGHT = POSTIT_METRICS.footer_height
-POSTIT_FOOTER_GAP = POSTIT_METRICS.footer_gap
-POSTIT_EXTERNAL_ROW_GAP = POSTIT_METRICS.external_row_gap
+POSTIT_FOOTER_HEIGHT = POSTIT_SECTION_METRICS.footer_height
+POSTIT_FOOTER_GAP = POSTIT_SECTION_METRICS.footer_gap
+POSTIT_EXTERNAL_ROW_GAP = POSTIT_SECTION_METRICS.external_row_gap
 POSTIT_STANDARD_EXTERNAL_ROW_GAP = POSTIT_EXTERNAL_ROW_GAP
-POSTIT_EXTERNAL_ROW_GAP_TIGHT = POSTIT_METRICS.external_row_gap_tight
+POSTIT_EXTERNAL_ROW_GAP_TIGHT = POSTIT_SECTION_METRICS.external_row_gap_tight
 POSTIT_TAB_MIN_WIDTH = POSTIT_METRICS.tab_min_width
 POSTIT_TAB_PADDING_X = POSTIT_METRICS.tab_padding_x
 POSTIT_ROW_ACTION_GAP = POSTIT_METRICS.row_action_gap
@@ -105,9 +117,9 @@ POSTIT_UNIT_DOWN_ICON_SIZE = POSTIT_METRICS.unit_down_icon_size
 POSTIT_UNIT_MENU_EMPTY_LABEL = POSTIT_METRICS.unit_menu_empty_label
 POSTIT_UNIT_MENU_CLEAR_LABEL = POSTIT_METRICS.unit_menu_clear_label
 
-POSTIT_ZERO_MARGIN = POSTIT_METRICS.zero_margin
+POSTIT_ZERO_MARGIN = POSTIT_SECTION_METRICS.zero_margin
 POSTIT_ZERO_SPACING = POSTIT_METRICS.zero_spacing
-POSTIT_ZERO_STRETCH = POSTIT_METRICS.zero_stretch
+POSTIT_ZERO_STRETCH = POSTIT_SECTION_METRICS.zero_stretch
 POSTIT_SINGLE_STRETCH = POSTIT_METRICS.single_stretch
 POSTIT_PARTNER_BAR_BASIC_STRETCH = POSTIT_METRICS.partner_bar_basic_stretch
 POSTIT_PARTNER_BAR_MATERIAL_STRETCH = POSTIT_METRICS.partner_bar_material_stretch

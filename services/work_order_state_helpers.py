@@ -6,8 +6,22 @@ from services.formatters import format_commas_from_digits, int_from_any
 from services.field_keys import HeaderKeys, MaterialTargets
 from services.models import MaterialItem
 
+
 def target_attr(target: str) -> str:
     return MaterialTargets.ATTRS.get(target, MaterialTargets.DEFAULT_ATTR)
+
+
+def get_target_items(state, target: str) -> List[MaterialItem]:
+    return getattr(state, target_attr(target))
+
+
+def set_target_items(state, target: str, items: List[MaterialItem] | None) -> None:
+    setattr(state, target_attr(target), list(items or []) or [MaterialItem()])
+
+
+def iter_target_items(state):
+    for target in MaterialTargets.ALL:
+        yield target, get_target_items(state, target)
 
 
 def items_to_dicts(items: List[MaterialItem]) -> List[Dict[str, str]]:

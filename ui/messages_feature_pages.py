@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from ui.messages_common import Labels
-from ui.messages_dialogs import DialogTitles
-
-
 class FeaturePageTexts:
     COMING_SOON_TITLE = "준비 중"
     COMING_SOON_SUBTITLE = "이 기능은 아직 연결되지 않았습니다."
@@ -11,36 +7,8 @@ class FeaturePageTexts:
     SECONDARY_ACTION = "메뉴로"
 
 
-class PageTitles:
-    WORK_ORDER = "작업지시서 생성"
-    ORDER = DialogTitles.ORDER
 
 
-class PageDescriptions:
-    WORK_ORDER = "작업지시서 내용을 입력하고 이미지, 자재, 메모를 함께 관리합니다."
-    ORDER = "저장된 작업지시서 템플릿을 선택하고 발주 수량을 입력합니다."
-    ORDER_LIST = "월별 필터와 검색으로 템플릿을 찾고, 예전 작업지시서도 다시 발주할 수 있습니다."
-
-
-class SectionTitles:
-    ORDER_TEMPLATE_LIST = "작업지시서 목록"
-    ORDER_TEMPLATE_DETAIL = "선택 작업지시서"
-    ORDER_TEMPLATE_MEMO = "작업지시서 메모"
-    ORDER_INPUT = "신규 발주 입력"
-    CHANGE_NOTE = "메모"
-    BASIC_INFO = "기본정보"
-    FABRIC = "원단"
-    TRIM = "부자재"
-    DYEING = "염색"
-    FINISHING = "마감"
-    OTHER = "기타"
-
-
-class DefaultTexts:
-    EMPTY_VALUE = "-"
-    ORDER_MATERIAL_SUMMARY_EMPTY = "원단 0 / 부자재 0"
-    ORDER_SAVE_SUCCESS = "발주 저장"
-    ORDER_SAVE_SUCCESS_MESSAGE = "발주 저장 완료\n\n작업지시서: {name}\n수량: {qty}\n발주일: {ordered_at}"
 
 
 class MenuPageTexts:
@@ -59,32 +27,6 @@ class MenuPageTexts:
     INVENTORY_TITLE = "재고 / 통계"
     INVENTORY_SUBTITLE = "재고 현황 · 월별 흐름 확인"
 
-
-class TableHeaders:
-    UNIT = (Labels.UNIT_VALUE, Labels.UNIT_DISPLAY_NAME)
-    PARTNER_TYPE = (DialogTitles.PARTNER_TYPE,)
-
-
-class PostItTexts:
-    CLEAR_UNIT = "(비움)"
-    EMPTY_UNIT_LIST = "(단위 목록 없음)"
-
-
-class HelperTexts:
-    ORDER_SAVE_HINT = "발주 수량은 1 이상이어야 하며, 저장 후에도 작업지시서 템플릿은 계속 남아 다시 발주할 수 있습니다."
-    ORDER_TEMPLATE_META_MATERIAL = "자재: 원단 {fabric} / 부자재 {trim}"
-    ORDER_TEMPLATE_META_STOCK = "재고 {stock} · 진행중 {in_progress}"
-    ORDER_TEMPLATE_META_LAST_ORDER = "최근 발주 {last_order}"
-    ORDER_DETAIL_MATERIAL_SUMMARY = "원단 {fabric} / 부자재 {trim}"
-
-
-class DomainTexts:
-    PARTNER_TYPE_FACTORY = "공장"
-    PARTNER_TYPE_FABRIC = "원단"
-    PARTNER_TYPE_TRIM = "부자재"
-    PARTNER_TYPE_DYEING = "염색"
-    PARTNER_TYPE_FINISH = "마감"
-    PARTNER_TYPE_OTHER = "기타"
 
 
 class FeatureConfigTexts:

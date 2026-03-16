@@ -1,12 +1,8 @@
 from ui.theme_tokens import THEME, ThemeTokens, hex_to_rgba
-from ui.theme_styles import (
-    build_app_stylesheet,
-    card_colors,
+from ui.theme_page_styles import build_app_stylesheet
+from ui.theme_widget_styles import (
     combo_box_style,
-    compact_popup_margins,
     delete_button_style,
-    dialog_inner_margins,
-    dialog_layout_margins,
     disabled_index_button_style,
     display_field_style,
     editing_line_edit_style,
@@ -20,13 +16,11 @@ from ui.theme_styles import (
     input_line_edit_style,
     list_widget_style,
     menu_style,
-    page_layout_margins,
     page_title_style,
     panel_frame_style,
     panel_title_style,
     plain_text_edit_style,
     read_only_line_edit_style,
-    status_row_margins,
     strong_field_label_style,
     table_line_edit_style,
     table_widget_style,
@@ -36,44 +30,32 @@ from ui.theme_styles import (
     tooltip_style_override,
     unit_button_style,
 )
+from ui.theme_dialog_styles import (
+    compact_popup_margins,
+    dialog_inner_margins,
+    dialog_layout_margins,
+    page_layout_margins,
+    status_row_margins,
+)
+
+
+def card_colors(kind: str) -> tuple[str, str]:
+    mapping = {
+        'basic': (THEME.color_basic_bg, THEME.color_basic_border),
+        'fabric': (THEME.color_fabric_bg, THEME.color_fabric_border),
+        'trim': (THEME.color_trim_bg, THEME.color_trim_border),
+        'change': (THEME.color_change_bg, THEME.color_change_border),
+    }
+    return mapping.get(kind, (THEME.color_basic_bg, THEME.color_basic_border))
+
 
 __all__ = [
-    'THEME',
-    'ThemeTokens',
-    'build_app_stylesheet',
-    'card_colors',
-    'combo_box_style',
-    'compact_popup_margins',
-    'delete_button_style',
-    'dialog_inner_margins',
-    'dialog_layout_margins',
-    'disabled_index_button_style',
-    'display_field_style',
-    'editing_line_edit_style',
-    'feedback_label_style',
-    'field_label_style',
-    'hex_to_rgba',
-    'hint_label_style',
-    'icon_button_override',
-    'image_preview_style',
-    'index_button_style',
-    'inner_panel_frame_style',
-    'input_line_edit_style',
-    'list_widget_style',
-    'menu_style',
-    'page_layout_margins',
-    'page_title_style',
-    'panel_frame_style',
-    'panel_title_style',
-    'plain_text_edit_style',
-    'read_only_line_edit_style',
-    'status_row_margins',
-    'strong_field_label_style',
-    'table_line_edit_style',
-    'table_widget_style',
-    'title_badge_style',
-    'title_label_style',
-    'tool_button_style',
-    'tooltip_style_override',
-    'unit_button_style',
+    'THEME', 'ThemeTokens', 'build_app_stylesheet', 'card_colors', 'combo_box_style', 'compact_popup_margins',
+    'delete_button_style', 'dialog_inner_margins', 'dialog_layout_margins', 'disabled_index_button_style',
+    'display_field_style', 'editing_line_edit_style', 'feedback_label_style', 'field_label_style', 'hex_to_rgba',
+    'hint_label_style', 'icon_button_override', 'image_preview_style', 'index_button_style', 'inner_panel_frame_style',
+    'input_line_edit_style', 'list_widget_style', 'menu_style', 'page_layout_margins', 'page_title_style',
+    'panel_frame_style', 'panel_title_style', 'plain_text_edit_style', 'read_only_line_edit_style',
+    'status_row_margins', 'strong_field_label_style', 'table_line_edit_style', 'table_widget_style',
+    'title_badge_style', 'title_label_style', 'tool_button_style', 'tooltip_style_override', 'unit_button_style',
 ]

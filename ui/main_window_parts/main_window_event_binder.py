@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from services.field_keys import MaterialTargets
-from ui.main_window_work_order_logic import MATERIAL_TARGET_CONFIGS
+from ui.main_window_parts.main_window_work_order_logic import MATERIAL_TARGET_CONFIGS
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow

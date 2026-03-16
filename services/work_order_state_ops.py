@@ -3,13 +3,20 @@ from __future__ import annotations
 from services.field_keys import MaterialTargets
 from services.models import MaterialItem, WorkOrderHeader
 from services.schema import MAX_MATERIAL_ITEMS
-from services.work_order_state_helpers import items_have_value, needs_price_recompute, recompute_header_prices, target_attr
+from services.work_order_state_helpers import (
+    get_target_items,
+    items_have_value,
+    iter_target_items,
+    needs_price_recompute,
+    recompute_header_prices,
+    set_target_items,
+)
 
 
 def reset_state(state) -> None:
     state.header = WorkOrderHeader()
-    for attr in MaterialTargets.ATTRS.values():
-        setattr(state, attr, [MaterialItem()])
+    for target in MaterialTargets.ALL:
+        set_target_items(state, target, [MaterialItem()])
     state.current_image_path = None
     recompute_sale_price(state)
     state.is_dirty = False
@@ -20,7 +27,7 @@ def state_has_any_data(state) -> bool:
         state.is_dirty
         or state.current_image_path
         or state.header.has_any_value()
-        or any(items_have_value(getattr(state, target_attr(target))) for target in MaterialTargets.ALL)
+        or any(items_have_value(items) for _, items in iter_target_items(state))
     )
 
 
@@ -34,7 +41,7 @@ def update_header_fields(state, patch: dict[str, str]) -> None:
 def update_material_patch_fields(state, target: str, idx: int, patch: dict[str, str]) -> None:
     if idx < 0 or not isinstance(patch, dict):
         return
-    items = getattr(state, target_attr(target))
+    items = get_target_items(state, target)
     while len(items) <= idx:
         items.append(MaterialItem())
     items[idx].patch(patch)
@@ -43,7 +50,7 @@ def update_material_patch_fields(state, target: str, idx: int, patch: dict[str, 
 
 
 def add_material_item_to_state(state, target: str, max_items: int = MAX_MATERIAL_ITEMS):
-    items = getattr(state, target_attr(target))
+    items = get_target_items(state, target)
     if len(items) >= max_items:
         return None
     items.append(MaterialItem())
@@ -53,7 +60,7 @@ def add_material_item_to_state(state, target: str, max_items: int = MAX_MATERIAL
 
 
 def remove_material_item_from_state(state, target: str, idx: int) -> bool:
-    items = getattr(state, target_attr(target))
+    items = get_target_items(state, target)
     if 0 <= idx < len(items):
         del items[idx]
         if not items:
@@ -65,4 +72,4 @@ def remove_material_item_from_state(state, target: str, idx: int) -> bool:
 
 
 def recompute_sale_price(state) -> None:
-    recompute_header_prices(state.header, [getattr(state, target_attr(target)) for target in MaterialTargets.ALL])
+    recompute_header_prices(state.header, [items for _, items in iter_target_items(state)])

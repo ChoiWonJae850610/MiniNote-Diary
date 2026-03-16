@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QSizePolicy, QVBoxLayout, QWidget
 
@@ -14,6 +16,17 @@ from ui.postit.layout_constants import (
 from ui.postit.layout_helpers import postit_section_height
 
 
+@dataclass(frozen=True)
+class SectionLayoutSpec:
+    tab_overlap: int = POSTIT_TAB_OVERLAP
+    footer_gap: int = POSTIT_FOOTER_GAP
+    external_row_gap: int = POSTIT_EXTERNAL_ROW_GAP
+    footer_height: int = POSTIT_FOOTER_HEIGHT
+
+
+DEFAULT_SECTION_LAYOUT = SectionLayoutSpec()
+
+
 class SectionContainer(QWidget):
     def __init__(
         self,
@@ -21,23 +34,23 @@ class SectionContainer(QWidget):
         body_widget: QWidget,
         *,
         parent=None,
-        spacing: int = POSTIT_TAB_OVERLAP,
+        layout_spec: SectionLayoutSpec = DEFAULT_SECTION_LAYOUT,
         header_alignment=Qt.AlignLeft,
         footer_widget: QWidget | None = None,
-        footer_gap: int = POSTIT_FOOTER_GAP,
         body_height: int | None = None,
     ):
         super().__init__(parent)
+        self.layout_spec = layout_spec
         root = QVBoxLayout(self)
         root.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
-        root.setSpacing(spacing)
+        root.setSpacing(layout_spec.tab_overlap)
         if header_alignment is None:
             root.addWidget(header_widget)
         else:
             root.addWidget(header_widget, POSTIT_ZERO_STRETCH, header_alignment)
         root.addWidget(body_widget, POSTIT_ZERO_STRETCH)
         if footer_widget is not None:
-            root.addSpacing(footer_gap)
+            root.addSpacing(layout_spec.footer_gap)
             root.addWidget(footer_widget, POSTIT_ZERO_STRETCH)
 
         height = body_height if body_height is not None else body_widget.sizeHint().height()
@@ -61,15 +74,14 @@ class PostItSectionColumn(QWidget):
         body_height: int | None = None,
         footer_widget: QWidget | None = None,
         external_row_widget: QWidget | None = None,
-        spacing: int = POSTIT_TAB_OVERLAP,
-        external_row_gap: int = POSTIT_EXTERNAL_ROW_GAP,
+        layout_spec: SectionLayoutSpec = DEFAULT_SECTION_LAYOUT,
     ):
         super().__init__(parent)
         self.section_wrap = SectionContainer(
             header_widget,
             body_widget,
             parent=self,
-            spacing=spacing,
+            layout_spec=layout_spec,
             header_alignment=None,
             footer_widget=footer_widget,
             body_height=body_height,
@@ -78,21 +90,23 @@ class PostItSectionColumn(QWidget):
 
         self.external_row_widget = external_row_widget or FooterSpacer(self)
         self.external_row_widget.setParent(self)
-        self.external_row_widget.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+        self.external_row_widget.setFixedHeight(layout_spec.footer_height)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
-        root.setSpacing(external_row_gap)
+        root.setSpacing(layout_spec.external_row_gap)
         root.addWidget(self.section_wrap, POSTIT_ZERO_STRETCH)
         root.addWidget(self.external_row_widget, POSTIT_ZERO_STRETCH)
 
         has_footer = footer_widget is not None
         section_height = postit_section_height(body_height=body_height or body_widget.sizeHint().height(), has_footer=has_footer)
-        self.setFixedHeight(section_height + external_row_gap + POSTIT_FOOTER_HEIGHT)
+        self.setFixedHeight(section_height + layout_spec.external_row_gap + layout_spec.footer_height)
 
 
 __all__ = [
+    "DEFAULT_SECTION_LAYOUT",
     "FooterSpacer",
     "PostItSectionColumn",
     "SectionContainer",
+    "SectionLayoutSpec",
 ]

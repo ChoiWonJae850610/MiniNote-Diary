@@ -1,42 +1,21 @@
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import QMainWindow, QWidget
+from PySide6.QtWidgets import QMainWindow
 
-from ui.main_window_bootstrap import MainWindowBootstrap
-from ui.main_window_constants import MainWindowPages
-from ui.main_window_features import build_feature_page_configs
-from ui.main_window_feedback import MainWindowFeedback
-from ui.main_window_focus_logic import MainWindowFocusLogic
-from ui.main_window_handlers import (
-    _clear_order_template_detail,
-    _focus_style_input,
-    _refresh_basic_postit,
-    _refresh_postits,
-    build_save_success_message,
-    create_back_confirm_dialog,
-    delete_image,
-    dialog_accept_code,
-    go_menu,
-    go_work_order,
-    on_add_material_clicked,
-    on_back_clicked,
-    on_feature_primary,
-    on_feature_secondary,
-    on_material_deleted,
-    on_order_create_clicked,
-    on_order_template_selected,
-    on_partner_mgmt_clicked,
-    on_reset_clicked,
-    on_save_clicked,
-    on_unit_mgmt_clicked,
-    open_feature_page,
-    open_order_page,
-    refresh_order_page,
-    reset_work_order_form,
-    show_validation_statuses,
-    upload_image,
-)
-from ui.main_window_logic import MainWindowEventBinder, MainWindowPageCoordinator
-from ui.messages import DialogTitles
+from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
+from ui.main_window_parts.main_window_bootstrap import MainWindowBootstrap
+from ui.main_window_parts.main_window_constants import MainWindowPages
+from ui.main_window_parts.main_window_dialog_logic import MainWindowDialogLogic
+from ui.main_window_parts.main_window_event_binder import MainWindowEventBinder
+from ui.main_window_parts.main_window_feature_logic import MainWindowFeatureLogic
+from ui.main_window_parts.main_window_features import build_feature_page_configs
+from ui.main_window_parts.main_window_feedback import MainWindowFeedback
+from ui.main_window_parts.main_window_focus_logic import MainWindowFocusLogic
+from ui.main_window_parts.main_window_navigation import MainWindowNavigationLogic
+from ui.main_window_parts.main_window_order_logic import MainWindowOrderLogic
+from ui.main_window_parts.main_window_pages import MainWindowPageCoordinator
+from ui.main_window_parts.main_window_save_logic import MainWindowSaveLogic
+from ui.main_window_parts.main_window_work_order_logic import MainWindowWorkOrderLogic
+from ui.messages import Buttons, DialogTitles, Warnings
 
 
 class MainWindow(QMainWindow):
@@ -48,34 +27,6 @@ class MainWindow(QMainWindow):
     PAGE_SALE = MainWindowPages.SALE
     PAGE_INVENTORY = MainWindowPages.INVENTORY
     PAGE_PARTNER = MainWindowPages.PARTNER
-
-    on_partner_mgmt_clicked = on_partner_mgmt_clicked
-    on_unit_mgmt_clicked = on_unit_mgmt_clicked
-    open_order_page = open_order_page
-    refresh_order_page = refresh_order_page
-    on_order_template_selected = on_order_template_selected
-    _clear_order_template_detail = _clear_order_template_detail
-    on_order_create_clicked = on_order_create_clicked
-    open_feature_page = open_feature_page
-    on_feature_primary = on_feature_primary
-    on_feature_secondary = on_feature_secondary
-    _focus_style_input = _focus_style_input
-    go_work_order = go_work_order
-    go_menu = go_menu
-    reset_work_order_form = reset_work_order_form
-    _refresh_postits = _refresh_postits
-    _refresh_basic_postit = _refresh_basic_postit
-    on_material_deleted = on_material_deleted
-    on_reset_clicked = on_reset_clicked
-    create_back_confirm_dialog = create_back_confirm_dialog
-    dialog_accept_code = staticmethod(dialog_accept_code)
-    show_validation_statuses = show_validation_statuses
-    build_save_success_message = staticmethod(build_save_success_message)
-    on_back_clicked = on_back_clicked
-    on_save_clicked = on_save_clicked
-    upload_image = upload_image
-    delete_image = delete_image
-    on_add_material_clicked = on_add_material_clicked
 
     def __init__(self):
         super().__init__()
@@ -134,6 +85,95 @@ class MainWindow(QMainWindow):
     def has_any_data(self) -> bool:
         return self.state.has_any_data()
 
+    def on_partner_mgmt_clicked(self):
+        MainWindowDialogLogic.open_partner_management(self)
+
+    def on_unit_mgmt_clicked(self):
+        MainWindowDialogLogic.open_unit_management(self)
+
+    def open_order_page(self) -> None:
+        MainWindowNavigationLogic.open_order_page(self)
+
+    def refresh_order_page(self) -> None:
+        MainWindowOrderLogic.refresh_order_page(self)
+
+    def on_order_template_selected(self, row: int) -> None:
+        MainWindowOrderLogic.on_order_template_selected(self, row)
+
+    def _clear_order_template_detail(self) -> None:
+        MainWindowOrderLogic.clear_order_template_detail(self)
+
+    def on_order_create_clicked(self) -> None:
+        MainWindowOrderLogic.on_order_create_clicked(self)
+
+    def open_feature_page(self, page_index: int) -> None:
+        MainWindowNavigationLogic.open_feature_page(self, page_index)
+
+    def on_feature_primary(self, page) -> None:
+        MainWindowFeatureLogic.show_primary(self, page)
+
+    def on_feature_secondary(self, page) -> None:
+        MainWindowFeatureLogic.show_secondary(self, page)
+
+    def _focus_style_input(self):
+        MainWindowNavigationLogic.focus_style_input(self)
+
+    def go_work_order(self):
+        MainWindowNavigationLogic.go_work_order(self)
+
+    def go_menu(self):
+        MainWindowNavigationLogic.go_menu(self)
+
+    def reset_work_order_form(self):
+        MainWindowWorkOrderLogic.reset_form(self)
+
+    def _refresh_postits(self, force_rebuild: bool = False):
+        MainWindowWorkOrderLogic.refresh_postits(self, force_rebuild=force_rebuild)
+
+    def _refresh_basic_postit(self):
+        MainWindowWorkOrderLogic.refresh_basic_postit(self)
+
+    def on_material_deleted(self, target: str, idx: int):
+        MainWindowWorkOrderLogic.remove_material(self, target, idx)
+
+    def on_reset_clicked(self):
+        self.reset_work_order_form()
+
+    def create_back_confirm_dialog(self):
+        return ConfirmActionDialog(
+            title=DialogTitles.TEMP_SAVE,
+            message=Warnings.TEMP_SAVE_CONFIRM,
+            confirm_text=Buttons.YES,
+            cancel_text=Buttons.NO,
+            parent=self,
+        )
+
+    @staticmethod
+    def dialog_accept_code() -> int:
+        return ConfirmActionDialog.Accepted
+
+    def show_validation_statuses(self, statuses) -> None:
+        ValidationStatusDialog(DialogTitles.SAVE_BLOCKED, statuses, parent=self).exec()
+
+    @staticmethod
+    def build_save_success_message(result) -> str:
+        return MainWindowFeedback.build_save_success_message(result)
+
+    def on_back_clicked(self):
+        MainWindowSaveLogic.handle_back(self)
+
+    def on_save_clicked(self):
+        MainWindowSaveLogic.handle_save(self)
+
+    def upload_image(self):
+        MainWindowWorkOrderLogic.upload_image(self)
+
+    def delete_image(self):
+        MainWindowWorkOrderLogic.delete_image(self)
+
+    def on_add_material_clicked(self, target: str):
+        MainWindowWorkOrderLogic.add_material(self, target)
+
     def on_basic_postit_changed(self, data: dict):
         self.state.update_header(data)
         self._update_window_title()
@@ -143,5 +183,4 @@ class MainWindow(QMainWindow):
         self._update_window_title()
 
     def on_material_changed(self, target: str, idx: int, patch: dict):
-        from ui.main_window_logic import MainWindowWorkOrderLogic
         MainWindowWorkOrderLogic.update_material(self, target, idx, patch)

@@ -5,7 +5,17 @@ from typing import Dict, List
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QSizePolicy
 
-from ui.postit.layout import FolderTabHeader, FooterSpacer, POSTIT_BODY_HEIGHT, POSTIT_EXTERNAL_ROW_GAP_TIGHT, POSTIT_TAB_OVERLAP, PostItSectionColumn, make_postit_pager_host, make_postit_stack_host
+from ui.postit.layout import (
+    FolderTabHeader,
+    FooterSpacer,
+    POSTIT_BODY_HEIGHT,
+    POSTIT_EXTERNAL_ROW_GAP_TIGHT,
+    POSTIT_TAB_OVERLAP,
+    PostItSectionColumn,
+    SectionLayoutSpec,
+    make_postit_pager_host,
+    make_postit_stack_host,
+)
 from ui.postit.partner_tab_setup import build_partner_tab_defs, connect_partner_stack_signals
 from ui.postit.stack_core import PostItStack
 
@@ -56,6 +66,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
         for stack in self._tab_stacks.values():
             self.pager_stack.addWidget(stack.footer_widget())
 
+        layout_spec = SectionLayoutSpec(tab_overlap=POSTIT_TAB_OVERLAP, external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT)
         super().__init__(
             self.tab_header,
             self.body_host,
@@ -63,8 +74,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             body_height=POSTIT_BODY_HEIGHT,
             footer_widget=self.footer_spacer,
             external_row_widget=self.pager_host,
-            spacing=POSTIT_TAB_OVERLAP,
-            external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
+            layout_spec=layout_spec,
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 

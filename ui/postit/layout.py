@@ -103,8 +103,11 @@ from ui.postit.layout_widgets import (  # noqa: E402
     PostItTabButton,
     SectionContainer,
     SectionTitleBadge,
+    DEFAULT_SECTION_LAYOUT,
+    SectionLayoutSpec,
     make_postit_footer_spacer,
     make_postit_pager_host,
+    make_postit_section_column,
     make_postit_stack_host,
     make_static_postit_column,
 )
@@ -162,17 +165,20 @@ _CONSTANT_EXPORTS = [
 ]
 
 _WIDGET_EXPORTS = [
+    'DEFAULT_SECTION_LAYOUT',
     'FolderTabHeader',
     'FooterSpacer',
     'PostItLayout',
     'PostItSectionColumn',
     'PostItTabButton',
     'SectionContainer',
+    'SectionLayoutSpec',
     'SectionTitleBadge',
     'embedded_tab_style',
     'folder_tab_style',
     'make_postit_footer_spacer',
     'make_postit_pager_host',
+    'make_postit_section_column',
     'make_postit_stack_host',
     'make_static_postit_column',
     'postit_section_height',

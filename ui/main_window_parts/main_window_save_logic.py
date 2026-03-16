@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ui.dialogs import show_error, show_info
-from ui.main_window_navigation import MainWindowNavigationLogic
+from ui.main_window_parts.main_window_navigation import MainWindowNavigationLogic
 from ui.messages import DialogTitles
 
 if TYPE_CHECKING:

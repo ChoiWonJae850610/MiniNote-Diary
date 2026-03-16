@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ui.main_window_work_order_postit_logic import MainWindowWorkOrderPostItLogic
-from ui.main_window_work_order_shared import MATERIAL_STACK_NAMES
+from ui.main_window_parts.main_window_work_order_postit_logic import MainWindowWorkOrderPostItLogic
+from ui.main_window_parts.main_window_work_order_shared import MATERIAL_STACK_NAMES
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
