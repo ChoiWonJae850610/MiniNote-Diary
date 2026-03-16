@@ -70,7 +70,7 @@ class FeaturePageBuilder:
         header_refs = make_standard_page_header(
             page,
             title_text=config.title,
-            subtitle_text=config.subtitle,
+            subtitle_text='',
             title_object_name='featureTitle',
             subtitle_object_name='featureSubtitle',
         )
@@ -92,7 +92,7 @@ class FeaturePageBuilder:
         left_panel, left_layout = make_titled_panel(
             page,
             title_text=config.left_title,
-            hint_text=config.left_hint,
+            hint_text='',
             title_object_name='featurePanelTitle',
             hint_object_name='featureHint',
         )
@@ -120,8 +120,9 @@ class FeaturePageBuilder:
 
         bottom_row = QHBoxLayout()
         bottom_row.setSpacing(THEME.row_spacing)
-        helper = make_hint_label(config.helper_text, page)
+        helper = make_hint_label('', page)
         helper.setObjectName('featureHint')
+        helper.hide()
         btn_secondary = make_action_button(config.secondary_button_text, page, width=THEME.secondary_button_width, height=THEME.primary_button_height)
         btn_primary = make_action_button(config.primary_button_text, page, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
         bottom_row.addWidget(helper, 1)

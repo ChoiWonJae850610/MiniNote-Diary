@@ -51,14 +51,14 @@ class OrderPageBuilder:
         root = make_standard_page_layout(page)
         root.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
 
-        header_refs = make_standard_page_header(page, title_text=PageTitles.ORDER, subtitle_text=PageDescriptions.ORDER)
+        header_refs = make_standard_page_header(page, title_text=PageTitles.ORDER, subtitle_text='')
         root.addLayout(header_refs.row)
         root.addWidget(build_filter_panel(page))
 
         body_row = QHBoxLayout()
         body_row.setSpacing(THEME.section_gap)
 
-        left_panel, left_layout = make_titled_panel(page, title_text=SectionTitles.ORDER_TEMPLATE_LIST, hint_text=PageDescriptions.ORDER_LIST)
+        left_panel, left_layout = make_titled_panel(page, title_text=SectionTitles.ORDER_TEMPLATE_LIST, hint_text='')
         template_list = QListWidget(left_panel)
         template_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
         template_list.setSpacing(OrderPageLayout.TEMPLATE_LIST_SPACING)

@@ -53,11 +53,13 @@ def apply_icon_button_metrics(
     font_px: int | None = None,
     object_name: str = 'iconAction',
     tooltip: str = '',
+    size: int | None = None,
 ) -> QPushButton:
+    button_size = size or THEME.icon_button_size
     apply_button_metrics(
         button,
-        width=THEME.icon_button_size,
-        height=THEME.icon_button_size,
+        width=button_size,
+        height=button_size,
         font_px=font_px or THEME.icon_button_font_px,
     )
     set_widget_tooltip(button, tooltip)

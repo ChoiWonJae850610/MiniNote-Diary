@@ -43,7 +43,7 @@ class MenuPageBuilder:
         hero_refs = make_page_text_header(
             page,
             title_text=MenuPageTexts.TITLE,
-            subtitle_text=MenuPageTexts.SUBTITLE,
+            subtitle_text='',
             title_object_name='menuHeroTitle',
             subtitle_object_name='menuHeroSubtitle',
             title_alignment=Qt.AlignCenter,

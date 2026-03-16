@@ -48,6 +48,7 @@ class ThemeTokens:
     note_dialog_min_height: int = 360
 
     icon_button_size: int = 24
+    nav_button_size: int = 32
     icon_size_sm: int = 12
     icon_size_md: int = 16
     field_height: int = 26
@@ -79,6 +80,7 @@ class ThemeTokens:
     page_top_bottom: int = 20
     page_header_top_margin: int = 20
     page_header_block_gap: int = 14
+    page_header_row_min_height: int = 36
     block_spacing: int = 10
     row_spacing: int = 8
     top_button_spacing: int = 6

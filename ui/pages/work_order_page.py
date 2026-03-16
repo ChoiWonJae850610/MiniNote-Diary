@@ -41,7 +41,7 @@ class WorkOrderPageBuilder:
         header_refs = make_standard_page_header(
             page,
             title_text=PageTitles.WORK_ORDER,
-            subtitle_text=PageDescriptions.WORK_ORDER,
+            subtitle_text='',
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)

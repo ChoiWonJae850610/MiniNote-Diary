@@ -92,14 +92,23 @@ def build_button_styles() -> str:
             border-color: {t.color_disabled_border};
         }}
         QPushButton#navButton, QPushButton#iconAction, QPushButton#iconPrimary, QPushButton#iconDanger {{
+            border-radius: {t.control_radius}px;
+            padding: 0;
+        }}
+        QPushButton#navButton {{
+            min-width: {t.nav_button_size}px;
+            max-width: {t.nav_button_size}px;
+            min-height: {t.nav_button_size}px;
+            max-height: {t.nav_button_size}px;
+            background: {icon_bg};
+        }}
+        QPushButton#iconAction, QPushButton#iconPrimary, QPushButton#iconDanger {{
             min-width: {t.icon_button_size}px;
             max-width: {t.icon_button_size}px;
             min-height: {t.icon_button_size}px;
             max-height: {t.icon_button_size}px;
-            border-radius: {t.control_radius}px;
-            padding: 0;
         }}
-        QPushButton#navButton, QPushButton#iconAction {{
+        QPushButton#iconAction {{
             background: {icon_bg};
         }}
         QPushButton#primaryAction {{

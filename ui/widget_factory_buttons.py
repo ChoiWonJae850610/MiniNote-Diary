@@ -62,7 +62,13 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
 
 def make_nav_button(*, parent=None, tooltip: str = '') -> QPushButton:
     button = QPushButton('', parent)
-    apply_icon_button_metrics(button, font_px=CommonSymbolsLayout.NAV_BUTTON_FONT_PX, object_name='navButton', tooltip=tooltip)
+    apply_icon_button_metrics(
+        button,
+        font_px=CommonSymbolsLayout.NAV_BUTTON_FONT_PX,
+        object_name='navButton',
+        tooltip=tooltip,
+        size=THEME.nav_button_size,
+    )
     return apply_glyph_icon(button, Symbols.BACK, font_px=CommonSymbolsLayout.NAV_BUTTON_FONT_PX, color=THEME.color_icon)
 
 

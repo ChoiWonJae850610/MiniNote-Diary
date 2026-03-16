@@ -66,6 +66,14 @@ def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
     return layout
 
 
+def _apply_standard_header_policy(title_col: QVBoxLayout, title: QLabel, subtitle: QLabel, *, has_subtitle: bool) -> None:
+    title_col.setSpacing(THEME.title_stack_spacing if has_subtitle else 0)
+    title.setMinimumHeight(max(title.minimumHeight(), THEME.page_header_row_min_height))
+    title.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+    subtitle.setVisible(has_subtitle)
+    subtitle.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+
+
 def make_page_text_header(
     parent: QWidget,
     *,
@@ -79,8 +87,8 @@ def make_page_text_header(
     title_min_height: int | None = None,
 ) -> PageTextHeaderRefs:
     title_col = QVBoxLayout()
-    title_col.setContentsMargins(0, 1, 0, 1)
-    title_col.setSpacing(THEME.title_stack_spacing)
+    title_col.setContentsMargins(0, 0, 0, 0)
+    has_subtitle = bool(subtitle_text.strip())
 
     title = make_page_title_label(
         title_text,
@@ -99,6 +107,7 @@ def make_page_text_header(
 
     title_col.addWidget(title)
     title_col.addWidget(subtitle)
+    _apply_standard_header_policy(title_col, title, subtitle, has_subtitle=has_subtitle)
     return PageTextHeaderRefs(layout=title_col, title_label=title, subtitle_label=subtitle)
 
 
@@ -117,7 +126,9 @@ def make_standard_page_header(
     title_min_height: int | None = None,
 ) -> PageHeaderRefs:
     row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
     row.setSpacing(THEME.top_button_spacing)
+    row.setAlignment(Qt.AlignVCenter)
 
     btn_back = make_nav_button(parent=page)
     title_refs = make_page_text_header(
@@ -132,11 +143,9 @@ def make_standard_page_header(
         title_min_height=title_min_height,
     )
 
-    row.setAlignment(Qt.AlignVCenter)
     row.addWidget(btn_back, 0, Qt.AlignVCenter)
-    title_refs.title_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-    title_refs.subtitle_label.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
     row.addLayout(title_refs.layout, 0)
+    row.setStretch(1, 0)
     if add_trailing_stretch:
         row.addStretch(1)
 

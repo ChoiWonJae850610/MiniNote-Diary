@@ -146,8 +146,8 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     order_panel, order_layout = create_order_panel(parent, spacing=THEME.block_spacing)
     add_panel_title(order_layout, order_panel, SectionTitles.ORDER_INPUT)
-    helper_label = make_hint_label(HelperTexts.ORDER_SAVE_HINT, order_panel)
-    order_layout.addWidget(helper_label)
+    helper_label = make_hint_label('', order_panel)
+    helper_label.hide()
 
     order_grid = make_form_grid()
     order_qty_spin = QSpinBox(order_panel)
