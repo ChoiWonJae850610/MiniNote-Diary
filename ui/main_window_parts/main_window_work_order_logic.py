@@ -43,7 +43,7 @@ class MainWindowWorkOrderLogic:
     @staticmethod
     def open_load_dialog(window) -> None:
         dialog = WorkOrderLoadDialog(window.controller.repository, window.order_repository, parent=window)
-        if dialog.exec() != dialog.Accepted or dialog.selected_result is None:
+        if dialog.exec() != WorkOrderLoadDialog.DialogCode.Accepted or dialog.selected_result is None:
             return
         try:
             MainWindowWorkOrderLogic.load_template_into_form(window, dialog.selected_result.detail)
