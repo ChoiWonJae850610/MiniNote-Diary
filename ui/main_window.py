@@ -128,7 +128,7 @@ class MainWindow(QMainWindow):
 
     def open_inbound_page(self) -> None:
         self.refresh_inbound_page()
-        self.stack.setCurrentIndex(self.PAGE_COMPLETE)
+        self.stack.setCurrentWidget(self.inbound_page_refs.page)
 
     def refresh_inbound_page(self) -> None:
         MainWindowInboundLogic.refresh_inbound_page(self)

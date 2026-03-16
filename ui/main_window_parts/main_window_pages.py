@@ -71,10 +71,10 @@ class MainWindowPageCoordinator:
             'page_menu': menu_refs.page,
             'page_work_order': window.work_order_page_ref,
             'page_job_start': order_refs.page,
+            'page_receipt': feature_pages['receipt'].page,
             'page_complete': inbound_refs.page,
+            'page_sale': feature_pages['sale'].page,
+            'page_inventory': feature_pages['inventory'].page,
+            'page_partner': feature_pages['partner'].page,
         }
-        for key, page_name in MainWindowPageCoordinator.PAGE_NAMES_BY_FEATURE_KEY.items():
-            if key == 'complete':
-                continue
-            pages[page_name] = feature_pages[key].page
         return pages
