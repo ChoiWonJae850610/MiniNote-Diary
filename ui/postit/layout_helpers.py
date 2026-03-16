@@ -1,10 +1,3 @@
-"""Compatibility surface for legacy post-it layout helper imports."""
+"""Compatibility wrapper for ui.postit.layouting.helpers."""
 
-from ui.postit.layout import embedded_tab_style, folder_tab_style, postit_section_height, postit_wrap_height
-
-__all__ = [
-    "embedded_tab_style",
-    "folder_tab_style",
-    "postit_section_height",
-    "postit_wrap_height",
-]
+from ui.postit.layouting.helpers import *  # noqa: F401,F403

@@ -11,7 +11,7 @@ from ui.postit.base import _PostItCardBase
 from ui.postit.common import InlineCalendarPopup
 from ui.postit.forms import PostItBodyLayout
 from ui.postit.layout import POSTIT_BASIC_CARD_MIN_WIDTH, POSTIT_BODY_HEIGHT, POSTIT_CALENDAR_POPUP_OFFSET_Y
-from ui.postit.basic_info_sections import (
+from ui.postit.cards.basic_info_sections import (
     build_date_row,
     build_partner_rows,
     build_price_rows,
@@ -19,7 +19,7 @@ from ui.postit.basic_info_sections import (
     connect_basic_info_signals,
     open_factory_picker,
 )
-from ui.postit.basic_info_logic import on_price_component_changed, on_sale_price_changed, recompute_basic_prices, set_basic_header_data
+from ui.postit.cards.basic_info_logic import on_price_component_changed, on_sale_price_changed, recompute_basic_prices, set_basic_header_data
 
 
 class BasicInfoPostIt(_PostItCardBase):

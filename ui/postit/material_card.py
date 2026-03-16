@@ -11,10 +11,10 @@ from ui.postit.layout import PostItLayout
 from ui.messages import Labels
 from ui.postit.base import _PostItCardBase
 from ui.postit.common import FIELD_H, make_down_icon
-from ui.postit.editors import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
+from ui.postit.editor_fields import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
 from ui.postit.layout import POSTIT_CARD_HEIGHT, POSTIT_DELETE_BUTTON_MARGIN_RIGHT, POSTIT_DELETE_BUTTON_MARGIN_TOP, POSTIT_MATERIAL_CARD_MIN_WIDTH
-from ui.postit.material_card_logic import (
+from ui.postit.cards.material_card_logic import (
     commit_material_value,
     on_price_changed,
     on_qty_committed,
@@ -23,7 +23,7 @@ from ui.postit.material_card_logic import (
     sync_unit_menu_checks,
     update_material_card_data,
 )
-from ui.postit.material_card_sections import (
+from ui.postit.cards.material_card_sections import (
     build_amount_rows,
     build_vendor_rows,
     configure_delete_button,
