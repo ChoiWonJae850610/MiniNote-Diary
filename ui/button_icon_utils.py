@@ -21,8 +21,7 @@ def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: 
     painter.setFont(font)
 
     text_rect = painter.boundingRect(QRect(0, 0, canvas_size, canvas_size), Qt.AlignmentFlag.AlignCenter, glyph)
-    offset = QPoint(0, -1)
-    text_rect.moveCenter(QRect(0, 0, canvas_size, canvas_size).center() + offset)
+    text_rect.moveCenter(QRect(0, 0, canvas_size, canvas_size).center())
     painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, glyph)
     painter.end()
     return QIcon(pixmap)
@@ -31,7 +30,9 @@ def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: 
 def apply_glyph_icon(button: QPushButton, glyph: str, *, font_px: int, color: str) -> QPushButton:
     button.setText("")
     button.setIcon(build_centered_glyph_icon(glyph, font_px=font_px, color=color))
-    button.setIconSize(QSize(button.width(), button.height()))
+    icon_w = max(12, button.width() - 2)
+    icon_h = max(12, button.height() - 2)
+    button.setIconSize(QSize(icon_w, icon_h))
     return button
 
 
