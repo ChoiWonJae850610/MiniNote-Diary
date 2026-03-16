@@ -8,6 +8,8 @@ from services.common.field_keys import PayloadKeys
 from services.storage.storage_crypto import decrypt_payload, encrypt_data, sha256_bytes
 from services.storage.storage_paths import ensure_db_dir, image_extension, make_base_filename, pick_vendor_name, unique_available_stem
 
+_IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.bmp')
+
 
 def _build_payload(data: Dict[str, Any], enc_payload: Dict[str, Any]) -> Dict[str, Any]:
     return {
@@ -15,6 +17,21 @@ def _build_payload(data: Dict[str, Any], enc_payload: Dict[str, Any]) -> Dict[st
         PayloadKeys.SAVED_AT: datetime.now().isoformat(timespec='seconds'),
         **enc_payload,
     }
+
+
+def _same_path(left: str, right: str) -> bool:
+    try:
+        return os.path.samefile(left, right)
+    except Exception:
+        return os.path.abspath(left) == os.path.abspath(right)
+
+
+def _find_existing_image(existing_prefix: str) -> Optional[str]:
+    for ext in _IMAGE_EXTENSIONS:
+        candidate = f'{existing_prefix}{ext}'
+        if os.path.isfile(candidate):
+            return candidate
+    return None
 
 
 def save_work_order(
@@ -39,22 +56,30 @@ def save_work_order(
 
     image_dst_path = None
     existing_prefix = os.path.join(db_dir, unique_name)
-    if overwrite_template_id:
-        for ext in ('.png', '.jpg', '.jpeg', '.bmp'):
+    existing_image_path = _find_existing_image(existing_prefix) if overwrite_template_id else None
+
+    keep_existing_image = bool(
+        overwrite_template_id
+        and image_src_path
+        and existing_image_path
+        and os.path.isfile(image_src_path)
+        and _same_path(image_src_path, existing_image_path)
+    )
+
+    if overwrite_template_id and existing_image_path and not keep_existing_image:
+        for ext in _IMAGE_EXTENSIONS:
             existing_image = f'{existing_prefix}{ext}'
             if os.path.isfile(existing_image):
                 try:
                     os.remove(existing_image)
                 except OSError:
                     pass
-    if image_src_path and os.path.isfile(image_src_path):
+
+    if keep_existing_image:
+        image_dst_path = existing_image_path
+    elif image_src_path and os.path.isfile(image_src_path):
         image_dst_path = os.path.join(db_dir, f'{unique_name}{image_extension(image_src_path)}')
-        same_file = False
-        try:
-            same_file = os.path.samefile(image_src_path, image_dst_path)
-        except Exception:
-            same_file = os.path.abspath(image_src_path) == os.path.abspath(image_dst_path)
-        if not same_file:
+        if not _same_path(image_src_path, image_dst_path):
             shutil.copy2(image_src_path, image_dst_path)
         else:
             image_dst_path = image_src_path
