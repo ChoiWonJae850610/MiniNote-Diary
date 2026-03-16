@@ -10,7 +10,16 @@ from ui.image_preview import ImagePreview
 from ui.messages import PageDescriptions, PageTitles, SectionTitles, Tooltips
 from ui.pages.common import make_image_shell, make_standard_page_header, make_standard_page_layout
 from ui.postit import ChangeNotePostIt, PostItBar
-from ui.postit.layout import POSTIT_MEMO_BODY_HEIGHT, make_postit_footer_spacer, make_static_postit_column
+from ui.postit.layout import (
+    POSTIT_BODY_HEIGHT,
+    POSTIT_EXTERNAL_ROW_GAP,
+    POSTIT_FOOTER_HEIGHT,
+    POSTIT_HEADER_HEIGHT,
+    POSTIT_MEMO_BODY_HEIGHT,
+    POSTIT_TAB_OVERLAP,
+    make_postit_footer_spacer,
+    make_static_postit_column,
+)
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import make_toolbar_icon_button
 
@@ -139,15 +148,45 @@ class WorkOrderPageBuilder:
 
     @staticmethod
     def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
+        change_note_body_height = WorkOrderPageBuilder._aligned_change_note_body_height()
         change_note_postit = ChangeNotePostIt()
+        change_note_postit.setFixedHeight(change_note_body_height)
         change_note_wrap = make_static_postit_column(
             SectionTitles.CHANGE_NOTE,
             change_note_postit,
             parent=page,
-            body_height=POSTIT_MEMO_BODY_HEIGHT,
+            body_height=change_note_body_height,
             footer_widget=make_postit_footer_spacer(page),
         )
         return change_note_postit, change_note_wrap
+
+    @staticmethod
+    def _aligned_change_note_body_height() -> int:
+        image_column_height = (
+            THEME.icon_button_size
+            + THEME.row_spacing
+            + (THEME.image_shell_margin * 2)
+            + THEME.image_preview_min_height
+        )
+        postit_bar_height = (
+            POSTIT_HEADER_HEIGHT
+            + POSTIT_TAB_OVERLAP
+            + POSTIT_BODY_HEIGHT
+            + THEME.top_button_spacing
+            + POSTIT_FOOTER_HEIGHT
+            + POSTIT_EXTERNAL_ROW_GAP
+            + POSTIT_FOOTER_HEIGHT
+        )
+        change_note_fixed_overhead = (
+            POSTIT_HEADER_HEIGHT
+            + POSTIT_TAB_OVERLAP
+            + THEME.top_button_spacing
+            + POSTIT_FOOTER_HEIGHT
+            + POSTIT_EXTERNAL_ROW_GAP
+            + POSTIT_FOOTER_HEIGHT
+        )
+        aligned_height = image_column_height - postit_bar_height - THEME.section_gap - change_note_fixed_overhead
+        return max(180, min(POSTIT_MEMO_BODY_HEIGHT, aligned_height))
 
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:

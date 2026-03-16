@@ -68,7 +68,9 @@ def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
 
 def _apply_standard_header_policy(title_col: QVBoxLayout, title: QLabel, subtitle: QLabel, *, has_subtitle: bool) -> None:
     title_col.setSpacing(THEME.title_stack_spacing if has_subtitle else 0)
-    title.setMinimumHeight(max(title.minimumHeight(), THEME.page_header_row_min_height))
+    title_min_height = max(title.minimumHeight(), THEME.page_header_row_min_height, THEME.page_title_font_px + 18, THEME.nav_button_size)
+    title.setMinimumHeight(title_min_height)
+    title.setContentsMargins(0, 1, 0, 1)
     title.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
     subtitle.setVisible(has_subtitle)
     subtitle.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
@@ -146,6 +148,7 @@ def make_standard_page_header(
     row.addWidget(btn_back, 0, Qt.AlignVCenter)
     row.addLayout(title_refs.layout, 0)
     row.setStretch(1, 0)
+    row.setSizeConstraint(QHBoxLayout.SetMinimumSize)
     if add_trailing_stretch:
         row.addStretch(1)
 

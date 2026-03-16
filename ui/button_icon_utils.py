@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QPushButton
 
 
 def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: int = 20) -> QIcon:
-    canvas_size = max(size_px, font_px + 6)
+    canvas_size = max(size_px, font_px + 10)
     pixmap = QPixmap(canvas_size, canvas_size)
     pixmap.fill(Qt.GlobalColor.transparent)
 
@@ -20,8 +20,10 @@ def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: 
     font.setBold(True)
     painter.setFont(font)
 
-    text_rect = painter.boundingRect(QRect(0, 0, canvas_size, canvas_size), Qt.AlignmentFlag.AlignCenter, glyph)
-    text_rect.moveCenter(QRect(0, 0, canvas_size, canvas_size).center())
+    inset = 2
+    target_rect = QRect(inset, inset, canvas_size - (inset * 2), canvas_size - (inset * 2))
+    text_rect = painter.boundingRect(target_rect, Qt.AlignmentFlag.AlignCenter, glyph)
+    text_rect.moveCenter(target_rect.center() + QPoint(0, 1))
     painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter, glyph)
     painter.end()
     return QIcon(pixmap)
@@ -29,8 +31,8 @@ def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: 
 
 def apply_glyph_icon(button: QPushButton, glyph: str, *, font_px: int, color: str) -> QPushButton:
     button.setText("")
-    button.setIcon(build_centered_glyph_icon(glyph, font_px=font_px, color=color))
-    icon_edge = max(12, min(button.width(), button.height()) - 6)
+    icon_edge = max(12, min(button.width(), button.height()) - 8)
+    button.setIcon(build_centered_glyph_icon(glyph, font_px=font_px, color=color, size_px=icon_edge))
     button.setIconSize(QSize(icon_edge, icon_edge))
     return button
 
