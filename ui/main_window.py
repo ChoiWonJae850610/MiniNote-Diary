@@ -1,3 +1,4 @@
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QMainWindow
 
@@ -58,8 +59,21 @@ class MainWindow(QMainWindow):
             self.on_save_clicked()
 
     def eventFilter(self, obj, event):
-        MainWindowFocusLogic.handle_event_filter(self, obj, event)
+        if MainWindowFocusLogic.handle_event_filter(self, obj, event):
+            return True
+        if event.type() == event.Type.MouseButtonPress and hasattr(event, "button"):
+            if event.button() == Qt.MouseButton.BackButton:
+                self._handle_mouse_back_navigation()
+                return True
         return super().eventFilter(obj, event)
+
+    def _handle_mouse_back_navigation(self) -> None:
+        current_index = self.stack.currentIndex()
+        if current_index == self.PAGE_WORK_ORDER:
+            self.on_back_clicked()
+            return
+        if current_index in {self.PAGE_JOB_START, self.PAGE_RECEIPT, self.PAGE_COMPLETE, self.PAGE_SALE, self.PAGE_INVENTORY, self.PAGE_PARTNER}:
+            self.go_menu()
 
     def _show_feedback(self, message: str, timeout_ms=None):
         if timeout_ms is None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Iterable
@@ -53,6 +54,51 @@ class WorkOrderSummaryView:
         for category in self.categories:
             counts.append(f"{category.title} {category.item_count}")
         return " / ".join(counts) if counts else "자재 없음"
+
+
+    def to_detail_html(self, *, include_total_amount: bool = True, include_header: bool = True) -> str:
+        blocks: list[str] = []
+        if include_header:
+            header_rows: list[str] = []
+            if self.name:
+                header_rows.append(f"<div><b>작업지시서</b> {html.escape(self.name)}</div>")
+            if self.factory_name:
+                header_rows.append(f"<div><b>공장</b> {html.escape(self.factory_name)}</div>")
+            if self.date:
+                header_rows.append(f"<div><b>기준일</b> {html.escape(self.date)}</div>")
+            if self.order_stats is not None:
+                last_order = self.order_stats.last_ordered_at or "없음"
+                header_rows.append(f"<div><b>발주이력</b> {self.order_stats.order_count}건 / 최근 {html.escape(last_order)}</div>")
+            if header_rows:
+                blocks.append(''.join(header_rows))
+        for category in self.categories:
+            rows = [
+                "<tr><th style='text-align:left;padding:4px 8px;'>품목</th><th style='text-align:center;padding:4px 8px;'>수량</th><th style='text-align:center;padding:4px 8px;'>단위</th><th style='text-align:right;padding:4px 8px;'>단가</th><th style='text-align:right;padding:4px 8px;'>금액</th></tr>"
+            ]
+            if not category.partners:
+                rows.append("<tr><td colspan='5' style='padding:6px 8px;'>내역 없음</td></tr>")
+            else:
+                for partner_summary in category.partners:
+                    rows.append(f"<tr><td colspan='5' style='padding:8px 8px 4px 8px;font-weight:700;background:#f5f5f5;'>{html.escape(partner_summary.partner)}</td></tr>")
+                    for item in partner_summary.items:
+                        rows.append(
+                            f"<tr>"
+                            f"<td style='padding:4px 8px;'>{html.escape(item.item or '-')}</td>"
+                            f"<td style='padding:4px 8px;text-align:center;'>{html.escape(item.qty or '-')}</td>"
+                            f"<td style='padding:4px 8px;text-align:center;'>{html.escape(item.unit or '-')}</td>"
+                            f"<td style='padding:4px 8px;text-align:right;'>{html.escape(item.unit_price or '-')}</td>"
+                            f"<td style='padding:4px 8px;text-align:right;'>{html.escape(item.total or _format_amount(item.total_amount))}</td>"
+                            f"</tr>"
+                        )
+                    rows.append(f"<tr><td colspan='4' style='padding:4px 8px;text-align:right;font-weight:700;'>소계</td><td style='padding:4px 8px;text-align:right;font-weight:700;'>{_format_amount(partner_summary.subtotal_amount)}</td></tr>")
+                rows.append(f"<tr><td colspan='4' style='padding:6px 8px;text-align:right;font-weight:700;'> {html.escape(category.title)} 합계</td><td style='padding:6px 8px;text-align:right;font-weight:700;'>{_format_amount(category.subtotal_amount)}</td></tr>")
+            table = "<table cellspacing='0' cellpadding='0' style='width:100%; border-collapse:collapse;'>" + ''.join(rows) + "</table>"
+            blocks.append(f"<div style='margin-top:10px;'><div style='font-weight:700; margin-bottom:6px;'>{html.escape(category.title)}</div>{table}</div>")
+        if include_total_amount:
+            blocks.append(f"<div style='margin-top:10px;font-weight:700;text-align:right;'>총 재료비 {_format_amount(self.total_amount)}</div>")
+        if self.change_note:
+            blocks.append(f"<div style='margin-top:12px;'><div style='font-weight:700; margin-bottom:4px;'>메모</div><div>{html.escape(self.change_note).replace(chr(10), '<br/>')}</div></div>")
+        return "<div style='font-family:Arial, Malgun Gothic, sans-serif; font-size:12px; line-height:1.45;'>" + ''.join(blocks) + "</div>"
 
     def to_detail_text(self, *, include_total_amount: bool = True) -> str:
         lines: list[str] = []

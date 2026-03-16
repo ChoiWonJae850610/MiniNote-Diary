@@ -65,7 +65,7 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     top_summary.setSpacing(THEME.section_gap)
     image_preview = ImagePreview()
     image_preview.setMinimumSize(THEME.image_preview_min_size, THEME.image_preview_min_size)
-    top_summary.addWidget(make_image_shell(summary_panel, image_preview), 4)
+    top_summary.addWidget(make_image_shell(summary_panel, image_preview), 5)
 
     lbl_name = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_factory = make_order_value_label(DefaultTexts.EMPTY_VALUE)
@@ -73,7 +73,6 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     lbl_cost = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_labor = make_order_value_label(DefaultTexts.EMPTY_VALUE)
     lbl_sale_price = make_order_value_label(DefaultTexts.EMPTY_VALUE)
-    lbl_material_summary = make_order_value_label(DefaultTexts.ORDER_MATERIAL_SUMMARY_EMPTY)
 
     detail_grid = make_form_grid()
     detail_grid.setColumnStretch(1, 1)
@@ -88,7 +87,7 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
             LabeledFieldRow(Labels.SALE_PRICE, lbl_sale_price, label_parent=summary_panel),
         ],
     )
-    top_summary.addLayout(detail_grid, 7)
+    top_summary.addLayout(detail_grid, 8)
     summary_layout.addLayout(top_summary)
 
     stats_panel = QFrame(summary_panel)
@@ -114,7 +113,8 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
     summary_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_MATERIAL_DETAIL, summary_panel))
-    material_detail_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.order_memo_min_height + 70)
+    material_detail_view = make_plain_text_editor(summary_panel, read_only=True, min_height=THEME.order_memo_min_height + 90)
+    material_detail_view.setStyleSheet(material_detail_view.styleSheet() + ' QTextEdit{font-family:"Consolas","D2Coding","Courier New",monospace;}')
     summary_layout.addWidget(material_detail_view)
 
     lbl_total_material_cost = make_order_value_label(DefaultTexts.EMPTY_VALUE)
@@ -132,7 +132,6 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
         'lbl_cost': lbl_cost,
         'lbl_labor': lbl_labor,
         'lbl_sale_price': lbl_sale_price,
-        'lbl_material_summary': lbl_material_summary,
         'lbl_last_order': lbl_last_order,
         'lbl_total_ordered': lbl_total_ordered,
         'lbl_in_progress': lbl_in_progress,

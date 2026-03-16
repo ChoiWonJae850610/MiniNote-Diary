@@ -58,12 +58,14 @@ class MainWindowOrderLogic:
 
         if refs.template_list.count() > 0:
             refs.template_list.setCurrentRow(0)
+            MainWindowOrderLogic._sync_template_list_selection(refs.template_list)
         else:
             MainWindowOrderLogic.clear_order_template_detail(window)
 
     @staticmethod
     def on_order_template_selected(window: "MainWindow", row: int) -> None:
         refs = window.order_page_refs
+        MainWindowOrderLogic._sync_template_list_selection(refs.template_list)
         item = refs.template_list.item(row) if row >= 0 else None
         if item is None:
             MainWindowOrderLogic.clear_order_template_detail(window)
@@ -88,7 +90,7 @@ class MainWindowOrderLogic:
         refs.lbl_total_ordered.setText(str(stats.total_ordered_qty))
         refs.lbl_in_progress.setText(str(stats.in_progress_qty))
         refs.lbl_current_stock.setText(str(stats.current_stock_qty))
-        refs.material_detail_view.setPlainText(summary_view.to_detail_text(include_total_amount=False))
+        refs.material_detail_view.setHtml(summary_view.to_detail_html(include_total_amount=False, include_header=False))
         refs.lbl_total_material_cost.clear()
         refs.memo_view.setPlainText(summary.change_note or InfoMessages.NO_MEMO)
         refs.order_qty_spin.setValue(max(1, refs.order_qty_spin.value()))
@@ -120,6 +122,7 @@ class MainWindowOrderLogic:
         refs.lbl_current_stock.setText('0')
         refs.memo_view.clear()
         refs.image_preview.clear_image()
+        MainWindowOrderLogic._sync_template_list_selection(refs.template_list)
 
     @staticmethod
     def on_order_create_clicked(window: "MainWindow") -> None:

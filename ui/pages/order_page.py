@@ -85,7 +85,7 @@ class OrderPageBuilder:
             lbl_cost=right_refs['lbl_cost'],
             lbl_labor=right_refs['lbl_labor'],
             lbl_sale_price=right_refs['lbl_sale_price'],
-            lbl_material_summary=right_refs['lbl_material_summary'],
+            lbl_material_summary=QLabel(page),
             lbl_last_order=right_refs['lbl_last_order'],
             lbl_total_ordered=right_refs['lbl_total_ordered'],
             lbl_in_progress=right_refs['lbl_in_progress'],

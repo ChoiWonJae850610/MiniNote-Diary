@@ -52,6 +52,7 @@ class WorkOrderLoadDialog(_BaseThemedDialog):
         left_layout.addWidget(make_section_title_label(SectionTitles.ORDER_TEMPLATE_LIST, left_panel))
         self.template_list = QListWidget(left_panel)
         self.template_list.currentRowChanged.connect(self._on_row_changed)
+        self.template_list.itemActivated.connect(self._on_item_activated)
         left_layout.addWidget(self.template_list, 1)
 
         right_panel = make_panel_frame(self)
@@ -112,7 +113,10 @@ class WorkOrderLoadDialog(_BaseThemedDialog):
             return
         stats = self.order_repository.aggregate_for_template(template_id)
         summary_view = build_work_order_summary_view(detail, order_stats=stats)
-        self.preview.setPlainText(summary_view.to_detail_text())
+        self.preview.setHtml(summary_view.to_detail_html())
+
+    def _on_item_activated(self, _item: QListWidgetItem) -> None:
+        self._accept_selected()
         self.selected_result = WorkOrderLoadResult(template_id=template_id, detail=detail)
         self.btn_load.setEnabled(True)
 
