@@ -30,9 +30,8 @@ def build_centered_glyph_icon(glyph: str, *, font_px: int, color: str, size_px: 
 def apply_glyph_icon(button: QPushButton, glyph: str, *, font_px: int, color: str) -> QPushButton:
     button.setText("")
     button.setIcon(build_centered_glyph_icon(glyph, font_px=font_px, color=color))
-    icon_w = max(12, min(button.width(), button.height()) - 4)
-    icon_h = max(12, min(button.width(), button.height()) - 4)
-    button.setIconSize(QSize(icon_w, icon_h))
+    icon_edge = max(12, min(button.width(), button.height()) - 6)
+    button.setIconSize(QSize(icon_edge, icon_edge))
     return button
 
 

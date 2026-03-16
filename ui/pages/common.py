@@ -131,7 +131,8 @@ def make_standard_page_header(
         title_min_height=title_min_height,
     )
 
-    row.addWidget(btn_back, 0, Qt.AlignTop)
+    row.setAlignment(Qt.AlignVCenter)
+    row.addWidget(btn_back, 0, Qt.AlignVCenter)
     row.addLayout(title_refs.layout, 1)
     if add_trailing_stretch:
         row.addStretch(1)
