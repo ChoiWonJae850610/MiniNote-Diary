@@ -18,6 +18,8 @@ class MenuPageTexts:
     TEMPLATE_SUBTITLE = "기준 문서 생성 · 수정"
     ORDER_TITLE = "발주"
     ORDER_SUBTITLE = "템플릿 선택 후 발주 수량 입력"
+    RECEIPT_TITLE = "자재 검토"
+    RECEIPT_SUBTITLE = "발주 화면 자재 요약으로 통합"
     COMPLETE_TITLE = "작업 완료"
     COMPLETE_SUBTITLE = "완료 수량 반영 · 재고 생성"
     SALE_TITLE = "판매 등록"
