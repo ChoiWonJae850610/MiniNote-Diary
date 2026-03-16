@@ -140,17 +140,20 @@ class MainWindowInboundLogic:
             return
         result = dialog.result_data()
 
+        inbound_date = refs.inbound_date_edit.date().toString('yyyy-MM-dd')
+        updated_inbound_qty = max(0, int(order.completed_qty or 0)) + inbound_qty
+        updated_status = MainWindowInboundLogic._status_code(completed_qty=updated_inbound_qty, ordered_qty=int(order.ordered_qty or 0))
+
         orders = window.order_repository.load_all()
         for index, row in enumerate(orders):
             if row.order_id != order.order_id:
                 continue
-            row.completed_qty = max(0, int(row.completed_qty or 0)) + result.good_qty
-            row.status = MainWindowInboundLogic._status_code(completed_qty=row.completed_qty, ordered_qty=int(row.ordered_qty or 0))
+            row.completed_qty = updated_inbound_qty
+            row.status = updated_status
             orders[index] = row
             break
         window.order_repository.save_all(orders)
 
-        inbound_date = refs.inbound_date_edit.date().toString('yyyy-MM-dd')
         window.inbound_repository.create_record(
             order_id=order.order_id,
             template_id=order.template_id,
@@ -165,9 +168,6 @@ class MainWindowInboundLogic:
             lead_days=MainWindowInboundLogic._lead_days_value(order.ordered_at, inbound_date=inbound_date),
         )
 
-        updated_completed_qty = max(0, int(order.completed_qty or 0)) + result.good_qty
-        updated_status = MainWindowInboundLogic._status_code(completed_qty=updated_completed_qty, ordered_qty=int(order.ordered_qty or 0))
-
         MainWindowInboundLogic.refresh_inbound_page(window)
         if updated_status != 'completed':
             MainWindowInboundLogic._select_order(window, order.order_id)
@@ -177,7 +177,7 @@ class MainWindowInboundLogic:
             InfoMessages.INBOUND_APPLIED.format(
                 good_qty=result.good_qty,
                 defect_qty=result.defect_qty,
-                remaining_qty=max(0, int(order.ordered_qty or 0) - (max(0, int(order.completed_qty or 0)) + result.good_qty)),
+                remaining_qty=max(0, int(order.ordered_qty or 0) - updated_inbound_qty),
             ),
         )
 
