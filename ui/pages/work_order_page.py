@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QStyle, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
@@ -127,17 +127,18 @@ class WorkOrderPageBuilder:
     @staticmethod
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
         image_toolbar = QWidget(page)
+        image_toolbar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         image_toolbar_layout = QHBoxLayout(image_toolbar)
         image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
         image_toolbar_layout.setSpacing(THEME.top_button_spacing)
 
         for key in ('btn_reset', 'btn_load', 'btn_save'):
-            image_toolbar_layout.addWidget(toolbar_buttons[key])
+            image_toolbar_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignLeft)
 
         image_toolbar_layout.addStretch(1)
 
         for key in ('btn_upload', 'btn_delete_image'):
-            image_toolbar_layout.addWidget(toolbar_buttons[key])
+            image_toolbar_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignRight)
 
         return image_toolbar
 
@@ -153,7 +154,7 @@ class WorkOrderPageBuilder:
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(THEME.row_spacing)
-        left_layout.addWidget(image_toolbar, 0, Qt.AlignLeft)
+        left_layout.addWidget(image_toolbar, 0)
         left_layout.addWidget(image_shell, 1)
         return image_preview, image_shell, image_toolbar, left_stack
 
@@ -170,6 +171,11 @@ class WorkOrderPageBuilder:
             image_shell=image_shell,
             postit_bar=postit_bar,
         )
+        target_change_note_wrap_height = WorkOrderPageBuilder._target_change_note_wrap_height(
+            image_toolbar=image_toolbar,
+            image_shell=image_shell,
+            postit_bar=postit_bar,
+        )
         change_note_postit = ChangeNotePostIt()
         change_note_postit.setFixedHeight(change_note_body_height)
         change_note_wrap = make_static_postit_column(
@@ -179,6 +185,7 @@ class WorkOrderPageBuilder:
             body_height=change_note_body_height,
             footer_widget=make_postit_footer_spacer(page),
         )
+        change_note_wrap.setFixedHeight(target_change_note_wrap_height)
         return change_note_postit, change_note_wrap
 
     @staticmethod
@@ -188,9 +195,11 @@ class WorkOrderPageBuilder:
         image_shell: QWidget,
         postit_bar: QWidget,
     ) -> int:
-        image_column_total_height = image_toolbar.sizeHint().height() + THEME.row_spacing + image_shell.sizeHint().height()
-        postit_bar_total_height = postit_bar.sizeHint().height()
-
+        target_change_note_wrap_height = WorkOrderPageBuilder._target_change_note_wrap_height(
+            image_toolbar=image_toolbar,
+            image_shell=image_shell,
+            postit_bar=postit_bar,
+        )
         change_note_wrap_overhead = (
             POSTIT_HEADER_HEIGHT
             + POSTIT_TAB_OVERLAP
@@ -199,10 +208,19 @@ class WorkOrderPageBuilder:
             + POSTIT_EXTERNAL_ROW_GAP
             + POSTIT_FOOTER_HEIGHT
         )
-
-        target_change_note_wrap_height = image_column_total_height - THEME.section_gap - postit_bar_total_height
         body_height = target_change_note_wrap_height - change_note_wrap_overhead
         return max(THEME.memo_min_height, body_height)
+
+    @staticmethod
+    def _target_change_note_wrap_height(
+        *,
+        image_toolbar: QWidget,
+        image_shell: QWidget,
+        postit_bar: QWidget,
+    ) -> int:
+        image_column_total_height = image_toolbar.sizeHint().height() + THEME.row_spacing + image_shell.sizeHint().height()
+        postit_bar_total_height = postit_bar.sizeHint().height()
+        return max(0, image_column_total_height - THEME.section_gap - postit_bar_total_height)
 
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
