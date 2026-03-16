@@ -24,6 +24,9 @@ class MainWindowInboundLogic:
             completed_qty = max(0, int(order.completed_qty or 0))
             ordered_qty = max(0, int(order.ordered_qty or 0))
             remaining_qty = max(0, ordered_qty - completed_qty)
+            status_code = MainWindowInboundLogic._status_code(completed_qty=completed_qty, ordered_qty=ordered_qty)
+            if status_code == 'completed':
+                continue
             status_text = MainWindowInboundLogic._display_status(order.status, completed_qty=completed_qty, ordered_qty=ordered_qty)
             meta_lines = [
                 f"상태 {status_text}",
@@ -162,8 +165,12 @@ class MainWindowInboundLogic:
             lead_days=MainWindowInboundLogic._lead_days_value(order.ordered_at, inbound_date=inbound_date),
         )
 
+        updated_completed_qty = max(0, int(order.completed_qty or 0)) + result.good_qty
+        updated_status = MainWindowInboundLogic._status_code(completed_qty=updated_completed_qty, ordered_qty=int(order.ordered_qty or 0))
+
         MainWindowInboundLogic.refresh_inbound_page(window)
-        MainWindowInboundLogic._select_order(window, order.order_id)
+        if updated_status != 'completed':
+            MainWindowInboundLogic._select_order(window, order.order_id)
         show_info(
             window,
             DialogTitles.INBOUND,
