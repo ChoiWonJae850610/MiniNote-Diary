@@ -9,7 +9,7 @@ from ui.postit.layouting.constants import (
     POSTIT_TAB_INSET_LEFT,
     POSTIT_SINGLE_STRETCH,
 )
-from ui.postit.layout import folder_tab_style
+from ui.postit.layouting.helpers import folder_tab_style
 from ui.theme import THEME, title_badge_style
 
 
