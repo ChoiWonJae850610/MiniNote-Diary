@@ -3,7 +3,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QLabel
 
 from ui.button_layout_utils import make_dialog_button_row
-from ui.dialog_base import _BaseThemedDialog
+from ui.dialogs.base import _BaseThemedDialog
 from ui.widget_factory_buttons import make_dialog_button
 
 

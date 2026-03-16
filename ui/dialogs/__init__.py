@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QDialog
 
-from ui.dialog_base import _BaseThemedDialog
-from ui.dialog_message_boxes import ConfirmActionDialog, SimpleMessageDialog
-from ui.dialog_status_dialogs import ValidationStatusDialog
+from ui.dialogs.base import _BaseThemedDialog
+from ui.dialogs.message_boxes import ConfirmActionDialog, SimpleMessageDialog
+from ui.dialogs.status_dialogs import ValidationStatusDialog
 from ui.messages import Buttons
 
 

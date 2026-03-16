@@ -3,7 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QListWidget, QVBoxLayout, QWidget
 
-from ui.dialog_form_fields import build_dialog_card, build_labeled_value_row, build_section_title, configure_text_field
+from ui.dialogs.forms.fields import build_dialog_card, build_labeled_value_row, build_section_title, configure_text_field
 from ui.layout_metrics import PartnerLayout
 from ui.messages import DialogTitles, Labels, Placeholders
 from ui.partners.dialogs.common import ReadOnlyTypeIndicatorGrid, detail_value_fallback, partner_field_label_style, partner_list_style

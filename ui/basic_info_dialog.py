@@ -5,9 +5,9 @@ from typing import Dict
 from PySide6.QtCore import QDate
 from PySide6.QtWidgets import QDialog
 
-from ui.dialog_basic_info_sections import build_basic_text_fields, build_factory_picker_row, build_price_row
-from ui.dialog_form_templates import add_action_row, add_form_to_root, setup_form_dialog
-from ui.dialog_value_widgets import build_calendar_row, show_calendar_popup
+from ui.dialogs.sections.basic_info import build_basic_text_fields, build_factory_picker_row, build_price_row
+from ui.dialogs.forms.templates import add_action_row, add_form_to_root, setup_form_dialog
+from ui.dialogs.forms.value_widgets import build_calendar_row, show_calendar_popup
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, DialogTitles, Labels
 from ui.partners.ui_utils import PARTNER_PICKER_TYPE_FACTORY, set_partner_line_edit, show_partner_picker

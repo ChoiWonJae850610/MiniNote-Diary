@@ -3,8 +3,8 @@ from __future__ import annotations
 from PySide6.QtWidgets import QLineEdit
 
 from services.unit.repository import load_units
-from ui.dialog_form_fields import configure_text_field
-from ui.dialog_value_widgets import ClearableComboBox, MoneyLineEdit, build_partner_picker_row
+from ui.dialogs.forms.fields import configure_text_field
+from ui.dialogs.forms.value_widgets import ClearableComboBox, MoneyLineEdit, build_partner_picker_row
 from ui.layout_metrics import DialogLayout
 from ui.messages import Tooltips
 from ui.theme import read_only_line_edit_style

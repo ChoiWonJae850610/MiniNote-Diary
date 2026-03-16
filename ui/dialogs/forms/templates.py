@@ -4,8 +4,8 @@ from collections.abc import Iterable
 
 from PySide6.QtWidgets import QDialog
 
-from ui.dialog_form_fields import build_dialog_actions
-from ui.dialog_layout_utils import make_dialog_form_layout, make_dialog_root_layout
+from ui.dialogs.forms.fields import build_dialog_actions
+from ui.dialogs.forms.layout_utils import make_dialog_form_layout, make_dialog_root_layout
 
 
 def setup_form_dialog(dialog: QDialog, *, title: str, min_width: int):

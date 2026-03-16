@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
 
 from ui.button_layout_utils import make_dialog_button_row
-from ui.dialog_base import _BaseThemedDialog
+from ui.dialogs.base import _BaseThemedDialog
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, Symbols
 from ui.theme import status_row_margins

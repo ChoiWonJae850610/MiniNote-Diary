@@ -3,9 +3,9 @@ from __future__ import annotations
 from PySide6.QtWidgets import QDialog
 
 from services.common.field_keys import MaterialKeys
-from ui.dialog_form_fields import build_hint_label
-from ui.dialog_form_templates import add_action_row, add_form_to_root, setup_form_dialog
-from ui.dialog_material_sections import build_material_fields, build_vendor_picker_row
+from ui.dialogs.forms.fields import build_hint_label
+from ui.dialogs.forms.templates import add_action_row, add_form_to_root, setup_form_dialog
+from ui.dialogs.sections.material import build_material_fields, build_vendor_picker_row
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, InfoMessages, Labels
 from ui.partners.ui_utils import PARTNER_PICKER_TYPE_OTHER, set_partner_line_edit, show_partner_picker

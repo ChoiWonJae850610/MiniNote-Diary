@@ -6,7 +6,7 @@ from ui.messages import Buttons, DialogTitles, Placeholders
 from ui.theme import THEME
 from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_dialog_button
-from ui.dialog_layout_utils import make_dialog_root_layout
+from ui.dialogs.forms.layout_utils import make_dialog_root_layout
 
 
 class ChangeNoteDialog(QDialog):

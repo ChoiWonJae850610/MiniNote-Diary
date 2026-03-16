@@ -7,7 +7,7 @@ from services.partner.repository import PartnerRecord
 from ui.dialogs import show_warning
 from ui.messages import DialogTitles, InfoMessages, Labels, Placeholders, Tooltips, WarningMessages
 from ui.partners.dialogs.common import partner_card_style, partner_field_label_style, partner_type_check_style
-from ui.dialog_form_fields import add_dialog_grid_row, build_dialog_card, build_dialog_grid, build_hint_label, build_section_title, configure_text_field
+from ui.dialogs.forms.fields import add_dialog_grid_row, build_dialog_card, build_dialog_grid, build_hint_label, build_section_title, configure_text_field
 from ui.layout_metrics import DialogLayout, PartnerLayout
 from ui.theme import THEME, dialog_layout_margins, plain_text_edit_style, title_label_style
 from ui.button_layout_utils import make_dialog_button_row
