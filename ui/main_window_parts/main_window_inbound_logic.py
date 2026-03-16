@@ -133,7 +133,7 @@ class MainWindowInboundLogic:
             return
 
         dialog = InboundInspectionDialog(inbound_qty=inbound_qty, parent=window)
-        if dialog.exec() != dialog.Accepted:
+        if not dialog.exec():
             return
         result = dialog.result_data()
 
