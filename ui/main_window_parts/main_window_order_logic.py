@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QListWidgetItem
 
 from services.search_utils import matches_keyword
 from ui.dialogs import show_error, show_info
-from ui.order_page import TemplateListCard
+from ui.pages.order_page import TemplateListCard
 from ui.messages import DefaultTexts, DialogTitles, HelperTexts, InfoMessages, Labels, Warnings
 
 if TYPE_CHECKING:
