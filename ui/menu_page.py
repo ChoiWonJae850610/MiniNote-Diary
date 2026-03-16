@@ -7,9 +7,9 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QPushButton, QWidget
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import DialogTitles, MenuPageTexts
-from ui.pages.common import make_standard_page_layout
+from ui.pages.common import make_page_text_header, make_standard_page_layout
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_page_title_label
+from ui.widget_factory import apply_button_metrics, make_action_button
 
 
 @dataclass
@@ -40,14 +40,16 @@ class MenuPageBuilder:
         layout = make_standard_page_layout(page)
         layout.setContentsMargins(THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET, MenuLayout.PAGE_MARGIN_TOP, THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET, MenuLayout.PAGE_MARGIN_BOTTOM)
 
-        title = make_page_title_label(MenuPageTexts.TITLE, page)
-        title.setAlignment(Qt.AlignCenter)
-        title.setObjectName('menuHeroTitle')
-        subtitle = make_hint_label(MenuPageTexts.SUBTITLE, page)
-        subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setObjectName('menuHeroSubtitle')
-        layout.addWidget(title)
-        layout.addWidget(subtitle)
+        hero_refs = make_page_text_header(
+            page,
+            title_text=MenuPageTexts.TITLE,
+            subtitle_text=MenuPageTexts.SUBTITLE,
+            title_object_name='menuHeroTitle',
+            subtitle_object_name='menuHeroSubtitle',
+            title_alignment=Qt.AlignCenter,
+            subtitle_alignment=Qt.AlignCenter,
+        )
+        layout.addLayout(hero_refs.layout)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(THEME.section_gap)

@@ -13,9 +13,18 @@ def make_panel_frame(parent=None, *, compact: bool = False, object_name: str | N
     return refresh_style(frame)
 
 
-def make_page_title_label(text: str, parent=None) -> QLabel:
+def make_page_title_label(
+    text: str,
+    parent=None,
+    *,
+    alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
+    object_name: str = 'pageTitle',
+    min_height: int | None = None,
+) -> QLabel:
     label = QLabel(text, parent)
-    label.setObjectName('pageTitle')
+    label.setObjectName(object_name)
+    label.setAlignment(alignment)
+    label.setMinimumHeight(THEME.page_title_font_px + 10 if min_height is None else min_height)
     return refresh_style(label)
 
 
@@ -25,10 +34,18 @@ def make_panel_title_label(text: str, parent=None) -> QLabel:
     return refresh_style(label)
 
 
-def make_hint_label(text: str, parent=None, *, word_wrap: bool = True) -> QLabel:
+def make_hint_label(
+    text: str,
+    parent=None,
+    *,
+    word_wrap: bool = True,
+    alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
+    object_name: str = 'hintLabel',
+) -> QLabel:
     label = QLabel(text, parent)
     label.setWordWrap(word_wrap)
-    label.setObjectName('hintLabel')
+    label.setAlignment(alignment)
+    label.setObjectName(object_name)
     return refresh_style(label)
 
 

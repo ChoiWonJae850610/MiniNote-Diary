@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
 from ui.theme import THEME
@@ -22,6 +22,15 @@ class PageHeaderRefs:
     row: QHBoxLayout
     back_button: QWidget
     title_layout: QVBoxLayout
+    title_label: QLabel
+    subtitle_label: QLabel
+
+
+@dataclass(frozen=True)
+class PageTextHeaderRefs:
+    layout: QVBoxLayout
+    title_label: QLabel
+    subtitle_label: QLabel
 
 
 @dataclass(frozen=True)
@@ -57,6 +66,41 @@ def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
     return layout
 
 
+def make_page_text_header(
+    parent: QWidget,
+    *,
+    title_text: str,
+    subtitle_text: str,
+    title_object_name: str | None = None,
+    subtitle_object_name: str | None = None,
+    title_alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
+    subtitle_alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
+    subtitle_word_wrap: bool = True,
+    title_min_height: int | None = None,
+) -> PageTextHeaderRefs:
+    title_col = QVBoxLayout()
+    title_col.setSpacing(THEME.title_stack_spacing)
+
+    title = make_page_title_label(
+        title_text,
+        parent,
+        alignment=title_alignment,
+        object_name=title_object_name or 'pageTitle',
+        min_height=title_min_height,
+    )
+    subtitle = make_hint_label(
+        subtitle_text,
+        parent,
+        word_wrap=subtitle_word_wrap,
+        alignment=subtitle_alignment,
+        object_name=subtitle_object_name or 'hintLabel',
+    )
+
+    title_col.addWidget(title)
+    title_col.addWidget(subtitle)
+    return PageTextHeaderRefs(layout=title_col, title_label=title, subtitle_label=subtitle)
+
+
 
 def make_standard_page_header(
     page: QWidget,
@@ -65,29 +109,40 @@ def make_standard_page_header(
     subtitle_text: str,
     subtitle_object_name: str | None = None,
     title_object_name: str | None = None,
+    add_trailing_stretch: bool = True,
+    subtitle_word_wrap: bool = True,
+    title_alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
+    subtitle_alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
+    title_min_height: int | None = None,
 ) -> PageHeaderRefs:
     row = QHBoxLayout()
     row.setSpacing(THEME.top_button_spacing)
 
     btn_back = make_nav_button(parent=page)
-    title_col = QVBoxLayout()
-    title_col.setSpacing(THEME.title_stack_spacing)
-
-    title = make_page_title_label(title_text, page)
-    if title_object_name:
-        title.setObjectName(title_object_name)
-
-    subtitle = make_hint_label(subtitle_text, page)
-    if subtitle_object_name:
-        subtitle.setObjectName(subtitle_object_name)
-
-    title_col.addWidget(title)
-    title_col.addWidget(subtitle)
+    title_refs = make_page_text_header(
+        page,
+        title_text=title_text,
+        subtitle_text=subtitle_text,
+        title_object_name=title_object_name,
+        subtitle_object_name=subtitle_object_name,
+        title_alignment=title_alignment,
+        subtitle_alignment=subtitle_alignment,
+        subtitle_word_wrap=subtitle_word_wrap,
+        title_min_height=title_min_height,
+    )
 
     row.addWidget(btn_back, 0, Qt.AlignTop)
-    row.addLayout(title_col, 1)
+    row.addLayout(title_refs.layout, 1)
+    if add_trailing_stretch:
+        row.addStretch(1)
 
-    return PageHeaderRefs(row=row, back_button=btn_back, title_layout=title_col)
+    return PageHeaderRefs(
+        row=row,
+        back_button=btn_back,
+        title_layout=title_refs.layout,
+        title_label=title_refs.title_label,
+        subtitle_label=title_refs.subtitle_label,
+    )
 
 
 
@@ -207,6 +262,7 @@ def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
 __all__ = [
     'LabeledFieldRow',
     'PageHeaderRefs',
+    'PageTextHeaderRefs',
     'ScrollPanelRefs',
     'StatFieldRow',
     'add_form_row',
@@ -216,6 +272,7 @@ __all__ = [
     'make_image_shell',
     'make_right_aligned_button_row',
     'make_scroll_panel',
+    'make_page_text_header',
     'make_standard_page_header',
     'make_standard_page_layout',
     'make_titled_panel',

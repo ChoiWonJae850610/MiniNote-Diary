@@ -43,7 +43,6 @@ class WorkOrderPageBuilder:
             title_text=PageTitles.WORK_ORDER,
             subtitle_text=PageDescriptions.WORK_ORDER,
         )
-        header_refs.row.addStretch(1)
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
         feedback_label = QLabel('')
