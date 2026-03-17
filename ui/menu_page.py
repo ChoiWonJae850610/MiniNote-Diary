@@ -9,7 +9,7 @@ from ui.layout_metrics import MenuLayout
 from ui.messages import DialogTitles, MenuPageTexts
 from ui.pages.common import make_page_text_header, make_standard_page_layout
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_panel_frame, make_panel_title_label
+from ui.widget_factory import apply_button_metrics, make_action_button, make_panel_frame, make_panel_title_label
 
 
 @dataclass
@@ -109,7 +109,6 @@ class MenuPageBuilder:
         recent_template_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         recent_template_layout.setSpacing(THEME.row_spacing)
         recent_template_layout.addWidget(make_panel_title_label('최근 작업지시서', recent_template_panel))
-        recent_template_layout.addWidget(make_hint_label('최근 저장한 작업지시서 5건을 표시합니다.', recent_template_panel))
         recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = []
         for _ in range(5):
             item_card, item_labels = MenuPageBuilder._make_line_item(recent_template_panel)
@@ -122,7 +121,6 @@ class MenuPageBuilder:
         recent_activity_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         recent_activity_layout.setSpacing(THEME.row_spacing)
         recent_activity_layout.addWidget(make_panel_title_label('최근 처리 내역', recent_activity_panel))
-        recent_activity_layout.addWidget(make_hint_label('발주, 입고, 상품 수정 내역 중 최근 5건을 표시합니다.', recent_activity_panel))
         recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = []
         for _ in range(5):
             item_card, item_labels = MenuPageBuilder._make_line_item(recent_activity_panel)

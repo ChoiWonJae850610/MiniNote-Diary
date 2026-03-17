@@ -11,6 +11,8 @@ from ui.pages.common import (
     StatFieldRow,
     add_labeled_field_rows,
     add_two_column_stat_rows,
+    apply_toolbar_field_metrics,
+    make_compact_toolbar_panel,
     make_form_grid,
     make_image_shell,
     make_right_aligned_button_row,
@@ -18,22 +20,23 @@ from ui.pages.common import (
 )
 from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
 from ui.theme import THEME, input_line_edit_style
-from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_input_line_edit, make_panel_frame, make_plain_text_editor, make_section_title_label
+from ui.widget_factory import make_action_button, make_field_label, make_hint_label, make_input_line_edit, make_plain_text_editor, make_section_title_label
 
 
 def build_filter_panel(page: QWidget) -> QFrame:
-    filter_panel = make_panel_frame(page, compact=True)
-    filter_layout = QHBoxLayout(filter_panel)
-    filter_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
-    filter_layout.setSpacing(THEME.row_spacing)
+    filter_panel, filter_layout = make_compact_toolbar_panel(page)
 
     month_combo = QComboBox(filter_panel)
     month_combo.setObjectName('orderMonthCombo')
     month_combo.setFixedWidth(OrderPageLayout.MONTH_COMBO_WIDTH)
+
     search_edit = make_input_line_edit(filter_panel, placeholder=Placeholders.ORDER_SEARCH)
     search_edit.setObjectName('orderSearchEdit')
+
     btn_reload = make_action_button(Buttons.REFRESH, filter_panel, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
     btn_reload.setObjectName('orderReloadButton')
+
+    apply_toolbar_field_metrics(month_combo, search_edit)
 
     filter_layout.addWidget(make_field_label(Labels.MONTH_FILTER, filter_panel))
     filter_layout.addWidget(month_combo)

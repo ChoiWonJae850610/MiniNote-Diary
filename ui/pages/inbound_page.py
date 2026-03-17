@@ -6,12 +6,14 @@ from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import QComboBox, QDateEdit, QHBoxLayout, QListWidget, QPushButton, QSpinBox, QTextEdit, QToolButton, QWidget
 
 from ui.image_preview import ImagePreview
-from ui.messages import Buttons, DefaultTexts, Labels, Placeholders, SectionTitles
+from ui.messages import Buttons, DefaultTexts, Labels, SectionTitles
 from ui.pages.common import (
     LabeledFieldRow,
     StatFieldRow,
     add_labeled_field_rows,
     add_two_column_stat_rows,
+    apply_toolbar_field_metrics,
+    make_compact_toolbar_panel,
     make_form_grid,
     make_image_shell,
     make_right_aligned_button_row,
@@ -21,8 +23,8 @@ from ui.pages.common import (
     make_titled_panel,
 )
 from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
-from ui.theme import THEME, input_line_edit_style, list_widget_style
-from ui.widget_factory import make_action_button, make_hint_label, make_plain_text_editor
+from ui.theme import THEME, list_widget_style
+from ui.widget_factory import make_action_button, make_plain_text_editor
 
 
 @dataclass
@@ -60,19 +62,18 @@ class InboundPageBuilder:
         header_refs = make_standard_page_header(page, title_text=SectionTitles.INBOUND_PAGE, subtitle_text='')
         root.addLayout(header_refs.row)
 
-        toolbar_panel, toolbar_layout = make_titled_panel(page, title_text=SectionTitles.INBOUND_FILTER, hint_text='', compact=True)
-        toolbar_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
+        toolbar_panel, toolbar_layout = make_compact_toolbar_panel(page, title_text=SectionTitles.INBOUND_FILTER)
         status_filter_combo = QComboBox(toolbar_panel)
         status_filter_combo.addItems(['진행중만', '완료 포함', '전체'])
         status_filter_combo.setCurrentIndex(0)
-        status_filter_combo.setFixedHeight(THEME.primary_button_height - 2)
         status_filter_combo.setMinimumWidth(140)
-        status_filter_combo.setStyleSheet(input_line_edit_style())
 
         btn_reload = make_action_button(Buttons.REFRESH, toolbar_panel, width=THEME.reload_button_width, height=THEME.primary_button_height - 2)
         btn_reload.setObjectName('inboundReloadButton')
-        hint = make_hint_label(Placeholders.INBOUND_FILTER_HINT, toolbar_panel)
-        toolbar_layout.addWidget(hint, 1)
+
+        apply_toolbar_field_metrics(status_filter_combo)
+
+        toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(status_filter_combo)
         toolbar_layout.addWidget(btn_reload)
         root.addWidget(toolbar_panel)

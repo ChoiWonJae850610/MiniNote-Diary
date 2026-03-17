@@ -52,13 +52,13 @@ class ProductPageBuilder:
         page.setObjectName('productPage')
         root = make_standard_page_layout(page)
 
-        header_refs = make_standard_page_header(page, title_text='상품관리', subtitle_text='제품 가격 등록, 재고 확인, 미검수 검수, 판매 등록을 한 화면에서 관리합니다.')
+        header_refs = make_standard_page_header(page, title_text='상품관리', subtitle_text='')
         root.addLayout(header_refs.row)
 
         body_row = QHBoxLayout()
         body_row.setSpacing(THEME.section_gap)
 
-        left_panel, left_layout = make_titled_panel(page, title_text='상품 목록', hint_text='발주/입고 이력이 있는 상품을 기준으로 보여줍니다.')
+        left_panel, left_layout = make_titled_panel(page, title_text='상품 목록', hint_text='')
         product_list = QListWidget(left_panel)
         product_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
         product_list.setSpacing(6)
