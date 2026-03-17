@@ -11,13 +11,12 @@ from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.postit.layout import (
-    POSTIT_EXTERNAL_ROW_GAP,
-    POSTIT_FOOTER_GAP,
+    POSTIT_BODY_HEIGHT,
+    POSTIT_EXTERNAL_ROW_GAP_TIGHT,
     POSTIT_FOOTER_HEIGHT,
-    POSTIT_HEADER_HEIGHT,
-    POSTIT_TAB_OVERLAP,
     make_postit_footer_spacer,
     make_static_postit_column,
+    postit_column_height,
 )
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import make_toolbar_icon_button
@@ -125,8 +124,12 @@ class WorkOrderPageBuilder:
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
         image_toolbar, image_toolbar_layout = make_standard_toolbar_strip(page, object_name='workOrderToolbarPanel')
         image_toolbar.setFixedHeight(THEME.work_order_toolbar_panel_min_height)
-        image_toolbar_layout.setContentsMargins(THEME.work_order_toolbar_inner_padding, 0, THEME.work_order_toolbar_inner_padding, 0)
-        image_toolbar.setContentsMargins(0, 0, 0, 1)
+        image_toolbar_layout.setContentsMargins(
+            THEME.work_order_toolbar_inner_padding,
+            3,
+            THEME.work_order_toolbar_inner_padding,
+            3,
+        )
 
         for key in ('btn_reset', 'btn_load', 'btn_save'):
             image_toolbar_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignLeft)
@@ -192,15 +195,13 @@ class WorkOrderPageBuilder:
             image_shell=image_shell,
             postit_bar=postit_bar,
         )
-        change_note_wrap_overhead = (
-            POSTIT_HEADER_HEIGHT
-            + POSTIT_TAB_OVERLAP
-            + POSTIT_FOOTER_GAP
-            + POSTIT_FOOTER_HEIGHT
-            + POSTIT_EXTERNAL_ROW_GAP
-            + POSTIT_FOOTER_HEIGHT
+        wrap_overhead = postit_column_height(
+            body_height=0,
+            has_footer=True,
+            external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
+            external_row_height=POSTIT_FOOTER_HEIGHT,
         )
-        body_height = target_change_note_wrap_height - change_note_wrap_overhead
+        body_height = target_change_note_wrap_height - wrap_overhead
         return max(THEME.memo_min_height, THEME.work_order_change_note_body_min_height, body_height)
 
     @staticmethod
@@ -211,13 +212,18 @@ class WorkOrderPageBuilder:
         postit_bar: QWidget,
     ) -> int:
         image_column_total_height = (
-            max(image_toolbar.sizeHint().height(), THEME.work_order_toolbar_panel_min_height)
+            THEME.work_order_toolbar_panel_min_height
             + THEME.work_order_toolbar_to_image_gap
             + (THEME.image_shell_margin * 2)
-            + max(image_shell.sizeHint().height(), THEME.work_order_image_preview_min_height)
-            + 2
+            + THEME.work_order_image_preview_min_height
+            + image_shell.frameWidth() * 2
         )
-        postit_bar_total_height = max(postit_bar.sizeHint().height(), THEME.postit_bar_max_height)
+        postit_bar_total_height = postit_column_height(
+            body_height=POSTIT_BODY_HEIGHT,
+            has_footer=True,
+            external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
+            external_row_height=POSTIT_FOOTER_HEIGHT,
+        )
         return max(
             THEME.memo_min_height,
             image_column_total_height

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ui.postit.layouting.constants import (
     POSTIT_BODY_HEIGHT,
+    POSTIT_EXTERNAL_ROW_GAP,
     POSTIT_FOOTER_HEIGHT,
     POSTIT_HEADER_HEIGHT,
     POSTIT_TAB_OVERLAP,
@@ -20,6 +21,20 @@ def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
 
 def postit_wrap_height(*, body_height: int = POSTIT_BODY_HEIGHT, has_footer: bool = False) -> int:
     return postit_section_height(body_height=body_height, has_footer=has_footer)
+
+
+def postit_column_height(
+    *,
+    body_height: int = POSTIT_BODY_HEIGHT,
+    has_footer: bool = True,
+    external_row_gap: int = POSTIT_EXTERNAL_ROW_GAP,
+    external_row_height: int = POSTIT_FOOTER_HEIGHT,
+) -> int:
+    return (
+        postit_section_height(body_height=body_height, has_footer=has_footer)
+        + external_row_gap
+        + external_row_height
+    )
 
 
 
@@ -53,4 +68,5 @@ __all__ = [
     'folder_tab_style',
     'postit_section_height',
     'postit_wrap_height',
+    'postit_column_height',
 ]
