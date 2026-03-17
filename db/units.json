@@ -1,0 +1,20 @@
+{
+  "units": [
+    {
+      "unit": "EA",
+      "label": "개(EA)"
+    },
+    {
+      "unit": "YD",
+      "label": "야드(YD)"
+    },
+    {
+      "unit": "줄",
+      "label": "줄"
+    },
+    {
+      "unit": "롤",
+      "label": "롤"
+    }
+  ]
+}
