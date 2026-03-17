@@ -61,7 +61,7 @@ def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
         THEME.page_padding_x,
         THEME.page_header_top_margin,
         THEME.page_padding_x,
-        THEME.page_padding_y,
+        THEME.page_top_bottom,
     )
     layout.setSpacing(THEME.section_gap)
     return layout

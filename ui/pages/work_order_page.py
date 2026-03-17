@@ -11,7 +11,6 @@ from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.postit.layout import (
-    POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP,
     POSTIT_FOOTER_GAP,
     POSTIT_FOOTER_HEIGHT,
@@ -141,7 +140,7 @@ class WorkOrderPageBuilder:
         image_shell = make_image_shell(page, image_preview, margin=THEME.image_shell_margin)
 
         left_stack = QWidget(page)
-        left_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        left_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(THEME.work_order_column_spacing)
@@ -162,11 +161,6 @@ class WorkOrderPageBuilder:
             image_shell=image_shell,
             postit_bar=postit_bar,
         )
-        target_change_note_wrap_height = WorkOrderPageBuilder._target_change_note_wrap_height(
-            image_toolbar=image_toolbar,
-            image_shell=image_shell,
-            postit_bar=postit_bar,
-        )
         change_note_postit = ChangeNotePostIt()
         change_note_postit.setFixedHeight(change_note_body_height)
         change_note_wrap = make_static_postit_column(
@@ -176,7 +170,6 @@ class WorkOrderPageBuilder:
             body_height=change_note_body_height,
             footer_widget=make_postit_footer_spacer(page),
         )
-        change_note_wrap.setFixedHeight(target_change_note_wrap_height)
         change_note_wrap.setMinimumWidth(THEME.work_order_change_note_min_width)
         return change_note_postit, change_note_wrap
 
@@ -210,20 +203,19 @@ class WorkOrderPageBuilder:
         image_shell: QWidget,
         postit_bar: QWidget,
     ) -> int:
-        image_column_total_height = image_toolbar.sizeHint().height() + THEME.work_order_column_spacing + image_shell.sizeHint().height()
-        postit_bar_total_height = postit_bar.sizeHint().height()
-        return max(0, image_column_total_height - THEME.section_gap - postit_bar_total_height)
+        image_column_total_height = max(image_toolbar.sizeHint().height(), THEME.work_order_toolbar_panel_min_height) + THEME.work_order_column_spacing + max(image_shell.sizeHint().height(), THEME.image_preview_min_height)
+        postit_bar_total_height = max(postit_bar.sizeHint().height(), THEME.postit_bar_max_height)
+        return max(THEME.memo_min_height, image_column_total_height - THEME.section_gap - postit_bar_total_height)
 
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
         right_stack = QWidget()
-        right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.work_order_column_spacing)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
-        right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
-        right_layout.addStretch(1)
+        right_layout.addWidget(change_note_wrap, 1)
         return right_stack
 
 
