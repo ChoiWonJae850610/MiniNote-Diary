@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import Dict, List
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QSizePolicy, QWidget
+from PySide6.QtWidgets import QWidget
 
-from services.work_order.defaults import empty_material_row
+from services.storage.json_store import empty_material_row
 from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
 from ui.postit.material_card import PostItCard
-from ui.postit.stack_index_controls import PostItIndexControls
-from ui.postit.stack_runtime import clamp_active_index, normalized_stack_items, should_update_in_place
+from ui.postit.stacking.stack_index_controls import PostItIndexControls
+from ui.postit.stacking.stack_runtime import clamp_active_index, normalized_stack_items, should_update_in_place
 
 
 class PostItStack(QWidget):
@@ -20,26 +20,20 @@ class PostItStack(QWidget):
     def __init__(self, kind: str, parent=None):
         super().__init__(parent)
         self.kind = kind
+        self.body_host, self.stack = make_postit_stack_host(height=POSTIT_BODY_HEIGHT)
+        self.index_controls = PostItIndexControls(parent=self)
+        self.footer_host = self.index_controls.footer_host
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
         self.active_index = 0
+        self.index_buttons = []
+        self.plus_button = None
         self._suppress_next_new_card_menu = False
 
-        self.stack_host, self.stack = make_postit_stack_host(parent=self, height=POSTIT_BODY_HEIGHT)
-        self.footer_host = QWidget(self)
-        self.footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
-        self.index_controls = PostItIndexControls(self, self.footer_host)
-        self.index_buttons = self.index_controls.index_buttons
-        self.plus_button = self.index_controls.plus_button
+    def body_widget(self):
+        return self.body_host
 
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(POSTIT_BODY_HEIGHT + POSTIT_FOOTER_HEIGHT)
-        self._rebuild_index_buttons()
-
-    def body_widget(self) -> QWidget:
-        return self.stack_host
-
-    def footer_widget(self) -> QWidget:
+    def footer_widget(self):
         return self.footer_host
 
     def set_items(self, items: List[Dict[str, str]], force_rebuild: bool = False):
@@ -49,6 +43,7 @@ class PostItStack(QWidget):
             self.active_index = clamp_active_index(self.active_index, self.items)
             self._rebuild()
             return
+
         if should_update_in_place(items, self.items, self.cards):
             self.items = items
             for idx, item in enumerate(self.items):
@@ -57,8 +52,8 @@ class PostItStack(QWidget):
             self.active_index = clamp_active_index(self.active_index, self.items)
             self.stack.setCurrentIndex(self.active_index)
             self._refresh_delete_buttons()
-            self._apply_active()
             self._rebuild_index_buttons()
+            self._apply_active()
             return
         self.items = items
         self.active_index = clamp_active_index(self.active_index, self.items)

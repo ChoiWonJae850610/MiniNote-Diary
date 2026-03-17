@@ -16,7 +16,7 @@ from ui.postit.layout import (
     make_postit_footer_spacer,
     make_static_postit_column,
 )
-from ui.postit.partner_tabs import PartnerTabbedPostIt
+from ui.postit.stacking.partner_tabs import PartnerTabbedPostIt
 from ui.theme import THEME
 
 

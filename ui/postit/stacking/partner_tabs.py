@@ -16,8 +16,8 @@ from ui.postit.layout import (
     make_postit_pager_host,
     make_postit_stack_host,
 )
-from ui.postit.partner_tab_setup import build_partner_tab_defs, connect_partner_stack_signals
-from ui.postit.stack_impl import PostItStack
+from ui.postit.stacking.partner_tab_setup import build_partner_tab_defs, connect_partner_stack_signals
+from ui.postit.stacking.stack_impl import PostItStack
 
 
 class PartnerTabbedPostIt(PostItSectionColumn):
@@ -98,6 +98,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
         self.dyeing.set_items(dyeings or [], force_rebuild=force_rebuild)
         self.finishing.set_items(finishings or [], force_rebuild=force_rebuild)
         self.other.set_items(others or [], force_rebuild=force_rebuild)
+        self.set_active_tab(self._active_tab)
 
 
-__all__ = ['PartnerTabbedPostIt']
+__all__ = ["PartnerTabbedPostIt"]
