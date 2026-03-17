@@ -54,6 +54,9 @@ class ThemeTokens:
     work_order_toolbar_panel_min_height: int = 52
     work_order_column_spacing: int = 10
     work_order_toolbar_inner_padding: int = 10
+    work_order_postit_top_offset: int = 6
+    work_order_image_preview_min_height: int = 580
+    work_order_change_note_body_min_height: int = 180
     work_order_change_note_min_width: int = 260
     dashboard_metric_card_min_height: int = 96
     dashboard_recent_panel_min_height: int = 228
