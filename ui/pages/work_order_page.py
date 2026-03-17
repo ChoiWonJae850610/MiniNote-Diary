@@ -67,6 +67,7 @@ class WorkOrderPageBuilder:
 
         right_stack = WorkOrderPageBuilder._build_postit_stack(postit_bar, change_note_wrap)
         left_stack.setMinimumWidth(THEME.work_order_left_column_min_width)
+        left_stack.setMaximumWidth(THEME.work_order_left_column_max_width)
         right_stack.setMinimumWidth(THEME.work_order_right_column_min_width)
 
         content_row = make_standard_body_row()
@@ -140,7 +141,7 @@ class WorkOrderPageBuilder:
         image_shell = make_image_shell(page, image_preview, margin=THEME.image_shell_margin)
 
         left_stack = QWidget(page)
-        left_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        left_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(THEME.work_order_column_spacing)
@@ -211,6 +212,7 @@ class WorkOrderPageBuilder:
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
         right_stack = QWidget()
         right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        right_stack.setContentsMargins(0, 0, 0, 0)
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.work_order_column_spacing)
