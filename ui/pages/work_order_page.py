@@ -55,6 +55,8 @@ class WorkOrderPageBuilder:
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
         feedback_label = make_standard_feedback_label(page)
+        feedback_label.setMinimumHeight(0)
+        feedback_label.setMaximumHeight(THEME.feedback_label_height)
 
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
@@ -75,8 +77,8 @@ class WorkOrderPageBuilder:
         content_row.addWidget(right_stack, THEME.work_order_right_stretch)
 
         page_layout.addLayout(header_refs.row)
-        page_layout.addLayout(content_row, 1)
         page_layout.addWidget(feedback_label)
+        page_layout.addLayout(content_row, 1)
 
         return WorkOrderPageRefs(
             page=page,
