@@ -5,7 +5,7 @@ from typing import Dict, List
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget
 
-from services.storage.json_store import empty_material_row
+from services.work_order.defaults import empty_material_row
 from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
 from ui.postit.material_card import PostItCard
 from ui.postit.stacking.stack_index_controls import PostItIndexControls
@@ -21,8 +21,9 @@ class PostItStack(QWidget):
         super().__init__(parent)
         self.kind = kind
         self.body_host, self.stack = make_postit_stack_host(height=POSTIT_BODY_HEIGHT)
-        self.index_controls = PostItIndexControls(parent=self)
-        self.footer_host = self.index_controls.footer_host
+        self.footer_host = QWidget(self)
+        self.footer_host.setFixedHeight(POSTIT_FOOTER_HEIGHT)
+        self.index_controls = PostItIndexControls(self, self.footer_host)
         self.items: List[Dict[str, str]] = []
         self.cards: List[PostItCard] = []
         self.active_index = 0
