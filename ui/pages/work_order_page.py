@@ -14,6 +14,7 @@ from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
     POSTIT_EXTERNAL_ROW_GAP_TIGHT,
     POSTIT_FOOTER_HEIGHT,
+    POSTIT_HEADER_HEIGHT,
     make_postit_footer_spacer,
     make_static_postit_column,
     postit_column_height,
@@ -123,13 +124,15 @@ class WorkOrderPageBuilder:
     @staticmethod
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
         image_toolbar, image_toolbar_layout = make_standard_toolbar_strip(page, object_name='workOrderToolbarPanel')
-        image_toolbar.setFixedHeight(THEME.work_order_toolbar_panel_min_height)
+        image_toolbar.setMinimumHeight(THEME.work_order_toolbar_panel_min_height)
+        image_toolbar.setMaximumHeight(THEME.work_order_toolbar_panel_min_height)
         image_toolbar_layout.setContentsMargins(
             THEME.work_order_toolbar_inner_padding,
-            3,
+            1,
             THEME.work_order_toolbar_inner_padding,
-            3,
+            1,
         )
+        image_toolbar_layout.setAlignment(Qt.AlignVCenter)
 
         for key in ('btn_reset', 'btn_load', 'btn_save'):
             image_toolbar_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignLeft)
@@ -153,7 +156,7 @@ class WorkOrderPageBuilder:
         left_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(THEME.work_order_toolbar_to_image_gap)
+        left_layout.setSpacing(THEME.work_order_toolbar_to_image_overlap)
         left_layout.addWidget(image_toolbar, 0)
         left_layout.addWidget(image_shell, 1)
         return image_preview, image_shell, image_toolbar, left_stack
@@ -213,7 +216,7 @@ class WorkOrderPageBuilder:
     ) -> int:
         image_column_total_height = (
             THEME.work_order_toolbar_panel_min_height
-            + THEME.work_order_toolbar_to_image_gap
+            + THEME.work_order_toolbar_to_image_overlap
             + (THEME.image_shell_margin * 2)
             + THEME.work_order_image_preview_min_height
             + image_shell.frameWidth() * 2
