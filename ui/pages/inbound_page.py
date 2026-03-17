@@ -12,6 +12,7 @@ from ui.pages.common import (
     StatFieldRow,
     add_labeled_field_rows,
     add_two_column_stat_rows,
+    apply_form_field_metrics,
     apply_toolbar_field_metrics,
     make_compact_toolbar_panel,
     make_form_grid,
@@ -24,7 +25,7 @@ from ui.pages.common import (
 )
 from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
 from ui.theme import THEME, list_widget_style
-from ui.widget_factory import make_action_button, make_plain_text_editor
+from ui.widget_factory import make_action_button, make_hint_label, make_plain_text_editor
 
 
 @dataclass
@@ -62,7 +63,7 @@ class InboundPageBuilder:
         header_refs = make_standard_page_header(page, title_text=SectionTitles.INBOUND_PAGE, subtitle_text='')
         root.addLayout(header_refs.row)
 
-        toolbar_panel, toolbar_layout = make_compact_toolbar_panel(page, title_text=SectionTitles.INBOUND_FILTER)
+        toolbar_panel, toolbar_layout = make_compact_toolbar_panel(page, object_name='inboundToolbarPanel')
         status_filter_combo = QComboBox(toolbar_panel)
         status_filter_combo.addItems(['진행중만', '완료 포함', '전체'])
         status_filter_combo.setCurrentIndex(0)
@@ -73,6 +74,7 @@ class InboundPageBuilder:
 
         apply_toolbar_field_metrics(status_filter_combo)
 
+        toolbar_layout.addWidget(make_order_value_label(SectionTitles.INBOUND_FILTER))
         toolbar_layout.addStretch(1)
         toolbar_layout.addWidget(status_filter_combo)
         toolbar_layout.addWidget(btn_reload)
@@ -221,16 +223,13 @@ def _build_input_panel(parent: QWidget) -> dict[str, QWidget]:
     inbound_date_edit.setCalendarPopup(True)
     inbound_date_edit.setDate(QDate.currentDate())
     inbound_date_edit.setDisplayFormat('yyyy-MM-dd')
-    inbound_date_edit.setFixedHeight(THEME.order_input_height)
-    inbound_date_edit.setStyleSheet(input_line_edit_style())
-
     inbound_qty_spin = QSpinBox(panel)
     inbound_qty_spin.setMinimum(0)
     inbound_qty_spin.setMaximum(999999)
-    inbound_qty_spin.setFixedHeight(THEME.order_input_height)
-    inbound_qty_spin.setStyleSheet(input_line_edit_style())
 
     inbound_memo_edit = make_plain_text_editor(panel, min_height=THEME.order_memo_min_height)
+
+    apply_form_field_metrics(inbound_date_edit, inbound_qty_spin)
 
     add_labeled_field_rows(
         form_grid,

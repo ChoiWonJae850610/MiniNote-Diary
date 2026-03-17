@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
-from ui.theme import THEME, input_line_edit_style
+from ui.theme import THEME
 from ui.widget_factory import (
     make_field_label,
     make_hint_label,
@@ -202,33 +202,14 @@ def make_titled_panel(
 
 
 
-
-
-def make_compact_toolbar_panel(
-    parent: QWidget,
-    *,
-    title_text: str = '',
-    object_name: str = 'toolbarPanel',
-) -> tuple[QFrame, QHBoxLayout]:
-    panel = make_panel_frame(parent, compact=True, object_name=object_name)
-    layout = QHBoxLayout(panel)
-    layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
-    layout.setSpacing(THEME.row_spacing)
-    if title_text:
-        layout.addWidget(make_panel_title_label(title_text, panel))
-    return panel, layout
-
-
-def apply_toolbar_field_metrics(*widgets: QWidget, min_width: int | None = None) -> None:
-    target_height = max(THEME.order_input_height, THEME.primary_button_height - 2)
+def apply_form_field_metrics(*widgets: QWidget) -> None:
+    target_height = THEME.order_input_height
     for widget in widgets:
         if widget is None:
             continue
         if hasattr(widget, 'setFixedHeight'):
             widget.setFixedHeight(target_height)
-        if min_width is not None and hasattr(widget, 'setMinimumWidth'):
-            widget.setMinimumWidth(min_width)
-        if isinstance(widget, (QLineEdit, QComboBox)):
+        if isinstance(widget, (QLineEdit, QComboBox, QSpinBox, QDateEdit)):
             widget.setStyleSheet(input_line_edit_style())
 
 
@@ -305,6 +286,8 @@ def add_two_column_stat_rows(grid: QGridLayout, rows: list[StatFieldRow], *, lab
 
 def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
     row = QHBoxLayout()
+    row.setContentsMargins(0, THEME.inline_gap, 0, 0)
+    row.setSpacing(THEME.row_spacing)
     row.addStretch(1)
     for button in buttons:
         row.addWidget(button)
@@ -322,6 +305,7 @@ __all__ = [
     'add_two_column_stat_rows',
     'make_compact_toolbar_panel',
     'apply_toolbar_field_metrics',
+    'apply_form_field_metrics',
     'make_form_grid',
     'make_image_shell',
     'make_right_aligned_button_row',

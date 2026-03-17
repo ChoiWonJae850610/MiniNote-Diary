@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QDate, Qt
+from PySide6.QtCore import QDate
 from PySide6.QtWidgets import QDateEdit, QHBoxLayout, QListWidget, QPushButton, QSpinBox, QTextEdit, QWidget
 
-from ui.messages import Buttons, DefaultTexts, Labels, SectionTitles
+from ui.messages import DefaultTexts
 from ui.pages.common import (
     LabeledFieldRow,
     StatFieldRow,
     add_labeled_field_rows,
     add_two_column_stat_rows,
+    apply_form_field_metrics,
     make_form_grid,
     make_right_aligned_button_row,
     make_scroll_panel,
@@ -19,8 +20,8 @@ from ui.pages.common import (
     make_titled_panel,
 )
 from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
-from ui.theme import THEME, input_line_edit_style, list_widget_style
-from ui.widget_factory import make_action_button, make_hint_label, make_plain_text_editor
+from ui.theme import THEME, list_widget_style
+from ui.widget_factory import make_action_button, make_plain_text_editor
 
 
 @dataclass
@@ -59,6 +60,7 @@ class ProductPageBuilder:
         body_row.setSpacing(THEME.section_gap)
 
         left_panel, left_layout = make_titled_panel(page, title_text='상품 목록', hint_text='')
+        left_panel.setMinimumWidth(320)
         product_list = QListWidget(left_panel)
         product_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
         product_list.setSpacing(6)
@@ -157,17 +159,20 @@ def _build_product_panel(parent: QWidget) -> dict[str, QWidget]:
     price_spin = QSpinBox(panel)
     price_spin.setRange(0, 10_000_000)
     price_spin.setSingleStep(100)
-    price_spin.setFixedHeight(THEME.order_input_height)
-    price_spin.setStyleSheet(input_line_edit_style())
-    form_grid.addWidget(make_hint_label('판매가', panel, word_wrap=False), 0, 0)
-    form_grid.addWidget(price_spin, 0, 1)
+    apply_form_field_metrics(price_spin)
+    add_labeled_field_rows(
+        form_grid,
+        [
+            LabeledFieldRow('판매가', price_spin, label_parent=panel),
+        ],
+    )
     layout.addLayout(form_grid)
 
     product_note_edit = make_plain_text_editor(panel, read_only=False, min_height=THEME.memo_min_height)
     product_note_edit.setPlaceholderText('상품 메모를 입력하세요')
     layout.addWidget(product_note_edit)
 
-    btn_save_product = make_action_button('상품 저장', panel, width=THEME.footer_button_width, height=THEME.primary_button_height)
+    btn_save_product = make_action_button('상품 저장', panel, width=THEME.primary_button_width, height=THEME.primary_button_height)
     layout.addLayout(make_right_aligned_button_row(btn_save_product))
     return {'panel': panel, 'price_spin': price_spin, 'product_note_edit': product_note_edit, 'btn_save_product': btn_save_product}
 
@@ -181,7 +186,7 @@ def _build_pending_panel(parent: QWidget) -> dict[str, QWidget]:
     pending_list.setStyleSheet(list_widget_style())
     pending_list.setMinimumHeight(180)
     layout.addWidget(pending_list)
-    btn_apply_pending = make_action_button('선택 미검수 검수', panel, width=THEME.footer_button_width + 60, height=THEME.primary_button_height)
+    btn_apply_pending = make_action_button('선택 미검수 검수', panel, width=THEME.primary_button_width + 40, height=THEME.primary_button_height)
     layout.addLayout(make_right_aligned_button_row(btn_apply_pending))
     return {'panel': panel, 'pending_list': pending_list, 'btn_apply_pending': btn_apply_pending}
 
@@ -195,19 +200,14 @@ def _build_sale_panel(parent: QWidget) -> dict[str, QWidget]:
     sale_date_edit.setCalendarPopup(True)
     sale_date_edit.setDate(QDate.currentDate())
     sale_date_edit.setDisplayFormat('yyyy-MM-dd')
-    sale_date_edit.setFixedHeight(THEME.order_input_height)
-    sale_date_edit.setStyleSheet(input_line_edit_style())
-
     sale_qty_spin = QSpinBox(panel)
     sale_qty_spin.setRange(0, 999999)
-    sale_qty_spin.setFixedHeight(THEME.order_input_height)
-    sale_qty_spin.setStyleSheet(input_line_edit_style())
 
     sale_price_spin = QSpinBox(panel)
     sale_price_spin.setRange(0, 10_000_000)
     sale_price_spin.setSingleStep(100)
-    sale_price_spin.setFixedHeight(THEME.order_input_height)
-    sale_price_spin.setStyleSheet(input_line_edit_style())
+
+    apply_form_field_metrics(sale_date_edit, sale_qty_spin, sale_price_spin)
 
     add_labeled_field_rows(
         form_grid,
@@ -223,7 +223,7 @@ def _build_sale_panel(parent: QWidget) -> dict[str, QWidget]:
     sale_memo_edit.setPlaceholderText('판매 메모를 입력하세요')
     layout.addWidget(sale_memo_edit)
 
-    btn_register_sale = make_action_button('판매 등록', panel, width=THEME.footer_button_width, height=THEME.primary_button_height)
+    btn_register_sale = make_action_button('판매 등록', panel, width=THEME.primary_button_width, height=THEME.primary_button_height)
     layout.addLayout(make_right_aligned_button_row(btn_register_sale))
     return {
         'panel': panel,
