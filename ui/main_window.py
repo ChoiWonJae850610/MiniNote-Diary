@@ -10,6 +10,7 @@ from ui.main_window_parts.main_window_dialog_logic import MainWindowDialogLogic
 from ui.main_window_parts.main_window_event_binder import MainWindowEventBinder
 from ui.main_window_parts.main_window_feature_logic import MainWindowFeatureLogic
 from ui.main_window_parts.main_window_inbound_logic import MainWindowInboundLogic
+from ui.main_window_parts.main_window_menu_logic import MainWindowMenuLogic
 from ui.main_window_parts.main_window_features import build_feature_page_configs
 from ui.main_window_parts.main_window_feedback import MainWindowFeedback
 from ui.main_window_parts.main_window_focus_logic import MainWindowFocusLogic
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self._build_pages()
         self._bind_page_events()
         MainWindowBootstrap.apply_defaults(self)
+        self.refresh_menu_page()
 
     @property
     def is_dirty(self) -> bool:
@@ -104,6 +106,9 @@ class MainWindow(QMainWindow):
     def has_any_data(self) -> bool:
         return self.state.has_any_data()
 
+    def refresh_menu_page(self) -> None:
+        MainWindowMenuLogic.refresh_menu_page(self)
+
     def on_data_reset_clicked(self):
         confirmed = ask_confirm(
             self,
@@ -119,6 +124,7 @@ class MainWindow(QMainWindow):
         self.refresh_order_page()
         self.refresh_inbound_page()
         self.refresh_product_page()
+        self.refresh_menu_page()
         self._show_feedback(InfoMessages.DATA_RESET_DONE)
 
     def on_partner_mgmt_clicked(self):

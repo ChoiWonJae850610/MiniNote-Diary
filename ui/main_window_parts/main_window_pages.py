@@ -44,6 +44,7 @@ class MainWindowPageCoordinator:
 
     @staticmethod
     def _apply_menu_refs(window: "MainWindow", refs) -> None:
+        window.menu_page_refs = refs
         window.btn_template = refs.btn_template
         window.btn_job_start_menu = refs.btn_job_start
         window.btn_receipt_menu = refs.btn_receipt

@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QPushButton, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import DialogTitles, MenuPageTexts
 from ui.pages.common import make_page_text_header, make_standard_page_layout
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, make_action_button
+from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_panel_frame, make_panel_title_label
 
 
 @dataclass
@@ -24,6 +24,9 @@ class MenuPageRefs:
     btn_data_reset: QPushButton
     btn_partner_mgmt: QPushButton
     btn_unit_mgmt: QPushButton
+    metric_value_labels: dict[str, QLabel]
+    recent_template_labels: list[tuple[QLabel, QLabel, QLabel]]
+    recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]]
 
 
 class MenuPageBuilder:
@@ -33,6 +36,42 @@ class MenuPageBuilder:
         button.setObjectName('menuActionCard')
         apply_button_metrics(button, width=THEME.menu_button_width, height=THEME.menu_button_height + MenuLayout.CARD_HEIGHT_EXTRA, font_px=THEME.base_font_px + 1)
         return button
+
+    @staticmethod
+    def _make_metric_card(parent: QWidget, title: str) -> tuple[QFrame, QLabel]:
+        card = make_panel_frame(parent, compact=False)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding - 2, THEME.page_section_padding, THEME.page_section_padding - 2)
+        layout.setSpacing(6)
+
+        title_label = make_hint_label(title, card, word_wrap=False)
+        value_label = QLabel('0', card)
+        value_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        value_label.setObjectName('menuMetricValue')
+        layout.addWidget(title_label)
+        layout.addWidget(value_label)
+        return card, value_label
+
+    @staticmethod
+    def _make_line_item(parent: QWidget) -> tuple[QFrame, tuple[QLabel, QLabel, QLabel]]:
+        card = make_panel_frame(parent, compact=True)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(4)
+
+        primary = QLabel('-', card)
+        primary.setObjectName('menuListPrimary')
+        secondary = QLabel('', card)
+        secondary.setObjectName('menuListSecondary')
+        secondary.setWordWrap(True)
+        tertiary = QLabel('', card)
+        tertiary.setObjectName('menuListTertiary')
+        tertiary.setWordWrap(True)
+
+        layout.addWidget(primary)
+        layout.addWidget(secondary)
+        layout.addWidget(tertiary)
+        return card, (primary, secondary, tertiary)
 
     @staticmethod
     def build() -> MenuPageRefs:
@@ -51,6 +90,47 @@ class MenuPageBuilder:
             subtitle_alignment=Qt.AlignCenter,
         )
         layout.addLayout(hero_refs.layout)
+
+        metric_grid = QGridLayout()
+        metric_grid.setHorizontalSpacing(THEME.section_gap)
+        metric_grid.setVerticalSpacing(THEME.section_gap)
+        metric_value_labels: dict[str, QLabel] = {}
+        for index, title in enumerate(('총 작업지시서', '진행중 발주', '미검수 건수', '현재고 합계')):
+            card, value_label = MenuPageBuilder._make_metric_card(page, title)
+            metric_grid.addWidget(card, 0, index)
+            metric_value_labels[title] = value_label
+        layout.addLayout(metric_grid)
+
+        summary_row = QHBoxLayout()
+        summary_row.setSpacing(THEME.section_gap)
+
+        recent_template_panel = make_panel_frame(page)
+        recent_template_layout = QVBoxLayout(recent_template_panel)
+        recent_template_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
+        recent_template_layout.setSpacing(THEME.row_spacing)
+        recent_template_layout.addWidget(make_panel_title_label('최근 작업지시서', recent_template_panel))
+        recent_template_layout.addWidget(make_hint_label('최근 저장한 작업지시서 5건을 표시합니다.', recent_template_panel))
+        recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = []
+        for _ in range(5):
+            item_card, item_labels = MenuPageBuilder._make_line_item(recent_template_panel)
+            recent_template_layout.addWidget(item_card)
+            recent_template_labels.append(item_labels)
+        summary_row.addWidget(recent_template_panel, 1)
+
+        recent_activity_panel = make_panel_frame(page)
+        recent_activity_layout = QVBoxLayout(recent_activity_panel)
+        recent_activity_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
+        recent_activity_layout.setSpacing(THEME.row_spacing)
+        recent_activity_layout.addWidget(make_panel_title_label('최근 처리 내역', recent_activity_panel))
+        recent_activity_layout.addWidget(make_hint_label('발주, 입고, 상품 수정 내역 중 최근 5건을 표시합니다.', recent_activity_panel))
+        recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = []
+        for _ in range(5):
+            item_card, item_labels = MenuPageBuilder._make_line_item(recent_activity_panel)
+            recent_activity_layout.addWidget(item_card)
+            recent_activity_labels.append(item_labels)
+        summary_row.addWidget(recent_activity_panel, 1)
+
+        layout.addLayout(summary_row)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(THEME.section_gap)
@@ -93,4 +173,7 @@ class MenuPageBuilder:
             btn_data_reset=btn_data_reset,
             btn_partner_mgmt=btn_partner_mgmt,
             btn_unit_mgmt=btn_unit_mgmt,
+            metric_value_labels=metric_value_labels,
+            recent_template_labels=recent_template_labels,
+            recent_activity_labels=recent_activity_labels,
         )

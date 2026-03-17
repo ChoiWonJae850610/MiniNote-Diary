@@ -36,4 +36,5 @@ class MainWindowSaveLogic:
             show_error(window, DialogTitles.SAVE_FAILED, str(exc))
             return
         window.reset_work_order_form()
+        window.refresh_menu_page()
         show_info(window, DialogTitles.SAVE, window.build_save_success_message(result))

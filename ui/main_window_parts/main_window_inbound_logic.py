@@ -184,6 +184,7 @@ class MainWindowInboundLogic:
         )
 
         MainWindowInboundLogic.refresh_inbound_page(window)
+        window.refresh_menu_page()
         if updated_status != 'completed':
             MainWindowInboundLogic._select_order(window, order.order_id)
         message = (

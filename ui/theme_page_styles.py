@@ -62,6 +62,26 @@ def build_global_widget_styles() -> str:
             padding: 0 10px;
             color: {t.color_text};
         }}
+
+        QLabel#menuMetricValue {
+            font-size: 16px;
+            font-weight: 700;
+            color: {t.color_text};
+            background: transparent;
+        }
+        QLabel#menuListPrimary {
+            font-size: 13px;
+            font-weight: 700;
+            color: {t.color_text};
+            background: transparent;
+        }
+        QLabel#menuListSecondary, QLabel#menuListTertiary {
+            color: {t.color_text_soft};
+            background: transparent;
+        }
+        QLabel#menuListTertiary {
+            color: {t.color_text_muted};
+        }
     """
 
 

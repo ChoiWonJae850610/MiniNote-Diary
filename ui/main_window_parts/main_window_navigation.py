@@ -30,4 +30,5 @@ class MainWindowNavigationLogic:
 
     @staticmethod
     def go_menu(window: "MainWindow") -> None:
+        window.refresh_menu_page()
         window.stack.setCurrentIndex(window.PAGE_MENU)
