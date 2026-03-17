@@ -45,7 +45,7 @@ class WorkOrderPageBuilder:
         page = QWidget()
         page_layout = make_standard_page_layout(page)
         page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
-        page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 4))
+        page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 6))
 
         header_refs = make_standard_page_header(
             page,
@@ -57,6 +57,7 @@ class WorkOrderPageBuilder:
         feedback_label = make_standard_feedback_label(page)
         feedback_label.setMinimumHeight(0)
         feedback_label.setMaximumHeight(THEME.feedback_label_height)
+        feedback_label.hide()
 
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
@@ -210,7 +211,14 @@ class WorkOrderPageBuilder:
     ) -> int:
         image_column_total_height = max(image_toolbar.sizeHint().height(), THEME.work_order_toolbar_panel_min_height) - THEME.work_order_toolbar_to_image_overlap + max(image_shell.sizeHint().height(), THEME.work_order_image_preview_min_height)
         postit_bar_total_height = max(postit_bar.sizeHint().height(), THEME.postit_bar_max_height)
-        return max(THEME.memo_min_height, image_column_total_height - THEME.section_gap - postit_bar_total_height - THEME.work_order_bottom_safe_reserve)
+        return max(
+            THEME.memo_min_height,
+            image_column_total_height
+            - THEME.work_order_column_spacing
+            - postit_bar_total_height
+            - THEME.work_order_bottom_safe_reserve
+            + THEME.work_order_bottom_match_adjust,
+        )
 
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:

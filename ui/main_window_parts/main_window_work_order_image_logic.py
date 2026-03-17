@@ -22,7 +22,7 @@ class MainWindowWorkOrderImageLogic:
             window.state.current_image_path = path
             window.btn_delete_image.setEnabled(True)
             window.mark_dirty()
-            window._show_feedback(InfoMessages.IMAGE_ATTACHED)
+            window._clear_feedback()
         except Exception as exc:
             show_error(window, DialogTitles.ERROR, str(exc))
 
@@ -32,4 +32,4 @@ class MainWindowWorkOrderImageLogic:
         window.state.current_image_path = None
         window.btn_delete_image.setEnabled(False)
         window.mark_dirty()
-        window._show_feedback(InfoMessages.IMAGE_REMOVED)
+        window._clear_feedback()

@@ -20,11 +20,13 @@ class MainWindowFeedback:
     @staticmethod
     def show_feedback(window: "MainWindow", message: str, timeout_ms: int = UiTiming.FEEDBACK_TIMEOUT_MS) -> None:
         window.feedback_label.setText(message)
+        window.feedback_label.setVisible(bool(message))
         window._feedback_timer.start(timeout_ms)
 
     @staticmethod
     def clear_feedback(window: "MainWindow") -> None:
         window.feedback_label.clear()
+        window.feedback_label.hide()
 
     @staticmethod
     def update_window_title(window: "MainWindow") -> None:
