@@ -39,9 +39,13 @@ class ThemeTokens:
     reload_button_width: int = 130
     page_list_panel_min_width: int = 320
     page_list_spacing: int = 6
+    page_master_detail_list_stretch: int = 4
+    page_master_detail_detail_stretch: int = 6
     page_body_split_spacing: int = 14
     page_right_panel_min_width: int = 640
+    page_detail_panel_spacing: int = 16
     page_action_row_top_margin: int = 10
+    page_wide_button_width: int = 210
     dialog_button_height: int = 34
     dialog_field_height: int = 30
     order_input_height: int = 34

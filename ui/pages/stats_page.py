@@ -106,7 +106,7 @@ class StatsPageBuilder:
         left_panel = make_panel_frame(page)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        left_layout.setSpacing(THEME.row_spacing)
+        left_layout.setSpacing(THEME.page_detail_panel_spacing)
         left_layout.addWidget(make_panel_title_label('스타일별 현황', left_panel))
         style_table = StatsPageBuilder._build_table(left_panel, ['스타일', '발주', '입고', '판매', '현재고', '상태'])
         left_layout.addWidget(style_table, 1)
@@ -118,7 +118,7 @@ class StatsPageBuilder:
         factory_panel = make_panel_frame(page)
         factory_layout = QVBoxLayout(factory_panel)
         factory_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        factory_layout.setSpacing(THEME.row_spacing)
+        factory_layout.setSpacing(THEME.page_detail_panel_spacing)
         factory_layout.addWidget(make_panel_title_label('거래처별 발주', factory_panel))
         factory_table = StatsPageBuilder._build_table(factory_panel, ['거래처', '건수', '수량'])
         factory_table.setMinimumHeight(220)
@@ -128,7 +128,7 @@ class StatsPageBuilder:
         note_panel = make_panel_frame(page)
         note_layout = QVBoxLayout(note_panel)
         note_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        note_layout.setSpacing(THEME.row_spacing)
+        note_layout.setSpacing(THEME.page_detail_panel_spacing - 4)
         note_layout.addWidget(make_panel_title_label('주의 / 참고', note_panel))
         note_labels: list[tuple[QLabel, QLabel]] = []
         for _ in range(4):

@@ -13,6 +13,7 @@ from ui.pages.common import (
     add_two_column_stat_rows,
     apply_form_field_metrics,
     apply_primary_button_metrics,
+    apply_wide_primary_button_metrics,
     make_standard_list_widget,
     make_form_grid,
     make_right_aligned_button_row,
@@ -22,6 +23,7 @@ from ui.pages.common import (
     make_standard_page_header,
     make_standard_page_layout,
     apply_scroll_panel_metrics,
+    make_standard_stat_panel,
 )
 from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
 from ui.theme import THEME, list_widget_style
@@ -66,8 +68,8 @@ class ProductPageBuilder:
         product_list.setStyleSheet(list_widget_style())
 
         right_refs = _build_right_panels(page)
-        body_row.addWidget(left_panel, 4)
-        body_row.addWidget(right_refs['scroll_area'], 6)
+        body_row.addWidget(left_panel, THEME.page_master_detail_list_stretch)
+        body_row.addWidget(right_refs['scroll_area'], THEME.page_master_detail_detail_stretch)
         root.addLayout(body_row, 1)
 
         return ProductPageRefs(
@@ -108,7 +110,7 @@ def _build_right_panels(page: QWidget) -> dict[str, QWidget]:
 
 
 def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
-    panel, layout = create_order_panel(parent, spacing=THEME.section_gap)
+    panel, layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(layout, panel, '상품 요약')
 
     lbl_name = make_order_value_label(DefaultTexts.EMPTY_VALUE)
@@ -124,9 +126,7 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     )
     layout.addLayout(grid)
 
-    stats_panel = QWidget(panel)
-    stats_layout = make_form_grid(parent=stats_panel)
-    stats_layout.setContentsMargins(0, 0, 0, 0)
+    stats_panel, stats_layout = make_standard_stat_panel(panel)
     lbl_stock_qty = make_order_value_label('0')
     lbl_pending_qty = make_order_value_label('0')
     lbl_defect_qty = make_order_value_label('0')
@@ -151,7 +151,7 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
 def _build_product_panel(parent: QWidget) -> dict[str, QWidget]:
-    panel, layout = create_order_panel(parent, spacing=THEME.section_gap)
+    panel, layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(layout, panel, '상품 정보')
 
     form_grid = make_form_grid()
@@ -178,20 +178,20 @@ def _build_product_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
 def _build_pending_panel(parent: QWidget) -> dict[str, QWidget]:
-    panel, layout = create_order_panel(parent, spacing=THEME.section_gap)
+    panel, layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(layout, panel, '미검수 검수')
     pending_list = make_standard_list_widget(panel)
     pending_list.setStyleSheet(list_widget_style())
     pending_list.setMinimumHeight(180)
     layout.addWidget(pending_list)
-    btn_apply_pending = make_action_button('선택 미검수 검수', panel, width=THEME.primary_button_width + 40, height=THEME.primary_button_height)
-    apply_primary_button_metrics(btn_apply_pending, width=THEME.primary_button_width + 40)
+    btn_apply_pending = make_action_button('선택 미검수 검수', panel, width=THEME.page_wide_button_width, height=THEME.primary_button_height)
+    apply_wide_primary_button_metrics(btn_apply_pending)
     layout.addLayout(make_right_aligned_button_row(btn_apply_pending))
     return {'panel': panel, 'pending_list': pending_list, 'btn_apply_pending': btn_apply_pending}
 
 
 def _build_sale_panel(parent: QWidget) -> dict[str, QWidget]:
-    panel, layout = create_order_panel(parent, spacing=THEME.section_gap)
+    panel, layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(layout, panel, '판매 등록')
     form_grid = make_form_grid()
 

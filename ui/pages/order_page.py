@@ -64,8 +64,8 @@ class OrderPageBuilder:
 
         right_refs = build_right_panels(page)
         apply_scroll_panel_metrics(right_refs['scroll_area'], min_width=THEME.page_right_panel_min_width)
-        body_row.addWidget(left_panel, 4)
-        body_row.addWidget(right_refs['scroll_area'], 6)
+        body_row.addWidget(left_panel, THEME.page_master_detail_list_stretch)
+        body_row.addWidget(right_refs['scroll_area'], THEME.page_master_detail_detail_stretch)
         root.addLayout(body_row, 1)
 
         return OrderPageRefs(

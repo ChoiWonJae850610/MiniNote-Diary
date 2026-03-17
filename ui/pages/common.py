@@ -268,6 +268,23 @@ def apply_scroll_panel_metrics(scroll_area: QScrollArea, *, min_width: int | Non
     scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
 
+def make_standard_stat_panel(parent: QWidget) -> tuple[QFrame, QGridLayout]:
+    panel = QFrame(parent)
+    panel.setObjectName('innerPanelFrame')
+    grid = make_form_grid(parent=panel)
+    grid.setContentsMargins(
+        THEME.filter_panel_margin_h,
+        THEME.filter_panel_margin_v,
+        THEME.filter_panel_margin_h,
+        THEME.filter_panel_margin_v,
+    )
+    return panel, grid
+
+
+def apply_wide_primary_button_metrics(*buttons: QWidget) -> None:
+    apply_primary_button_metrics(*buttons, width=THEME.page_wide_button_width)
+
+
 
 def make_scroll_panel(parent: QWidget) -> ScrollPanelRefs:
     scroll = QScrollArea(parent)
@@ -404,6 +421,7 @@ __all__ = [
     'add_form_row',
     'add_labeled_field_rows',
     'apply_primary_button_metrics',
+    'apply_wide_primary_button_metrics',
     'apply_secondary_button_metrics',
     'add_two_column_stat_rows',
     'make_compact_toolbar_panel',
@@ -417,6 +435,7 @@ __all__ = [
     'make_standard_list_panel',
     'make_scroll_panel',
     'apply_scroll_panel_metrics',
+    'make_standard_stat_panel',
     'make_page_text_header',
     'make_standard_list_widget',
     'make_standard_page_header',

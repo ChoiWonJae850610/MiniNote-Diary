@@ -14,6 +14,7 @@ from ui.pages.common import (
     add_two_column_stat_rows,
     apply_form_field_metrics,
     apply_primary_button_metrics,
+    make_standard_stat_panel,
     apply_toolbar_field_metrics,
     make_compact_toolbar_panel,
     make_form_grid,
@@ -89,8 +90,8 @@ class InboundPageBuilder:
         order_list.setStyleSheet(list_widget_style())
 
         right_refs = _build_right_panels(page)
-        body_row.addWidget(left_panel, 4)
-        body_row.addWidget(right_refs['scroll_area'], 6)
+        body_row.addWidget(left_panel, THEME.page_master_detail_list_stretch)
+        body_row.addWidget(right_refs['scroll_area'], THEME.page_master_detail_detail_stretch)
         root.addLayout(body_row, 1)
 
         return InboundPageRefs(
@@ -130,7 +131,7 @@ def _build_right_panels(page: QWidget) -> dict[str, QWidget]:
 
 
 def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
-    summary_panel, summary_layout = create_order_panel(parent, spacing=THEME.section_gap)
+    summary_panel, summary_layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(summary_layout, summary_panel, SectionTitles.INBOUND_SELECTED_ORDER)
 
     top_row = QHBoxLayout()
@@ -157,9 +158,7 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     top_row.addLayout(detail_grid, 8)
     summary_layout.addLayout(top_row)
 
-    stats_panel = QWidget(summary_panel)
-    stats_layout = make_form_grid(parent=stats_panel)
-    stats_layout.setContentsMargins(0, 0, 0, 0)
+    stats_panel, stats_layout = make_standard_stat_panel(summary_panel)
     lbl_completed_qty = make_order_value_label('0')
     lbl_remaining_qty = make_order_value_label('0')
     lbl_status = make_order_value_label(DefaultTexts.EMPTY_VALUE)
@@ -209,12 +208,11 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
 def _build_input_panel(parent: QWidget) -> dict[str, QWidget]:
-    panel, layout = create_order_panel(parent, spacing=THEME.section_gap)
+    panel, layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(layout, panel, SectionTitles.INBOUND_INPUT)
 
     helper_label = make_hint_label('', panel)
     helper_label.hide()
-    layout.addWidget(helper_label)
 
     form_grid = make_form_grid()
 
@@ -239,6 +237,7 @@ def _build_input_panel(parent: QWidget) -> dict[str, QWidget]:
         ],
     )
     layout.addLayout(form_grid)
+    layout.addWidget(helper_label)
 
     btn_apply = make_action_button(Buttons.INBOUND_APPLY, panel, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
     apply_primary_button_metrics(btn_apply)

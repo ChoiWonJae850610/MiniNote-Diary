@@ -13,6 +13,7 @@ from ui.pages.common import (
     add_two_column_stat_rows,
     apply_form_field_metrics,
     apply_primary_button_metrics,
+    make_standard_stat_panel,
     apply_toolbar_field_metrics,
     make_compact_toolbar_panel,
     make_form_grid,
@@ -63,7 +64,7 @@ def build_right_panels(page: QWidget) -> dict[str, QWidget]:
 
 
 def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
-    summary_panel, summary_layout = create_order_panel(parent, spacing=THEME.section_gap)
+    summary_panel, summary_layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(summary_layout, summary_panel, SectionTitles.ORDER_TEMPLATE_DETAIL)
 
     top_summary = QHBoxLayout()
@@ -95,10 +96,7 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
     top_summary.addLayout(detail_grid, 8)
     summary_layout.addLayout(top_summary)
 
-    stats_panel = QFrame(summary_panel)
-    stats_panel.setObjectName('innerPanelFrame')
-    stats_layout = make_form_grid(parent=stats_panel)
-    stats_layout.setContentsMargins(THEME.filter_panel_margin_h, THEME.filter_panel_margin_v, THEME.filter_panel_margin_h, THEME.filter_panel_margin_v)
+    stats_panel, stats_layout = make_standard_stat_panel(summary_panel)
 
     lbl_last_order = make_order_value_label(InfoMessages.NO_ORDER_HISTORY)
     lbl_total_ordered = make_order_value_label('0')
@@ -149,7 +147,7 @@ def build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
 def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
-    order_panel, order_layout = create_order_panel(parent, spacing=THEME.block_spacing)
+    order_panel, order_layout = create_order_panel(parent, spacing=THEME.page_detail_panel_spacing)
     add_panel_title(order_layout, order_panel, SectionTitles.ORDER_INPUT)
     helper_label = make_hint_label('', order_panel)
     helper_label.hide()
