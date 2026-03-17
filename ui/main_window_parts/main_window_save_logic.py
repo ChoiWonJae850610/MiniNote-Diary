@@ -37,4 +37,5 @@ class MainWindowSaveLogic:
             return
         window.reset_work_order_form()
         window.refresh_menu_page()
+        window.refresh_stats_page()
         show_info(window, DialogTitles.SAVE, window.build_save_success_message(result))

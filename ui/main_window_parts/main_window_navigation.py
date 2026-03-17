@@ -16,6 +16,8 @@ class MainWindowNavigationLogic:
 
     @staticmethod
     def open_feature_page(window: "MainWindow", page_index: int) -> None:
+        if page_index == window.PAGE_INVENTORY:
+            window.refresh_stats_page()
         window.stack.setCurrentIndex(page_index)
 
     @staticmethod

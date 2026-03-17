@@ -19,6 +19,7 @@ from ui.main_window_parts.main_window_order_logic import MainWindowOrderLogic
 from ui.main_window_parts.main_window_product_logic import MainWindowProductLogic
 from ui.main_window_parts.main_window_pages import MainWindowPageCoordinator
 from ui.main_window_parts.main_window_save_logic import MainWindowSaveLogic
+from ui.main_window_parts.main_window_stats_logic import MainWindowStatsLogic
 from ui.main_window_parts.main_window_work_order_logic import MainWindowWorkOrderLogic
 from ui.messages import Buttons, DialogTitles, InfoMessages, Warnings
 
@@ -44,6 +45,7 @@ class MainWindow(QMainWindow):
         self._bind_page_events()
         MainWindowBootstrap.apply_defaults(self)
         self.refresh_menu_page()
+        self.refresh_stats_page()
 
     @property
     def is_dirty(self) -> bool:
@@ -109,6 +111,9 @@ class MainWindow(QMainWindow):
     def refresh_menu_page(self) -> None:
         MainWindowMenuLogic.refresh_menu_page(self)
 
+    def refresh_stats_page(self) -> None:
+        MainWindowStatsLogic.refresh_stats_page(self)
+
     def on_data_reset_clicked(self):
         confirmed = ask_confirm(
             self,
@@ -125,6 +130,7 @@ class MainWindow(QMainWindow):
         self.refresh_inbound_page()
         self.refresh_product_page()
         self.refresh_menu_page()
+        self.refresh_stats_page()
         self._show_feedback(InfoMessages.DATA_RESET_DONE)
 
     def on_partner_mgmt_clicked(self):

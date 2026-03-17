@@ -17,6 +17,7 @@ class MainWindowEventBinder:
         MainWindowEventBinder._bind_inbound_page(window)
         MainWindowEventBinder._bind_product_page(window)
         MainWindowEventBinder._bind_work_order(window)
+        MainWindowEventBinder._bind_stats_page(window)
 
     @staticmethod
     def _bind_menu(window: "MainWindow") -> None:
@@ -36,6 +37,13 @@ class MainWindowEventBinder:
             refs.btn_back.clicked.connect(window.go_menu)
             refs.btn_primary.clicked.connect(lambda _=False, page=refs.page: window.on_feature_primary(page))
             refs.btn_secondary.clicked.connect(lambda _=False, page=refs.page: window.on_feature_secondary(page))
+
+    @staticmethod
+    def _bind_stats_page(window: "MainWindow") -> None:
+        refs = window.stats_page_refs
+        refs.btn_back.clicked.connect(window.go_menu)
+        refs.btn_refresh.clicked.connect(window.refresh_stats_page)
+        refs.period_combo.currentIndexChanged.connect(lambda _index: window.refresh_stats_page())
 
     @staticmethod
     def _bind_order_page(window: "MainWindow") -> None:

@@ -157,5 +157,6 @@ class MainWindowOrderLogic:
         )
         MainWindowOrderLogic.refresh_order_page(window)
         window.refresh_menu_page()
+        window.refresh_stats_page()
         message = DefaultTexts.ORDER_SAVE_SUCCESS_MESSAGE.format(name=detail.summary.name, qty=qty, ordered_at=ordered_at)
         show_info(window, DefaultTexts.ORDER_SAVE_SUCCESS, message)

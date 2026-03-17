@@ -119,6 +119,7 @@ class MainWindowProductLogic:
         )
         MainWindowProductLogic.refresh_product_page(window)
         window.refresh_menu_page()
+        window.refresh_stats_page()
         MainWindowProductLogic._select_template(window, template_id)
         show_info(window, DialogTitles.PRODUCT, InfoMessages.PRODUCT_SAVED)
 
@@ -150,6 +151,7 @@ class MainWindowProductLogic:
         template_id = refs.page.property('selected_template_id') or ''
         MainWindowProductLogic.refresh_product_page(window)
         window.refresh_menu_page()
+        window.refresh_stats_page()
         if template_id:
             MainWindowProductLogic._select_template(window, template_id)
         show_info(window, DialogTitles.PRODUCT, InfoMessages.PRODUCT_INSPECTION_APPLIED.format(good_qty=result.good_qty, defect_qty=result.defect_qty))
@@ -179,6 +181,7 @@ class MainWindowProductLogic:
         window.order_repository.save_all(rows)
         MainWindowProductLogic.refresh_product_page(window)
         window.refresh_menu_page()
+        window.refresh_stats_page()
         MainWindowProductLogic._select_template(window, template_id)
         show_info(window, DialogTitles.PRODUCT, InfoMessages.PRODUCT_SALE_SAVED.format(sale_qty=sale_qty, stock_qty=max(0, stats.stock_qty - sale_qty)))
 
