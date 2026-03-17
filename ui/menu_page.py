@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
@@ -24,6 +24,9 @@ class MenuPageRefs:
     btn_data_reset: QPushButton
     btn_partner_mgmt: QPushButton
     btn_unit_mgmt: QPushButton
+    metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
+    recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
+    recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
 
 
 class MenuPageBuilder:
@@ -31,15 +34,74 @@ class MenuPageBuilder:
     def _make_menu_card(title: str, subtitle: str) -> QPushButton:
         button = QPushButton(f'{title}\n{subtitle}')
         button.setObjectName('menuActionCard')
-        apply_button_metrics(button, width=THEME.menu_button_width, height=THEME.menu_button_height + MenuLayout.CARD_HEIGHT_EXTRA, font_px=THEME.base_font_px + 1)
+        apply_button_metrics(
+            button,
+            width=THEME.menu_button_width,
+            height=THEME.menu_button_height + MenuLayout.CARD_HEIGHT_EXTRA,
+            font_px=THEME.base_font_px + 1,
+        )
         return button
+
+    @staticmethod
+    def _make_metric_card(page: QWidget, title: str) -> tuple[QFrame, QLabel]:
+        card = make_panel_frame(page, object_name='menuMetricCard')
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setSpacing(6)
+
+        title_label = make_hint_label(title, card, word_wrap=False)
+        title_label.setObjectName('menuMetricTitle')
+        value_label = QLabel('0', card)
+        value_label.setObjectName('menuMetricValue')
+        value_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+        layout.addWidget(title_label)
+        layout.addWidget(value_label)
+        return card, value_label
+
+    @staticmethod
+    def _make_recent_panel(page: QWidget, title: str) -> tuple[QFrame, list[tuple[QLabel, QLabel, QLabel]]]:
+        panel = make_panel_frame(page, object_name='menuRecentPanel')
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(14, 14, 14, 14)
+        layout.setSpacing(8)
+
+        layout.addWidget(make_panel_title_label(title, panel))
+
+        rows: list[tuple[QLabel, QLabel, QLabel]] = []
+        for _ in range(5):
+            row = QWidget(panel)
+            row_layout = QVBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(2)
+
+            primary = QLabel('-', row)
+            primary.setObjectName('menuListPrimary')
+            secondary = QLabel('표시할 데이터가 없습니다.', row)
+            secondary.setObjectName('menuListSecondary')
+            tertiary = QLabel('', row)
+            tertiary.setObjectName('menuListTertiary')
+
+            row_layout.addWidget(primary)
+            row_layout.addWidget(secondary)
+            row_layout.addWidget(tertiary)
+            layout.addWidget(row)
+            rows.append((primary, secondary, tertiary))
+
+        layout.addStretch(1)
+        return panel, rows
 
     @staticmethod
     def build() -> MenuPageRefs:
         page = QWidget()
         page.setObjectName('workOrderPage')
         layout = make_standard_page_layout(page)
-        layout.setContentsMargins(THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET, MenuLayout.PAGE_MARGIN_TOP, THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET, MenuLayout.PAGE_MARGIN_BOTTOM)
+        layout.setContentsMargins(
+            THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET,
+            MenuLayout.PAGE_MARGIN_TOP,
+            THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET,
+            MenuLayout.PAGE_MARGIN_BOTTOM,
+        )
 
         hero_refs = make_page_text_header(
             page,
@@ -51,6 +113,25 @@ class MenuPageBuilder:
             subtitle_alignment=Qt.AlignCenter,
         )
         layout.addLayout(hero_refs.layout)
+
+        metric_titles = ('총 작업지시서', '진행중 발주', '미검수 건수', '현재고 합계')
+        metrics_row = QGridLayout()
+        metrics_row.setHorizontalSpacing(THEME.section_gap)
+        metrics_row.setVerticalSpacing(THEME.section_gap)
+        metric_value_labels: dict[str, QLabel] = {}
+        for index, title in enumerate(metric_titles):
+            card, value_label = MenuPageBuilder._make_metric_card(page, title)
+            metrics_row.addWidget(card, 0, index)
+            metric_value_labels[title] = value_label
+        layout.addLayout(metrics_row)
+
+        recent_row = QHBoxLayout()
+        recent_row.setSpacing(THEME.section_gap)
+        recent_templates_panel, recent_template_labels = MenuPageBuilder._make_recent_panel(page, '최근 작업지시서')
+        recent_activity_panel, recent_activity_labels = MenuPageBuilder._make_recent_panel(page, '최근 처리 내역')
+        recent_row.addWidget(recent_templates_panel, 1)
+        recent_row.addWidget(recent_activity_panel, 1)
+        layout.addLayout(recent_row)
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(THEME.section_gap)
@@ -72,9 +153,24 @@ class MenuPageBuilder:
 
         bottom_row = QHBoxLayout()
         bottom_row.addStretch(1)
-        btn_data_reset = make_action_button(DialogTitles.DATA_RESET, page, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA, height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA)
-        btn_partner_mgmt = make_action_button(DialogTitles.PARTNER_MANAGE, page, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA, height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA)
-        btn_unit_mgmt = make_action_button(DialogTitles.UNIT_MANAGE, page, width=THEME.footer_button_width, height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA)
+        btn_data_reset = make_action_button(
+            DialogTitles.DATA_RESET,
+            page,
+            width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA,
+            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
+        )
+        btn_partner_mgmt = make_action_button(
+            DialogTitles.PARTNER_MANAGE,
+            page,
+            width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA,
+            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
+        )
+        btn_unit_mgmt = make_action_button(
+            DialogTitles.UNIT_MANAGE,
+            page,
+            width=THEME.footer_button_width,
+            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
+        )
         bottom_row.addWidget(btn_data_reset)
         bottom_row.addSpacing(THEME.row_spacing)
         bottom_row.addWidget(btn_partner_mgmt)
@@ -93,4 +189,7 @@ class MenuPageBuilder:
             btn_data_reset=btn_data_reset,
             btn_partner_mgmt=btn_partner_mgmt,
             btn_unit_mgmt=btn_unit_mgmt,
+            metric_value_labels=metric_value_labels,
+            recent_template_labels=recent_template_labels,
+            recent_activity_labels=recent_activity_labels,
         )

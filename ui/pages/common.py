@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QScrollArea, QSizePolicy, QSpinBox, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
-from ui.theme import THEME
+from ui.theme import THEME, input_line_edit_style
 from ui.widget_factory import (
     make_field_label,
     make_hint_label,
@@ -202,6 +202,33 @@ def make_titled_panel(
 
 
 
+
+def make_compact_toolbar_panel(parent: QWidget, *, object_name: str | None = None) -> tuple[QFrame, QHBoxLayout]:
+    panel = make_panel_frame(parent, compact=True)
+    if object_name:
+        panel.setObjectName(object_name)
+    layout = QHBoxLayout(panel)
+    layout.setContentsMargins(
+        THEME.page_section_padding_compact,
+        THEME.page_section_padding_compact - 2,
+        THEME.page_section_padding_compact,
+        THEME.page_section_padding_compact - 2,
+    )
+    layout.setSpacing(THEME.row_spacing)
+    return panel, layout
+
+
+def apply_toolbar_field_metrics(*widgets: QWidget) -> None:
+    target_height = THEME.order_input_height
+    for widget in widgets:
+        if widget is None:
+            continue
+        if hasattr(widget, 'setFixedHeight'):
+            widget.setFixedHeight(target_height)
+        if isinstance(widget, (QLineEdit, QComboBox, QSpinBox, QDateEdit)):
+            widget.setStyleSheet(input_line_edit_style())
+
+
 def apply_form_field_metrics(*widgets: QWidget) -> None:
     target_height = THEME.order_input_height
     for widget in widgets:
@@ -286,7 +313,7 @@ def add_two_column_stat_rows(grid: QGridLayout, rows: list[StatFieldRow], *, lab
 
 def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
     row = QHBoxLayout()
-    row.setContentsMargins(0, THEME.inline_gap, 0, 0)
+    row.setContentsMargins(0, THEME.row_spacing, 0, 0)
     row.setSpacing(THEME.row_spacing)
     row.addStretch(1)
     for button in buttons:
