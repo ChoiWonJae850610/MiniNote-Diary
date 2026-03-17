@@ -96,7 +96,7 @@ class PostItLayout:
     DELETE_BUTTON_MARGIN_TOP = POSTIT_DELETE_BUTTON_MARGIN_TOP
 
 
-from ui.postit.layouting.widgets import (  # noqa: E402
+from ui.postit.layout_widgets import (  # noqa: E402
     FolderTabHeader,
     FooterSpacer,
     PostItSectionColumn,

@@ -8,8 +8,8 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 from services.work_order.defaults import empty_material_row
 from ui.postit.layout import POSTIT_BODY_HEIGHT, POSTIT_FOOTER_HEIGHT, make_postit_stack_host
 from ui.postit.material_card import PostItCard
-from ui.postit.stacking.stack_index_controls import PostItIndexControls
-from ui.postit.stacking.stack_runtime import clamp_active_index, normalized_stack_items, should_update_in_place
+from ui.postit.stack_index_controls import PostItIndexControls
+from ui.postit.stack_runtime import clamp_active_index, normalized_stack_items, should_update_in_place
 
 
 class PostItStack(QWidget):

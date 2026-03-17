@@ -1,4 +1,5 @@
-from ui.postit.stacking.partner_bar import PostItBar
-from ui.postit.stacking.stack_impl import PostItStack
+from ui.postit.partner_bar import PostItBar
+from ui.postit.partner_tabs import PartnerTabbedPostIt
+from ui.postit.stack_impl import PostItStack
 
-__all__ = ["PostItBar", "PostItStack"]
+__all__ = ["PostItBar", "PartnerTabbedPostIt", "PostItStack"]

@@ -14,7 +14,7 @@ from ui.common import (
     next_focusable_widget,
     prev_focusable_widget,
 )
-from ui.postit.layouting.constants import POSTIT_POPUP_MARGIN
+from ui.postit.layout_constants import POSTIT_POPUP_MARGIN
 
 
 class InlineCalendarPopup(QDialog):
