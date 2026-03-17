@@ -10,6 +10,7 @@ class Actions:
     OPEN_CALENDAR = "달력 열기"
     PARTNER_MANAGE = "거래처 관리"
     TYPE_MANAGE = "타입 관리"
+    DATA_RESET = "모든 데이터 초기화"
     ADD = "추가"
     EDIT = "수정"
     CLOSE = "닫기"
@@ -33,6 +34,7 @@ class Buttons:
     FILTER_OPEN = "필터 열기"
     SALES_PREVIEW = "판매 미리보기"
     TYPE_MANAGE = "타입 관리"
+    DATA_RESET = "모든 데이터 초기화"
     ORDER_SAVE = "발주 의뢰 저장"
     LOAD_TO_EDIT = "불러와서 수정"
     COMPLETE_PROCESS = "입고 반영"
@@ -40,6 +42,7 @@ class Buttons:
     PARTNER_SAVE = "거래처 저장"
     RECEIPT_SAVE = "영수증 저장"
     INBOUND_APPLY = "입고하기"
+    DATA_RESET = "모든 데이터 초기화"
 
 
 class Labels:
@@ -134,6 +137,7 @@ class Tooltips:
     OPEN_CALENDAR = "달력 열기"
     PARTNER_MANAGE = "거래처 관리"
     TYPE_MANAGE = "타입 관리"
+    DATA_RESET = "모든 데이터 초기화"
     PARTNER_TYPE_MANAGE = TYPE_MANAGE
     ADD = "추가"
     EDIT = "수정"

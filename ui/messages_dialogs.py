@@ -33,6 +33,7 @@ class DialogTitles:
     INBOUND = "입고&검수"
     COMING_SOON = "준비중"
     SCREEN_REVIEW = "화면 검토"
+    DATA_RESET = "모든 데이터 초기화"
 
 
 class Warnings:
@@ -51,6 +52,7 @@ class Warnings:
     TEMP_SAVE_CONFIRM = "임시 저장 하시겠습니까?"
     PARTNER_DELETE_CONFIRM = "거래처를 삭제하시겠습니까?"
     WORK_ORDER_LOAD_FAILED = "선택한 작업지시서를 현재 화면으로 불러오지 못했습니다."
+    DATA_RESET_CONFIRM = "DB 안의 모든 데이터를 완전 초기화하시겠습니까?\n\n작업지시서, 이미지, 거래처, 거래처 타입, 단위, 발주, 입고, 상품 데이터가 모두 삭제됩니다."
 
 
 class WarningMessages(Warnings):
@@ -86,3 +88,4 @@ class InfoMessages:
     PARTNER_EMPTY_VALUE = "-"
     PARTNER_EMPTY_LIST = "(목록 없음)"
     WORK_ORDER_LOADED = "작업지시서를 불러왔습니다. 필요한 부분을 수정한 뒤 새로 저장하세요."
+    DATA_RESET_DONE = "모든 데이터가 초기화되었습니다."

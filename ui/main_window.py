@@ -2,7 +2,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog
+from services.common.db_reset_service import DbResetService
+from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, ask_confirm
 from ui.main_window_parts.main_window_bootstrap import MainWindowBootstrap
 from ui.main_window_parts.main_window_constants import MainWindowPages
 from ui.main_window_parts.main_window_dialog_logic import MainWindowDialogLogic
@@ -18,7 +19,7 @@ from ui.main_window_parts.main_window_product_logic import MainWindowProductLogi
 from ui.main_window_parts.main_window_pages import MainWindowPageCoordinator
 from ui.main_window_parts.main_window_save_logic import MainWindowSaveLogic
 from ui.main_window_parts.main_window_work_order_logic import MainWindowWorkOrderLogic
-from ui.messages import Buttons, DialogTitles, Warnings
+from ui.messages import Buttons, DialogTitles, InfoMessages, Warnings
 
 
 class MainWindow(QMainWindow):
@@ -102,6 +103,23 @@ class MainWindow(QMainWindow):
 
     def has_any_data(self) -> bool:
         return self.state.has_any_data()
+
+    def on_data_reset_clicked(self):
+        confirmed = ask_confirm(
+            self,
+            DialogTitles.DATA_RESET,
+            Warnings.DATA_RESET_CONFIRM,
+            confirm_text=Buttons.YES,
+            cancel_text=Buttons.NO,
+        )
+        if not confirmed:
+            return
+        DbResetService.reset_all(self.project_root)
+        self.reset_work_order_form()
+        self.refresh_order_page()
+        self.refresh_inbound_page()
+        self.refresh_product_page()
+        self._show_feedback(InfoMessages.DATA_RESET_DONE)
 
     def on_partner_mgmt_clicked(self):
         MainWindowDialogLogic.open_partner_management(self)

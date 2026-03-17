@@ -50,6 +50,7 @@ class MainWindowPageCoordinator:
         window.btn_complete_menu = refs.btn_complete
         window.btn_sale_menu = refs.btn_sale
         window.btn_inventory_menu = refs.btn_inventory
+        window.btn_data_reset = refs.btn_data_reset
         window.btn_partner_mgmt = refs.btn_partner_mgmt
         window.btn_unit_mgmt = refs.btn_unit_mgmt
 
