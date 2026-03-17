@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSt
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
-from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout
+from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
@@ -120,11 +120,7 @@ class WorkOrderPageBuilder:
 
     @staticmethod
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
-        image_toolbar = QWidget(page)
-        image_toolbar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        image_toolbar_layout = QHBoxLayout(image_toolbar)
-        image_toolbar_layout.setContentsMargins(0, 0, 0, 0)
-        image_toolbar_layout.setSpacing(THEME.top_button_spacing)
+        image_toolbar, image_toolbar_layout = make_standard_toolbar_strip(page, object_name='workOrderToolbarPanel')
 
         for key in ('btn_reset', 'btn_load', 'btn_save'):
             image_toolbar_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignLeft)
@@ -148,7 +144,7 @@ class WorkOrderPageBuilder:
         left_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(THEME.row_spacing)
+        left_layout.setSpacing(THEME.work_order_column_spacing)
         left_layout.addWidget(image_toolbar, 0)
         left_layout.addWidget(image_shell, 1)
         return image_preview, image_shell, image_toolbar, left_stack
@@ -181,6 +177,7 @@ class WorkOrderPageBuilder:
             footer_widget=make_postit_footer_spacer(page),
         )
         change_note_wrap.setFixedHeight(target_change_note_wrap_height)
+        change_note_wrap.setMinimumWidth(THEME.work_order_change_note_min_width)
         return change_note_postit, change_note_wrap
 
     @staticmethod
@@ -213,7 +210,7 @@ class WorkOrderPageBuilder:
         image_shell: QWidget,
         postit_bar: QWidget,
     ) -> int:
-        image_column_total_height = image_toolbar.sizeHint().height() + THEME.row_spacing + image_shell.sizeHint().height()
+        image_column_total_height = image_toolbar.sizeHint().height() + THEME.work_order_column_spacing + image_shell.sizeHint().height()
         postit_bar_total_height = postit_bar.sizeHint().height()
         return max(0, image_column_total_height - THEME.section_gap - postit_bar_total_height)
 
@@ -223,7 +220,7 @@ class WorkOrderPageBuilder:
         right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(THEME.section_gap)
+        right_layout.setSpacing(THEME.work_order_column_spacing)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
         right_layout.addWidget(change_note_wrap, 0, Qt.AlignTop)
         right_layout.addStretch(1)

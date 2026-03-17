@@ -219,6 +219,16 @@ def make_compact_toolbar_panel(parent: QWidget, *, object_name: str | None = Non
     return panel, layout
 
 
+def make_standard_toolbar_strip(parent: QWidget, *, object_name: str | None = None) -> tuple[QFrame, QHBoxLayout]:
+    panel, layout = make_compact_toolbar_panel(parent, object_name=object_name)
+    pad = THEME.work_order_toolbar_inner_padding
+    layout.setContentsMargins(pad, 6, pad, 6)
+    layout.setSpacing(THEME.top_button_spacing)
+    panel.setMinimumHeight(THEME.work_order_toolbar_panel_min_height)
+    panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+    return panel, layout
+
+
 def apply_toolbar_field_metrics(*widgets: QWidget) -> None:
     target_height = THEME.order_input_height
     for widget in widgets:

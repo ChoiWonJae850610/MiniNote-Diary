@@ -50,6 +50,10 @@ class ThemeTokens:
     work_order_right_column_min_width: int = 520
     work_order_left_stretch: int = 5
     work_order_right_stretch: int = 6
+    work_order_toolbar_panel_min_height: int = 52
+    work_order_column_spacing: int = 10
+    work_order_toolbar_inner_padding: int = 10
+    work_order_change_note_min_width: int = 220
     dashboard_metric_card_min_height: int = 96
     dashboard_recent_panel_min_height: int = 228
     dashboard_metric_value_font_px: int = 18
