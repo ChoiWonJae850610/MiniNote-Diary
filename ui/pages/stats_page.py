@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
 from services.stats import StatsService
-from ui.pages.common import apply_secondary_button_metrics, apply_table_widget_metrics, make_standard_page_header, make_standard_page_layout
+from ui.pages.common import apply_secondary_button_metrics, apply_table_widget_metrics, apply_toolbar_field_metrics, make_compact_toolbar_panel, make_standard_body_row, make_standard_page_header, make_standard_page_layout
 from ui.theme import THEME
 from ui.widget_factory import make_action_button, make_hint_label, make_panel_frame, make_panel_title_label
 
@@ -77,19 +77,19 @@ class StatsPageBuilder:
         header_refs = make_standard_page_header(page, title_text='재고 / 통계', subtitle_text='')
         root.addLayout(header_refs.row)
 
-        filter_row = QHBoxLayout()
-        filter_row.setSpacing(THEME.row_spacing)
-        filter_row.addWidget(make_hint_label('조회 기간', page, word_wrap=False), 0)
+        filter_panel, filter_row = make_compact_toolbar_panel(page, object_name='statsToolbarPanel')
+        filter_row.addWidget(make_hint_label('조회 기간', filter_panel, word_wrap=False), 0)
 
-        period_combo = QComboBox(page)
+        period_combo = QComboBox(filter_panel)
         for text, key in StatsPageBuilder.PERIOD_OPTIONS:
             period_combo.addItem(text, key)
+        apply_toolbar_field_metrics(period_combo)
         filter_row.addWidget(period_combo, 0)
         filter_row.addStretch(1)
-        btn_refresh = make_action_button('새로고침', page, width=THEME.secondary_button_width, height=THEME.primary_button_height)
+        btn_refresh = make_action_button('새로고침', filter_panel, width=THEME.secondary_button_width, height=THEME.primary_button_height)
         apply_secondary_button_metrics(btn_refresh)
         filter_row.addWidget(btn_refresh, 0)
-        root.addLayout(filter_row)
+        root.addWidget(filter_panel)
 
         metric_grid = QGridLayout()
         metric_grid.setHorizontalSpacing(THEME.section_gap)
@@ -101,15 +101,13 @@ class StatsPageBuilder:
             metric_value_labels[title] = value_label
         root.addLayout(metric_grid)
 
-        body_row = QHBoxLayout()
-        body_row.setSpacing(THEME.section_gap)
+        body_row = make_standard_body_row()
 
         left_panel = make_panel_frame(page)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         left_layout.setSpacing(THEME.row_spacing)
         left_layout.addWidget(make_panel_title_label('스타일별 현황', left_panel))
-        left_layout.addWidget(make_hint_label('발주, 입고, 판매, 현재고 상태를 스타일 기준으로 보여줍니다.', left_panel))
         style_table = StatsPageBuilder._build_table(left_panel, ['스타일', '발주', '입고', '판매', '현재고', '상태'])
         left_layout.addWidget(style_table, 1)
         body_row.addWidget(left_panel, 7)
@@ -122,7 +120,6 @@ class StatsPageBuilder:
         factory_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
         factory_layout.setSpacing(THEME.row_spacing)
         factory_layout.addWidget(make_panel_title_label('거래처별 발주', factory_panel))
-        factory_layout.addWidget(make_hint_label('현재 필터 기준 발주 건수와 발주 수량입니다.', factory_panel))
         factory_table = StatsPageBuilder._build_table(factory_panel, ['거래처', '건수', '수량'])
         factory_table.setMinimumHeight(220)
         factory_layout.addWidget(factory_table, 1)

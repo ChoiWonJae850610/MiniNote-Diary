@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QListWidget, QPushButton, QSpinBox, QTextEdit, QWidget
-from PySide6.QtWidgets import QDateEdit, QHBoxLayout
+from PySide6.QtWidgets import QDateEdit
 
 from ui.image_preview import ImagePreview
 from ui.layout_metrics import OrderPageLayout
 from ui.messages import PageDescriptions, PageTitles, SectionTitles
-from ui.pages.common import make_standard_page_header, make_standard_page_layout, make_titled_panel
+from ui.pages.common import apply_scroll_panel_metrics, make_standard_body_row, make_standard_list_panel, make_standard_page_header, make_standard_page_layout
 from ui.pages.order_sections import TemplateListCard, build_filter_panel, build_right_panels
 from ui.theme import THEME, list_widget_style
 
@@ -55,17 +55,15 @@ class OrderPageBuilder:
         root.addLayout(header_refs.row)
         root.addWidget(build_filter_panel(page))
 
-        body_row = QHBoxLayout()
-        body_row.setSpacing(THEME.section_gap)
+        body_row = make_standard_body_row()
 
-        left_panel, left_layout = make_titled_panel(page, title_text=SectionTitles.ORDER_TEMPLATE_LIST, hint_text='')
-        template_list = QListWidget(left_panel)
+        left_panel, _left_layout, template_list = make_standard_list_panel(page, title_text=SectionTitles.ORDER_TEMPLATE_LIST)
         template_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
         template_list.setSpacing(OrderPageLayout.TEMPLATE_LIST_SPACING)
         template_list.setStyleSheet(list_widget_style())
-        left_layout.addWidget(template_list, 1)
 
         right_refs = build_right_panels(page)
+        apply_scroll_panel_metrics(right_refs['scroll_area'], min_width=THEME.page_right_panel_min_width)
         body_row.addWidget(left_panel, 4)
         body_row.addWidget(right_refs['scroll_area'], 6)
         root.addLayout(body_row, 1)

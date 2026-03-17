@@ -20,10 +20,11 @@ from ui.pages.common import (
     make_image_shell,
     make_right_aligned_button_row,
     make_scroll_panel,
-    make_standard_list_widget,
+    make_standard_body_row,
+    make_standard_list_panel,
     make_standard_page_header,
     make_standard_page_layout,
-    make_titled_panel,
+    apply_scroll_panel_metrics,
 )
 from ui.pages.order_panels import TemplateListCard, add_panel_title, create_order_panel, make_order_value_label
 from ui.theme import THEME, list_widget_style
@@ -82,13 +83,10 @@ class InboundPageBuilder:
         toolbar_layout.addWidget(btn_reload)
         root.addWidget(toolbar_panel)
 
-        body_row = QHBoxLayout()
-        body_row.setSpacing(THEME.section_gap)
+        body_row = make_standard_body_row()
 
-        left_panel, left_layout = make_titled_panel(page, title_text=SectionTitles.INBOUND_ORDER_LIST, hint_text='')
-        order_list = make_standard_list_widget(left_panel)
+        left_panel, _left_layout, order_list = make_standard_list_panel(page, title_text=SectionTitles.INBOUND_ORDER_LIST)
         order_list.setStyleSheet(list_widget_style())
-        left_layout.addWidget(order_list, 1)
 
         right_refs = _build_right_panels(page)
         body_row.addWidget(left_panel, 4)
@@ -122,6 +120,7 @@ class InboundPageBuilder:
 
 def _build_right_panels(page: QWidget) -> dict[str, QWidget]:
     right_refs = make_scroll_panel(page)
+    apply_scroll_panel_metrics(right_refs.scroll_area, min_width=THEME.page_right_panel_min_width)
     summary_refs = _build_summary_panel(right_refs.wrap)
     input_refs = _build_input_panel(right_refs.wrap)
     right_refs.layout.addWidget(summary_refs['panel'])
@@ -210,7 +209,7 @@ def _build_summary_panel(parent: QWidget) -> dict[str, QWidget]:
 
 
 def _build_input_panel(parent: QWidget) -> dict[str, QWidget]:
-    panel, layout = create_order_panel(parent, spacing=THEME.block_spacing)
+    panel, layout = create_order_panel(parent, spacing=THEME.section_gap)
     add_panel_title(layout, panel, SectionTitles.INBOUND_INPUT)
 
     helper_label = make_hint_label('', panel)

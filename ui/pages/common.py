@@ -241,6 +241,34 @@ def apply_form_field_metrics(*widgets: QWidget) -> None:
             widget.setStyleSheet(input_line_edit_style())
 
 
+def make_standard_body_row() -> QHBoxLayout:
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(THEME.page_body_split_spacing)
+    return row
+
+
+def make_standard_list_panel(
+    parent: QWidget,
+    *,
+    title_text: str,
+    hint_text: str = '',
+    list_min_height: int = 0,
+) -> tuple[QFrame, QVBoxLayout, QListWidget]:
+    panel, layout = make_titled_panel(parent, title_text=title_text, hint_text=hint_text)
+    panel.setMinimumWidth(THEME.page_list_panel_min_width)
+    list_widget = make_standard_list_widget(panel, min_height=list_min_height)
+    layout.addWidget(list_widget, 1)
+    return panel, layout, list_widget
+
+
+def apply_scroll_panel_metrics(scroll_area: QScrollArea, *, min_width: int | None = None) -> None:
+    if min_width is not None:
+        scroll_area.setMinimumWidth(min_width)
+    scroll_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+
+
 def make_scroll_panel(parent: QWidget) -> ScrollPanelRefs:
     scroll = QScrollArea(parent)
     scroll.setWidgetResizable(True)
@@ -314,7 +342,7 @@ def add_two_column_stat_rows(grid: QGridLayout, rows: list[StatFieldRow], *, lab
 
 def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
     row = QHBoxLayout()
-    row.setContentsMargins(0, THEME.row_spacing, 0, 0)
+    row.setContentsMargins(0, THEME.page_action_row_top_margin, 0, 0)
     row.setSpacing(THEME.row_spacing)
     row.addStretch(1)
     for button in buttons:
@@ -385,7 +413,10 @@ __all__ = [
     'make_form_grid',
     'make_image_shell',
     'make_right_aligned_button_row',
+    'make_standard_body_row',
+    'make_standard_list_panel',
     'make_scroll_panel',
+    'apply_scroll_panel_metrics',
     'make_page_text_header',
     'make_standard_list_widget',
     'make_standard_page_header',
