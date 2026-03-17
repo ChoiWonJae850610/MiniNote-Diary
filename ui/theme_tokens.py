@@ -46,6 +46,10 @@ class ThemeTokens:
     page_detail_panel_spacing: int = 16
     page_action_row_top_margin: int = 10
     page_wide_button_width: int = 210
+    work_order_left_column_min_width: int = 420
+    work_order_right_column_min_width: int = 520
+    work_order_left_stretch: int = 5
+    work_order_right_stretch: int = 6
     dashboard_metric_card_min_height: int = 96
     dashboard_recent_panel_min_height: int = 228
     dashboard_metric_value_font_px: int = 18

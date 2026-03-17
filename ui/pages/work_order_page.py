@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
-from ui.messages import PageDescriptions, PageTitles, SectionTitles, Tooltips
-from ui.pages.common import make_image_shell, make_standard_page_header, make_standard_page_layout
+from ui.messages import PageTitles, SectionTitles, Tooltips
+from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.postit.layout import (
     POSTIT_BODY_HEIGHT,
@@ -45,7 +45,8 @@ class WorkOrderPageBuilder:
     def build(parent: QWidget) -> WorkOrderPageRefs:
         page = QWidget()
         page_layout = make_standard_page_layout(page)
-        page_layout.setSpacing(THEME.block_spacing)
+        page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
+        page_layout.setSpacing(THEME.section_gap)
 
         header_refs = make_standard_page_header(
             page,
@@ -54,9 +55,7 @@ class WorkOrderPageBuilder:
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
-        feedback_label = QLabel('')
-        feedback_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        feedback_label.setMinimumHeight(THEME.feedback_label_height)
+        feedback_label = make_standard_feedback_label(page)
 
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
@@ -67,21 +66,16 @@ class WorkOrderPageBuilder:
             postit_bar=postit_bar,
         )
 
-        content = QWidget()
-        content_layout = QGridLayout(content)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setHorizontalSpacing(THEME.section_gap)
-        content_layout.setVerticalSpacing(THEME.row_spacing)
-
         right_stack = WorkOrderPageBuilder._build_postit_stack(postit_bar, change_note_wrap)
+        left_stack.setMinimumWidth(THEME.work_order_left_column_min_width)
+        right_stack.setMinimumWidth(THEME.work_order_right_column_min_width)
 
-        content_layout.addWidget(left_stack, 0, 0)
-        content_layout.addWidget(right_stack, 0, 1)
-        content_layout.setColumnStretch(0, 2)
-        content_layout.setColumnStretch(1, 1)
+        content_row = make_standard_body_row()
+        content_row.addWidget(left_stack, THEME.work_order_left_stretch)
+        content_row.addWidget(right_stack, THEME.work_order_right_stretch)
 
         page_layout.addLayout(header_refs.row)
-        page_layout.addWidget(content)
+        page_layout.addLayout(content_row, 1)
         page_layout.addWidget(feedback_label)
 
         return WorkOrderPageRefs(
@@ -151,6 +145,7 @@ class WorkOrderPageBuilder:
         image_shell = make_image_shell(page, image_preview, margin=THEME.image_shell_margin)
 
         left_stack = QWidget(page)
+        left_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(THEME.row_spacing)
@@ -225,6 +220,7 @@ class WorkOrderPageBuilder:
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
         right_stack = QWidget()
+        right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(THEME.section_gap)

@@ -286,6 +286,12 @@ def apply_wide_primary_button_metrics(*buttons: QWidget) -> None:
 
 
 
+def make_standard_feedback_label(parent: QWidget, *, object_name: str = 'hintLabel') -> QLabel:
+    label = make_hint_label('', parent, word_wrap=False, alignment=Qt.AlignLeft | Qt.AlignVCenter, object_name=object_name)
+    label.setMinimumHeight(THEME.feedback_label_height)
+    return label
+
+
 def make_scroll_panel(parent: QWidget) -> ScrollPanelRefs:
     scroll = QScrollArea(parent)
     scroll.setWidgetResizable(True)
