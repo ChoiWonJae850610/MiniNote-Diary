@@ -50,7 +50,7 @@ class ThemeTokens:
     work_order_left_column_max_width: int = 390
     work_order_right_column_min_width: int = 620
     work_order_left_stretch: int = 4
-    work_order_right_stretch: int = 8
+    work_order_right_stretch: int = 12
     work_order_toolbar_panel_min_height: int = 24
     work_order_column_spacing: int = 10
     work_order_toolbar_inner_padding: int = 4
@@ -59,7 +59,7 @@ class ThemeTokens:
     work_order_bottom_safe_reserve: int = 0
     work_order_image_preview_min_height: int = 610
     work_order_change_note_body_min_height: int = 180
-    work_order_bottom_match_adjust: int = 22
+    work_order_bottom_match_adjust: int = 36
     work_order_change_note_min_width: int = 260
     dashboard_metric_card_min_height: int = 96
     dashboard_recent_panel_min_height: int = 228
