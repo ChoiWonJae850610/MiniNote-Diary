@@ -126,6 +126,7 @@ class WorkOrderPageBuilder:
         image_toolbar, image_toolbar_layout = make_standard_toolbar_strip(page, object_name='workOrderToolbarPanel')
         image_toolbar.setFixedHeight(THEME.work_order_toolbar_panel_min_height)
         image_toolbar_layout.setContentsMargins(THEME.work_order_toolbar_inner_padding, 0, THEME.work_order_toolbar_inner_padding, 0)
+        image_toolbar.setContentsMargins(0, 0, 0, 1)
 
         for key in ('btn_reset', 'btn_load', 'btn_save'):
             image_toolbar_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignLeft)
@@ -232,7 +233,7 @@ class WorkOrderPageBuilder:
         right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         right_stack.setContentsMargins(0, 0, 0, 0)
         right_layout = QVBoxLayout(right_stack)
-        right_layout.setContentsMargins(0, THEME.work_order_postit_top_offset, 0, 0)
+        right_layout.setContentsMargins(0, max(0, THEME.work_order_postit_top_offset - 2), 0, 0)
         right_layout.setSpacing(THEME.work_order_column_spacing)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
         right_layout.addWidget(change_note_wrap, 1)

@@ -56,11 +56,11 @@ class ThemeTokens:
     work_order_toolbar_inner_padding: int = 4
     work_order_postit_top_offset: int = 0
     work_order_toolbar_to_image_overlap: int = 0
-    work_order_toolbar_to_image_gap: int = 10
+    work_order_toolbar_to_image_gap: int = 14
     work_order_bottom_safe_reserve: int = 0
     work_order_image_preview_min_height: int = 610
     work_order_change_note_body_min_height: int = 180
-    work_order_bottom_match_adjust: int = 28
+    work_order_bottom_match_adjust: int = 18
     work_order_change_note_min_width: int = 260
     dashboard_metric_card_min_height: int = 96
     dashboard_recent_panel_min_height: int = 228
