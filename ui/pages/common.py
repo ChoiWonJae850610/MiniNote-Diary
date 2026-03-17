@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QScrollArea, QSizePolicy, QSpinBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QAbstractItemView, QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QScrollArea, QSizePolicy, QSpinBox, QTableWidget, QVBoxLayout, QWidget
 
 from ui.layout_metrics import OrderPageLayout
 from ui.theme import THEME, input_line_edit_style
 from ui.widget_factory import (
+    apply_button_metrics,
     make_field_label,
     make_hint_label,
     make_nav_button,
@@ -321,6 +322,51 @@ def make_right_aligned_button_row(*buttons: QWidget) -> QHBoxLayout:
     return row
 
 
+
+def apply_primary_button_metrics(*buttons: QWidget, width: int | None = None) -> None:
+    for button in buttons:
+        if button is None:
+            continue
+        apply_button_metrics(
+            button,
+            width=width or THEME.primary_button_width,
+            height=THEME.primary_button_height,
+        )
+
+
+def apply_secondary_button_metrics(*buttons: QWidget, width: int | None = None) -> None:
+    for button in buttons:
+        if button is None:
+            continue
+        apply_button_metrics(
+            button,
+            width=width or THEME.secondary_button_width,
+            height=THEME.primary_button_height,
+        )
+
+
+def make_standard_list_widget(parent: QWidget, *, min_height: int = 0) -> QListWidget:
+    widget = QListWidget(parent)
+    widget.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+    widget.setSpacing(THEME.page_list_spacing)
+    if min_height > 0:
+        widget.setMinimumHeight(min_height)
+    return widget
+
+
+def apply_table_widget_metrics(table: QTableWidget, *, min_height: int | None = None) -> None:
+    table.setEditTriggers(QTableWidget.NoEditTriggers)
+    table.setSelectionMode(QTableWidget.NoSelection)
+    table.setAlternatingRowColors(False)
+    table.setWordWrap(False)
+    table.verticalHeader().setVisible(False)
+    table.horizontalHeader().setStretchLastSection(True)
+    table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
+    table.setShowGrid(False)
+    if min_height is not None:
+        table.setMinimumHeight(min_height)
+
+
 __all__ = [
     'LabeledFieldRow',
     'PageHeaderRefs',
@@ -329,15 +375,19 @@ __all__ = [
     'StatFieldRow',
     'add_form_row',
     'add_labeled_field_rows',
+    'apply_primary_button_metrics',
+    'apply_secondary_button_metrics',
     'add_two_column_stat_rows',
     'make_compact_toolbar_panel',
     'apply_toolbar_field_metrics',
+    'apply_table_widget_metrics',
     'apply_form_field_metrics',
     'make_form_grid',
     'make_image_shell',
     'make_right_aligned_button_row',
     'make_scroll_panel',
     'make_page_text_header',
+    'make_standard_list_widget',
     'make_standard_page_header',
     'make_standard_page_layout',
     'make_titled_panel',

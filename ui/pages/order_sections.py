@@ -11,6 +11,8 @@ from ui.pages.common import (
     StatFieldRow,
     add_labeled_field_rows,
     add_two_column_stat_rows,
+    apply_form_field_metrics,
+    apply_primary_button_metrics,
     apply_toolbar_field_metrics,
     make_compact_toolbar_panel,
     make_form_grid,
@@ -166,6 +168,8 @@ def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     order_date_edit.setFixedHeight(THEME.order_input_height)
     order_date_edit.setStyleSheet(input_line_edit_style())
 
+    apply_form_field_metrics(order_qty_spin, order_date_edit)
+
     order_memo_edit = make_plain_text_editor(order_panel, min_height=THEME.order_memo_min_height)
     add_labeled_field_rows(
         order_grid,
@@ -178,6 +182,7 @@ def build_order_panel(parent: QWidget) -> dict[str, QWidget]:
     order_layout.addLayout(order_grid)
 
     btn_order = make_action_button(Buttons.ORDER_SAVE, order_panel, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
+    apply_primary_button_metrics(btn_order)
     order_layout.addLayout(make_right_aligned_button_row(btn_order))
 
     return {

@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
 from services.stats import StatsService
-from ui.pages.common import make_standard_page_header, make_standard_page_layout
+from ui.pages.common import apply_secondary_button_metrics, apply_table_widget_metrics, make_standard_page_header, make_standard_page_layout
 from ui.theme import THEME
 from ui.widget_factory import make_action_button, make_hint_label, make_panel_frame, make_panel_title_label
 
@@ -50,14 +50,7 @@ class StatsPageBuilder:
         table = QTableWidget(parent)
         table.setColumnCount(len(headers))
         table.setHorizontalHeaderLabels(headers)
-        table.setEditTriggers(QTableWidget.NoEditTriggers)
-        table.setSelectionMode(QTableWidget.NoSelection)
-        table.setAlternatingRowColors(False)
-        table.setWordWrap(False)
-        table.verticalHeader().setVisible(False)
-        table.horizontalHeader().setStretchLastSection(True)
-        table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-        table.setMinimumHeight(260)
+        apply_table_widget_metrics(table, min_height=260)
         return table
 
     @staticmethod
@@ -94,6 +87,7 @@ class StatsPageBuilder:
         filter_row.addWidget(period_combo, 0)
         filter_row.addStretch(1)
         btn_refresh = make_action_button('새로고침', page, width=THEME.secondary_button_width, height=THEME.primary_button_height)
+        apply_secondary_button_metrics(btn_refresh)
         filter_row.addWidget(btn_refresh, 0)
         root.addLayout(filter_row)
 

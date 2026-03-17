@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushBut
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import DialogTitles, MenuPageTexts
-from ui.pages.common import make_page_text_header, make_standard_page_layout
+from ui.pages.common import apply_secondary_button_metrics, make_page_text_header, make_standard_page_layout
 from ui.theme import THEME
 from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_panel_frame, make_panel_title_label
 
@@ -171,6 +171,10 @@ class MenuPageBuilder:
             width=THEME.footer_button_width,
             height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
         )
+        apply_secondary_button_metrics(btn_data_reset, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
+        apply_secondary_button_metrics(btn_partner_mgmt, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
+        apply_secondary_button_metrics(btn_unit_mgmt, width=THEME.footer_button_width)
+
         bottom_row.addWidget(btn_data_reset)
         bottom_row.addSpacing(THEME.row_spacing)
         bottom_row.addWidget(btn_partner_mgmt)

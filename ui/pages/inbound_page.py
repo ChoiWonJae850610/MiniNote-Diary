@@ -13,12 +13,14 @@ from ui.pages.common import (
     add_labeled_field_rows,
     add_two_column_stat_rows,
     apply_form_field_metrics,
+    apply_primary_button_metrics,
     apply_toolbar_field_metrics,
     make_compact_toolbar_panel,
     make_form_grid,
     make_image_shell,
     make_right_aligned_button_row,
     make_scroll_panel,
+    make_standard_list_widget,
     make_standard_page_header,
     make_standard_page_layout,
     make_titled_panel,
@@ -84,9 +86,7 @@ class InboundPageBuilder:
         body_row.setSpacing(THEME.section_gap)
 
         left_panel, left_layout = make_titled_panel(page, title_text=SectionTitles.INBOUND_ORDER_LIST, hint_text='')
-        order_list = QListWidget(left_panel)
-        order_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
-        order_list.setSpacing(6)
+        order_list = make_standard_list_widget(left_panel)
         order_list.setStyleSheet(list_widget_style())
         left_layout.addWidget(order_list, 1)
 
@@ -242,6 +242,7 @@ def _build_input_panel(parent: QWidget) -> dict[str, QWidget]:
     layout.addLayout(form_grid)
 
     btn_apply = make_action_button(Buttons.INBOUND_APPLY, panel, primary=True, width=THEME.primary_button_width, height=THEME.primary_button_height)
+    apply_primary_button_metrics(btn_apply)
     layout.addLayout(make_right_aligned_button_row(btn_apply))
 
     return {

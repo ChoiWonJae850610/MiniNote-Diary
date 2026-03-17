@@ -12,6 +12,8 @@ from ui.pages.common import (
     add_labeled_field_rows,
     add_two_column_stat_rows,
     apply_form_field_metrics,
+    apply_primary_button_metrics,
+    make_standard_list_widget,
     make_form_grid,
     make_right_aligned_button_row,
     make_scroll_panel,
@@ -60,10 +62,8 @@ class ProductPageBuilder:
         body_row.setSpacing(THEME.section_gap)
 
         left_panel, left_layout = make_titled_panel(page, title_text='상품 목록', hint_text='')
-        left_panel.setMinimumWidth(320)
-        product_list = QListWidget(left_panel)
-        product_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
-        product_list.setSpacing(6)
+        left_panel.setMinimumWidth(THEME.page_list_panel_min_width)
+        product_list = make_standard_list_widget(left_panel)
         product_list.setStyleSheet(list_widget_style())
         left_layout.addWidget(product_list, 1)
 
@@ -173,6 +173,7 @@ def _build_product_panel(parent: QWidget) -> dict[str, QWidget]:
     layout.addWidget(product_note_edit)
 
     btn_save_product = make_action_button('상품 저장', panel, width=THEME.primary_button_width, height=THEME.primary_button_height)
+    apply_primary_button_metrics(btn_save_product)
     layout.addLayout(make_right_aligned_button_row(btn_save_product))
     return {'panel': panel, 'price_spin': price_spin, 'product_note_edit': product_note_edit, 'btn_save_product': btn_save_product}
 
@@ -180,13 +181,12 @@ def _build_product_panel(parent: QWidget) -> dict[str, QWidget]:
 def _build_pending_panel(parent: QWidget) -> dict[str, QWidget]:
     panel, layout = create_order_panel(parent, spacing=THEME.block_spacing)
     add_panel_title(layout, panel, '미검수 검수')
-    pending_list = QListWidget(panel)
-    pending_list.setVerticalScrollMode(QListWidget.ScrollPerPixel)
-    pending_list.setSpacing(6)
+    pending_list = make_standard_list_widget(panel)
     pending_list.setStyleSheet(list_widget_style())
     pending_list.setMinimumHeight(180)
     layout.addWidget(pending_list)
     btn_apply_pending = make_action_button('선택 미검수 검수', panel, width=THEME.primary_button_width + 40, height=THEME.primary_button_height)
+    apply_primary_button_metrics(btn_apply_pending, width=THEME.primary_button_width + 40)
     layout.addLayout(make_right_aligned_button_row(btn_apply_pending))
     return {'panel': panel, 'pending_list': pending_list, 'btn_apply_pending': btn_apply_pending}
 
@@ -224,6 +224,7 @@ def _build_sale_panel(parent: QWidget) -> dict[str, QWidget]:
     layout.addWidget(sale_memo_edit)
 
     btn_register_sale = make_action_button('판매 등록', panel, width=THEME.primary_button_width, height=THEME.primary_button_height)
+    apply_primary_button_metrics(btn_register_sale)
     layout.addLayout(make_right_aligned_button_row(btn_register_sale))
     return {
         'panel': panel,

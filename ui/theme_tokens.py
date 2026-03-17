@@ -37,6 +37,8 @@ class ThemeTokens:
     primary_button_width: int = 170
     secondary_button_width: int = 140
     reload_button_width: int = 130
+    page_list_panel_min_width: int = 320
+    page_list_spacing: int = 6
     dialog_button_height: int = 34
     dialog_field_height: int = 30
     order_input_height: int = 34
@@ -93,6 +95,7 @@ class ThemeTokens:
     filter_panel_margin_v: int = 12
     image_shell_margin: int = 18
     label_padding_x: int = 2
+    section_panel_min_height: int = 0
 
     card_radius: int = 16
     card_shadow_blur: int = 22
