@@ -149,7 +149,7 @@ class WorkOrderPageBuilder:
         left_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(THEME.work_order_toolbar_to_image_gap - THEME.work_order_toolbar_to_image_overlap)
+        left_layout.setSpacing(THEME.work_order_toolbar_to_image_gap)
         left_layout.addWidget(image_toolbar, 0)
         left_layout.addWidget(image_shell, 1)
         return image_preview, image_shell, image_toolbar, left_stack
@@ -209,7 +209,13 @@ class WorkOrderPageBuilder:
         image_shell: QWidget,
         postit_bar: QWidget,
     ) -> int:
-        image_column_total_height = max(image_toolbar.sizeHint().height(), THEME.work_order_toolbar_panel_min_height) - THEME.work_order_toolbar_to_image_overlap + max(image_shell.sizeHint().height(), THEME.work_order_image_preview_min_height)
+        image_column_total_height = (
+            max(image_toolbar.sizeHint().height(), THEME.work_order_toolbar_panel_min_height)
+            + THEME.work_order_toolbar_to_image_gap
+            + (THEME.image_shell_margin * 2)
+            + max(image_shell.sizeHint().height(), THEME.work_order_image_preview_min_height)
+            + 2
+        )
         postit_bar_total_height = max(postit_bar.sizeHint().height(), THEME.postit_bar_max_height)
         return max(
             THEME.memo_min_height,
