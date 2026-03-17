@@ -149,7 +149,7 @@ class WorkOrderPageBuilder:
         left_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         left_layout = QVBoxLayout(left_stack)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(-THEME.work_order_toolbar_to_image_overlap)
+        left_layout.setSpacing(THEME.work_order_toolbar_to_image_gap - THEME.work_order_toolbar_to_image_overlap)
         left_layout.addWidget(image_toolbar, 0)
         left_layout.addWidget(image_shell, 1)
         return image_preview, image_shell, image_toolbar, left_stack
