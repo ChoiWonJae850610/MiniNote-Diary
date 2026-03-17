@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ui.postit import layout_constants as const
 from ui.theme import THEME
+from ui.postit.layout_helpers import postit_column_height
 
 # Public constant aliases kept here as a single compatibility surface for post-it layout consumers.
 POSTIT_BASIC_CARD_MIN_WIDTH = const.POSTIT_BASIC_CARD_MIN_WIDTH
@@ -165,6 +166,7 @@ _CONSTANT_EXPORTS = [
 ]
 
 _WIDGET_EXPORTS = [
+    'postit_column_height',
     'DEFAULT_SECTION_LAYOUT',
     'FolderTabHeader',
     'FooterSpacer',

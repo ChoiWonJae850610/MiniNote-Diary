@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from ui.postit.layouting.constants import (
     POSTIT_BODY_HEIGHT,
-    POSTIT_EXTERNAL_ROW_GAP,
     POSTIT_FOOTER_HEIGHT,
     POSTIT_HEADER_HEIGHT,
     POSTIT_TAB_OVERLAP,
@@ -27,15 +26,15 @@ def postit_column_height(
     *,
     body_height: int = POSTIT_BODY_HEIGHT,
     has_footer: bool = True,
-    external_row_gap: int = POSTIT_EXTERNAL_ROW_GAP,
+    external_row_gap: int | None = None,
     external_row_height: int = POSTIT_FOOTER_HEIGHT,
 ) -> int:
+    resolved_external_row_gap = THEME.top_button_spacing if external_row_gap is None else external_row_gap
     return (
         postit_section_height(body_height=body_height, has_footer=has_footer)
-        + external_row_gap
+        + resolved_external_row_gap
         + external_row_height
     )
-
 
 
 def embedded_tab_style(*, active: bool = True, selector: str = 'QToolButton') -> str:
@@ -66,7 +65,7 @@ def folder_tab_style(*, active: bool = True, selector: str = 'QToolButton') -> s
 __all__ = [
     'embedded_tab_style',
     'folder_tab_style',
+    'postit_column_height',
     'postit_section_height',
     'postit_wrap_height',
-    'postit_column_height',
 ]
