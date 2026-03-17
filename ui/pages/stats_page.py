@@ -33,11 +33,13 @@ class StatsPageBuilder:
     @staticmethod
     def _make_metric_card(parent: QWidget, title: str) -> tuple[QFrame, QLabel]:
         card = make_panel_frame(parent, compact=False)
+        card.setMinimumHeight(THEME.dashboard_metric_card_min_height)
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding - 2, THEME.page_section_padding, THEME.page_section_padding - 2)
-        layout.setSpacing(6)
+        layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
+        layout.setSpacing(8)
 
         title_label = make_hint_label(title, card, word_wrap=False)
+        title_label.setObjectName('menuMetricTitle')
         value_label = QLabel('0', card)
         value_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         value_label.setObjectName('menuMetricValue')
@@ -58,7 +60,7 @@ class StatsPageBuilder:
         frame = make_panel_frame(parent, compact=True)
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(4)
+        layout.setSpacing(5)
         title = QLabel('-', frame)
         title.setObjectName('menuListPrimary')
         detail = QLabel('', frame)
@@ -92,6 +94,7 @@ class StatsPageBuilder:
         root.addWidget(filter_panel)
 
         metric_grid = QGridLayout()
+        metric_grid.setContentsMargins(0, 0, 0, 0)
         metric_grid.setHorizontalSpacing(THEME.section_gap)
         metric_grid.setVerticalSpacing(THEME.section_gap)
         metric_value_labels: dict[str, QLabel] = {}
@@ -106,11 +109,11 @@ class StatsPageBuilder:
         left_panel = make_panel_frame(page)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        left_layout.setSpacing(THEME.page_detail_panel_spacing)
+        left_layout.setSpacing(THEME.section_gap)
         left_layout.addWidget(make_panel_title_label('스타일별 현황', left_panel))
         style_table = StatsPageBuilder._build_table(left_panel, ['스타일', '발주', '입고', '판매', '현재고', '상태'])
         left_layout.addWidget(style_table, 1)
-        body_row.addWidget(left_panel, 7)
+        body_row.addWidget(left_panel, THEME.page_master_detail_detail_stretch)
 
         right_column = QVBoxLayout()
         right_column.setSpacing(THEME.section_gap)
@@ -118,7 +121,7 @@ class StatsPageBuilder:
         factory_panel = make_panel_frame(page)
         factory_layout = QVBoxLayout(factory_panel)
         factory_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        factory_layout.setSpacing(THEME.page_detail_panel_spacing)
+        factory_layout.setSpacing(THEME.section_gap)
         factory_layout.addWidget(make_panel_title_label('거래처별 발주', factory_panel))
         factory_table = StatsPageBuilder._build_table(factory_panel, ['거래처', '건수', '수량'])
         factory_table.setMinimumHeight(220)
@@ -128,7 +131,7 @@ class StatsPageBuilder:
         note_panel = make_panel_frame(page)
         note_layout = QVBoxLayout(note_panel)
         note_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        note_layout.setSpacing(THEME.page_detail_panel_spacing - 4)
+        note_layout.setSpacing(THEME.row_spacing)
         note_layout.addWidget(make_panel_title_label('주의 / 참고', note_panel))
         note_labels: list[tuple[QLabel, QLabel]] = []
         for _ in range(4):
@@ -138,7 +141,7 @@ class StatsPageBuilder:
         note_layout.addStretch(1)
         right_column.addWidget(note_panel, 2)
 
-        body_row.addLayout(right_column, 4)
+        body_row.addLayout(right_column, THEME.page_master_detail_list_stretch)
         root.addLayout(body_row, 1)
 
         return StatsPageRefs(

@@ -46,6 +46,10 @@ class ThemeTokens:
     page_detail_panel_spacing: int = 16
     page_action_row_top_margin: int = 10
     page_wide_button_width: int = 210
+    dashboard_metric_card_min_height: int = 96
+    dashboard_recent_panel_min_height: int = 228
+    dashboard_metric_value_font_px: int = 18
+    table_header_height: int = 34
     dialog_button_height: int = 34
     dialog_field_height: int = 30
     order_input_height: int = 34

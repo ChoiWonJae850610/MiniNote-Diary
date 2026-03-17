@@ -63,8 +63,13 @@ def build_global_widget_styles() -> str:
             color: {t.color_text};
         }}
 
+        QLabel#menuMetricTitle {{
+            color: {t.color_text_muted};
+            background: transparent;
+            font-weight: 600;
+        }}
         QLabel#menuMetricValue {{
-            font-size: 16px;
+            font-size: {t.dashboard_metric_value_font_px}px;
             font-weight: 700;
             color: {t.color_text};
             background: transparent;
@@ -173,6 +178,16 @@ def build_panel_styles() -> str:
             border-radius: {t.shell_radius}px;
         }}
         QFrame#panelFrame {{
+            background: {t.color_surface};
+            border: 1px solid {t.color_border};
+            border-radius: {t.panel_radius}px;
+        }}
+        QFrame#menuMetricCard {{
+            background: {t.color_surface};
+            border: 1px solid {t.color_border};
+            border-radius: {t.panel_radius}px;
+        }}
+        QFrame#menuRecentPanel {{
             background: {t.color_surface};
             border: 1px solid {t.color_border};
             border-radius: {t.panel_radius}px;

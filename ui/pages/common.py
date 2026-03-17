@@ -402,12 +402,19 @@ def make_standard_list_widget(parent: QWidget, *, min_height: int = 0) -> QListW
 def apply_table_widget_metrics(table: QTableWidget, *, min_height: int | None = None) -> None:
     table.setEditTriggers(QTableWidget.NoEditTriggers)
     table.setSelectionMode(QTableWidget.NoSelection)
+    table.setFocusPolicy(Qt.NoFocus)
     table.setAlternatingRowColors(False)
     table.setWordWrap(False)
+    table.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+    table.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+    table.setShowGrid(False)
+    table.setCornerButtonEnabled(False)
     table.verticalHeader().setVisible(False)
+    table.verticalHeader().setDefaultSectionSize(THEME.table_row_height)
     table.horizontalHeader().setStretchLastSection(True)
     table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-    table.setShowGrid(False)
+    table.horizontalHeader().setMinimumHeight(THEME.table_header_height)
+    table.horizontalHeader().setFixedHeight(THEME.table_header_height)
     if min_height is not None:
         table.setMinimumHeight(min_height)
 
