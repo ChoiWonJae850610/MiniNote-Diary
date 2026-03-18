@@ -8,12 +8,19 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
-from ui.dialogs import show_error, show_info
 from ui.dialogs.base import _BaseThemedDialog
+from ui.dialogs.message_boxes import SimpleMessageDialog
 from ui.messages import Buttons, DialogTitles, InfoMessages
 from ui.theme import THEME
 from ui.widget_factory import apply_button_metrics, make_action_button
 from ui.widget_factory_buttons import make_dialog_button
+
+def _show_info(parent, title: str, message: str) -> int:
+    return SimpleMessageDialog(title, message, button_text=Buttons.OK, parent=parent).exec()
+
+
+def _show_error(parent, title: str, message: str) -> int:
+    return SimpleMessageDialog(title, message, button_text=Buttons.OK, parent=parent).exec()
 
 
 class SettingsDialog(_BaseThemedDialog):
@@ -92,7 +99,7 @@ class SettingsDialog(_BaseThemedDialog):
         self._run_window_action('on_data_reset_clicked')
 
     def _show_help(self) -> None:
-        show_info(
+        _show_info(
             self,
             DialogTitles.HELP,
             '작업지시서 작성 화면에서 저장/불러오기/이미지 첨부를 사용할 수 있습니다.\n\n'
@@ -105,7 +112,7 @@ class SettingsDialog(_BaseThemedDialog):
         project_root = Path(getattr(parent, 'project_root', Path.cwd()))
         db_dir = project_root / 'db'
         if not db_dir.exists():
-            show_error(self, DialogTitles.ERROR, '백업할 DB 폴더를 찾을 수 없습니다.')
+            _show_error(self, DialogTitles.ERROR, '백업할 DB 폴더를 찾을 수 없습니다.')
             return
 
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -122,12 +129,12 @@ class SettingsDialog(_BaseThemedDialog):
                     target.unlink()
                 created.replace(target)
         except Exception as exc:
-            show_error(self, DialogTitles.ERROR, f'백업 파일을 만들지 못했습니다.\n\n{exc}')
+            _show_error(self, DialogTitles.ERROR, f'백업 파일을 만들지 못했습니다.\n\n{exc}')
             return
-        show_info(self, DialogTitles.BACKUP, InfoMessages.BACKUP_DONE.format(path=str(target)))
+        _show_info(self, DialogTitles.BACKUP, InfoMessages.BACKUP_DONE.format(path=str(target)))
 
     def _show_theme_change_info(self) -> None:
-        show_info(self, DialogTitles.THEME_CHANGE, InfoMessages.THEME_CHANGE_PENDING)
+        _show_info(self, DialogTitles.THEME_CHANGE, InfoMessages.THEME_CHANGE_PENDING)
 
     def _contact_creator(self) -> None:
         parent = self.parent()
@@ -136,7 +143,7 @@ class SettingsDialog(_BaseThemedDialog):
             webbrowser.open(f'mailto:{email}?subject=MiniNote%20Diary%20문의')
         except Exception:
             pass
-        show_info(self, DialogTitles.CONTACT, InfoMessages.CONTACT_GUIDE.format(email=email))
+        _show_info(self, DialogTitles.CONTACT, InfoMessages.CONTACT_GUIDE.format(email=email))
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
