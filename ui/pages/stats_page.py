@@ -36,7 +36,7 @@ class StatsPageBuilder:
         card.setMinimumHeight(THEME.dashboard_metric_card_min_height)
         layout = QVBoxLayout(card)
         layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        layout.setSpacing(8)
+        layout.setSpacing(THEME.dashboard_metric_spacing)
 
         title_label = make_hint_label(title, card, word_wrap=False)
         title_label.setObjectName('menuMetricTitle')
@@ -59,8 +59,13 @@ class StatsPageBuilder:
     def _make_note_item(parent: QWidget) -> tuple[QFrame, tuple[QLabel, QLabel]]:
         frame = make_panel_frame(parent, compact=True)
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(5)
+        layout.setContentsMargins(
+            THEME.stats_note_item_padding_x,
+            THEME.stats_note_item_padding_y,
+            THEME.stats_note_item_padding_x,
+            THEME.stats_note_item_padding_y,
+        )
+        layout.setSpacing(THEME.stats_note_item_spacing)
         title = QLabel('-', frame)
         title.setObjectName('menuListPrimary')
         detail = QLabel('', frame)

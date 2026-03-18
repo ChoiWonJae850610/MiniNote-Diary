@@ -135,7 +135,12 @@ def make_standard_page_header(
     title_min_height: int | None = None,
 ) -> PageHeaderRefs:
     row = QHBoxLayout()
-    row.setContentsMargins(0, THEME.page_header_safe_padding_top + 1, 0, THEME.page_header_safe_padding_bottom)
+    row.setContentsMargins(
+        0,
+        THEME.page_header_safe_padding_top + THEME.page_header_row_margin_adjust,
+        0,
+        THEME.page_header_safe_padding_bottom,
+    )
     row.setSpacing(THEME.top_button_spacing)
     row.setAlignment(Qt.AlignVCenter)
 
@@ -222,7 +227,7 @@ def make_compact_toolbar_panel(parent: QWidget, *, object_name: str | None = Non
 def make_standard_toolbar_strip(parent: QWidget, *, object_name: str | None = None) -> tuple[QFrame, QHBoxLayout]:
     panel, layout = make_compact_toolbar_panel(parent, object_name=object_name)
     pad = THEME.work_order_toolbar_inner_padding
-    layout.setContentsMargins(pad, 6, pad, 6)
+    layout.setContentsMargins(pad, THEME.toolbar_strip_padding_y, pad, THEME.toolbar_strip_padding_y)
     layout.setSpacing(THEME.top_button_spacing)
     panel.setMinimumHeight(THEME.work_order_toolbar_panel_min_height)
     panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)

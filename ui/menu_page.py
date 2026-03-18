@@ -47,8 +47,13 @@ class MenuPageBuilder:
         card = make_panel_frame(page, object_name='menuMetricCard')
         card.setMinimumHeight(THEME.dashboard_metric_card_min_height)
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(16, 14, 16, 14)
-        layout.setSpacing(8)
+        layout.setContentsMargins(
+            THEME.dashboard_metric_padding_x,
+            THEME.dashboard_metric_padding_y,
+            THEME.dashboard_metric_padding_x,
+            THEME.dashboard_metric_padding_y,
+        )
+        layout.setSpacing(THEME.dashboard_metric_spacing)
 
         title_label = make_hint_label(title, card, word_wrap=False)
         title_label.setObjectName('menuMetricTitle')
@@ -65,8 +70,13 @@ class MenuPageBuilder:
         panel = make_panel_frame(page, object_name='menuRecentPanel')
         panel.setMinimumHeight(THEME.dashboard_recent_panel_min_height)
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(10)
+        layout.setContentsMargins(
+            THEME.dashboard_recent_padding,
+            THEME.dashboard_recent_padding,
+            THEME.dashboard_recent_padding,
+            THEME.dashboard_recent_padding,
+        )
+        layout.setSpacing(THEME.dashboard_recent_spacing)
 
         layout.addWidget(make_panel_title_label(title, panel))
 
@@ -75,7 +85,7 @@ class MenuPageBuilder:
             row = QWidget(panel)
             row_layout = QVBoxLayout(row)
             row_layout.setContentsMargins(0, 0, 0, 0)
-            row_layout.setSpacing(3)
+            row_layout.setSpacing(THEME.dashboard_recent_item_spacing)
 
             primary = QLabel('-', row)
             primary.setObjectName('menuListPrimary')

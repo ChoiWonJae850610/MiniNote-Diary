@@ -69,6 +69,17 @@ class ThemeTokens:
     work_order_change_note_visual_trim: int = 4
     work_order_change_note_min_width: int = 260
     dashboard_metric_card_min_height: int = 96
+    dashboard_metric_padding_x: int = 16
+    dashboard_metric_padding_y: int = 14
+    dashboard_metric_spacing: int = 8
+    dashboard_recent_padding: int = 16
+    dashboard_recent_spacing: int = 10
+    dashboard_recent_item_spacing: int = 3
+    stats_note_item_padding_x: int = 12
+    stats_note_item_padding_y: int = 10
+    stats_note_item_spacing: int = 5
+    page_header_row_margin_adjust: int = 1
+    toolbar_strip_padding_y: int = 6
     dashboard_recent_panel_min_height: int = 228
     dashboard_metric_value_font_px: int = 18
     table_header_height: int = 34
