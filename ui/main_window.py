@@ -3,7 +3,7 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from services.common.db_reset_service import DbResetService
-from ui.dialogs import ConfirmActionDialog, ValidationStatusDialog, ask_confirm
+from ui.dialogs import ConfirmActionDialog, ask_confirm, show_warning
 from ui.main_window_parts.main_window_bootstrap import MainWindowBootstrap
 from ui.main_window_parts.main_window_constants import MainWindowPages
 from ui.main_window_parts.main_window_dialog_logic import MainWindowDialogLogic
@@ -236,7 +236,8 @@ class MainWindow(QMainWindow):
         return ConfirmActionDialog.Accepted
 
     def show_validation_statuses(self, statuses) -> None:
-        ValidationStatusDialog(DialogTitles.SAVE_BLOCKED, statuses, parent=self).exec()
+        del statuses
+        show_warning(self, DialogTitles.SAVE_BLOCKED, "필수 요소가 입력되지 않았습니다.")
 
     @staticmethod
     def build_save_success_message(result) -> str:

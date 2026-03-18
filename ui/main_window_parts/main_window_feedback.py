@@ -19,14 +19,20 @@ class MainWindowFeedback:
 
     @staticmethod
     def show_feedback(window: "MainWindow", message: str, timeout_ms: int = UiTiming.FEEDBACK_TIMEOUT_MS) -> None:
-        window.feedback_label.setText(message)
-        window.feedback_label.setVisible(bool(message))
+        label = getattr(window, "feedback_label", None)
+        if label is None:
+            return
+        label.setText(message)
+        label.setVisible(bool(message))
         window._feedback_timer.start(timeout_ms)
 
     @staticmethod
     def clear_feedback(window: "MainWindow") -> None:
-        window.feedback_label.clear()
-        window.feedback_label.hide()
+        label = getattr(window, "feedback_label", None)
+        if label is None:
+            return
+        label.clear()
+        label.hide()
 
     @staticmethod
     def update_window_title(window: "MainWindow") -> None:
@@ -35,7 +41,4 @@ class MainWindowFeedback:
 
     @staticmethod
     def build_save_success_message(result) -> str:
-        message = f"저장 완료\n\nJSON: {result.json_path}\nSHA256(평문): {result.sha256_plain}"
-        if result.image_path:
-            message += f"\n이미지: {result.image_path}"
-        return message
+        return "저장되었습니다."

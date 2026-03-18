@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
 
 from ui.icon_factory import make_image_upload_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
-from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
+from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
 from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
 from ui.postit.layout import SectionLayoutSpec
 from ui.theme import THEME, image_preview_style
@@ -27,7 +27,7 @@ class WorkOrderPageRefs:
     btn_load: QPushButton
     btn_upload: QPushButton
     btn_delete_image: QPushButton
-    feedback_label: QLabel
+    feedback_label: QWidget | None
     image_preview: ImagePreview
     image_shell: QWidget
     change_note_postit: ChangeNotePostIt
@@ -49,11 +49,6 @@ class WorkOrderPageBuilder:
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
-        feedback_label = make_standard_feedback_label(page)
-        feedback_label.setMinimumHeight(0)
-        feedback_label.setMaximumHeight(THEME.feedback_label_height)
-        feedback_label.hide()
-
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
         change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(
@@ -71,7 +66,6 @@ class WorkOrderPageBuilder:
         content_row.addWidget(right_stack, THEME.work_order_right_stretch)
 
         page_layout.addLayout(header_refs.row)
-        page_layout.addWidget(feedback_label)
         page_layout.addLayout(content_row, 1)
 
         return WorkOrderPageRefs(
@@ -82,7 +76,7 @@ class WorkOrderPageBuilder:
             btn_load=toolbar_buttons['btn_load'],
             btn_upload=toolbar_buttons['btn_upload'],
             btn_delete_image=toolbar_buttons['btn_delete_image'],
-            feedback_label=feedback_label,
+            feedback_label=None,
             image_preview=image_preview,
             image_shell=image_shell,
             change_note_postit=change_note_postit,
