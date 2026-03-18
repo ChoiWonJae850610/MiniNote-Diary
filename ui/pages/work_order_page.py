@@ -183,7 +183,7 @@ class WorkOrderPageBuilder:
         right_stack.setContentsMargins(0, 0, 0, 0)
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, max(0, THEME.work_order_postit_top_offset - THEME.work_order_postit_top_margin_adjust), 0, 0)
-        right_layout.setSpacing(THEME.work_order_column_spacing)
+        right_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
         right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
         right_layout.addWidget(change_note_wrap, 1)
         return right_stack
