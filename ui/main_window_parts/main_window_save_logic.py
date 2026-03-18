@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ui.dialogs import ask_confirm, show_error, show_info
+from ui.dialogs import ask_confirm, show_error
 from ui.main_window_parts.main_window_navigation import MainWindowNavigationLogic
 from ui.messages import Buttons, DialogTitles, Warnings
 import ui.work_order_validation_ui as WorkOrderValidationUi
@@ -65,6 +65,10 @@ class MainWindowSaveLogic:
             if not confirmed:
                 return
 
+        dialog = window.create_save_confirm_dialog()
+        if dialog.exec() != window.dialog_accept_code():
+            return
+
         try:
             result = window.controller.save()
         except Exception as exc:
@@ -74,4 +78,4 @@ class MainWindowSaveLogic:
         window.reset_work_order_form()
         window.refresh_menu_page()
         window.refresh_stats_page()
-        show_info(window, DialogTitles.SAVE, window.build_save_success_message(result))
+        window._show_feedback(window.build_save_success_message(result))

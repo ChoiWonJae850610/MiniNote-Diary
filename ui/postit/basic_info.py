@@ -107,11 +107,11 @@ class BasicInfoPostIt(_PostItCardBase):
         value1 = current_path[0] if len(current_path) >= 1 else ''
         self._refresh_combo_options(self.product_type_1, level1, value1)
 
-        level2 = service.get_level_options([value1] if value1 else [])
+        level2 = service.get_level_options([value1]) if value1 else []
         value2 = current_path[1] if len(current_path) >= 2 else ''
         self._refresh_combo_options(self.product_type_2, level2, value2)
 
-        level3 = service.get_level_options([v for v in (value1, value2) if v])
+        level3 = service.get_level_options([value1, value2]) if value1 and value2 else []
         value3 = current_path[2] if len(current_path) >= 3 else ''
         self._refresh_combo_options(self.product_type_3, level3, value3)
 

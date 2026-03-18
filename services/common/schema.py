@@ -48,7 +48,7 @@ REQUIRED_MATERIAL_FIELDS: tuple[str, ...] = (
     MaterialKeys.TOTAL,
 )
 
-MAX_MATERIAL_ITEMS = 15
+MAX_MATERIAL_ITEMS = 10
 
 
 def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:

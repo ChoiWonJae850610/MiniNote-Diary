@@ -253,6 +253,37 @@ class MainWindow(QMainWindow):
             parent=self,
         )
 
+    def create_save_confirm_dialog(self):
+        return ConfirmActionDialog(
+            title=DialogTitles.SAVE,
+            message=self.build_save_confirm_message(),
+            confirm_text=Buttons.YES,
+            cancel_text=Buttons.NO,
+            parent=self,
+        )
+
+    def build_save_confirm_message(self) -> str:
+        header = getattr(self.state, "header", None)
+        style_no = str(getattr(header, "style_no", "") or "").strip() or "(미입력)"
+        product_type = str(getattr(header, "product_type", "") or "").strip() or "(미선택)"
+        cost_display = str(getattr(header, "cost_display", "") or "").strip()
+        if cost_display:
+            cost_text = cost_display if cost_display.endswith("원") else f"{cost_display}원"
+        else:
+            cost_text = "0원"
+        return (
+            f"제품명: {style_no}
+"
+            f"제품 타입: {product_type}
+"
+            f"원가: {cost_text}
+
+"
+            f"위 내용으로 저장하시겠습니까?
+"
+            f"예(Y) / 아니오(N)"
+        )
+
     @staticmethod
     def dialog_accept_code() -> int:
         return ConfirmActionDialog.Accepted

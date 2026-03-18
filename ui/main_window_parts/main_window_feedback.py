@@ -41,4 +41,4 @@ class MainWindowFeedback:
 
     @staticmethod
     def build_save_success_message(result) -> str:
-        return "저장되었습니다."
+        return "저장 완료"

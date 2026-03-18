@@ -11,7 +11,7 @@ class ImagePreview(QLabel):
         self.setAlignment(Qt.AlignCenter)
         self._pixmap = None
         self._placeholder_pixmap = None
-        self._placeholder_text = "No Image"
+        self._placeholder_text = "no image"
         self.set_placeholder_pixmap(None)
 
     def set_placeholder_pixmap(self, pixmap: QPixmap | None):
