@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, Qt
@@ -14,6 +15,14 @@ from ui.postit.layout import PostItLayout
 from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
 from ui.work_order_validation_ui import set_invalid
+
+
+def _make_type_combo(card):
+    combo = QComboBox(card)
+    combo.setFixedHeight(FIELD_H)
+    combo.addItem('(비움)', '')
+    combo.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+    return combo
 
 
 def build_date_row(card, root) -> None:
@@ -37,18 +46,15 @@ def build_date_row(card, root) -> None:
 
 def build_partner_rows(card, root) -> None:
     card.style_no = _ClickToEditLineEdit(card)
-    card.product_type = QComboBox(card)
-    card.product_type.setFixedHeight(FIELD_H)
-    card.product_type.setMinimumWidth(THEME.basic_type_field_width)
-    card.product_type.setMaximumWidth(THEME.basic_type_field_width)
-    card.product_type.addItem('(비움)', '')
-    service = ProductTypeService(project_root_from_widget(card))
-    for value in service.list_types():
-        card.product_type.addItem(value, value)
+    card.product_type_1 = _make_type_combo(card)
+    card.product_type_2 = _make_type_combo(card)
+    card.product_type_3 = _make_type_combo(card)
+    card.product_type_1.setMinimumWidth(THEME.basic_type_field_width)
+    card.product_type_2.setMinimumWidth(THEME.basic_type_field_width - 8)
+    card.product_type_3.setMinimumWidth(THEME.basic_type_field_width - 8)
     card.btn_product_type_manage = QToolButton(card)
     card.btn_product_type_manage.setText('≡')
     card.btn_product_type_manage.setFixedSize(THEME.basic_type_manage_button_width, FIELD_H)
-    card.product_type.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
     card.btn_product_type_manage.setCursor(Qt.PointingHandCursor)
     set_widget_tooltip(card.btn_product_type_manage, Tooltips.PRODUCT_TYPE_MANAGE)
     card.btn_product_type_manage.setStyleSheet(tool_button_style())
@@ -68,7 +74,13 @@ def build_partner_rows(card, root) -> None:
     card.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
     card.style_no.setMinimumWidth(THEME.basic_style_field_extra_width)
     card.style_no.setMaximumWidth(16777215)
-    root.addLayout(make_form_row(make_field_label(Labels.STYLE_NO, card), (card.style_no, 1), make_field_label(Labels.TYPE, card), card.product_type, card.btn_product_type_manage))
+
+    card._refresh_product_type_options()
+    type_row = make_form_row(
+        make_field_label(Labels.STYLE_NO, card), (card.style_no, 1),
+        make_field_label(Labels.TYPE, card), card.product_type_1, card.product_type_2, card.product_type_3, card.btn_product_type_manage,
+    )
+    root.addLayout(type_row)
     root.addLayout(make_form_row(make_field_label(Labels.FACTORY, card), (card.factory, 1), card.btn_factory_partner))
 
 
@@ -83,28 +95,16 @@ def build_price_rows(card, root) -> None:
     card.cost.setFocusPolicy(Qt.NoFocus)
     card.sale_price.set_edit_enabled(False)
     card.sale_price.setFocusPolicy(Qt.NoFocus)
-    root.addLayout(
-        make_form_row(
-            make_field_label(Labels.LABOR, card),
-            (card.labor, 1),
-            make_field_label(Labels.LOSS, card),
-            (card.loss, 1),
-        )
-    )
-    root.addLayout(
-        make_form_row(
-            make_field_label(Labels.COST, card),
-            (card.cost, 1),
-            make_field_label(Labels.SALE_PRICE, card),
-            (card.sale_price, 1),
-        )
-    )
+    root.addLayout(make_form_row(make_field_label(Labels.LABOR, card), (card.labor, 1), make_field_label(Labels.LOSS, card), (card.loss, 1)))
+    root.addLayout(make_form_row(make_field_label(Labels.COST, card), (card.cost, 1), make_field_label(Labels.SALE_PRICE, card), (card.sale_price, 1)))
 
 
 def connect_basic_info_signals(card) -> None:
-    card.style_no.textChanged.connect(lambda text: set_invalid(card.style_no, not bool((text or "").strip()) and bool(card.style_no.property("validationError"))))
+    card.style_no.textChanged.connect(lambda text: set_invalid(card.style_no, not bool((text or '').strip()) and bool(card.style_no.property('validationError'))))
     card.style_no.committed.connect(lambda _v: card._emit_basic_fields())
-    card.product_type.currentIndexChanged.connect(lambda _i: card._emit_basic_fields())
+    card.product_type_1.currentIndexChanged.connect(lambda _i: card._on_product_type_level_changed(1))
+    card.product_type_2.currentIndexChanged.connect(lambda _i: card._on_product_type_level_changed(2))
+    card.product_type_3.currentIndexChanged.connect(lambda _i: card._emit_basic_fields())
     card.labor.textChanged.connect(card._on_price_component_changed)
     card.loss.textChanged.connect(card._on_price_component_changed)
     card.sale_price.textChanged.connect(card._on_sale_price_changed)
@@ -112,8 +112,10 @@ def connect_basic_info_signals(card) -> None:
 
 def configure_basic_info_tab_order(card) -> None:
     card.setTabOrder(card.btn_calendar, card.style_no)
-    card.setTabOrder(card.style_no, card.product_type)
-    card.setTabOrder(card.product_type, card.btn_product_type_manage)
+    card.setTabOrder(card.style_no, card.product_type_1)
+    card.setTabOrder(card.product_type_1, card.product_type_2)
+    card.setTabOrder(card.product_type_2, card.product_type_3)
+    card.setTabOrder(card.product_type_3, card.btn_product_type_manage)
     card.setTabOrder(card.btn_product_type_manage, card.btn_factory_partner)
     card.setTabOrder(card.btn_factory_partner, card.labor)
     card.setTabOrder(card.labor, card.loss)
@@ -129,12 +131,12 @@ def configure_basic_info_tab_order(card) -> None:
 def open_factory_picker(card) -> None:
     def _apply(partner):
         card.factory.set_text_silent(partner.name)
-        card.factory.setProperty("factory_partner_id", partner.id)
+        card.factory.setProperty('factory_partner_id', partner.id)
         card._emit_basic_fields()
 
     def _clear():
-        card.factory.set_text_silent("")
-        card.factory.setProperty("factory_partner_id", "")
+        card.factory.set_text_silent('')
+        card.factory.setProperty('factory_partner_id', '')
         card._emit_basic_fields()
 
     show_partner_picker(card.btn_factory_partner, partner_type=PARTNER_PICKER_TYPE_FACTORY, on_selected=_apply, on_cleared=_clear)

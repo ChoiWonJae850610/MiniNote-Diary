@@ -30,4 +30,7 @@ class MainWindowDialogLogic:
 
     @staticmethod
     def open_product_type_management(window: "MainWindow") -> int:
-        return MainWindowDialogLogic.open_modal_dialog(window, ProductTypeDialog)
+        result = MainWindowDialogLogic.open_modal_dialog(window, ProductTypeDialog)
+        if hasattr(window, 'refresh_product_type_options'):
+            window.refresh_product_type_options()
+        return result

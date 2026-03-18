@@ -56,7 +56,7 @@ class BasicInfoPostIt(_PostItCardBase):
             "style_no": self.style_no.text(),
             "factory": self.factory.text(),
             "factory_partner_id": str(self.factory.property("factory_partner_id") or ""),
-            "product_type": str(self.product_type.currentData() or ""),
+            "product_type": self._current_product_type_path(),
         })
 
     def _emit_price_fields(self):
@@ -79,6 +79,57 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def _on_sale_price_changed(self, _text: str):
         on_sale_price_changed(self, _text)
+
+
+    def _product_type_service(self):
+        from services.product_type.service import ProductTypeService
+        from ui.partners.ui_utils import project_root_from_widget
+        return ProductTypeService(project_root_from_widget(self))
+
+    def _refresh_combo_options(self, combo, values: list[str], current: str = ''):
+        from PySide6.QtCore import QSignalBlocker
+        blocker = QSignalBlocker(combo)
+        try:
+            combo.clear()
+            combo.addItem('(비움)', '')
+            for value in values:
+                combo.addItem(value, value)
+            idx = combo.findData(current)
+            combo.setCurrentIndex(idx if idx >= 0 else 0)
+        finally:
+            del blocker
+
+    def _refresh_product_type_options(self, current_path: list[str] | None = None):
+        current_path = list(current_path or [])
+        service = self._product_type_service()
+        level1 = service.get_level_options([])
+        value1 = current_path[0] if len(current_path) >= 1 else ''
+        self._refresh_combo_options(self.product_type_1, level1, value1)
+
+        level2 = service.get_level_options([value1] if value1 else [])
+        value2 = current_path[1] if len(current_path) >= 2 else ''
+        self._refresh_combo_options(self.product_type_2, level2, value2)
+
+        level3 = service.get_level_options([v for v in (value1, value2) if v])
+        value3 = current_path[2] if len(current_path) >= 3 else ''
+        self._refresh_combo_options(self.product_type_3, level3, value3)
+
+    def _on_product_type_level_changed(self, level: int):
+        if level == 1:
+            path = [str(self.product_type_1.currentData() or '')]
+            self._refresh_product_type_options(path)
+        elif level == 2:
+            path = [str(self.product_type_1.currentData() or ''), str(self.product_type_2.currentData() or '')]
+            self._refresh_product_type_options(path)
+        self._emit_basic_fields()
+
+    def _current_product_type_path(self) -> str:
+        values = [
+            str(self.product_type_1.currentData() or ''),
+            str(self.product_type_2.currentData() or ''),
+            str(self.product_type_3.currentData() or ''),
+        ]
+        return self._product_type_service().encode_path(values)
 
     def _adjust_style_width(self, text: str):
         # 제품명 입력칸은 카드 폭 안에서만 동작해야 하므로,

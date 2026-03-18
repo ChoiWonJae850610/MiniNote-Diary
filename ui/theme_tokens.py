@@ -146,8 +146,8 @@ class ThemeTokens:
     order_input_height: int = 34
     unit_dialog_width: int = 520
     unit_dialog_height: int = 420
-    product_type_dialog_width: int = 420
-    product_type_dialog_height: int = 220
+    product_type_dialog_width: int = 560
+    product_type_dialog_height: int = 520
     window_min_width: int = 1080
     window_min_height: int = 760
     note_dialog_min_width: int = 520
@@ -159,7 +159,7 @@ class ThemeTokens:
     icon_size_md: int = 16
     field_height: int = 26
     field_label_width: int = 44
-    basic_type_field_width: int = 92
+    basic_type_field_width: int = 74
     basic_type_manage_button_width: int = 26
     basic_style_field_extra_width: int = 140
     postit_unit_button_width: int = 90

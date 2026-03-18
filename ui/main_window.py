@@ -219,6 +219,16 @@ class MainWindow(QMainWindow):
     def _refresh_postits(self, force_rebuild: bool = False):
         MainWindowWorkOrderLogic.refresh_postits(self, force_rebuild=force_rebuild)
 
+    def refresh_product_type_options(self):
+        try:
+            basic = self.postit_bar.basic
+        except Exception:
+            return
+        header = getattr(getattr(self, 'state', None), 'header', None)
+        current = str(getattr(header, 'product_type', '') or '')
+        path = basic._product_type_service().resolve_path(current)
+        basic._refresh_product_type_options(path)
+
     def _refresh_basic_postit(self):
         MainWindowWorkOrderLogic.refresh_basic_postit(self)
 

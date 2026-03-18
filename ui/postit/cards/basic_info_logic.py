@@ -36,7 +36,9 @@ def set_basic_header_data(card, header: dict) -> None:
     blockers = [
         QSignalBlocker(card.style_no),
         QSignalBlocker(card.factory),
-        QSignalBlocker(card.product_type),
+        QSignalBlocker(card.product_type_1),
+        QSignalBlocker(card.product_type_2),
+        QSignalBlocker(card.product_type_3),
         QSignalBlocker(card.cost),
         QSignalBlocker(card.labor),
         QSignalBlocker(card.loss),
@@ -46,9 +48,9 @@ def set_basic_header_data(card, header: dict) -> None:
         card.style_no.set_text_silent(header.get("style_no", ""))
         card.factory.set_text_silent(header.get("factory", ""))
         card.factory.setProperty("factory_partner_id", header.get("factory_partner_id", ""))
-        current = header.get("product_type", "")
-        idx = card.product_type.findData(current)
-        card.product_type.setCurrentIndex(idx if idx >= 0 else 0)
+        current = header.get('product_type', '')
+        path = card._product_type_service().resolve_path(current)
+        card._refresh_product_type_options(path)
         card._adjust_style_width(card.style_no.text())
         card.cost.setText(header.get("cost_display", header.get("cost", "0")) or "0")
         card.labor.setText(header.get("labor_display", header.get("labor", "0")) or "0")
