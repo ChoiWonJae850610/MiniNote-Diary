@@ -3,13 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
 from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
+from ui.postit.layout import SectionLayoutSpec
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import make_toolbar_icon_button
 
@@ -168,6 +169,7 @@ class WorkOrderPageBuilder:
             FolderTabHeader(SectionTitles.CHANGE_NOTE, page),
             change_note_postit,
             parent=page,
+            layout_spec=SectionLayoutSpec(tab_overlap=THEME.work_order_change_note_tab_overlap),
             header_alignment=None,
             footer_widget=None,
             body_height=None,
@@ -184,8 +186,23 @@ class WorkOrderPageBuilder:
         right_layout = QVBoxLayout(right_stack)
         right_layout.setContentsMargins(0, max(0, THEME.work_order_postit_top_offset - THEME.work_order_postit_top_margin_adjust), 0, 0)
         right_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
-        right_layout.addWidget(postit_bar, 0, Qt.AlignTop)
-        right_layout.addWidget(change_note_wrap, 1)
+
+        top_region = QFrame(right_stack)
+        top_region.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        top_region_layout = QVBoxLayout(top_region)
+        top_region_layout.setContentsMargins(0, 0, 0, 0)
+        top_region_layout.setSpacing(0)
+        top_region_layout.addWidget(postit_bar, 0)
+
+        note_region = QFrame(right_stack)
+        note_region.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        note_region_layout = QVBoxLayout(note_region)
+        note_region_layout.setContentsMargins(0, 0, 0, 0)
+        note_region_layout.setSpacing(0)
+        note_region_layout.addWidget(change_note_wrap, 1)
+
+        right_layout.addWidget(top_region, 0)
+        right_layout.addWidget(note_region, 1)
         return right_stack
 
 

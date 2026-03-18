@@ -54,6 +54,7 @@ class ThemeTokens:
     work_order_toolbar_panel_min_height: int = 32
     work_order_column_spacing: int = 10
     work_order_postit_to_note_spacing: int = 0
+    work_order_change_note_tab_overlap: int = -20
     work_order_toolbar_inner_padding: int = 4
     work_order_toolbar_inner_padding_y: int = 1
     work_order_postit_top_offset: int = 0
