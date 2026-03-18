@@ -33,9 +33,9 @@ def update_material_card_data(card, data: Dict[str, str]) -> None:
             card.vendor.set_text_silent(card.data.get(MaterialKeys.VENDOR, ""))
             card.data[MaterialKeys.VENDOR_ID] = card.data.get(MaterialKeys.VENDOR_ID, "")
             card.item.set_text_silent(card.data.get(MaterialKeys.ITEM, ""))
-            card.qty.set_text_silent(digits_only(card.data.get(MaterialKeys.QTY, "")))
-            card.price.setText(card.data.get(MaterialKeys.UNIT_PRICE, ""))
-            card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
+            card.qty.set_text_silent(digits_only(card.data.get(MaterialKeys.QTY, "")) or "0")
+            card.price.setText(card.data.get(MaterialKeys.UNIT_PRICE, "") or "0")
+            card.total.setText(card.data.get(MaterialKeys.TOTAL, "") or "0")
             card._apply_unit_button_text()
         finally:
             for widget, old in blocked:
@@ -74,11 +74,11 @@ def recalc_material_total(card, *, commit: bool = True) -> None:
     if not qty_digits or not price_digits:
         card._block_total = True
         try:
-            card.total.setText("")
+            card.total.setText("0")
         finally:
             card._block_total = False
         if commit:
-            commit_material_value(card, MaterialKeys.TOTAL, "")
+            commit_material_value(card, MaterialKeys.TOTAL, "0")
         return
     try:
         total = int(qty_digits) * int(price_digits)

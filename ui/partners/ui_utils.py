@@ -8,13 +8,23 @@ from PySide6.QtWidgets import QLineEdit, QMenu, QWidget
 
 from services.partner.lookup_service import PartnerLookupService
 from services.partner.repository import PartnerRecord
-from services.partner.utils import PARTNER_TYPE_FACTORY, PARTNER_TYPE_FABRIC, PARTNER_TYPE_OTHER
+from services.partner.utils import (
+    PARTNER_TYPE_DYEING,
+    PARTNER_TYPE_FACTORY,
+    PARTNER_TYPE_FABRIC,
+    PARTNER_TYPE_FINISH,
+    PARTNER_TYPE_OTHER,
+    PARTNER_TYPE_TRIM,
+)
 from ui.messages import InfoMessages
 from ui.partners.dialogs.partner_dialog import PartnerDialog
 from ui.theme import menu_style
 
 PARTNER_PICKER_TYPE_FACTORY = PARTNER_TYPE_FACTORY
 PARTNER_PICKER_TYPE_FABRIC = PARTNER_TYPE_FABRIC
+PARTNER_PICKER_TYPE_TRIM = PARTNER_TYPE_TRIM
+PARTNER_PICKER_TYPE_DYEING = PARTNER_TYPE_DYEING
+PARTNER_PICKER_TYPE_FINISH = PARTNER_TYPE_FINISH
 PARTNER_PICKER_TYPE_OTHER = PARTNER_TYPE_OTHER
 
 

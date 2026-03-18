@@ -10,6 +10,19 @@ if TYPE_CHECKING:
     from ui.main_window import MainWindow
 
 
+def _row_has_meaningful_optional_work(row: dict) -> bool:
+    row = row or {}
+    text_keys = ("거래처", "품목", "단위")
+    if any(str(row.get(key, "") or "").strip() for key in text_keys):
+        return True
+    numeric_keys = ("수량", "단가", "총액")
+    for key in numeric_keys:
+        value = str(row.get(key, "") or "").replace(",", "").strip()
+        if value and value != "0":
+            return True
+    return False
+
+
 class MainWindowSaveLogic:
     @staticmethod
     def handle_back(window: "MainWindow") -> None:
@@ -32,7 +45,7 @@ class MainWindowSaveLogic:
             return
 
         has_any_optional_work = any(
-            any(str(value or '').strip() for value in row.values())
+            _row_has_meaningful_optional_work(row)
             for group in (window.state.fabric_items, window.state.trim_items, window.state.dyeing_items, window.state.other_items)
             for row in (group or [])
         )

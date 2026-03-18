@@ -10,7 +10,7 @@ def recompute_basic_prices(card) -> None:
     sale_total = material_total + labor + loss
     card._syncing_prices = True
     try:
-        card.sale_price.setText(f"{sale_total:,}" if sale_total else "")
+        card.sale_price.setText(f"{sale_total:,}")
     finally:
         card._syncing_prices = False
 
@@ -46,9 +46,9 @@ def set_basic_header_data(card, header: dict) -> None:
         card.factory.set_text_silent(header.get("factory", ""))
         card.factory.setProperty("factory_partner_id", header.get("factory_partner_id", ""))
         card._adjust_style_width(card.style_no.text())
-        card.cost.setText(header.get("cost_display", header.get("cost", "")) or "")
-        card.labor.setText(header.get("labor_display", header.get("labor", "")) or "")
-        card.loss.setText(header.get("loss_display", header.get("loss", "")) or "")
-        card.sale_price.setText(header.get("sale_price_display", header.get("sale_price", "")) or "")
+        card.cost.setText(header.get("cost_display", header.get("cost", "0")) or "0")
+        card.labor.setText(header.get("labor_display", header.get("labor", "0")) or "0")
+        card.loss.setText(header.get("loss_display", header.get("loss", "0")) or "0")
+        card.sale_price.setText(header.get("sale_price_display", header.get("sale_price", "0")) or "0")
     finally:
         del blockers

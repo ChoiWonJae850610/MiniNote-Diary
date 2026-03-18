@@ -54,11 +54,18 @@ def needs_price_recompute(patch: Dict[str, str] | None) -> bool:
 
 def recompute_header_prices(header, material_groups: Iterable[List[MaterialItem]]) -> None:
     material_total = sum(sum_material_totals(items) for items in material_groups)
-    material_text = str(material_total) if material_total else ''
+    material_text = str(material_total)
     header.cost = material_text
-    header.cost_display = format_commas_from_digits(material_text) if material_text else ''
+    header.cost_display = format_commas_from_digits(material_text)
+
+    labor_text = str(int_from_any(header.labor))
+    loss_text = str(int_from_any(header.loss))
+    header.labor = labor_text
+    header.labor_display = format_commas_from_digits(labor_text)
+    header.loss = loss_text
+    header.loss_display = format_commas_from_digits(loss_text)
 
     sale_total = material_total + int_from_any(header.labor) + int_from_any(header.loss)
-    sale_text = str(sale_total) if sale_total else ''
+    sale_text = str(sale_total)
     header.sale_price = sale_text
-    header.sale_price_display = format_commas_from_digits(sale_text) if sale_text else ''
+    header.sale_price_display = format_commas_from_digits(sale_text)

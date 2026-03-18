@@ -105,6 +105,7 @@ class _ClickToEditLineEdit(QLineEdit):
 
 
 class _MoneyLineEdit(_ClickToEditLineEdit):
+    DEFAULT_DIGITS = "0"
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
@@ -127,7 +128,18 @@ class _MoneyLineEdit(_ClickToEditLineEdit):
             self._fmt = False
 
     def digits(self) -> str:
-        return digits_only(self.text())
+        digits = digits_only(self.text())
+        return digits or self.DEFAULT_DIGITS
+
+    def _commit_lock(self):
+        if not self.isReadOnly():
+            digits = digits_only(self.text()) or self.DEFAULT_DIGITS
+            changed = digits != digits_only(self._edit_start_text)
+            self.set_text_silent(format_commas_from_digits(digits))
+            self.setReadOnly(True)
+            self._apply_style(editing=False)
+            if changed:
+                self.committed.emit(self.text())
 
 
 class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
@@ -138,7 +150,7 @@ class _QtyClickToEditLineEdit(_ClickToEditLineEdit):
 
     def _commit_lock(self):
         if not self.isReadOnly():
-            digits = digits_only(self.text())
+            digits = digits_only(self.text()) or "0"
             changed = digits != digits_only(self._edit_start_text)
             self.set_text_silent(digits)
             self.setReadOnly(True)

@@ -9,7 +9,14 @@ from services.common.field_keys import MaterialKeys
 from services.unit.repository import load_units, unit_label_for_value
 from ui.icon_factory import make_partner_link_icon
 from ui.messages import Labels, PostItTexts, Tooltips
-from ui.partners.ui_utils import PARTNER_PICKER_TYPE_FABRIC, PARTNER_PICKER_TYPE_OTHER, show_partner_picker
+from ui.partners.ui_utils import (
+    PARTNER_PICKER_TYPE_DYEING,
+    PARTNER_PICKER_TYPE_FABRIC,
+    PARTNER_PICKER_TYPE_FINISH,
+    PARTNER_PICKER_TYPE_OTHER,
+    PARTNER_PICKER_TYPE_TRIM,
+    show_partner_picker,
+)
 from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editor_fields import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import make_field_label, make_form_row
@@ -134,7 +141,15 @@ def configure_material_tab_order(card) -> None:
 
 
 def picker_partner_type(kind: str) -> str:
-    return PARTNER_PICKER_TYPE_FABRIC if kind == "fabric" else PARTNER_PICKER_TYPE_OTHER
+    if kind == "fabric":
+        return PARTNER_PICKER_TYPE_FABRIC
+    if kind == "trim":
+        return PARTNER_PICKER_TYPE_TRIM
+    if kind == "dyeing":
+        return PARTNER_PICKER_TYPE_DYEING
+    if kind == "finishing":
+        return PARTNER_PICKER_TYPE_FINISH
+    return PARTNER_PICKER_TYPE_OTHER
 
 
 def open_vendor_picker(card) -> None:

@@ -13,20 +13,21 @@ class WorkOrderHeader:
     date: str = ''
     style_no: str = ''
     factory: str = ''
-    cost_display: str = ''
-    labor_display: str = ''
-    loss_display: str = ''
-    sale_price_display: str = ''
-    cost: str = ''
-    labor: str = ''
-    loss: str = ''
-    sale_price: str = ''
+    cost_display: str = '0'
+    labor_display: str = '0'
+    loss_display: str = '0'
+    sale_price_display: str = '0'
+    cost: str = '0'
+    labor: str = '0'
+    loss: str = '0'
+    sale_price: str = '0'
     change_note: str = ''
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any] | None) -> 'WorkOrderHeader':
         data = data or {}
-        payload = {name: to_text(data.get(name, '')) for name in HEADER_FIELDS}
+        defaults = cls().to_dict()
+        payload = {name: (to_text(data.get(name, defaults[name])) or defaults[name]) for name in HEADER_FIELDS}
         return cls(**payload)
 
     def to_dict(self) -> Dict[str, str]:
@@ -44,17 +45,21 @@ class WorkOrderHeader:
         return all(data.get(key, '').strip() for key in REQUIRED_HEADER_FIELDS)
 
     def has_any_value(self) -> bool:
-        return any(value.strip() for value in self.to_dict().values())
+        text_keys = ('date', 'style_no', 'factory', 'change_note')
+        if any(str(getattr(self, key, '') or '').strip() for key in text_keys):
+            return True
+        numeric_keys = ('cost', 'labor', 'loss', 'sale_price')
+        return any(str(getattr(self, key, '') or '').replace(',', '').strip() not in ('', '0') for key in numeric_keys)
 
 
 @dataclass
 class MaterialItem:
     거래처: str = ''
     품목: str = ''
-    수량: str = ''
+    수량: str = '0'
     단위: str = ''
-    단가: str = ''
-    총액: str = ''
+    단가: str = '0'
+    총액: str = '0'
 
     @property
     def vendor(self) -> str:
@@ -83,7 +88,8 @@ class MaterialItem:
     @classmethod
     def from_dict(cls, data: Dict[str, Any] | None) -> 'MaterialItem':
         data = data or {}
-        return cls(**{name: to_text(data.get(name, '')) for name in MATERIAL_FIELDS})
+        defaults = cls().to_dict()
+        return cls(**{name: (to_text(data.get(name, defaults[name])) or defaults[name]) for name in MATERIAL_FIELDS})
 
     def to_dict(self) -> Dict[str, str]:
         return {name: to_text(getattr(self, name, '')) for name in MATERIAL_FIELDS}
@@ -96,7 +102,11 @@ class MaterialItem:
                 setattr(self, name, to_text(patch.get(name, '')))
 
     def has_any_value(self) -> bool:
-        return any(value.strip() for value in self.to_dict().values())
+        text_keys = (MaterialKeys.VENDOR, MaterialKeys.ITEM, MaterialKeys.UNIT)
+        if any(str(getattr(self, key) or '').strip() for key in text_keys):
+            return True
+        numeric_keys = (MaterialKeys.QTY, MaterialKeys.UNIT_PRICE, MaterialKeys.TOTAL)
+        return any(str(getattr(self, key) or '').replace(',', '').strip() not in ('', '0') for key in numeric_keys)
 
     def has_required_fields(self) -> bool:
         data = self.to_dict()
