@@ -65,7 +65,7 @@ def build_partner_rows(card, root) -> None:
     card.factory.set_edit_enabled(False)
     card.factory.setFocusPolicy(Qt.NoFocus)
     card.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-    card.style_no.setMinimumWidth(0)
+    card.style_no.setMinimumWidth(THEME.basic_style_field_extra_width)
     root.addLayout(make_form_row(make_field_label(Labels.STYLE_NO, card), (card.style_no, 1), make_field_label(Labels.TYPE, card), card.product_type, card.btn_product_type_manage))
     root.addLayout(make_form_row(make_field_label(Labels.FACTORY, card), (card.factory, 1), card.btn_factory_partner))
 

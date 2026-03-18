@@ -62,14 +62,15 @@ def make_inline_icon_button(*, parent=None, tooltip: str = '', icon: QIcon | Non
 
 def make_nav_button(*, parent=None, tooltip: str = '') -> QPushButton:
     button = QPushButton('', parent)
+    nav_font_px = max(THEME.base_font_px, THEME.page_title_font_px - 4)
     apply_icon_button_metrics(
         button,
-        font_px=max(THEME.base_font_px, THEME.page_title_font_px - 2),
+        font_px=nav_font_px,
         object_name='navButton',
         tooltip=tooltip,
         size=THEME.nav_button_size,
     )
-    return apply_glyph_icon(button, Symbols.BACK, font_px=max(THEME.base_font_px, THEME.page_title_font_px - 2), color=THEME.color_icon)
+    return apply_glyph_icon(button, Symbols.BACK, font_px=nav_font_px, color=THEME.color_icon)
 
 
 def make_toolbar_icon_button(*, parent=None, object_name: str = 'iconAction', tooltip: str = '', icon: QIcon | None = None, font_px: int | None = None) -> QPushButton:

@@ -154,13 +154,15 @@ class ThemeTokens:
     note_dialog_min_height: int = 360
 
     icon_button_size: int = 24
-    nav_button_size: int = 28
+    nav_button_size: int = 22
     icon_size_sm: int = 12
     icon_size_md: int = 16
     field_height: int = 26
     field_label_width: int = 44
     basic_type_field_width: int = 118
     basic_type_manage_button_width: int = 30
+    basic_style_field_extra_width: int = 44
+    postit_unit_button_width: int = 75
     calendar_display_width: int = 110
     postit_qty_field_max_width: int = 112
     postit_unit_button_min_width: int = 60

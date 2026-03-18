@@ -72,8 +72,8 @@ def configure_unit_controls(card) -> None:
     card.unit_btn.setIconSize(QSize(PostItLayout.UNIT_ICON_SIZE, PostItLayout.UNIT_ICON_SIZE))
     card.unit_btn.setCursor(Qt.PointingHandCursor)
     card.unit_btn.setFixedHeight(FIELD_H)
-    card.unit_btn.setMinimumWidth(max(32, THEME.postit_unit_button_min_width // 2))
-    card.unit_btn.setMaximumWidth(max(32, THEME.postit_unit_button_min_width // 2))
+    card.unit_btn.setMinimumWidth(max(32, THEME.postit_unit_button_width))
+    card.unit_btn.setMaximumWidth(max(32, THEME.postit_unit_button_width))
     card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
     card.unit_btn.setStyleSheet(unit_button_style())
     _apply_unit_button_text(card)
@@ -113,8 +113,8 @@ def build_amount_rows(card, root) -> None:
     card.total.set_edit_enabled(False)
     card.total.setFocusPolicy(Qt.NoFocus)
     card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
-    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_min_width // 2))
-    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_min_width // 2))
+    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_width))
+    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_width))
     root.addLayout(
         make_form_row(
             make_field_label(Labels.QTY, card),
