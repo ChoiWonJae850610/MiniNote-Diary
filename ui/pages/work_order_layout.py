@@ -2,12 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ui.postit.layout import (
-    POSTIT_BODY_HEIGHT,
-    POSTIT_EXTERNAL_ROW_GAP_TIGHT,
-    POSTIT_FOOTER_HEIGHT,
-    postit_column_height,
-)
+from ui.postit.layout import POSTIT_EXTERNAL_ROW_GAP_TIGHT, POSTIT_FOOTER_HEIGHT
+from ui.postit.layout_helpers import build_postit_column_metrics
 from ui.theme import THEME
 
 
@@ -27,21 +23,20 @@ class WorkOrderLayoutMetrics:
 
     @property
     def postit_bar_total_height(self) -> int:
-        return postit_column_height(
-            body_height=POSTIT_BODY_HEIGHT,
+        return build_postit_column_metrics(
             has_footer=True,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
             external_row_height=POSTIT_FOOTER_HEIGHT,
-        )
+        ).column_height
 
     @property
     def change_note_wrap_overhead(self) -> int:
-        return postit_column_height(
+        return build_postit_column_metrics(
             body_height=0,
             has_footer=True,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
             external_row_height=POSTIT_FOOTER_HEIGHT,
-        )
+        ).column_height
 
     @property
     def target_change_note_wrap_height(self) -> int:

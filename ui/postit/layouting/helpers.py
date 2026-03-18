@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from PySide6.QtWidgets import QWidget
+
 from ui.postit.layouting.constants import (
     POSTIT_BODY_HEIGHT,
     POSTIT_FOOTER_HEIGHT,
@@ -10,11 +14,58 @@ from ui.postit.layouting.constants import (
 from ui.theme import THEME
 
 
+@dataclass(frozen=True)
+class PostItColumnMetrics:
+    body_height: int
+    has_footer: bool
+    external_row_gap: int
+    external_row_height: int
+
+    @property
+    def section_height(self) -> int:
+        total = POSTIT_HEADER_HEIGHT + POSTIT_TAB_OVERLAP + self.body_height
+        if self.has_footer:
+            total += THEME.top_button_spacing + POSTIT_FOOTER_HEIGHT
+        return total
+
+    @property
+    def column_height(self) -> int:
+        return self.section_height + self.external_row_gap + self.external_row_height
+
+
+def resolve_postit_body_height(*, body_height: int | None = None, body_widget: QWidget | None = None) -> int:
+    if body_height is not None:
+        return max(0, body_height)
+    if body_widget is None:
+        return 0
+    return max(0, body_widget.sizeHint().height())
+
+
+def build_postit_column_metrics(
+    *,
+    body_height: int | None = None,
+    body_widget: QWidget | None = None,
+    has_footer: bool = True,
+    external_row_gap: int | None = None,
+    external_row_height: int = POSTIT_FOOTER_HEIGHT,
+) -> PostItColumnMetrics:
+    resolved_external_row_gap = THEME.top_button_spacing if external_row_gap is None else external_row_gap
+    resolved_body_height = resolve_postit_body_height(body_height=body_height, body_widget=body_widget)
+    return PostItColumnMetrics(
+        body_height=resolved_body_height,
+        has_footer=has_footer,
+        external_row_gap=resolved_external_row_gap,
+        external_row_height=external_row_height,
+    )
+
+
 def postit_section_height(*, body_height: int, has_footer: bool = False) -> int:
-    total = POSTIT_HEADER_HEIGHT + POSTIT_TAB_OVERLAP + body_height
-    if has_footer:
-        total += THEME.top_button_spacing + POSTIT_FOOTER_HEIGHT
-    return total
+    return build_postit_column_metrics(
+        body_height=body_height,
+        has_footer=has_footer,
+        external_row_gap=0,
+        external_row_height=0,
+    ).section_height
 
 
 
@@ -29,12 +80,12 @@ def postit_column_height(
     external_row_gap: int | None = None,
     external_row_height: int = POSTIT_FOOTER_HEIGHT,
 ) -> int:
-    resolved_external_row_gap = THEME.top_button_spacing if external_row_gap is None else external_row_gap
-    return (
-        postit_section_height(body_height=body_height, has_footer=has_footer)
-        + resolved_external_row_gap
-        + external_row_height
-    )
+    return build_postit_column_metrics(
+        body_height=body_height,
+        has_footer=has_footer,
+        external_row_gap=external_row_gap,
+        external_row_height=external_row_height,
+    ).column_height
 
 
 def embedded_tab_style(*, active: bool = True, selector: str = 'QToolButton') -> str:
@@ -63,9 +114,12 @@ def folder_tab_style(*, active: bool = True, selector: str = 'QToolButton') -> s
 
 
 __all__ = [
+    'PostItColumnMetrics',
+    'build_postit_column_metrics',
     'embedded_tab_style',
     'folder_tab_style',
     'postit_column_height',
     'postit_section_height',
     'postit_wrap_height',
+    'resolve_postit_body_height',
 ]

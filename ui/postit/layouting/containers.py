@@ -13,7 +13,7 @@ from ui.postit.layouting.constants import (
     POSTIT_ZERO_MARGIN,
     POSTIT_ZERO_STRETCH,
 )
-from ui.postit.layouting.helpers import postit_section_height
+from ui.postit.layouting.helpers import build_postit_column_metrics, resolve_postit_body_height
 
 
 @dataclass(frozen=True)
@@ -53,9 +53,15 @@ class SectionContainer(QWidget):
             root.addSpacing(layout_spec.footer_gap)
             root.addWidget(footer_widget, POSTIT_ZERO_STRETCH)
 
-        height = body_height if body_height is not None else body_widget.sizeHint().height()
-        if height > 0:
-            self.setFixedHeight(postit_section_height(body_height=height, has_footer=footer_widget is not None))
+        resolved_body_height = resolve_postit_body_height(body_height=body_height, body_widget=body_widget)
+        if resolved_body_height > 0:
+            metrics = build_postit_column_metrics(
+                body_height=resolved_body_height,
+                has_footer=footer_widget is not None,
+                external_row_gap=0,
+                external_row_height=0,
+            )
+            self.setFixedHeight(metrics.section_height)
 
 
 class FooterSpacer(QWidget):
@@ -98,9 +104,14 @@ class PostItSectionColumn(QWidget):
         root.addWidget(self.section_wrap, POSTIT_ZERO_STRETCH)
         root.addWidget(self.external_row_widget, POSTIT_ZERO_STRETCH)
 
-        has_footer = footer_widget is not None
-        section_height = postit_section_height(body_height=body_height or body_widget.sizeHint().height(), has_footer=has_footer)
-        self.setFixedHeight(section_height + layout_spec.external_row_gap + layout_spec.footer_height)
+        resolved_body_height = resolve_postit_body_height(body_height=body_height, body_widget=body_widget)
+        metrics = build_postit_column_metrics(
+            body_height=resolved_body_height,
+            has_footer=footer_widget is not None,
+            external_row_gap=layout_spec.external_row_gap,
+            external_row_height=layout_spec.footer_height,
+        )
+        self.setFixedHeight(metrics.column_height)
 
 
 __all__ = [
