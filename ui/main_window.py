@@ -272,15 +272,10 @@ class MainWindow(QMainWindow):
         else:
             cost_text = "0원"
         return (
-            f"제품명: {style_no}
-"
-            f"제품 타입: {product_type}
-"
-            f"원가: {cost_text}
-
-"
-            f"위 내용으로 저장하시겠습니까?
-"
+            f"제품명: {style_no}\n"
+            f"제품 타입: {product_type}\n"
+            f"원가: {cost_text}\n\n"
+            f"위 내용으로 저장하시겠습니까?\n"
             f"예(Y) / 아니오(N)"
         )
 
