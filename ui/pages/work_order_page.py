@@ -173,6 +173,7 @@ class WorkOrderPageBuilder:
             header_alignment=None,
             footer_widget=None,
             body_height=None,
+            lock_height_to_body=False,
         )
         change_note_wrap.setMinimumWidth(THEME.work_order_change_note_min_width)
         change_note_wrap.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

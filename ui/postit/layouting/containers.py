@@ -38,6 +38,7 @@ class SectionContainer(QWidget):
         header_alignment=Qt.AlignLeft,
         footer_widget: QWidget | None = None,
         body_height: int | None = None,
+        lock_height_to_body: bool = True,
     ):
         super().__init__(parent)
         self.layout_spec = layout_spec
@@ -54,7 +55,7 @@ class SectionContainer(QWidget):
             root.addWidget(footer_widget, POSTIT_ZERO_STRETCH)
 
         resolved_body_height = resolve_postit_body_height(body_height=body_height, body_widget=body_widget)
-        if resolved_body_height > 0:
+        if lock_height_to_body and resolved_body_height > 0:
             metrics = build_postit_column_metrics(
                 body_height=resolved_body_height,
                 has_footer=footer_widget is not None,
