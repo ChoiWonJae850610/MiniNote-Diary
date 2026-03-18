@@ -56,9 +56,7 @@ class WorkOrderPageBuilder:
         image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
         change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(
             page,
-            image_toolbar=image_toolbar,
             image_shell=image_shell,
-            postit_bar=postit_bar,
         )
 
         right_stack = WorkOrderPageBuilder._build_postit_stack(postit_bar, change_note_wrap)
@@ -158,9 +156,7 @@ class WorkOrderPageBuilder:
     def _build_change_note_column(
         page: QWidget,
         *,
-        image_toolbar: QWidget,
         image_shell: QWidget,
-        postit_bar: QWidget,
     ) -> tuple[ChangeNotePostIt, QWidget]:
         change_note_body_height = WorkOrderPageBuilder._aligned_change_note_body_height(
             image_shell=image_shell,

@@ -39,14 +39,21 @@ class WorkOrderLayoutMetrics:
         ).column_height
 
     @property
-    def target_change_note_wrap_height(self) -> int:
-        return max(
-            THEME.memo_min_height,
+    def available_change_note_wrap_height(self) -> int:
+        return (
             self.image_column_total_height
             - THEME.work_order_column_spacing
             - self.postit_bar_total_height
             - THEME.work_order_bottom_safe_reserve
-            + THEME.work_order_bottom_match_adjust,
+        )
+
+    @property
+    def target_change_note_wrap_height(self) -> int:
+        return max(
+            THEME.memo_min_height,
+            self.available_change_note_wrap_height
+            + THEME.work_order_bottom_match_adjust
+            - THEME.work_order_change_note_visual_trim,
         )
 
     @property
