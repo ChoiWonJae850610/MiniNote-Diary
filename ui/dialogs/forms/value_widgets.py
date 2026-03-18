@@ -85,11 +85,13 @@ class CalendarPopup(QDialog):
 def build_calendar_row(parent, date_value: QDate, on_click):
     date_text = QLabel(date_value.toString('yyyy-MM-dd'), parent)
     date_text.setMinimumHeight(THEME.dialog_field_height)
-    date_text.setFixedWidth(THEME.calendar_display_width)
+    date_text.setMinimumWidth(THEME.calendar_display_width)
+    date_text.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
     date_text.setStyleSheet(display_field_style(8))
 
     btn_calendar = QToolButton(parent)
-    btn_calendar.setFixedSize(THEME.dialog_field_height, THEME.dialog_field_height)
+    btn_calendar.setMinimumSize(THEME.calendar_button_size, THEME.calendar_button_size)
+    btn_calendar.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
     set_widget_tooltip(btn_calendar, Tooltips.OPEN_CALENDAR)
     btn_calendar.setCursor(Qt.PointingHandCursor)
     btn_calendar.setAutoRaise(True)

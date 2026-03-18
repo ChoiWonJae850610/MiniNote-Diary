@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Iterable
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QToolButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QToolButton, QWidget
 
 from ui.messages import Symbols
 from ui.postit.common import MAX_POSTIT_CARDS
@@ -31,7 +31,8 @@ class PostItIndexControls:
         button = QToolButton(self._owner)
         button.setText(text)
         button.setCursor(Qt.PointingHandCursor)
-        button.setFixedSize(THEME.icon_button_size, THEME.icon_button_size)
+        button.setMinimumSize(THEME.postit_index_button_min_size, THEME.postit_index_button_min_size)
+        button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         button.setFocusPolicy(Qt.NoFocus)
         return button
 

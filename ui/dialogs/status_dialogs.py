@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import Sequence, Tuple
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
 from ui.button_layout_utils import make_dialog_button_row
 from ui.dialogs.base import _BaseThemedDialog
 from ui.layout_metrics import DialogLayout
 from ui.messages import Buttons, Symbols
-from ui.theme import status_row_margins
+from ui.theme import THEME, status_row_margins
 from ui.widget_factory_buttons import make_dialog_button
 
 
@@ -33,7 +33,8 @@ class ValidationStatusDialog(_BaseThemedDialog):
         layout.setSpacing(DialogLayout.STATUS_ROW_SPACING)
 
         icon = QLabel(Symbols.STATUS_OK if ok else Symbols.STATUS_FAIL, row)
-        icon.setFixedWidth(DialogLayout.STATUS_ICON_WIDTH)
+        icon.setMinimumWidth(max(DialogLayout.STATUS_ICON_WIDTH, THEME.dialog_status_icon_min_width))
+        icon.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         icon.setAlignment(Qt.AlignCenter)
         icon.setObjectName("statusIconOk" if ok else "statusIconFail")
 

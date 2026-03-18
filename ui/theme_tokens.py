@@ -85,6 +85,8 @@ class ThemeTokens:
     table_header_height: int = 34
     dialog_button_height: int = 34
     dialog_field_height: int = 30
+    dialog_status_icon_min_width: int = 22
+    calendar_button_size: int = 30
     order_input_height: int = 34
     unit_dialog_width: int = 520
     unit_dialog_height: int = 420
@@ -101,6 +103,7 @@ class ThemeTokens:
     field_label_width: int = 44
     calendar_display_width: int = 110
     table_row_height: int = 30
+    postit_index_button_min_size: int = 24
     section_badge_height: int = 28
     summary_chip_height: int = 30
     feedback_label_height: int = 20
