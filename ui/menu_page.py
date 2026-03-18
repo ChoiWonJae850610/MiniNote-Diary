@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import QDate, Qt
+from PySide6.QtCore import QDate, Qt, QSize
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -14,6 +14,9 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QToolButton,
+    QStyle,
+    QAbstractButton,
     QVBoxLayout,
     QWidget,
 )
@@ -30,18 +33,18 @@ from ui.widget_factory import apply_button_metrics, make_panel_frame
 @dataclass
 class MenuPageRefs:
     page: QWidget
-    btn_template: QPushButton
-    btn_job_start: QPushButton
-    btn_receipt: QPushButton
-    btn_complete: QPushButton
-    btn_sale: QPushButton
-    btn_inventory: QPushButton
-    btn_partner_mgmt: QPushButton
-    btn_unit_mgmt: QPushButton
-    btn_product_type_mgmt: QPushButton
-    btn_material_mgmt: QPushButton
-    btn_settings: QPushButton
-    btn_help: QPushButton
+    btn_template: QAbstractButton
+    btn_job_start: QAbstractButton
+    btn_receipt: QAbstractButton
+    btn_complete: QAbstractButton
+    btn_sale: QAbstractButton
+    btn_inventory: QAbstractButton
+    btn_partner_mgmt: QAbstractButton
+    btn_unit_mgmt: QAbstractButton
+    btn_product_type_mgmt: QAbstractButton
+    btn_material_mgmt: QAbstractButton
+    btn_settings: QAbstractButton
+    btn_help: QAbstractButton
     checklist_input: QLineEdit
     checklist_list: QListWidget
     metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
@@ -151,7 +154,7 @@ class MenuPageBuilder:
         layout.setSpacing(12)
 
         title = MenuPageBuilder._make_section_label('오늘 할 일', panel)
-        subtitle = QLabel('한 줄씩 입력하고 Enter를 누르면 체크리스트에 추가됩니다.', panel)
+        subtitle = QLabel('Enter로 바로 추가하고 체크해서 관리합니다.', panel)
         subtitle.setObjectName('menuSectionHint')
 
         input_row = QHBoxLayout()
@@ -220,13 +223,19 @@ class MenuPageBuilder:
         return panel, checklist_input, checklist_list
 
     @staticmethod
-    def _make_menu_button(title: str, glyph: str, accent_name: str) -> QPushButton:
-        button = QPushButton(f'{glyph}\n{title}')
+    def _make_menu_button(title: str, glyph: str, accent_name: str, icon_kind: QStyle.StandardPixmap) -> QToolButton:
+        button = QToolButton()
+        button.setText(f'{glyph}\n{title}')
         button.setObjectName('menuIconCard')
         button.setProperty('accent', accent_name)
+        button.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         button.setCursor(Qt.PointingHandCursor)
-        button.setMinimumHeight(110)
-        apply_button_metrics(button, font_px=THEME.base_font_px + 1, bold=True)
+        button.setAutoRaise(False)
+        button.setIcon(button.style().standardIcon(icon_kind))
+        button.setIconSize(QSize(*THEME.menu_button_icon_size))
+        button.setMinimumHeight(THEME.menu_button_min_height)
+        button.setMinimumWidth(THEME.menu_button_min_width)
+        apply_button_metrics(button, font_px=THEME.base_font_px, bold=True)
         return button
 
     @staticmethod
@@ -303,16 +312,16 @@ class MenuPageBuilder:
         menu_grid.setHorizontalSpacing(12)
         menu_grid.setVerticalSpacing(12)
 
-        btn_template = MenuPageBuilder._make_menu_button(MenuPageTexts.TEMPLATE_TITLE, '📝', 'peach')
-        btn_job_start = MenuPageBuilder._make_menu_button(MenuPageTexts.ORDER_TITLE, '📦', 'lavender')
-        btn_receipt = MenuPageBuilder._make_menu_button(MenuPageTexts.RECEIPT_TITLE, '🧵', 'mint')
-        btn_complete = MenuPageBuilder._make_menu_button(MenuPageTexts.COMPLETE_TITLE, '✅', 'sky')
-        btn_sale = MenuPageBuilder._make_menu_button(MenuPageTexts.SALE_TITLE, '🏷', 'peach')
-        btn_inventory = MenuPageBuilder._make_menu_button(MenuPageTexts.INVENTORY_TITLE, '📊', 'lavender')
-        btn_partner_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.PARTNER_TITLE, '🏭', 'sky')
-        btn_unit_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.UNIT_TITLE, '📏', 'mint')
-        btn_product_type_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.PRODUCT_TYPE_TITLE, '🪪', 'peach')
-        btn_material_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.MATERIAL_MGMT_TITLE, '🧶', 'lavender')
+        btn_template = MenuPageBuilder._make_menu_button(MenuPageTexts.TEMPLATE_TITLE, '📝', 'peach', QStyle.SP_FileIcon)
+        btn_job_start = MenuPageBuilder._make_menu_button(MenuPageTexts.ORDER_TITLE, '📦', 'lavender', QStyle.SP_DialogOpenButton)
+        btn_receipt = MenuPageBuilder._make_menu_button(MenuPageTexts.RECEIPT_TITLE, '🧵', 'mint', QStyle.SP_DialogApplyButton)
+        btn_complete = MenuPageBuilder._make_menu_button(MenuPageTexts.COMPLETE_TITLE, '✅', 'sky', QStyle.SP_DialogYesButton)
+        btn_sale = MenuPageBuilder._make_menu_button(MenuPageTexts.SALE_TITLE, '🏷', 'peach', QStyle.SP_ComputerIcon)
+        btn_inventory = MenuPageBuilder._make_menu_button(MenuPageTexts.INVENTORY_TITLE, '📊', 'lavender', QStyle.SP_DriveHDIcon)
+        btn_partner_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.PARTNER_TITLE, '🏭', 'sky', QStyle.SP_DirHomeIcon)
+        btn_unit_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.UNIT_TITLE, '📏', 'mint', QStyle.SP_DialogResetButton)
+        btn_product_type_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.PRODUCT_TYPE_TITLE, '🪪', 'peach', QStyle.SP_DriveFDIcon)
+        btn_material_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.MATERIAL_MGMT_TITLE, '🧶', 'lavender', QStyle.SP_DirIcon)
 
         menu_buttons = (
             btn_template,
@@ -327,8 +336,8 @@ class MenuPageBuilder:
             btn_receipt,
         )
         for index, button in enumerate(menu_buttons):
-            menu_grid.addWidget(button, index // 3, index % 3)
-        for col in range(3):
+            menu_grid.addWidget(button, index // 5, index % 5)
+        for col in range(5):
             menu_grid.setColumnStretch(col, 1)
 
         menu_layout.addLayout(menu_grid)
@@ -348,11 +357,11 @@ class MenuPageBuilder:
         metric_value_labels: dict[str, QLabel] = {}
         for index, title in enumerate(metric_titles):
             card, value_label = MenuPageBuilder._make_metric_card(page, title)
-            metrics_grid.addWidget(card, index, 0)
+            metrics_grid.addWidget(card, index // 2, index % 2)
             metric_value_labels[title] = value_label
         metrics_grid.setColumnStretch(0, 1)
+        metrics_grid.setColumnStretch(1, 1)
         right_layout.addLayout(metrics_grid)
-        right_layout.addStretch(1)
 
         content_row.addLayout(left_col, 0, 0)
         content_row.addWidget(right_panel, 0, 1)

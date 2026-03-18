@@ -165,10 +165,13 @@ class ThemeTokens:
     unit_dialog_height: int = 420
     product_type_dialog_width: int = 560
     product_type_dialog_height: int = 520
-    window_min_width: int = 950
-    window_min_height: int = 1000
+    window_min_width: int = 800
+    window_min_height: int = 900
     note_dialog_min_width: int = 520
     note_dialog_min_height: int = 360
+    menu_button_min_width: int = 116
+    menu_button_min_height: int = 108
+    menu_button_icon_size: tuple[int, int] = (26, 26)
 
     icon_button_size: int = 24
     nav_button_size: int = 22

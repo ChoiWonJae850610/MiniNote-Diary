@@ -103,6 +103,36 @@ def build_global_widget_styles() -> str:
             background: transparent;
             padding-top: 2px;
         }}
+        QLineEdit#menuChecklistInput {{
+            min-height: 42px;
+            border-radius: {t.input_radius + 4}px;
+            border: 1px solid #E2E7EF;
+            background: #FFFFFF;
+            padding: 0 14px;
+        }}
+        QLineEdit#menuChecklistInput:focus {{
+            border-color: {t.color_primary};
+            background: #FFFDF8;
+        }}
+        QListWidget#menuChecklistList {{
+            background: #FFFFFF;
+            border: 1px solid #E5EAF0;
+            border-radius: {t.panel_radius_sm + 2}px;
+            outline: none;
+            padding: 6px;
+        }}
+        QListWidget#menuChecklistList::item {{
+            background: #FFFEFB;
+            border: 1px solid #F0E6D4;
+            border-radius: {t.control_radius + 2}px;
+            padding: 10px 12px;
+            margin: 4px 2px;
+            min-height: 24px;
+        }}
+        QListWidget#menuChecklistList::item:hover {{
+            background: #FFF8EC;
+            border-color: #E8D8B8;
+        }}
 
         QLabel#menuSectionHint {{
             color: {t.color_text_muted};
@@ -178,9 +208,11 @@ def build_button_styles() -> str:
             background: {icon_bg};
         }}
         QPushButton#primaryAction {{
+            min-height: 42px;
             background: {t.color_primary};
             border-color: {t.color_primary};
             color: {t.color_text_on_primary};
+            border-radius: {t.control_radius + 3}px;
         }}
         QPushButton#primaryAction:hover {{
             background: {t.color_primary_hover};
@@ -213,30 +245,31 @@ def build_button_styles() -> str:
             background: #FCFAFF;
             border-color: #C7B7EC;
         }}
-        QPushButton#menuIconCard {{
+        QToolButton#menuIconCard {{
             background: #FFFFFF;
             color: {t.color_text};
             border: 1px solid #E2E7EF;
             border-radius: {t.panel_radius}px;
-            padding: 10px 8px 8px 8px;
-            text-align: center;
+            padding: 10px 8px 10px 8px;
             font-weight: 800;
-            line-height: 1.35;
         }}
-        QPushButton#menuIconCard:hover {{
+        QToolButton#menuIconCard:hover {{
             background: #FFFCF6;
             border-color: {t.color_border_hover};
         }}
-        QPushButton#menuIconCard[accent="peach"] {{
+        QToolButton#menuIconCard::menu-indicator {{
+            image: none;
+        }}
+        QToolButton#menuIconCard[accent="peach"] {{
             border-top: 5px solid #E8D8B8;
         }}
-        QPushButton#menuIconCard[accent="lavender"] {{
+        QToolButton#menuIconCard[accent="lavender"] {{
             border-top: 5px solid #D9CCF2;
         }}
-        QPushButton#menuIconCard[accent="mint"] {{
+        QToolButton#menuIconCard[accent="mint"] {{
             border-top: 5px solid #CBE8DD;
         }}
-        QPushButton#menuIconCard[accent="sky"] {{
+        QToolButton#menuIconCard[accent="sky"] {{
             border-top: 5px solid #CFE0F6;
         }}
         QPushButton#dangerSoft {{
@@ -286,9 +319,19 @@ def build_panel_styles() -> str:
             border: 1px solid #E0E4EB;
             border-radius: {t.panel_radius}px;
         }}
+        QFrame#menuActionPanel, QFrame#menuChecklistPanel {{
+            background: #FCFCFE;
+            border: 1px solid #E0E4EB;
+            border-radius: {t.panel_radius}px;
+        }}
+        QFrame#menuStatusPanel {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFDF8, stop:1 #F9F5EC);
+            border: 1px solid #E8D8B8;
+            border-radius: {t.panel_radius}px;
+        }}
         QFrame#menuMetricCard {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFFFFF, stop:1 #F8F4FF);
-            border: 1px solid #E3DCEF;
+            background: #FFFFFF;
+            border: 1px solid #E8DCC7;
             border-radius: {t.panel_radius_sm + 3}px;
         }}
         QFrame#menuRecentPanel {{
