@@ -21,6 +21,10 @@ class MenuPageRefs:
     btn_complete: QPushButton
     btn_sale: QPushButton
     btn_inventory: QPushButton
+    btn_partner_mgmt: QPushButton
+    btn_unit_mgmt: QPushButton
+    btn_product_type_mgmt: QPushButton
+    btn_material_mgmt: QPushButton
     btn_settings: QPushButton
     metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
     recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
@@ -199,14 +203,29 @@ class MenuPageBuilder:
 
         btn_template = MenuPageBuilder._make_menu_card(MenuPageTexts.TEMPLATE_TITLE, MenuPageTexts.TEMPLATE_SUBTITLE)
         btn_job_start = MenuPageBuilder._make_menu_card(MenuPageTexts.ORDER_TITLE, MenuPageTexts.ORDER_SUBTITLE)
-        btn_receipt = MenuPageBuilder._make_menu_card(MenuPageTexts.RECEIPT_TITLE, MenuPageTexts.RECEIPT_SUBTITLE)
         btn_complete = MenuPageBuilder._make_menu_card(MenuPageTexts.COMPLETE_TITLE, MenuPageTexts.COMPLETE_SUBTITLE)
         btn_sale = MenuPageBuilder._make_menu_card(MenuPageTexts.SALE_TITLE, MenuPageTexts.SALE_SUBTITLE)
         btn_inventory = MenuPageBuilder._make_menu_card(MenuPageTexts.INVENTORY_TITLE, MenuPageTexts.INVENTORY_SUBTITLE)
+        btn_partner_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.PARTNER_TITLE, MenuPageTexts.PARTNER_SUBTITLE)
+        btn_unit_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.UNIT_TITLE, MenuPageTexts.UNIT_SUBTITLE)
+        btn_product_type_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.PRODUCT_TYPE_TITLE, MenuPageTexts.PRODUCT_TYPE_SUBTITLE)
+        btn_material_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.MATERIAL_MGMT_TITLE, MenuPageTexts.MATERIAL_MGMT_SUBTITLE)
+        btn_receipt = MenuPageBuilder._make_menu_card(MenuPageTexts.RECEIPT_TITLE, MenuPageTexts.RECEIPT_SUBTITLE)
 
-        menu_buttons = (btn_template, btn_job_start, btn_complete, btn_sale, btn_inventory, btn_receipt)
+        menu_buttons = (
+            btn_template,
+            btn_job_start,
+            btn_complete,
+            btn_sale,
+            btn_inventory,
+            btn_partner_mgmt,
+            btn_unit_mgmt,
+            btn_product_type_mgmt,
+            btn_material_mgmt,
+            btn_receipt,
+        )
         for index, button in enumerate(menu_buttons):
-            flow_grid.addWidget(button, index // 3, index % 3)
+            flow_grid.addWidget(button, index // 5, index % 5)
         flow_layout.addLayout(flow_grid)
         flow_layout.addStretch(1)
 
@@ -254,6 +273,10 @@ class MenuPageBuilder:
             btn_complete=btn_complete,
             btn_sale=btn_sale,
             btn_inventory=btn_inventory,
+            btn_partner_mgmt=btn_partner_mgmt,
+            btn_unit_mgmt=btn_unit_mgmt,
+            btn_product_type_mgmt=btn_product_type_mgmt,
+            btn_material_mgmt=btn_material_mgmt,
             btn_settings=btn_settings,
             metric_value_labels=metric_value_labels,
             recent_template_labels=recent_template_labels,

@@ -53,6 +53,10 @@ class MainWindowPageCoordinator:
         window.btn_complete_menu = refs.btn_complete
         window.btn_sale_menu = refs.btn_sale
         window.btn_inventory_menu = refs.btn_inventory
+        window.btn_partner_mgmt_menu = refs.btn_partner_mgmt
+        window.btn_unit_mgmt_menu = refs.btn_unit_mgmt
+        window.btn_product_type_mgmt_menu = refs.btn_product_type_mgmt
+        window.btn_material_mgmt_menu = refs.btn_material_mgmt
         window.btn_settings = refs.btn_settings
 
     @staticmethod
