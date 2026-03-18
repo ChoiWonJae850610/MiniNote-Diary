@@ -207,6 +207,25 @@ def make_titled_panel(
     return panel, layout
 
 
+def make_standard_panel_layout(
+    parent: QWidget,
+    *,
+    object_name: str | None = None,
+    compact: bool = False,
+) -> tuple[QFrame, QVBoxLayout]:
+    panel = make_panel_frame(parent, compact=compact, object_name=object_name)
+    layout = QVBoxLayout(panel)
+    padding = THEME.page_section_padding_compact if compact else THEME.page_section_padding
+    layout.setContentsMargins(padding, padding, padding, padding)
+    layout.setSpacing(THEME.section_gap if not compact else THEME.row_spacing)
+    return panel, layout
+
+
+def make_standard_action_row() -> QHBoxLayout:
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(THEME.row_spacing)
+    return row
 
 
 def make_compact_toolbar_panel(parent: QWidget, *, object_name: str | None = None) -> tuple[QFrame, QHBoxLayout]:

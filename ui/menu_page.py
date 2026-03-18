@@ -7,7 +7,13 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushBut
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import DialogTitles, MenuPageTexts
-from ui.pages.common import apply_secondary_button_metrics, make_page_text_header, make_standard_page_layout
+from ui.pages.common import (
+    apply_secondary_button_metrics,
+    make_page_text_header,
+    make_standard_action_row,
+    make_standard_body_row,
+    make_standard_page_layout,
+)
 from ui.theme import THEME
 from ui.widget_factory import apply_button_metrics, make_action_button, make_hint_label, make_panel_frame, make_panel_title_label
 
@@ -137,8 +143,7 @@ class MenuPageBuilder:
             metric_value_labels[title] = value_label
         layout.addLayout(metrics_row)
 
-        recent_row = QHBoxLayout()
-        recent_row.setSpacing(THEME.section_gap)
+        recent_row = make_standard_body_row()
         recent_templates_panel, recent_template_labels = MenuPageBuilder._make_recent_panel(page, '최근 작업지시서')
         recent_activity_panel, recent_activity_labels = MenuPageBuilder._make_recent_panel(page, '최근 처리 내역')
         recent_row.addWidget(recent_templates_panel, 1)
@@ -163,7 +168,7 @@ class MenuPageBuilder:
         layout.addLayout(grid)
         layout.addStretch(1)
 
-        bottom_row = QHBoxLayout()
+        bottom_row = make_standard_action_row()
         bottom_row.addStretch(1)
         btn_data_reset = make_action_button(
             DialogTitles.DATA_RESET,

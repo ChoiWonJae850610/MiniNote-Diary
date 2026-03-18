@@ -4,10 +4,17 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
 from ui.messages import Buttons
-from ui.pages.common import make_standard_page_header, make_standard_page_layout, make_titled_panel
+from ui.pages.common import (
+    make_standard_action_row,
+    make_standard_body_row,
+    make_standard_page_header,
+    make_standard_page_layout,
+    make_standard_panel_layout,
+    make_titled_panel,
+)
 from ui.theme import THEME
 from ui.widget_factory import make_action_button, make_hint_label, make_meta_label, make_section_title_label
 
@@ -86,8 +93,7 @@ class FeaturePageBuilder:
             summary_grid.addWidget(chip, index // 3, index % 3)
         root.addLayout(summary_grid)
 
-        content_row = QHBoxLayout()
-        content_row.setSpacing(THEME.section_gap)
+        content_row = make_standard_body_row()
 
         left_panel, left_layout = make_titled_panel(
             page,
@@ -105,11 +111,7 @@ class FeaturePageBuilder:
             item_list.setCurrentRow(0)
         left_layout.addWidget(item_list, 1)
 
-        right_panel = QFrame(page)
-        right_panel.setObjectName('featurePanel')
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding, THEME.page_section_padding)
-        right_layout.setSpacing(THEME.section_gap)
+        right_panel, right_layout = make_standard_panel_layout(page, object_name='featurePanel')
         for section in config.sections:
             right_layout.addWidget(_SectionCard(section.title, section.lines, right_panel))
         right_layout.addStretch(1)
@@ -118,8 +120,7 @@ class FeaturePageBuilder:
         content_row.addWidget(right_panel, 6)
         root.addLayout(content_row, 1)
 
-        bottom_row = QHBoxLayout()
-        bottom_row.setSpacing(THEME.row_spacing)
+        bottom_row = make_standard_action_row()
         helper = make_hint_label('', page)
         helper.setObjectName('featureHint')
         helper.hide()
