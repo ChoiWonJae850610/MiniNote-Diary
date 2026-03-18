@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QDialog
 from ui.dialogs.base import _BaseThemedDialog
 from ui.dialogs.inbound_inspection_dialog import InboundInspectionDialog, InboundInspectionResult
 from ui.dialogs.message_boxes import ConfirmActionDialog, SimpleMessageDialog
+from ui.dialogs.settings_dialog import SettingsDialog
 from ui.dialogs.status_dialogs import ValidationStatusDialog
 from ui.dialogs.work_order_load_dialog import WorkOrderLoadDialog
 from ui.messages import Buttons
@@ -30,6 +31,7 @@ __all__ = [
     "_BaseThemedDialog",
     "ConfirmActionDialog",
     "SimpleMessageDialog",
+    "SettingsDialog",
     "ValidationStatusDialog",
     "WorkOrderLoadDialog",
     "InboundInspectionDialog",

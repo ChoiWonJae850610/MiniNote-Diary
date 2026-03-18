@@ -11,6 +11,7 @@ from ui.common import (
     PENDING_TAB_FILTER,
     PendingTabFocusFilter,
     ensure_pending_tab_filter,
+    make_down_icon,
     next_focusable_widget,
     prev_focusable_widget,
 )
@@ -35,7 +36,9 @@ class CheckedPopupSelector(QToolButton):
 
         self.setCursor(Qt.PointingHandCursor)
         self.setPopupMode(QToolButton.InstantPopup)
-        self.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setIcon(make_down_icon(PostItLayout.UNIT_ICON_SIZE))
+        self.setIconSize(self.iconSize())
         self.setFixedHeight(FIELD_H)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setStyleSheet(unit_button_style())
@@ -189,6 +192,7 @@ __all__ = [
     "PENDING_TAB_FILTER",
     "PendingTabFocusFilter",
     "ensure_pending_tab_filter",
+    "make_down_icon",
     "next_focusable_widget",
     "prev_focusable_widget",
 ]

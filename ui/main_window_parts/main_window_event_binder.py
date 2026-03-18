@@ -27,10 +27,7 @@ class MainWindowEventBinder:
         window.btn_complete_menu.clicked.connect(window.open_inbound_page)
         window.btn_sale_menu.clicked.connect(window.open_product_page)
         window.btn_inventory_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_INVENTORY))
-        window.btn_data_reset.clicked.connect(window.on_data_reset_clicked)
-        window.btn_partner_mgmt.clicked.connect(window.on_partner_mgmt_clicked)
-        window.btn_unit_mgmt.clicked.connect(window.on_unit_mgmt_clicked)
-        window.btn_product_type_mgmt.clicked.connect(window.on_product_type_mgmt_clicked)
+        window.btn_settings.clicked.connect(window.on_settings_clicked)
 
     @staticmethod
     def _bind_feature_pages(window: "MainWindow") -> None:

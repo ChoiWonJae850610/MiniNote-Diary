@@ -31,10 +31,16 @@ class ConfirmActionDialog(_BaseThemedDialog):
 
         self.confirm_button = make_dialog_button(confirm_text, self.card, role="confirm")
         self.confirm_button.clicked.connect(self.accept)
-        self.confirm_button.setDefault(True)
+        self.confirm_button.setDefault(False)
+        self.confirm_button.setAutoDefault(False)
 
         self.cancel_button = make_dialog_button(cancel_text, self.card, role="cancel")
         self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.setDefault(False)
+        self.cancel_button.setAutoDefault(False)
+
+        self.setFocusPolicy(self.focusPolicy())
+        self.setFocus()
 
         button_row = QHBoxLayout()
         button_row.setSpacing(self.body.spacing())

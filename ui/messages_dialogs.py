@@ -35,6 +35,11 @@ class DialogTitles:
     COMING_SOON = "준비중"
     SCREEN_REVIEW = "화면 검토"
     DATA_RESET = "모든 데이터 초기화"
+    SETTINGS = "환경설정"
+    HELP = "도움말"
+    BACKUP = "백업하기"
+    THEME_CHANGE = "테마 변경"
+    CONTACT = "문의하기"
 
 
 class Warnings:
@@ -91,3 +96,6 @@ class InfoMessages:
     PARTNER_EMPTY_LIST = "(목록 없음)"
     WORK_ORDER_LOADED = "작업지시서를 불러왔습니다. 필요한 부분을 수정한 뒤 새로 저장하세요."
     DATA_RESET_DONE = "모든 데이터가 초기화되었습니다."
+    BACKUP_DONE = "백업 파일을 저장했습니다.\n\n{path}"
+    THEME_CHANGE_PENDING = "테마 변경 기능은 다음 단계에서 실제 전환 로직과 연결합니다."
+    CONTACT_GUIDE = "기본 메일 앱으로 문의 창을 열었습니다.\n\n문의 주소: {email}"

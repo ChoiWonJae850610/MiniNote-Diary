@@ -3,7 +3,7 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from services.common.db_reset_service import DbResetService
-from ui.dialogs import ConfirmActionDialog, ask_confirm, show_warning
+from ui.dialogs import SettingsDialog, ask_confirm
 from ui.main_window_parts.main_window_bootstrap import MainWindowBootstrap
 from ui.main_window_parts.main_window_constants import MainWindowPages
 from ui.main_window_parts.main_window_dialog_logic import MainWindowDialogLogic
@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(DialogTitles.APP)
         self.menuBar().hide()
+        self.support_email = "support@example.com"
         self._validation_marks_active = False
         MainWindowBootstrap.initialize_services(self)
         MainWindowFeedback.initialize(self)
@@ -115,6 +116,10 @@ class MainWindow(QMainWindow):
 
     def refresh_stats_page(self) -> None:
         MainWindowStatsLogic.refresh_stats_page(self)
+
+    def on_settings_clicked(self):
+        dialog = SettingsDialog(self)
+        dialog.exec()
 
     def on_data_reset_clicked(self):
         confirmed = ask_confirm(

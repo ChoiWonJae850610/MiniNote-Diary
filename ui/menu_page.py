@@ -27,10 +27,7 @@ class MenuPageRefs:
     btn_complete: QPushButton
     btn_sale: QPushButton
     btn_inventory: QPushButton
-    btn_data_reset: QPushButton
-    btn_partner_mgmt: QPushButton
-    btn_unit_mgmt: QPushButton
-    btn_product_type_mgmt: QPushButton
+    btn_settings: QPushButton
     metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
     recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
     recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
@@ -171,42 +168,14 @@ class MenuPageBuilder:
 
         bottom_row = make_standard_action_row()
         bottom_row.addStretch(1)
-        btn_data_reset = make_action_button(
-            DialogTitles.DATA_RESET,
+        btn_settings = make_action_button(
+            DialogTitles.SETTINGS,
             page,
             width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA,
             height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
         )
-        btn_partner_mgmt = make_action_button(
-            DialogTitles.PARTNER_MANAGE,
-            page,
-            width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA,
-            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
-        )
-        btn_unit_mgmt = make_action_button(
-            DialogTitles.UNIT_MANAGE,
-            page,
-            width=THEME.footer_button_width,
-            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
-        )
-        btn_product_type_mgmt = make_action_button(
-            DialogTitles.PRODUCT_TYPE_MANAGE,
-            page,
-            width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA,
-            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
-        )
-        apply_secondary_button_metrics(btn_data_reset, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
-        apply_secondary_button_metrics(btn_partner_mgmt, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
-        apply_secondary_button_metrics(btn_unit_mgmt, width=THEME.footer_button_width)
-        apply_secondary_button_metrics(btn_product_type_mgmt, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
-
-        bottom_row.addWidget(btn_data_reset)
-        bottom_row.addSpacing(THEME.row_spacing)
-        bottom_row.addWidget(btn_partner_mgmt)
-        bottom_row.addSpacing(THEME.row_spacing)
-        bottom_row.addWidget(btn_unit_mgmt)
-        bottom_row.addSpacing(THEME.row_spacing)
-        bottom_row.addWidget(btn_product_type_mgmt)
+        apply_secondary_button_metrics(btn_settings, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
+        bottom_row.addWidget(btn_settings)
         layout.addLayout(bottom_row)
 
         return MenuPageRefs(
@@ -217,10 +186,7 @@ class MenuPageBuilder:
             btn_complete=btn_complete,
             btn_sale=btn_sale,
             btn_inventory=btn_inventory,
-            btn_data_reset=btn_data_reset,
-            btn_partner_mgmt=btn_partner_mgmt,
-            btn_unit_mgmt=btn_unit_mgmt,
-            btn_product_type_mgmt=btn_product_type_mgmt,
+            btn_settings=btn_settings,
             metric_value_labels=metric_value_labels,
             recent_template_labels=recent_template_labels,
             recent_activity_labels=recent_activity_labels,
