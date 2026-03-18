@@ -175,7 +175,7 @@ class ThemeTokens:
     image_preview_min_size: int = 240
     memo_min_height: int = 110
     order_memo_min_height: int = 88
-    postit_bar_max_height: int = 232
+    postit_bar_max_height: int = 266
     postit_card_height: int = 198
     postit_index_row_height: int = 28
     postit_index_button_size: int = 24

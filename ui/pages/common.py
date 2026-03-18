@@ -142,7 +142,7 @@ def make_standard_page_header(
         0,
         THEME.page_header_safe_padding_bottom,
     )
-    row.setSpacing(THEME.top_button_spacing)
+    row.setSpacing(0)
     row.setAlignment(Qt.AlignVCenter)
 
     btn_back = make_nav_button(parent=page)
@@ -158,9 +158,24 @@ def make_standard_page_header(
         title_min_height=title_min_height,
     )
 
-    row.addWidget(btn_back, 0, Qt.AlignVCenter)
-    row.addLayout(title_refs.layout, 0)
-    row.setStretch(1, 0)
+    title_wrap = QWidget(page)
+    title_wrap.setContentsMargins(0, 0, 0, 0)
+    title_wrap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+    title_wrap.setLayout(title_refs.layout)
+
+    lead_wrap = QWidget(page)
+    lead_wrap.setContentsMargins(0, 0, 0, 0)
+    lead_wrap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+    lead_layout = QHBoxLayout(lead_wrap)
+    lead_layout.setContentsMargins(0, 0, 0, 0)
+    lead_layout.setSpacing(THEME.top_button_spacing)
+    lead_layout.setAlignment(Qt.AlignVCenter)
+    lead_layout.addWidget(btn_back, 0, Qt.AlignVCenter)
+    lead_layout.addWidget(title_wrap, 0, Qt.AlignVCenter)
+    lead_wrap.setMinimumHeight(max(THEME.page_header_row_min_height, btn_back.minimumHeight(), title_refs.title_label.minimumHeight()))
+
+    row.addWidget(lead_wrap, 0, Qt.AlignVCenter)
+    row.setStretch(0, 0)
     row.setSizeConstraint(QHBoxLayout.SetMinimumSize)
     if add_trailing_stretch:
         row.addStretch(1)

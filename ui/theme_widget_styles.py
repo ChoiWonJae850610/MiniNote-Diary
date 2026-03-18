@@ -55,6 +55,7 @@ def combo_box_style() -> str:
         f"QComboBox:hover{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border-color:{hex_to_rgba(t.color_text_soft, 0.10)};}}"
         f"QComboBox:focus{{background:{hex_to_rgba(t.color_window, 1.0)};border:1px solid {hex_to_rgba(t.color_primary, 0.28)};}}"
+        + _error_border_rule('QComboBox')
     )
 
 

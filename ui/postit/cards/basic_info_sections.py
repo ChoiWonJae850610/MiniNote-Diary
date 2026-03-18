@@ -12,7 +12,7 @@ from ui.postit.common import FIELD_H
 from ui.postit.editor_fields import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.postit.forms import make_field_label, make_form_row
 from ui.postit.layout import PostItLayout
-from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
+from ui.theme import THEME, combo_box_style, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
 from ui.work_order_validation_ui import set_invalid
 
@@ -21,7 +21,8 @@ def _make_type_combo(card):
     combo = QComboBox(card)
     combo.setFixedHeight(FIELD_H)
     combo.addItem('(비움)', '')
-    combo.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+    combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+    combo.setStyleSheet(combo_box_style())
     return combo
 
 
@@ -76,10 +77,15 @@ def build_partner_rows(card, root) -> None:
     card.style_no.setMaximumWidth(16777215)
 
     card._refresh_product_type_options()
+    style_row = make_form_row(make_field_label(Labels.STYLE_NO, card), (card.style_no, 1))
     type_row = make_form_row(
-        make_field_label(Labels.STYLE_NO, card), (card.style_no, 1),
-        make_field_label(Labels.TYPE, card), card.product_type_1, card.product_type_2, card.product_type_3, card.btn_product_type_manage,
+        make_field_label(Labels.TYPE, card),
+        (card.product_type_1, 1),
+        (card.product_type_2, 1),
+        (card.product_type_3, 1),
+        card.btn_product_type_manage,
     )
+    root.addLayout(style_row)
     root.addLayout(type_row)
     root.addLayout(make_form_row(make_field_label(Labels.FACTORY, card), (card.factory, 1), card.btn_factory_partner))
 
@@ -100,11 +106,17 @@ def build_price_rows(card, root) -> None:
 
 
 def connect_basic_info_signals(card) -> None:
+    def _clear_type_invalid_if_selected():
+        has_type = bool(card._current_product_type_path().strip())
+        if has_type:
+            for combo in (card.product_type_1, card.product_type_2, card.product_type_3):
+                set_invalid(combo, False)
+
     card.style_no.textChanged.connect(lambda text: set_invalid(card.style_no, not bool((text or '').strip()) and bool(card.style_no.property('validationError'))))
     card.style_no.committed.connect(lambda _v: card._emit_basic_fields())
-    card.product_type_1.currentIndexChanged.connect(lambda _i: card._on_product_type_level_changed(1))
-    card.product_type_2.currentIndexChanged.connect(lambda _i: card._on_product_type_level_changed(2))
-    card.product_type_3.currentIndexChanged.connect(lambda _i: card._emit_basic_fields())
+    card.product_type_1.currentIndexChanged.connect(lambda _i: (card._on_product_type_level_changed(1), _clear_type_invalid_if_selected()))
+    card.product_type_2.currentIndexChanged.connect(lambda _i: (card._on_product_type_level_changed(2), _clear_type_invalid_if_selected()))
+    card.product_type_3.currentIndexChanged.connect(lambda _i: (card._emit_basic_fields(), _clear_type_invalid_if_selected()))
     card.labor.textChanged.connect(card._on_price_component_changed)
     card.loss.textChanged.connect(card._on_price_component_changed)
     card.sale_price.textChanged.connect(card._on_sale_price_changed)

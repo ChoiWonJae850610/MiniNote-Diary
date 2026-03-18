@@ -23,7 +23,13 @@ def set_invalid(widget, invalid: bool):
 def clear_all(window):
     basic = getattr(window.postit_bar, "basic", None)
     if basic is not None:
-        for widget in (getattr(basic, "style_no", None), getattr(basic, "factory", None)):
+        for widget in (
+            getattr(basic, "style_no", None),
+            getattr(basic, "factory", None),
+            getattr(basic, "product_type_1", None),
+            getattr(basic, "product_type_2", None),
+            getattr(basic, "product_type_3", None),
+        ):
             set_invalid(widget, False)
     partner = getattr(window.postit_bar, "partner", None)
     if partner is not None and hasattr(partner, "tab_header"):
@@ -43,6 +49,9 @@ def _apply_basic(window):
     basic = window.postit_bar.basic
     set_invalid(basic.style_no, not bool(str(header.get("style_no", "") or "").strip()))
     set_invalid(basic.factory, not bool(str(header.get("factory", "") or "").strip()))
+    type_missing = not bool(str(header.get("product_type", "") or "").strip())
+    for combo in (basic.product_type_1, basic.product_type_2, basic.product_type_3):
+        set_invalid(combo, type_missing)
 
 
 def _apply_card(card, row):
