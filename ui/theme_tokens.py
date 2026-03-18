@@ -134,7 +134,7 @@ class ThemeTokens:
     stats_note_item_padding_x: int = 12
     stats_note_item_padding_y: int = 10
     stats_note_item_spacing: int = 5
-    page_header_row_margin_adjust: int = 1
+    page_header_row_margin_adjust: int = 0
     toolbar_strip_padding_y: int = 6
     dashboard_recent_panel_min_height: int = 228
     dashboard_metric_value_font_px: int = 18
@@ -159,12 +159,12 @@ class ThemeTokens:
     icon_size_md: int = 16
     field_height: int = 26
     field_label_width: int = 44
-    basic_type_field_width: int = 118
-    basic_type_manage_button_width: int = 30
-    basic_style_field_extra_width: int = 44
-    postit_unit_button_width: int = 75
+    basic_type_field_width: int = 92
+    basic_type_manage_button_width: int = 26
+    basic_style_field_extra_width: int = 140
+    postit_unit_button_width: int = 90
     calendar_display_width: int = 110
-    postit_qty_field_max_width: int = 112
+    postit_qty_field_max_width: int = 86
     postit_unit_button_min_width: int = 60
     table_row_height: int = 30
     postit_index_button_min_size: int = 24
@@ -200,8 +200,8 @@ class ThemeTokens:
     section_gap: int = 14
     card_inner_spacing: int = 8
     title_stack_spacing: int = 3
-    page_header_safe_padding_top: int = 5
-    page_header_safe_padding_bottom: int = 3
+    page_header_safe_padding_top: int = 0
+    page_header_safe_padding_bottom: int = 0
     filter_panel_margin_h: int = 14
     filter_panel_margin_v: int = 12
     image_shell_margin: int = 18

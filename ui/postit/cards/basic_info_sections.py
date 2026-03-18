@@ -48,6 +48,7 @@ def build_partner_rows(card, root) -> None:
     card.btn_product_type_manage = QToolButton(card)
     card.btn_product_type_manage.setText('≡')
     card.btn_product_type_manage.setFixedSize(THEME.basic_type_manage_button_width, FIELD_H)
+    card.product_type.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
     card.btn_product_type_manage.setCursor(Qt.PointingHandCursor)
     set_widget_tooltip(card.btn_product_type_manage, Tooltips.PRODUCT_TYPE_MANAGE)
     card.btn_product_type_manage.setStyleSheet(tool_button_style())
@@ -66,6 +67,7 @@ def build_partner_rows(card, root) -> None:
     card.factory.setFocusPolicy(Qt.NoFocus)
     card.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
     card.style_no.setMinimumWidth(THEME.basic_style_field_extra_width)
+    card.style_no.setMaximumWidth(16777215)
     root.addLayout(make_form_row(make_field_label(Labels.STYLE_NO, card), (card.style_no, 1), make_field_label(Labels.TYPE, card), card.product_type, card.btn_product_type_manage))
     root.addLayout(make_form_row(make_field_label(Labels.FACTORY, card), (card.factory, 1), card.btn_factory_partner))
 

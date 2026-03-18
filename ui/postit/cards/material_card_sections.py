@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QMenu, QToolButton
+from PySide6.QtWidgets import QMenu, QToolButton, QSizePolicy
 
 from services.common.field_keys import MaterialKeys
 from services.unit.repository import load_units, unit_label_for_value
@@ -74,6 +74,7 @@ def configure_unit_controls(card) -> None:
     card.unit_btn.setFixedHeight(FIELD_H)
     card.unit_btn.setMinimumWidth(max(32, THEME.postit_unit_button_width))
     card.unit_btn.setMaximumWidth(max(32, THEME.postit_unit_button_width))
+    card.unit_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
     card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
     card.unit_btn.setStyleSheet(unit_button_style())
     _apply_unit_button_text(card)
@@ -113,8 +114,9 @@ def build_amount_rows(card, root) -> None:
     card.total.set_edit_enabled(False)
     card.total.setFocusPolicy(Qt.NoFocus)
     card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
-    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_width))
-    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_width))
+    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width)
+    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width)
+    card.qty.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
     root.addLayout(
         make_form_row(
             make_field_label(Labels.QTY, card),
