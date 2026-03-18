@@ -104,11 +104,11 @@ def build_global_widget_styles() -> str:
             padding-top: 2px;
         }}
 
-        QLabel#menuSectionHint {
+        QLabel#menuSectionHint {{
             color: {t.color_text_muted};
             background: transparent;
             font-size: 12px;
-        }
+        }}
         QLabel#menuListPrimary {{
             font-size: 13px;
             font-weight: 800;
