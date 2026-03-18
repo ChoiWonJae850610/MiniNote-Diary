@@ -9,10 +9,8 @@ from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_ic
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
-from ui.postit import ChangeNotePostIt, PostItBar
-from ui.postit.layout import POSTIT_HEADER_HEIGHT, make_postit_footer_spacer, make_static_postit_column
+from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
 from ui.theme import THEME, image_preview_style
-from ui.pages.work_order_layout import build_work_order_layout_metrics
 from ui.widget_factory import make_toolbar_icon_button
 
 
@@ -161,28 +159,22 @@ class WorkOrderPageBuilder:
         *,
         image_shell: QWidget,
     ) -> tuple[ChangeNotePostIt, QWidget]:
-        change_note_body_height = WorkOrderPageBuilder._aligned_change_note_body_height(
-            image_shell=image_shell,
-        )
+        del image_shell
         change_note_postit = ChangeNotePostIt()
-        change_note_postit.setFixedHeight(change_note_body_height)
-        change_note_wrap = make_static_postit_column(
-            SectionTitles.CHANGE_NOTE,
+        change_note_postit.setMinimumHeight(THEME.work_order_change_note_body_min_height)
+        change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        change_note_wrap = SectionContainer(
+            FolderTabHeader(SectionTitles.CHANGE_NOTE, page),
             change_note_postit,
             parent=page,
-            body_height=change_note_body_height,
-            footer_widget=make_postit_footer_spacer(page),
+            header_alignment=None,
+            footer_widget=None,
+            body_height=None,
         )
         change_note_wrap.setMinimumWidth(THEME.work_order_change_note_min_width)
+        change_note_wrap.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         return change_note_postit, change_note_wrap
-
-    @staticmethod
-    def _aligned_change_note_body_height(
-        *,
-        image_shell: QWidget,
-    ) -> int:
-        metrics = build_work_order_layout_metrics(image_shell_frame_width=image_shell.frameWidth())
-        return metrics.change_note_body_height
 
     @staticmethod
     def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout
+from PySide6.QtWidgets import QPlainTextEdit, QSizePolicy, QVBoxLayout
 
 from ui.postit.base import _PostItCardBase
 from ui.postit.layout import (
@@ -23,8 +23,8 @@ class ChangeNotePostIt(_PostItCardBase):
     def __init__(self, parent=None):
         super().__init__("change", parent=parent)
         self.setMinimumSize(QSize(POSTIT_CHANGE_NOTE_MIN_WIDTH, POSTIT_MEMO_BODY_HEIGHT))
-        self.setFixedHeight(POSTIT_MEMO_BODY_HEIGHT)
         self._block = False
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         root = QVBoxLayout(self)
         uniform_padding = min(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
         root.setContentsMargins(uniform_padding, uniform_padding, uniform_padding, uniform_padding)
@@ -47,6 +47,7 @@ class ChangeNotePostIt(_PostItCardBase):
             self.editor.setPlainText(text or "")
         finally:
             self._block = False
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def text(self) -> str:
         return self.editor.toPlainText().rstrip()
