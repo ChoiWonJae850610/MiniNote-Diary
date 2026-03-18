@@ -46,7 +46,7 @@ class MainWindowSaveLogic:
 
         has_any_optional_work = any(
             _row_has_meaningful_optional_work(row)
-            for group in (window.state.fabric_items, window.state.trim_items, window.state.dyeing_items, window.state.other_items)
+            for group in (window.state.fabric_items, window.state.trim_items, window.state.dyeing_items, window.state.finishing_items, window.state.other_items)
             for row in (group or [])
         )
         if not has_any_optional_work:

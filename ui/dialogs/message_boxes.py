@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QHBoxLayout, QLabel
 
+from ui.button_layout_utils import make_dialog_button_row
 from ui.dialogs.base import _BaseThemedDialog
 from ui.widget_factory_buttons import make_dialog_button
 

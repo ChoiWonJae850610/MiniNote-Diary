@@ -110,7 +110,11 @@ class MaterialItem:
 
     def has_required_fields(self) -> bool:
         data = self.to_dict()
-        return all(data.get(key, '').strip() for key in REQUIRED_MATERIAL_FIELDS)
+        required_text_keys = (MaterialKeys.VENDOR, MaterialKeys.ITEM, MaterialKeys.UNIT)
+        if not all(str(data.get(key, '') or '').strip() for key in required_text_keys):
+            return False
+        required_numeric_keys = (MaterialKeys.QTY, MaterialKeys.UNIT_PRICE, MaterialKeys.TOTAL)
+        return all(str(data.get(key, '') or '').replace(',', '').strip() != '' for key in required_numeric_keys)
 
 
 @dataclass
