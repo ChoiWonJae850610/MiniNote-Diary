@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
 
-from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
+from ui.icon_factory import make_image_upload_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_feedback_label, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
@@ -94,16 +94,16 @@ class WorkOrderPageBuilder:
         btn_reset = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=Tooltips.RELOAD, font_px=THEME.reset_button_font_px)
         btn_reset.setIcon(standard_icon(parent, [QStyle.SP_BrowserReload]))
 
-        btn_save = make_toolbar_icon_button(parent=page, object_name='iconPrimary', tooltip=Tooltips.SAVE, font_px=THEME.save_button_font_px)
-        btn_save.setIcon(make_save_icon(THEME.icon_size_md, THEME.color_text_on_primary))
+        btn_save = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=Tooltips.SAVE, font_px=THEME.save_button_font_px)
+        btn_save.setIcon(make_save_icon(THEME.icon_size_md, THEME.color_icon))
 
         btn_load = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=Tooltips.LOAD)
         btn_load.setIcon(standard_icon(parent, [QStyle.SP_DialogOpenButton, QStyle.SP_DirOpenIcon, QStyle.SP_DriveHDIcon]))
 
         btn_upload = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=Tooltips.IMAGE_UPLOAD)
-        btn_upload.setIcon(make_image_outline_icon(THEME.icon_size_md))
+        btn_upload.setIcon(make_image_upload_icon(THEME.icon_size_md, THEME.color_icon))
 
-        btn_delete_image = make_toolbar_icon_button(parent=page, object_name='iconDanger', tooltip=Tooltips.IMAGE_DELETE)
+        btn_delete_image = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=Tooltips.IMAGE_DELETE)
         btn_delete_image.setIcon(parent.style().standardIcon(QStyle.SP_TrashIcon))
 
         return {

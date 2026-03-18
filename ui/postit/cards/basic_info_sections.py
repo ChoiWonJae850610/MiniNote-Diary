@@ -64,16 +64,16 @@ def build_price_rows(card, root) -> None:
     card.sale_price.setFocusPolicy(Qt.NoFocus)
     root.addLayout(
         make_form_row(
-            make_field_label(Labels.COST, card),
-            (card.cost, 1),
             make_field_label(Labels.LABOR, card),
             (card.labor, 1),
+            make_field_label(Labels.LOSS, card),
+            (card.loss, 1),
         )
     )
     root.addLayout(
         make_form_row(
-            make_field_label(Labels.LOSS, card),
-            (card.loss, 1),
+            make_field_label(Labels.COST, card),
+            (card.cost, 1),
             make_field_label(Labels.SALE_PRICE, card),
             (card.sale_price, 1),
         )
@@ -92,10 +92,13 @@ def configure_basic_info_tab_order(card) -> None:
     card.setTabOrder(card.style_no, card.btn_factory_partner)
     card.setTabOrder(card.btn_factory_partner, card.labor)
     card.setTabOrder(card.labor, card.loss)
-    card.setTabOrder(card.loss, card.sale_price)
+    card.setTabOrder(card.loss, card.cost)
+    card.setTabOrder(card.cost, card.sale_price)
     card.labor._pending_prev_widget = card.btn_factory_partner
     card.labor._pending_next_widget = card.loss
     card.loss._pending_prev_widget = card.labor
+    card.loss._pending_next_widget = card.cost
+    card.cost._pending_prev_widget = card.loss
 
 
 def open_factory_picker(card) -> None:

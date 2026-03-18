@@ -72,6 +72,7 @@ def configure_unit_controls(card) -> None:
     card.unit_btn.setCursor(Qt.PointingHandCursor)
     card.unit_btn.setFixedHeight(FIELD_H)
     card.unit_btn.setMinimumWidth(THEME.postit_unit_button_min_width)
+    card.unit_btn.setMaximumWidth(THEME.postit_unit_button_min_width)
     card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
     card.unit_btn.setStyleSheet(unit_button_style())
     _apply_unit_button_text(card)
@@ -111,13 +112,14 @@ def build_amount_rows(card, root) -> None:
     card.total.set_edit_enabled(False)
     card.total.setFocusPolicy(Qt.NoFocus)
     card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
+    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width)
     card.qty.setMaximumWidth(THEME.postit_qty_field_max_width)
     root.addLayout(
         make_form_row(
             make_field_label(Labels.QTY, card),
             card.qty,
             make_field_label(Labels.UNIT, card),
-            (card.unit_btn, 1),
+            card.unit_btn,
         )
     )
     root.addLayout(make_form_row(make_field_label(Labels.UNIT_PRICE, card), (card.price, 1)))

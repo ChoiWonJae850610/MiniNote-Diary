@@ -33,6 +33,30 @@ def make_image_outline_icon(size: int = 16, color: str | None = None) -> QIcon:
     return QIcon(pix)
 
 
+
+
+def make_image_upload_icon(size: int = 16, color: str | None = None) -> QIcon:
+    pix, p = _new_pixmap(size)
+    pen = QPen(QColor(color or THEME.color_icon), 1.8)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+    p.setBrush(Qt.NoBrush)
+    inset = 2.0
+    frame_w = size - inset * 2
+    frame_h = size - inset * 2
+    p.drawRoundedRect(inset, inset, frame_w, frame_h, 2.2, 2.2)
+    p.drawEllipse(size * 0.63, size * 0.34, size * 0.14, size * 0.14)
+    p.drawLine(size * 0.25, size * 0.73, size * 0.45, size * 0.50)
+    p.drawLine(size * 0.45, size * 0.50, size * 0.57, size * 0.61)
+    p.drawLine(size * 0.57, size * 0.61, size * 0.77, size * 0.39)
+    arrow_x = size * 0.22
+    p.drawLine(arrow_x, size * 0.56, arrow_x, size * 0.28)
+    p.drawLine(arrow_x, size * 0.28, size * 0.15, size * 0.36)
+    p.drawLine(arrow_x, size * 0.28, size * 0.29, size * 0.36)
+    p.end()
+    return QIcon(pix)
+
 def make_save_icon(size: int = 16, color: str | None = None) -> QIcon:
     pix, p = _new_pixmap(size)
     pen = QPen(QColor(color or THEME.color_text_on_primary), 1.7)
