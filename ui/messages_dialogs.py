@@ -19,6 +19,7 @@ class DialogTitles:
     PARTNER_TYPE = "거래처 타입"
     MATERIAL_ITEM_INPUT = "자재 입력"
     UNIT_MANAGE = "단위 관리"
+    PRODUCT_TYPE_MANAGE = "제품 타입 관리"
     VALIDATION = "검증 결과"
     CONFIRM = "확인"
     NOTE = "메모"

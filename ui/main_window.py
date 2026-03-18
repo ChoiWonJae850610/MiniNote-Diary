@@ -141,6 +141,9 @@ class MainWindow(QMainWindow):
     def on_unit_mgmt_clicked(self):
         MainWindowDialogLogic.open_unit_management(self)
 
+    def on_product_type_mgmt_clicked(self):
+        MainWindowDialogLogic.open_product_type_management(self)
+
     def open_order_page(self) -> None:
         MainWindowNavigationLogic.open_order_page(self)
 

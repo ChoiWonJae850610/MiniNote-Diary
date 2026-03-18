@@ -53,6 +53,7 @@ class BasicInfoDialog(QDialog):
             self.btn_factory_partner,
             partner_type=PARTNER_PICKER_TYPE_FACTORY,
             on_selected=lambda partner: set_partner_line_edit(self.factory, partner, id_property='factory_partner_id'),
+            on_cleared=lambda: (self.factory.setText(''), self.factory.setProperty('factory_partner_id', '')),
         )
 
     def get_data(self) -> Dict[str, str]:

@@ -72,8 +72,8 @@ def configure_unit_controls(card) -> None:
     card.unit_btn.setIconSize(QSize(PostItLayout.UNIT_ICON_SIZE, PostItLayout.UNIT_ICON_SIZE))
     card.unit_btn.setCursor(Qt.PointingHandCursor)
     card.unit_btn.setFixedHeight(FIELD_H)
-    card.unit_btn.setMinimumWidth(THEME.postit_unit_button_min_width)
-    card.unit_btn.setMaximumWidth(THEME.postit_unit_button_min_width)
+    card.unit_btn.setMinimumWidth(max(32, THEME.postit_unit_button_min_width // 2))
+    card.unit_btn.setMaximumWidth(max(32, THEME.postit_unit_button_min_width // 2))
     card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
     card.unit_btn.setStyleSheet(unit_button_style())
     _apply_unit_button_text(card)
@@ -113,8 +113,8 @@ def build_amount_rows(card, root) -> None:
     card.total.set_edit_enabled(False)
     card.total.setFocusPolicy(Qt.NoFocus)
     card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
-    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width)
-    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width)
+    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_min_width // 2))
+    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width + max(20, THEME.postit_unit_button_min_width // 2))
     root.addLayout(
         make_form_row(
             make_field_label(Labels.QTY, card),
@@ -164,4 +164,9 @@ def open_vendor_picker(card) -> None:
         card.data[MaterialKeys.VENDOR_ID] = partner.id
         card._commit(MaterialKeys.VENDOR, partner.name)
 
-    show_partner_picker(card.btn_vendor_partner, partner_type=picker_partner_type(card.kind), on_selected=_apply)
+    def _clear():
+        card.vendor.set_text_silent("")
+        card.data[MaterialKeys.VENDOR_ID] = ""
+        card._commit(MaterialKeys.VENDOR, "")
+
+    show_partner_picker(card.btn_vendor_partner, partner_type=picker_partner_type(card.kind), on_selected=_apply, on_cleared=_clear)

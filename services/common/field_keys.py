@@ -5,6 +5,7 @@ class HeaderKeys:
     DATE = "date"
     STYLE_NO = "style_no"
     FACTORY = "factory"
+    PRODUCT_TYPE = "product_type"
     COST_DISPLAY = "cost_display"
     LABOR_DISPLAY = "labor_display"
     LOSS_DISPLAY = "loss_display"
@@ -63,4 +64,5 @@ class DbFilenames:
     PARTNERS = "partners.json"
     PARTNER_TYPES = "partner_types.json"
     UNITS = "units.json"
+    PRODUCT_TYPES = "product_types.json"
     ORDER_RUNS = "job_orders.json"

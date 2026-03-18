@@ -56,6 +56,7 @@ class BasicInfoPostIt(_PostItCardBase):
             "style_no": self.style_no.text(),
             "factory": self.factory.text(),
             "factory_partner_id": str(self.factory.property("factory_partner_id") or ""),
+            "product_type": str(self.product_type.currentData() or ""),
         })
 
     def _emit_price_fields(self):
@@ -91,6 +92,11 @@ class BasicInfoPostIt(_PostItCardBase):
 
     def _open_factory_picker(self):
         open_factory_picker(self)
+
+    def _open_product_type_management(self):
+        top = self.window()
+        if top is not None and hasattr(top, "on_product_type_mgmt_clicked"):
+            top.on_product_type_mgmt_clicked()
 
     def _open_calendar(self):
         popup = InlineCalendarPopup(self._date_value, parent=self)

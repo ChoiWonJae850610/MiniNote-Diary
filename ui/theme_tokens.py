@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 def _clamp_alpha(alpha: float) -> float:
@@ -15,6 +15,62 @@ def hex_to_rgba(hex_color: str, alpha: float) -> str:
     g = int(color[2:4], 16)
     b = int(color[4:6], 16)
     return f"rgba({r}, {g}, {b}, {_clamp_alpha(alpha):.3f})"
+
+
+
+@dataclass(frozen=True)
+class ThemePalette:
+    name: str
+    color_primary: str
+    color_primary_hover: str
+    color_pressed: str
+    color_text_on_primary: str
+    color_validation_error: str
+
+
+@dataclass(frozen=True)
+class FontPreset:
+    name: str
+    font_family: str
+
+
+DEFAULT_THEME_PALETTE = ThemePalette(
+    name="default",
+    color_primary="#626B77",
+    color_primary_hover="#535B66",
+    color_pressed="#E9EDF2",
+    color_text_on_primary="#FFFFFF",
+    color_validation_error="#FF6B6B",
+)
+
+MONO_THEME_PALETTE = ThemePalette(
+    name="mono",
+    color_primary="#4B5563",
+    color_primary_hover="#374151",
+    color_pressed="#E5E7EB",
+    color_text_on_primary="#FFFFFF",
+    color_validation_error="#FF6B6B",
+)
+
+THEME_PRESETS: dict[str, ThemePalette] = {
+    DEFAULT_THEME_PALETTE.name: DEFAULT_THEME_PALETTE,
+    MONO_THEME_PALETTE.name: MONO_THEME_PALETTE,
+}
+
+DEFAULT_FONT_PRESET = FontPreset(
+    name="pretendard",
+    font_family="Pretendard, Noto Sans KR, Segoe UI",
+)
+
+CLASSIC_FONT_PRESET = FontPreset(
+    name="classic",
+    font_family="Noto Sans KR, Malgun Gothic, Segoe UI",
+)
+
+FONT_PRESETS: dict[str, FontPreset] = {
+    DEFAULT_FONT_PRESET.name: DEFAULT_FONT_PRESET,
+    CLASSIC_FONT_PRESET.name: CLASSIC_FONT_PRESET,
+}
 
 
 @dataclass(frozen=True)
@@ -90,17 +146,21 @@ class ThemeTokens:
     order_input_height: int = 34
     unit_dialog_width: int = 520
     unit_dialog_height: int = 420
+    product_type_dialog_width: int = 420
+    product_type_dialog_height: int = 220
     window_min_width: int = 1080
     window_min_height: int = 760
     note_dialog_min_width: int = 520
     note_dialog_min_height: int = 360
 
     icon_button_size: int = 24
-    nav_button_size: int = 32
+    nav_button_size: int = 28
     icon_size_sm: int = 12
     icon_size_md: int = 16
     field_height: int = 26
     field_label_width: int = 44
+    basic_type_field_width: int = 118
+    basic_type_manage_button_width: int = 30
     calendar_display_width: int = 110
     postit_qty_field_max_width: int = 112
     postit_unit_button_min_width: int = 60
@@ -157,7 +217,7 @@ class ThemeTokens:
     input_radius: int = 8
     editor_radius: int = 14
 
-    font_family: str = "Pretendard, Noto Sans KR, Segoe UI"
+    font_family: str = DEFAULT_FONT_PRESET.font_family
 
     color_window: str = "#FFFFFF"
     color_surface: str = "#FAFAFB"
@@ -167,10 +227,10 @@ class ThemeTokens:
     color_border_soft: str = "#E7EBF0"
     color_border_hover: str = "#B8C0CC"
 
-    color_primary: str = "#626B77"
-    color_primary_hover: str = "#535B66"
-    color_pressed: str = "#E9EDF2"
-    color_text_on_primary: str = "#FFFFFF"
+    color_primary: str = DEFAULT_THEME_PALETTE.color_primary
+    color_primary_hover: str = DEFAULT_THEME_PALETTE.color_primary_hover
+    color_pressed: str = DEFAULT_THEME_PALETTE.color_pressed
+    color_text_on_primary: str = DEFAULT_THEME_PALETTE.color_text_on_primary
 
     color_text: str = "#1F2933"
     color_text_soft: str = "#364152"
@@ -195,7 +255,21 @@ class ThemeTokens:
     color_tooltip_bg: str = "#FFFFFF"
     color_tooltip_border: str = "#D7DCE3"
     color_tooltip_text: str = "#364152"
-    color_validation_error: str = "#D64545"
+    color_validation_error: str = DEFAULT_THEME_PALETTE.color_validation_error
 
 
-THEME = ThemeTokens()
+def build_theme_tokens(theme_name: str = "default", font_name: str = "pretendard") -> ThemeTokens:
+    palette = THEME_PRESETS.get(str(theme_name or "").strip(), DEFAULT_THEME_PALETTE)
+    font = FONT_PRESETS.get(str(font_name or "").strip(), DEFAULT_FONT_PRESET)
+    return replace(
+        ThemeTokens(),
+        font_family=font.font_family,
+        color_primary=palette.color_primary,
+        color_primary_hover=palette.color_primary_hover,
+        color_pressed=palette.color_pressed,
+        color_text_on_primary=palette.color_text_on_primary,
+        color_validation_error=palette.color_validation_error,
+    )
+
+
+THEME = build_theme_tokens()

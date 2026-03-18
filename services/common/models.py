@@ -13,6 +13,7 @@ class WorkOrderHeader:
     date: str = ''
     style_no: str = ''
     factory: str = ''
+    product_type: str = ''
     cost_display: str = '0'
     labor_display: str = '0'
     loss_display: str = '0'
@@ -45,7 +46,7 @@ class WorkOrderHeader:
         return all(data.get(key, '').strip() for key in REQUIRED_HEADER_FIELDS)
 
     def has_any_value(self) -> bool:
-        text_keys = ('date', 'style_no', 'factory', 'change_note')
+        text_keys = ('date', 'style_no', 'factory', 'product_type', 'change_note')
         if any(str(getattr(self, key, '') or '').strip() for key in text_keys):
             return True
         numeric_keys = ('cost', 'labor', 'loss', 'sale_price')

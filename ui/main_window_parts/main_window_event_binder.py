@@ -30,6 +30,7 @@ class MainWindowEventBinder:
         window.btn_data_reset.clicked.connect(window.on_data_reset_clicked)
         window.btn_partner_mgmt.clicked.connect(window.on_partner_mgmt_clicked)
         window.btn_unit_mgmt.clicked.connect(window.on_unit_mgmt_clicked)
+        window.btn_product_type_mgmt.clicked.connect(window.on_product_type_mgmt_clicked)
 
     @staticmethod
     def _bind_feature_pages(window: "MainWindow") -> None:

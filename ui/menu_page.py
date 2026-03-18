@@ -30,6 +30,7 @@ class MenuPageRefs:
     btn_data_reset: QPushButton
     btn_partner_mgmt: QPushButton
     btn_unit_mgmt: QPushButton
+    btn_product_type_mgmt: QPushButton
     metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
     recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
     recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
@@ -188,15 +189,24 @@ class MenuPageBuilder:
             width=THEME.footer_button_width,
             height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
         )
+        btn_product_type_mgmt = make_action_button(
+            DialogTitles.PRODUCT_TYPE_MANAGE,
+            page,
+            width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA,
+            height=THEME.footer_button_height + MenuLayout.FOOTER_BUTTON_HEIGHT_EXTRA,
+        )
         apply_secondary_button_metrics(btn_data_reset, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
         apply_secondary_button_metrics(btn_partner_mgmt, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
         apply_secondary_button_metrics(btn_unit_mgmt, width=THEME.footer_button_width)
+        apply_secondary_button_metrics(btn_product_type_mgmt, width=THEME.footer_button_width + MenuLayout.FOOTER_PRIMARY_WIDTH_EXTRA)
 
         bottom_row.addWidget(btn_data_reset)
         bottom_row.addSpacing(THEME.row_spacing)
         bottom_row.addWidget(btn_partner_mgmt)
         bottom_row.addSpacing(THEME.row_spacing)
         bottom_row.addWidget(btn_unit_mgmt)
+        bottom_row.addSpacing(THEME.row_spacing)
+        bottom_row.addWidget(btn_product_type_mgmt)
         layout.addLayout(bottom_row)
 
         return MenuPageRefs(
@@ -210,6 +220,7 @@ class MenuPageBuilder:
             btn_data_reset=btn_data_reset,
             btn_partner_mgmt=btn_partner_mgmt,
             btn_unit_mgmt=btn_unit_mgmt,
+            btn_product_type_mgmt=btn_product_type_mgmt,
             metric_value_labels=metric_value_labels,
             recent_template_labels=recent_template_labels,
             recent_activity_labels=recent_activity_labels,

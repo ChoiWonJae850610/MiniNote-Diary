@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -5,6 +6,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 
 from ui.partners.dialogs.partner_dialog import PartnerDialog
+from ui.product_type_dialog import ProductTypeDialog
 from ui.unit_dialog import UnitDialog
 
 if TYPE_CHECKING:
@@ -25,3 +27,7 @@ class MainWindowDialogLogic:
     @staticmethod
     def open_unit_management(window: "MainWindow") -> int:
         return MainWindowDialogLogic.open_modal_dialog(window, UnitDialog)
+
+    @staticmethod
+    def open_product_type_management(window: "MainWindow") -> int:
+        return MainWindowDialogLogic.open_modal_dialog(window, ProductTypeDialog)

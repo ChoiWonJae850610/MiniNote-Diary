@@ -8,6 +8,8 @@ HEADER_FIELDS: tuple[str, ...] = (
     HeaderKeys.DATE,
     HeaderKeys.STYLE_NO,
     HeaderKeys.FACTORY,
+    HeaderKeys.PRODUCT_TYPE,
+    HeaderKeys.PRODUCT_TYPE,
     HeaderKeys.COST_DISPLAY,
     HeaderKeys.LABOR_DISPLAY,
     HeaderKeys.LOSS_DISPLAY,
@@ -55,4 +57,5 @@ def make_empty_mapping(fields: Iterable[str]) -> dict[str, str]:
 
 PARTNERS_DB_FILENAME = DbFilenames.PARTNERS
 PARTNER_TYPES_DB_FILENAME = DbFilenames.PARTNER_TYPES
+PRODUCT_TYPES_DB_FILENAME = DbFilenames.PRODUCT_TYPES
 ORDER_RUNS_DB_FILENAME = DbFilenames.ORDER_RUNS

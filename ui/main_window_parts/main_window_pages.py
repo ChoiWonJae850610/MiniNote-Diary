@@ -56,6 +56,7 @@ class MainWindowPageCoordinator:
         window.btn_data_reset = refs.btn_data_reset
         window.btn_partner_mgmt = refs.btn_partner_mgmt
         window.btn_unit_mgmt = refs.btn_unit_mgmt
+        window.btn_product_type_mgmt = refs.btn_product_type_mgmt
 
     @staticmethod
     def _apply_work_order_refs(window: "MainWindow", refs) -> None:

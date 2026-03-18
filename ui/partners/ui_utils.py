@@ -67,21 +67,28 @@ def set_partner_line_edit(line_edit: QLineEdit, partner: PartnerRecord, *, id_pr
 
 
 
-def show_partner_picker(anchor: QWidget, *, partner_type: str, on_selected: Callable[[PartnerRecord], None]) -> bool:
+def show_partner_picker(anchor: QWidget, *, partner_type: str, on_selected: Callable[[PartnerRecord], None], on_cleared: Callable[[], None] | None = None) -> bool:
     partners = _partners_for_type(anchor, partner_type)
     menu = QMenu(anchor)
     menu.setStyleSheet(menu_style())
-    if not partners:
-        empty = menu.addAction(InfoMessages.PARTNER_EMPTY_LIST)
-        empty.setEnabled(False)
-    else:
+    clear_action = menu.addAction('(비움)')
+    clear_action.setData('__clear__')
+    if partners:
+        menu.addSeparator()
         for partner in partners:
             action = menu.addAction(partner.name)
             action.setData(partner.id)
+    else:
+        empty = menu.addAction(InfoMessages.PARTNER_EMPTY_LIST)
+        empty.setEnabled(False)
     chosen = menu.exec(anchor.mapToGlobal(QPoint(0, anchor.height() + 2)))
     if chosen is None or not chosen.isEnabled():
         return False
     chosen_id = str(chosen.data() or '')
+    if chosen_id == '__clear__':
+        if on_cleared is not None:
+            on_cleared()
+        return True
     if not chosen_id:
         return False
     partner = next((row for row in partners if row.id == chosen_id), None)
