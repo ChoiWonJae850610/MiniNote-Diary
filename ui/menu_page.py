@@ -6,10 +6,10 @@ from PySide6.QtCore import QDate, Qt
 from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ui.layout_metrics import MenuLayout
-from ui.messages import DialogTitles, MenuPageTexts
+from ui.messages import MenuPageTexts
 from ui.pages.common import make_standard_page_layout
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, make_hint_label, make_panel_frame, make_panel_title_label
+from ui.widget_factory import apply_button_metrics, make_panel_frame, make_panel_title_label
 
 
 @dataclass
@@ -51,14 +51,9 @@ class MenuPageBuilder:
         return label
 
     @staticmethod
-    def _make_section_hint(text: str, parent: QWidget) -> QLabel:
-        label = make_hint_label(text, parent, word_wrap=True)
-        label.setObjectName('menuSectionHint')
-        return label
-
-    @staticmethod
     def _make_menu_card(title: str, subtitle: str, *, utility: bool = False) -> QPushButton:
-        button = QPushButton(f'{title}\n{subtitle}')
+        button_text = title if not subtitle else f'{title}\n{subtitle}'
+        button = QPushButton(button_text)
         button.setObjectName('menuUtilityCard' if utility else 'menuActionCard')
         button.setMinimumHeight(THEME.menu_action_card_min_height)
         button.setCursor(Qt.PointingHandCursor)
@@ -78,7 +73,7 @@ class MenuPageBuilder:
         )
         layout.setSpacing(THEME.dashboard_metric_spacing)
 
-        title_label = make_hint_label(title, card, word_wrap=False)
+        title_label = QLabel(title, card)
         title_label.setObjectName('menuMetricTitle')
         value_label = QLabel('0', card)
         value_label.setObjectName('menuMetricValue')
@@ -89,9 +84,45 @@ class MenuPageBuilder:
         return card, value_label
 
     @staticmethod
+    def _make_recent_item(panel: QWidget, empty_text: str) -> tuple[QFrame, tuple[QLabel, QLabel, QLabel]]:
+        row = QFrame(panel)
+        row.setObjectName('menuRecentItemCard')
+        row.setMinimumHeight(THEME.menu_recent_item_min_height)
+
+        row_layout = QVBoxLayout(row)
+        row_layout.setContentsMargins(
+            THEME.menu_recent_item_padding_x,
+            THEME.menu_recent_item_padding_y,
+            THEME.menu_recent_item_padding_x,
+            THEME.menu_recent_item_padding_y,
+        )
+        row_layout.setSpacing(THEME.menu_recent_item_spacing)
+
+        primary = QLabel('-', row)
+        primary.setObjectName('menuListPrimary')
+        primary.setWordWrap(False)
+        primary.setMinimumHeight(THEME.menu_recent_primary_height)
+
+        secondary = QLabel(empty_text, row)
+        secondary.setObjectName('menuListSecondary')
+        secondary.setWordWrap(False)
+        secondary.setMinimumHeight(THEME.menu_recent_secondary_height)
+
+        tertiary = QLabel('', row)
+        tertiary.setObjectName('menuListTertiary')
+        tertiary.setWordWrap(False)
+        tertiary.setMinimumHeight(THEME.menu_recent_tertiary_height)
+
+        row_layout.addWidget(primary)
+        row_layout.addWidget(secondary)
+        row_layout.addWidget(tertiary)
+        return row, (primary, secondary, tertiary)
+
+    @staticmethod
     def _make_recent_panel(page: QWidget, title: str, empty_text: str) -> tuple[QFrame, list[tuple[QLabel, QLabel, QLabel]]]:
         panel = make_panel_frame(page, object_name='menuRecentPanel')
         panel.setMinimumHeight(THEME.dashboard_recent_panel_min_height)
+
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(
             THEME.dashboard_recent_padding,
@@ -105,29 +136,15 @@ class MenuPageBuilder:
 
         rows: list[tuple[QLabel, QLabel, QLabel]] = []
         for _ in range(THEME.menu_recent_row_count):
-            row = QWidget(panel)
-            row_layout = QVBoxLayout(row)
-            row_layout.setContentsMargins(0, 0, 0, 0)
-            row_layout.setSpacing(THEME.dashboard_recent_item_spacing)
-
-            primary = QLabel('-', row)
-            primary.setObjectName('menuListPrimary')
-            secondary = QLabel(empty_text, row)
-            secondary.setObjectName('menuListSecondary')
-            tertiary = QLabel('', row)
-            tertiary.setObjectName('menuListTertiary')
-
-            row_layout.addWidget(primary)
-            row_layout.addWidget(secondary)
-            row_layout.addWidget(tertiary)
-            layout.addWidget(row)
-            rows.append((primary, secondary, tertiary))
+            row_widget, row_labels = MenuPageBuilder._make_recent_item(panel, empty_text)
+            layout.addWidget(row_widget)
+            rows.append(row_labels)
 
         layout.addStretch(1)
         return panel, rows
 
     @staticmethod
-    def _make_section_panel(page: QWidget, title: str, subtitle: str) -> tuple[QFrame, QVBoxLayout]:
+    def _make_section_panel(page: QWidget, title: str) -> tuple[QFrame, QVBoxLayout]:
         panel = make_panel_frame(page, object_name='menuSectionPanel')
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(
@@ -138,7 +155,6 @@ class MenuPageBuilder:
         )
         layout.setSpacing(THEME.menu_section_spacing)
         layout.addWidget(MenuPageBuilder._make_section_label(title, panel))
-        layout.addWidget(MenuPageBuilder._make_section_hint(subtitle, panel))
         return panel, layout
 
     @staticmethod
@@ -168,20 +184,15 @@ class MenuPageBuilder:
         hero_title.setObjectName('menuHeroTitle')
         hero_date = QLabel(MenuPageBuilder._today_text(), hero_panel)
         hero_date.setObjectName('menuHeroDate')
-        hero_subtitle = QLabel(MenuPageTexts.SUBTITLE, hero_panel)
-        hero_subtitle.setWordWrap(True)
-        hero_subtitle.setObjectName('menuHeroSubtitle')
-
         hero_layout.addWidget(hero_title)
         hero_layout.addWidget(hero_date)
-        hero_layout.addWidget(hero_subtitle)
         layout.addWidget(hero_panel)
 
         overview_row = QGridLayout()
         overview_row.setHorizontalSpacing(THEME.section_gap)
         overview_row.setVerticalSpacing(THEME.section_gap)
 
-        flow_panel, flow_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.FLOW_TITLE, MenuPageTexts.FLOW_SUBTITLE)
+        flow_panel, flow_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.FLOW_TITLE)
         flow_grid = QGridLayout()
         flow_grid.setHorizontalSpacing(THEME.section_gap)
         flow_grid.setVerticalSpacing(THEME.section_gap)
@@ -189,18 +200,17 @@ class MenuPageBuilder:
         btn_template = MenuPageBuilder._make_menu_card(MenuPageTexts.TEMPLATE_TITLE, MenuPageTexts.TEMPLATE_SUBTITLE)
         btn_job_start = MenuPageBuilder._make_menu_card(MenuPageTexts.ORDER_TITLE, MenuPageTexts.ORDER_SUBTITLE)
         btn_receipt = MenuPageBuilder._make_menu_card(MenuPageTexts.RECEIPT_TITLE, MenuPageTexts.RECEIPT_SUBTITLE)
-        btn_receipt.hide()
         btn_complete = MenuPageBuilder._make_menu_card(MenuPageTexts.COMPLETE_TITLE, MenuPageTexts.COMPLETE_SUBTITLE)
         btn_sale = MenuPageBuilder._make_menu_card(MenuPageTexts.SALE_TITLE, MenuPageTexts.SALE_SUBTITLE)
         btn_inventory = MenuPageBuilder._make_menu_card(MenuPageTexts.INVENTORY_TITLE, MenuPageTexts.INVENTORY_SUBTITLE)
 
-        menu_buttons = (btn_template, btn_job_start, btn_complete, btn_sale, btn_inventory)
+        menu_buttons = (btn_template, btn_job_start, btn_complete, btn_sale, btn_inventory, btn_receipt)
         for index, button in enumerate(menu_buttons):
             flow_grid.addWidget(button, index // 3, index % 3)
         flow_layout.addLayout(flow_grid)
         flow_layout.addStretch(1)
 
-        status_panel, status_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.STATUS_TITLE, MenuPageTexts.STATUS_SUBTITLE)
+        status_panel, status_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.STATUS_TITLE)
         metric_titles = ('총 작업지시서', '진행중 발주', '미검수 건수', '현재고 합계')
         metrics_grid = QGridLayout()
         metrics_grid.setHorizontalSpacing(THEME.section_gap)
@@ -212,11 +222,10 @@ class MenuPageBuilder:
             metric_value_labels[title] = value_label
         status_layout.addLayout(metrics_grid)
 
-        utility_panel, utility_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.UTILITIES_TITLE, MenuPageTexts.UTILITIES_SUBTITLE)
+        utility_panel, utility_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.UTILITIES_TITLE)
         btn_settings = MenuPageBuilder._make_menu_card(MenuPageTexts.SETTINGS_TITLE, MenuPageTexts.SETTINGS_SUBTITLE, utility=True)
         utility_layout.addWidget(btn_settings)
         utility_layout.addStretch(1)
-
         status_layout.addWidget(utility_panel)
 
         overview_row.addWidget(flow_panel, 0, 0, 2, 1)

@@ -64,15 +64,17 @@ def build_global_widget_styles() -> str:
         }}
 
         QLabel#menuHeroTitle {{
-            font-size: {t.page_title_font_px + 4}px;
-            font-weight: 700;
+            font-size: {t.page_title_font_px + 5}px;
+            font-weight: 800;
             color: {t.color_text};
             background: transparent;
+            padding: 0;
         }}
         QLabel#menuHeroDate {{
             color: {t.color_primary};
             font-weight: 700;
             background: transparent;
+            padding: 0;
         }}
         QLabel#menuHeroSubtitle {{
             color: {t.color_text_muted};
@@ -80,9 +82,10 @@ def build_global_widget_styles() -> str:
         }}
         QLabel#menuSectionLabel {{
             font-size: {t.panel_title_font_px}px;
-            font-weight: 700;
+            font-weight: 800;
             color: {t.color_text};
             background: transparent;
+            padding: 0 0 2px 0;
         }}
         QLabel#menuSectionHint {{
             color: {t.color_text_muted};
@@ -91,26 +94,29 @@ def build_global_widget_styles() -> str:
         QLabel#menuMetricTitle {{
             color: {t.color_text_muted};
             background: transparent;
-            font-weight: 600;
+            font-weight: 700;
         }}
         QLabel#menuMetricValue {{
             font-size: {t.dashboard_metric_value_font_px}px;
-            font-weight: 700;
+            font-weight: 800;
             color: {t.color_text};
             background: transparent;
         }}
         QLabel#menuListPrimary {{
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 800;
             color: {t.color_text};
             background: transparent;
+            min-height: {t.menu_recent_primary_height}px;
         }}
         QLabel#menuListSecondary, QLabel#menuListTertiary {{
             color: {t.color_text_soft};
             background: transparent;
+            min-height: {t.menu_recent_secondary_height}px;
         }}
         QLabel#menuListTertiary {{
             color: {t.color_text_muted};
+            min-height: {t.menu_recent_tertiary_height}px;
         }}
     """
 
@@ -174,25 +180,28 @@ def build_button_styles() -> str:
             text-align: left;
             padding: {t.menu_action_card_padding_y}px {t.menu_action_card_padding_x}px;
             border-radius: {t.panel_radius}px;
-            font-weight: 700;
+            font-weight: 800;
         }}
         QPushButton#menuActionCard {{
-            background: {hex_to_rgba(t.color_surface, 1.0)};
+            background: #FFFFFF;
             color: {t.color_text};
-            border: 1px solid {t.color_border};
+            border: 1px solid #D9DEE7;
+            border-left: 4px solid #C7D2E2;
         }}
         QPushButton#menuActionCard:hover {{
-            background: {t.color_surface_alt};
+            background: #F8FAFC;
             border-color: {t.color_border_hover};
+            border-left: 4px solid {t.color_primary};
         }}
         QPushButton#menuUtilityCard {{
-            background: {hex_to_rgba(t.color_surface_alt, 1.0)};
+            background: #F7F3FF;
             color: {t.color_text};
-            border: 1px solid {t.color_border_soft};
+            border: 1px solid #DDD3F3;
+            border-left: 4px solid #C7B7EC;
         }}
         QPushButton#menuUtilityCard:hover {{
-            background: {t.color_surface};
-            border-color: {t.color_border_hover};
+            background: #FCFAFF;
+            border-color: #C7B7EC;
         }}
         QPushButton#dangerSoft {{
             background: {t.color_surface_muted};
@@ -232,14 +241,33 @@ def build_panel_styles() -> str:
             border-radius: {t.panel_radius}px;
         }}
         QFrame#menuHeroPanel {{
-            background: {hex_to_rgba(t.color_surface, 1.0)};
-            border: 1px solid {t.color_border};
+            background: #FFF9ED;
+            border: 1px solid #E6DAB9;
             border-radius: {t.panel_radius}px;
         }}
-        QFrame#menuSectionPanel, QFrame#menuMetricCard, QFrame#menuRecentPanel {{
-            background: {t.color_surface};
-            border: 1px solid {t.color_border};
+        QFrame#menuSectionPanel {{
+            background: #FAFBFD;
+            border: 1px solid #DCE2EA;
             border-radius: {t.panel_radius}px;
+        }}
+        QFrame#menuMetricCard {{
+            background: #FFFFFF;
+            border: 1px solid #E1E6EC;
+            border-radius: {t.panel_radius_sm + 2}px;
+        }}
+        QFrame#menuRecentPanel {{
+            background: #F9FAFC;
+            border: 1px solid #DCE2EA;
+            border-radius: {t.panel_radius}px;
+        }}
+        QFrame#menuRecentItemCard {{
+            background: #FFFFFF;
+            border: 1px solid #E5EAF0;
+            border-radius: {t.panel_radius_sm + 2}px;
+        }}
+        QFrame#menuRecentItemCard:hover {{
+            border-color: {t.color_border_hover};
+            background: #FCFDFE;
         }}
         QFrame#panelFrameCompact {{
             background: {t.color_surface};
