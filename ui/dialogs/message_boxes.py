@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QHBoxLayout, QLabel
 
@@ -24,18 +25,19 @@ class SimpleMessageDialog(_BaseThemedDialog):
 class ConfirmActionDialog(_BaseThemedDialog):
     def __init__(self, title: str, message: str, confirm_text: str, cancel_text: str, parent=None):
         super().__init__(title=title, parent=parent)
+        self.selected_action = None
         message_label = QLabel(message, self.card)
         message_label.setObjectName("dialogMessage")
         message_label.setWordWrap(True)
         self.body.addWidget(message_label)
 
         self.confirm_button = make_dialog_button(confirm_text, self.card, role="confirm")
-        self.confirm_button.clicked.connect(self.accept)
+        self.confirm_button.clicked.connect(self._on_confirm_clicked)
         self.confirm_button.setDefault(False)
         self.confirm_button.setAutoDefault(False)
 
         self.cancel_button = make_dialog_button(cancel_text, self.card, role="cancel")
-        self.cancel_button.clicked.connect(self.reject)
+        self.cancel_button.clicked.connect(self._on_cancel_clicked)
         self.cancel_button.setDefault(False)
         self.cancel_button.setAutoDefault(False)
 
@@ -51,9 +53,25 @@ class ConfirmActionDialog(_BaseThemedDialog):
         self.body.addLayout(button_row)
 
         self.shortcut_yes = QShortcut(QKeySequence("Y"), self)
-        self.shortcut_yes.activated.connect(self.accept)
+        self.shortcut_yes.activated.connect(self._on_confirm_clicked)
         self.shortcut_no = QShortcut(QKeySequence("N"), self)
-        self.shortcut_no.activated.connect(self.reject)
+        self.shortcut_no.activated.connect(self._on_cancel_clicked)
+
+    def _on_confirm_clicked(self) -> None:
+        self.selected_action = "confirm"
+        self.accept()
+
+    def _on_cancel_clicked(self) -> None:
+        self.selected_action = "cancel"
+        self.reject()
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key_Escape:
+            self.selected_action = None
+            self.done(0)
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
 
 __all__ = [

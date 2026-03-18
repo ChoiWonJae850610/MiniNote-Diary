@@ -35,9 +35,11 @@ class MainWindowSaveLogic:
         if result == window.dialog_accept_code():
             MainWindowNavigationLogic.go_menu(window)
             return
-        WorkOrderValidationUi.deactivate(window)
-        window.reset_work_order_form()
-        MainWindowNavigationLogic.go_menu(window)
+        if getattr(dialog, "selected_action", None) == "cancel":
+            WorkOrderValidationUi.deactivate(window)
+            window.reset_work_order_form()
+            MainWindowNavigationLogic.go_menu(window)
+            return
 
     @staticmethod
     def handle_save(window: "MainWindow") -> None:
