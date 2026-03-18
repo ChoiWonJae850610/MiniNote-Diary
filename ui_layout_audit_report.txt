@@ -1,0 +1,241 @@
+MiniNote Diary UI Layout Audit Report
+=
+
+Purpose: phase-1 inventory of layout-sensitive hardcoded values and fragile patterns.
+Runtime behavior is not changed by this script.
+
+Scanned files: 13
+Total findings: 186
+
+Priority review order:
+1. ui/pages/work_order_page.py (0 findings)
+2. ui/theme_tokens.py (94 findings)
+3. ui/postit/layout.py (0 findings)
+4. ui/postit/layout_constants.py (0 findings)
+5. ui/postit/layout_containers.py (0 findings)
+6. ui/postit/layout_stack_hosts.py (0 findings)
+
+layouting/constants.py
+----------------------
+L  11 [assign] tab_overlap = -12
+L  19 [assign] tab_padding_x = 10
+L  20 [assign] row_action_gap = 6
+L  22 [assign] popup_margin = 8
+L  23 [assign] inner_side_padding = 14
+L  24 [assign] body_top_padding = 4
+L  25 [assign] inner_bottom_padding = 4
+L  26 [assign] section_spacing = 2
+L  27 [assign] grid_h_spacing = 8
+L  28 [assign] grid_v_spacing = 4
+L  29 [assign] memo_body_height = 292
+L  30 [assign] basic_card_min_width = 320
+L  31 [assign] material_card_min_width = 320
+L  32 [assign] change_note_min_width = 340
+L  33 [assign] delete_button_margin_top = 6
+L  34 [assign] delete_button_margin_right = 4
+L  35 [assign] calendar_popup_offset_y = 4
+L  36 [assign] calendar_icon_size = 16
+L  37 [assign] partner_link_icon_size = 14
+L  38 [assign] unit_down_icon_size = 12
+L  44 [assign] partner_bar_material_stretch = 2
+
+layouting/containers.py
+-----------------------
+L  56 [sizehint] height = body_height if body_height is not None else body_widget.sizeHint().height()
+L 102 [sizehint] section_height = postit_section_height(body_height=body_height or body_widget.sizeHint().height(), has_footer=has_footer)
+
+main_window_parts/main_window_inbound_logic.py
+----------------------------------------------
+L  51 [sizehint] item.setSizeHint(card.sizeHint())
+
+main_window_parts/main_window_order_logic.py
+--------------------------------------------
+L  55 [sizehint] item.setSizeHint(card.sizeHint())
+
+main_window_parts/main_window_product_logic.py
+----------------------------------------------
+L  47 [sizehint] item.setSizeHint(card.sizeHint())
+L 203 [sizehint] item.setSizeHint(card.sizeHint())
+
+pages/common.py
+---------------
+L 225 [call] setContentsMargins -> [6, 6] :: layout.setContentsMargins(pad, 6, pad, 6)
+
+pages/inbound_page.py
+---------------------
+L  74 [call] setMinimumWidth -> [140] :: status_filter_combo.setMinimumWidth(140)
+
+pages/product_page.py
+---------------------
+L 185 [call] setMinimumHeight -> [180] :: pending_list.setMinimumHeight(180)
+
+pages/stats_page.py
+-------------------
+L  39 [call] setSpacing -> [8] :: layout.setSpacing(8)
+L  62 [call] setContentsMargins -> [12, 10, 12, 10] :: layout.setContentsMargins(12, 10, 12, 10)
+L  63 [call] setSpacing -> [5] :: layout.setSpacing(5)
+L 127 [call] setMinimumHeight -> [220] :: factory_table.setMinimumHeight(220)
+
+postit/layout.py
+----------------
+L  52 [assign] POSTIT_DATE_MIN_WIDTH_EXTRA = 8
+
+ui/layout_metrics.py
+--------------------
+L   5 [assign] MIN_WIDTH_NARROW = 420
+L   6 [assign] MIN_WIDTH_STANDARD = 460
+L   7 [assign] FORM_HORIZONTAL_SPACING = 12
+L   8 [assign] FORM_VERTICAL_SPACING = 10
+L   9 [assign] INLINE_ROW_SPACING = 6
+L  10 [assign] PRICE_GRID_SPACING = 10
+L  11 [assign] FIELD_HEIGHT = 30
+L  12 [assign] BUTTON_ICON_SIZE = 14
+L  13 [assign] STATUS_ICON_WIDTH = 18
+L  14 [assign] STATUS_ROW_SPACING = 6
+L  15 [assign] CALENDAR_POPUP_OFFSET_Y = 2
+L  16 [assign] PRICE_FIELD_MIN_WIDTH = 90
+L  17 [assign] PRICE_FIELD_MAX_WIDTH = 140
+L  18 [assign] UNIT_COMBO_MIN_WIDTH = 160
+L  19 [assign] CARD_MARGIN = 18
+L  20 [assign] CARD_ROW_SPACING = 10
+L  24 [assign] MONTH_COMBO_WIDTH = 150
+L  25 [assign] FILTER_INLINE_GAP = 6
+L  26 [assign] TEMPLATE_LIST_SPACING = 6
+L  27 [assign] IMAGE_SHELL_MARGIN = 14
+L  28 [assign] DETAIL_GRID_HORIZONTAL_SPACING = 10
+L  29 [assign] DETAIL_GRID_VERTICAL_SPACING = 8
+L  30 [assign] TEMPLATE_CARD_MARGIN = 12
+L  31 [assign] TEMPLATE_CARD_SPACING = 4
+L  35 [assign] BROWSER_WIDTH = 920
+L  36 [assign] BROWSER_HEIGHT = 640
+L  39 [assign] CARD_MARGIN = 16
+L  40 [assign] CARD_ROW_SPACING = 10
+L  41 [assign] CONTENT_SPACING = 12
+L  42 [assign] DETAIL_CARD_SPACING = 12
+L  43 [assign] DETAIL_LABEL_WIDTH = 54
+L  44 [assign] FIELD_EXTRA_HEIGHT = 6
+L  45 [assign] FORM_MARGIN = 18
+L  46 [assign] TYPE_SECTION_SPACING = 10
+L  47 [assign] MEMO_HEIGHT = 120
+L  48 [assign] TYPE_BADGE_ROW_SPACING = 4
+L  49 [assign] TYPE_BADGE_SIZE = 16
+L  50 [assign] TYPE_BADGE_RADIUS = 4
+L  52 [assign] LIST_ITEM_MARGIN_H = 8
+L  53 [assign] LIST_ITEM_MARGIN_TOP = 7
+L  54 [assign] LIST_ITEM_MARGIN_BOTTOM = 7
+L  55 [assign] LIST_ITEM_SPACING = 6
+L  56 [assign] TYPE_GRID_HORIZONTAL_SPACING = 10
+L  57 [assign] TYPE_GRID_VERTICAL_SPACING = 8
+L  61 [assign] CARD_HEIGHT_EXTRA = 18
+L  62 [assign] PAGE_MARGIN_X_OFFSET = 4
+L  63 [assign] PAGE_MARGIN_TOP = 22
+L  64 [assign] PAGE_MARGIN_BOTTOM = 18
+L  65 [assign] FOOTER_PRIMARY_WIDTH_EXTRA = 10
+L  66 [assign] FOOTER_BUTTON_HEIGHT_EXTRA = 2
+L  75 [assign] WIDTH = 540
+L  76 [assign] HEIGHT = 420
+
+ui/theme_tokens.py
+------------------
+L  32 [assign] menu_button_width = 360
+L  33 [assign] menu_button_height = 54
+L  34 [assign] footer_button_width = 140
+L  35 [assign] footer_button_height = 32
+L  36 [assign] primary_button_height = 38
+L  37 [assign] primary_button_width = 170
+L  38 [assign] secondary_button_width = 140
+L  39 [assign] reload_button_width = 130
+L  40 [assign] page_list_panel_min_width = 320
+L  41 [assign] page_list_spacing = 6
+L  42 [assign] page_master_detail_list_stretch = 4
+L  43 [assign] page_master_detail_detail_stretch = 6
+L  44 [assign] page_body_split_spacing = 14
+L  45 [assign] page_right_panel_min_width = 640
+L  46 [assign] page_detail_panel_spacing = 16
+L  47 [assign] page_action_row_top_margin = 10
+L  48 [assign] page_wide_button_width = 210
+L  49 [assign] work_order_left_column_min_width = 340
+L  50 [assign] work_order_left_column_max_width = 390
+L  51 [assign] work_order_right_column_min_width = 620
+L  52 [assign] work_order_left_stretch = 4
+L  53 [assign] work_order_right_stretch = 12
+L  54 [assign] work_order_toolbar_panel_min_height = 32
+L  55 [assign] work_order_column_spacing = 10
+L  56 [assign] work_order_toolbar_inner_padding = 4
+L  59 [assign] work_order_toolbar_to_image_gap = 14
+L  61 [assign] work_order_image_preview_min_height = 610
+L  62 [assign] work_order_change_note_body_min_height = 180
+L  63 [assign] work_order_bottom_match_adjust = 18
+L  64 [assign] work_order_change_note_min_width = 260
+L  65 [assign] dashboard_metric_card_min_height = 96
+L  66 [assign] dashboard_recent_panel_min_height = 228
+L  68 [assign] table_header_height = 34
+L  69 [assign] dialog_button_height = 34
+L  70 [assign] dialog_field_height = 30
+L  71 [assign] order_input_height = 34
+L  72 [assign] unit_dialog_width = 520
+L  73 [assign] unit_dialog_height = 420
+L  74 [assign] window_min_width = 1080
+L  75 [assign] window_min_height = 760
+L  76 [assign] note_dialog_min_width = 520
+L  77 [assign] note_dialog_min_height = 360
+L  79 [assign] icon_button_size = 24
+L  80 [assign] nav_button_size = 32
+L  81 [assign] icon_size_sm = 12
+L  82 [assign] icon_size_md = 16
+L  83 [assign] field_height = 26
+L  84 [assign] field_label_width = 44
+L  85 [assign] calendar_display_width = 110
+L  86 [assign] table_row_height = 30
+L  87 [assign] section_badge_height = 28
+L  88 [assign] summary_chip_height = 30
+L  89 [assign] feedback_label_height = 20
+L  90 [assign] image_preview_min_height = 520
+L  91 [assign] image_preview_min_size = 240
+L  92 [assign] memo_min_height = 110
+L  93 [assign] order_memo_min_height = 88
+L  94 [assign] postit_bar_max_height = 232
+L  95 [assign] postit_card_height = 198
+L  96 [assign] postit_index_row_height = 28
+L  97 [assign] postit_index_button_size = 24
+L  98 [assign] delete_button_size = 14
+L 100 [assign] tooltip_padding_v = 6
+L 101 [assign] tooltip_padding_h = 10
+L 102 [assign] tooltip_radius = 8
+L 104 [assign] page_padding = 12
+L 105 [assign] page_padding_x = 30
+L 107 [assign] page_section_padding = 16
+L 108 [assign] page_section_padding_compact = 14
+L 109 [assign] page_top_bottom = 20
+L 110 [assign] page_header_top_margin = 20
+L 111 [assign] page_header_block_gap = 14
+L 112 [assign] page_header_row_min_height = 46
+L 113 [assign] block_spacing = 10
+L 114 [assign] row_spacing = 8
+L 115 [assign] top_button_spacing = 6
+L 116 [assign] section_gap = 14
+L 117 [assign] card_inner_spacing = 8
+L 118 [assign] title_stack_spacing = 3
+L 119 [assign] page_header_safe_padding_top = 5
+L 120 [assign] page_header_safe_padding_bottom = 3
+L 121 [assign] filter_panel_margin_h = 14
+L 122 [assign] filter_panel_margin_v = 12
+L 123 [assign] image_shell_margin = 18
+L 124 [assign] label_padding_x = 2
+L 127 [assign] card_radius = 16
+L 129 [assign] card_shadow_offset_y = 5
+L 130 [assign] shell_radius = 22
+L 131 [assign] panel_radius = 18
+L 132 [assign] panel_radius_sm = 14
+L 133 [assign] list_radius = 12
+L 134 [assign] control_radius = 9
+L 135 [assign] input_radius = 8
+L 136 [assign] editor_radius = 14
+
+ui/ui_metrics.py
+----------------
+L   8 [assign] DIALOG_MIN_WIDTH_SM = 330
+L   9 [assign] DIALOG_MIN_WIDTH_MD = 340
+L  10 [assign] DIALOG_MIN_WIDTH_LG = 360
+L  11 [assign] PANEL_INLINE_SPACING = 6
+L  12 [assign] POSTIT_CONTENT_MARGIN = 8
