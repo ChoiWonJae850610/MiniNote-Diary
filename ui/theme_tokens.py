@@ -62,8 +62,8 @@ class ThemeTokens:
     work_order_bottom_safe_reserve: int = 0
     work_order_image_preview_min_height: int = 610
     work_order_change_note_body_min_height: int = 180
-    work_order_bottom_match_adjust: int = 18
-    work_order_change_note_clip_guard: int = 8
+    work_order_bottom_match_adjust: int = 12
+    work_order_change_note_bottom_trim: int = 6
     work_order_change_note_visual_trim: int = 4
     work_order_change_note_min_width: int = 260
     dashboard_metric_card_min_height: int = 96

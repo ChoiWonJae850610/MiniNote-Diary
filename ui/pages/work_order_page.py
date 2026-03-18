@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
 
 from ui.icon_factory import make_image_outline_icon, make_save_icon, standard_icon
@@ -17,26 +17,6 @@ from ui.widget_factory import make_toolbar_icon_button
 
 
 
-
-class WorkOrderPage(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._layout_sync_callback = None
-
-    def set_layout_sync_callback(self, callback) -> None:
-        self._layout_sync_callback = callback
-
-    def _schedule_layout_sync(self) -> None:
-        if self._layout_sync_callback is not None:
-            QTimer.singleShot(0, self._layout_sync_callback)
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        self._schedule_layout_sync()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._schedule_layout_sync()
 
 
 @dataclass
@@ -58,7 +38,7 @@ class WorkOrderPageRefs:
 class WorkOrderPageBuilder:
     @staticmethod
     def build(parent: QWidget) -> WorkOrderPageRefs:
-        page = WorkOrderPage()
+        page = QWidget()
         page_layout = make_standard_page_layout(page)
         page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
         page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 6))
@@ -83,15 +63,6 @@ class WorkOrderPageBuilder:
         )
 
         right_stack = WorkOrderPageBuilder._build_postit_stack(postit_bar, change_note_wrap)
-        WorkOrderPageBuilder._bind_runtime_memo_alignment(
-            page,
-            left_stack=left_stack,
-            right_stack=right_stack,
-            postit_bar=postit_bar,
-            change_note_wrap=change_note_wrap,
-            change_note_postit=change_note_postit,
-            image_shell=image_shell,
-        )
         left_stack.setMinimumWidth(THEME.work_order_left_column_min_width)
         left_stack.setMaximumWidth(THEME.work_order_left_column_max_width)
         right_stack.setMinimumWidth(THEME.work_order_right_column_min_width)
@@ -225,50 +196,5 @@ class WorkOrderPageBuilder:
         right_layout.addWidget(change_note_wrap, 1)
         return right_stack
 
-    @staticmethod
-    def _bind_runtime_memo_alignment(
-        page: WorkOrderPage,
-        *,
-        left_stack: QWidget,
-        right_stack: QWidget,
-        postit_bar: QWidget,
-        change_note_wrap: QWidget,
-        change_note_postit: ChangeNotePostIt,
-        image_shell: QWidget,
-    ) -> None:
-        def _sync() -> None:
-            if not page.isVisible():
-                return
-            right_layout = right_stack.layout()
-            if right_layout is None:
-                return
-            metrics = build_work_order_layout_metrics(image_shell_frame_width=image_shell.frameWidth())
-            left_available = max(
-                THEME.memo_min_height,
-                left_stack.height() - postit_bar.height() - THEME.work_order_column_spacing,
-            )
-            right_contents_height = right_stack.contentsRect().height()
-            right_available = max(
-                THEME.memo_min_height,
-                right_contents_height - postit_bar.height() - right_layout.spacing(),
-            )
-            target_wrap_height = min(
-                left_available + THEME.work_order_bottom_match_adjust,
-                right_available,
-            )
-            target_wrap_height = max(THEME.memo_min_height, target_wrap_height)
-            body_height = max(
-                THEME.memo_min_height,
-                THEME.work_order_change_note_body_min_height,
-                target_wrap_height - metrics.change_note_wrap_overhead,
-            )
-            desired_wrap_height = body_height + metrics.change_note_wrap_overhead
-            if change_note_postit.height() != body_height:
-                change_note_postit.setFixedHeight(body_height)
-            if change_note_wrap.height() != desired_wrap_height:
-                change_note_wrap.setFixedHeight(desired_wrap_height)
 
-        page.set_layout_sync_callback(_sync)
-
-
-__all__ = ['WorkOrderPage', 'WorkOrderPageBuilder', 'WorkOrderPageRefs']
+__all__ = ['WorkOrderPageBuilder', 'WorkOrderPageRefs']

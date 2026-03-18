@@ -53,7 +53,7 @@ class WorkOrderLayoutMetrics:
             THEME.memo_min_height,
             self.available_change_note_wrap_height
             + THEME.work_order_bottom_match_adjust
-            + THEME.work_order_change_note_clip_guard,
+            - THEME.work_order_change_note_bottom_trim,
         )
 
     @property
