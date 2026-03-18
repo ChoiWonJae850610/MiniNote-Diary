@@ -58,6 +58,7 @@ class MainWindowPageCoordinator:
         window.btn_product_type_mgmt_menu = refs.btn_product_type_mgmt
         window.btn_material_mgmt_menu = refs.btn_material_mgmt
         window.btn_settings = refs.btn_settings
+        window.btn_help = refs.btn_help
 
     @staticmethod
     def _apply_work_order_refs(window: "MainWindow", refs) -> None:

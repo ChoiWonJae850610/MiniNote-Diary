@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtWidgets import QMessageBox
+
 from ui.main_window_parts.main_window_work_order_logic import MATERIAL_TARGET_CONFIGS
 
 if TYPE_CHECKING:
@@ -32,6 +34,13 @@ class MainWindowEventBinder:
         window.btn_product_type_mgmt_menu.clicked.connect(window.on_product_type_mgmt_clicked)
         window.btn_material_mgmt_menu.clicked.connect(lambda: window.open_feature_page(window.PAGE_RECEIPT))
         window.btn_settings.clicked.connect(window.on_settings_clicked)
+        window.btn_help.clicked.connect(
+            lambda: QMessageBox.information(
+                window,
+                '도움말',
+                '메인 화면은 오늘 현황과 최근 기록을 먼저 확인하는 다이어리형 홈 화면입니다.\n\n업무 메뉴 카드로 각 관리 화면으로 이동하고, 우측 상단 톱니 버튼에서 환경설정을 열 수 있습니다.',
+            )
+        )
 
     @staticmethod
     def _bind_feature_pages(window: "MainWindow") -> None:
