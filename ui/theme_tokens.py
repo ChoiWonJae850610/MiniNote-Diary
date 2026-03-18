@@ -138,6 +138,15 @@ class ThemeTokens:
     toolbar_strip_padding_y: int = 6
     dashboard_recent_panel_min_height: int = 228
     dashboard_metric_value_font_px: int = 18
+    menu_hero_padding_x: int = 22
+    menu_hero_padding_y: int = 18
+    menu_hero_spacing: int = 8
+    menu_section_padding: int = 18
+    menu_section_spacing: int = 12
+    menu_action_card_min_height: int = 92
+    menu_action_card_padding_x: int = 16
+    menu_action_card_padding_y: int = 14
+    menu_recent_row_count: int = 4
     table_header_height: int = 34
     dialog_button_height: int = 34
     dialog_field_height: int = 30
