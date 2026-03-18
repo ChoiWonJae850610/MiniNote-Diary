@@ -195,6 +195,7 @@ class ThemeTokens:
     color_tooltip_bg: str = "#FFFFFF"
     color_tooltip_border: str = "#D7DCE3"
     color_tooltip_text: str = "#364152"
+    color_validation_error: str = "#D64545"
 
 
 THEME = ThemeTokens()

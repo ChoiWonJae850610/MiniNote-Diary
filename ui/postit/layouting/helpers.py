@@ -88,7 +88,7 @@ def postit_column_height(
     ).column_height
 
 
-def embedded_tab_style(*, active: bool = True, selector: str = 'QToolButton') -> str:
+def embedded_tab_style(*, active: bool = True, invalid: bool = False, selector: str = 'QToolButton') -> str:
     t = THEME
     base = (
         f"{selector}{{"
@@ -103,14 +103,16 @@ def embedded_tab_style(*, active: bool = True, selector: str = 'QToolButton') ->
         f"font-size:{t.section_title_font_px}px;"
         'font-weight:700;'
     )
+    border_color = t.color_validation_error if invalid else t.color_border
+    base = base.replace(f"border:1px solid {t.color_border};", f"border:1px solid {border_color};")
     if active:
         return base + f"background:{t.color_surface};" + f"color:{t.color_text};" + '}'
     return base + f"background:{t.color_surface_muted};" + f"color:{t.color_text_soft};" + '}'
 
 
 
-def folder_tab_style(*, active: bool = True, selector: str = 'QToolButton') -> str:
-    return embedded_tab_style(active=active, selector=selector)
+def folder_tab_style(*, active: bool = True, invalid: bool = False, selector: str = 'QToolButton') -> str:
+    return embedded_tab_style(active=active, invalid=invalid, selector=selector)
 
 
 __all__ = [

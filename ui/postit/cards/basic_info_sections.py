@@ -12,6 +12,7 @@ from ui.postit.forms import make_field_label, make_form_row
 from ui.postit.layout import PostItLayout
 from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
+from ui.work_order_validation_ui import set_invalid
 
 
 def build_date_row(card, root) -> None:
@@ -81,6 +82,7 @@ def build_price_rows(card, root) -> None:
 
 
 def connect_basic_info_signals(card) -> None:
+    card.style_no.textChanged.connect(lambda text: set_invalid(card.style_no, not bool((text or "").strip()) and bool(card.style_no.property("validationError"))))
     card.style_no.committed.connect(lambda _v: card._emit_basic_fields())
     card.labor.textChanged.connect(card._on_price_component_changed)
     card.loss.textChanged.connect(card._on_price_component_changed)

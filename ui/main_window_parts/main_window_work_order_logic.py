@@ -6,6 +6,7 @@ from ui.messages import DialogTitles, InfoMessages, Warnings
 from ui.main_window_parts.main_window_work_order_material_logic import MainWindowWorkOrderMaterialLogic
 from ui.main_window_parts.main_window_work_order_postit_logic import MainWindowWorkOrderPostItLogic
 from ui.main_window_parts.main_window_work_order_shared import MATERIAL_STACK_NAMES, MATERIAL_TARGET_CONFIGS
+import ui.work_order_validation_ui as WorkOrderValidationUi
 
 
 class MainWindowWorkOrderLogic:
@@ -76,6 +77,7 @@ class MainWindowWorkOrderLogic:
             else:
                 window.image_preview.clear_image()
                 window.btn_delete_image.setEnabled(False)
+            WorkOrderValidationUi.deactivate(window)
             window._show_feedback(InfoMessages.WORK_ORDER_LOADED)
         finally:
             window._suppress_dirty = False

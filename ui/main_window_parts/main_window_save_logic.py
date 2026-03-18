@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from ui.dialogs import ask_confirm, show_error, show_info
 from ui.main_window_parts.main_window_navigation import MainWindowNavigationLogic
 from ui.messages import Buttons, DialogTitles, Warnings
+import ui.work_order_validation_ui as WorkOrderValidationUi
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
@@ -33,14 +34,16 @@ class MainWindowSaveLogic:
         result = dialog.exec()
         if result == window.dialog_accept_code():
             MainWindowNavigationLogic.go_menu(window)
-        else:
-            window.reset_work_order_form()
-            MainWindowNavigationLogic.go_menu(window)
+            return
+        WorkOrderValidationUi.deactivate(window)
+        window.reset_work_order_form()
+        MainWindowNavigationLogic.go_menu(window)
 
     @staticmethod
     def handle_save(window: "MainWindow") -> None:
         statuses = window.controller.get_save_requirement_statuses()
         if not all(ok for _, ok in statuses):
+            WorkOrderValidationUi.activate(window)
             window.show_validation_statuses(statuses)
             return
 
@@ -65,6 +68,7 @@ class MainWindowSaveLogic:
         except Exception as exc:
             show_error(window, DialogTitles.SAVE_FAILED, str(exc))
             return
+        WorkOrderValidationUi.deactivate(window)
         window.reset_work_order_form()
         window.refresh_menu_page()
         window.refresh_stats_page()

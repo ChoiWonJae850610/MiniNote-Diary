@@ -3,6 +3,15 @@ from __future__ import annotations
 from ui.theme_tokens import THEME, hex_to_rgba
 
 
+def _error_border_rule(selector: str) -> str:
+    t = THEME
+    return (
+        f'{selector}[validationError="true"]{{border:1px solid {t.color_validation_error};}}'
+        f'{selector}[validationError="true"]:focus{{border:1px solid {t.color_validation_error};}}'
+        f'{selector}[validationError="true"]:hover{{border-color:{t.color_validation_error};}}'
+    )
+
+
 def read_only_line_edit_style() -> str:
     t = THEME
     return (
@@ -10,6 +19,7 @@ def read_only_line_edit_style() -> str:
         f"color:{t.color_text};padding:0 8px;border-radius:{t.control_radius}px;}}"
         f"QLineEdit:hover{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border-color:{hex_to_rgba(t.color_text_soft, 0.10)};}}"
+        + _error_border_rule('QLineEdit')
     )
 
 
@@ -19,6 +29,7 @@ def editing_line_edit_style() -> str:
         f"QLineEdit{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border:1px solid {hex_to_rgba(t.color_primary, 0.28)};border-radius:{t.control_radius}px;"
         f"padding:0 8px;color:{t.color_text};}}"
+        + _error_border_rule('QLineEdit')
     )
 
 
@@ -32,6 +43,7 @@ def input_line_edit_style(horizontal_padding: int = 6) -> str:
         f"QLineEdit:focus{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border:1px solid {hex_to_rgba(t.color_primary, 0.28)};border-radius:{t.input_radius}px;"
         f"padding:0 {horizontal_padding}px;}}"
+        + _error_border_rule('QLineEdit')
     )
 
 
@@ -54,6 +66,7 @@ def plain_text_edit_style() -> str:
         f"font-size:{t.base_font_px}px;border-radius:{t.editor_radius}px;padding:10px;}}"
         f"QPlainTextEdit:focus{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border:1px solid {hex_to_rgba(t.color_primary, 0.24)};}}"
+        + _error_border_rule('QPlainTextEdit')
     )
 
 
@@ -176,6 +189,9 @@ def unit_button_style() -> str:
         f"QToolButton:pressed{{background:{hex_to_rgba(t.color_pressed, 1.0)};}}"
         f"QToolButton:focus{{background:{hex_to_rgba(t.color_window, 1.0)};"
         f"border-color:{hex_to_rgba(t.color_primary, 0.28)};}}"
+        f"QToolButton[validationError=\"true\"]{{border:1px solid {t.color_validation_error};}}"
+        f"QToolButton[validationError=\"true\"]:hover{{border-color:{t.color_validation_error};}}"
+        f"QToolButton[validationError=\"true\"]:focus{{border-color:{t.color_validation_error};}}"
     )
 
 

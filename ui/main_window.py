@@ -22,6 +22,7 @@ from ui.main_window_parts.main_window_save_logic import MainWindowSaveLogic
 from ui.main_window_parts.main_window_stats_logic import MainWindowStatsLogic
 from ui.main_window_parts.main_window_work_order_logic import MainWindowWorkOrderLogic
 from ui.messages import Buttons, DialogTitles, InfoMessages, Warnings
+import ui.work_order_validation_ui as WorkOrderValidationUi
 
 
 class MainWindow(QMainWindow):
@@ -38,6 +39,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(DialogTitles.APP)
         self.menuBar().hide()
+        self._validation_marks_active = False
         MainWindowBootstrap.initialize_services(self)
         MainWindowFeedback.initialize(self)
         MainWindowBootstrap.build_root(self)
@@ -209,6 +211,7 @@ class MainWindow(QMainWindow):
 
     def reset_work_order_form(self):
         MainWindowWorkOrderLogic.reset_form(self)
+        WorkOrderValidationUi.deactivate(self)
 
     def _refresh_postits(self, force_rebuild: bool = False):
         MainWindowWorkOrderLogic.refresh_postits(self, force_rebuild=force_rebuild)
@@ -218,6 +221,7 @@ class MainWindow(QMainWindow):
 
     def on_material_deleted(self, target: str, idx: int):
         MainWindowWorkOrderLogic.remove_material(self, target, idx)
+        WorkOrderValidationUi.refresh_if_active(self)
 
     def on_reset_clicked(self):
         self.reset_work_order_form()
@@ -260,9 +264,11 @@ class MainWindow(QMainWindow):
 
     def on_add_material_clicked(self, target: str):
         MainWindowWorkOrderLogic.add_material(self, target)
+        WorkOrderValidationUi.refresh_if_active(self)
 
     def on_basic_postit_changed(self, data: dict):
         self.state.update_header(data)
+        WorkOrderValidationUi.refresh_if_active(self)
         self._update_window_title()
 
     def on_change_note_changed(self, text: str):
@@ -271,3 +277,4 @@ class MainWindow(QMainWindow):
 
     def on_material_changed(self, target: str, idx: int, patch: dict):
         MainWindowWorkOrderLogic.update_material(self, target, idx, patch)
+        WorkOrderValidationUi.refresh_if_active(self)

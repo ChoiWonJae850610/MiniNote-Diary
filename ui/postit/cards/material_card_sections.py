@@ -23,6 +23,7 @@ from ui.postit.forms import make_field_label, make_form_row
 from ui.postit.layout import POSTIT_ROW_ACTION_GAP, PostItLayout
 from ui.theme import delete_button_style, menu_style, tool_button_style, unit_button_style, THEME, input_line_edit_style
 from ui.widget_factory import set_widget_tooltip
+from ui.work_order_validation_ui import set_invalid
 
 
 def configure_delete_button(card) -> None:
@@ -127,9 +128,12 @@ def build_amount_rows(card, root) -> None:
 
 
 def connect_material_signals(card) -> None:
+    card.item.textChanged.connect(lambda text: set_invalid(card.item, not bool((text or "").strip()) and bool(card.item.property("validationError"))))
     card.item.committed.connect(lambda value: card._commit(MaterialKeys.ITEM, value))
+    card.qty.textChanged.connect(lambda text: set_invalid(card.qty, (str(text or "").replace(",", "").strip() == "") and bool(card.qty.property("validationError"))))
     card.qty.committed.connect(card._on_qty_committed)
     card.qty.textChanged.connect(lambda _t: card._recalc_total())
+    card.price.textChanged.connect(lambda text: set_invalid(card.price, (str(text or "").replace(",", "").strip() == "") and bool(card.price.property("validationError"))))
     card.price.textChanged.connect(lambda _t: card._on_price_changed())
     card.total.textChanged.connect(lambda _t: None if card._block_total else card._commit(MaterialKeys.TOTAL, card.total.text()))
 

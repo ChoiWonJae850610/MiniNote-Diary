@@ -33,10 +33,20 @@ class PostItTabButton(QToolButton):
         self.setFixedHeight(POSTIT_HEADER_HEIGHT)
         self.setMinimumWidth(0)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.setStyleSheet(folder_tab_style(active=active, selector="QToolButton"))
+        self._active = bool(active)
+        self._invalid = False
+        self._apply_style()
+
+    def _apply_style(self) -> None:
+        self.setStyleSheet(folder_tab_style(active=self._active, invalid=self._invalid, selector="QToolButton"))
 
     def set_active(self, active: bool):
-        self.setStyleSheet(folder_tab_style(active=active, selector="QToolButton"))
+        self._active = bool(active)
+        self._apply_style()
+
+    def set_invalid(self, invalid: bool):
+        self._invalid = bool(invalid)
+        self._apply_style()
 
 
 class FolderTabHeader(QWidget):
@@ -71,6 +81,15 @@ class FolderTabHeader(QWidget):
 
     def keys(self) -> list[str]:
         return list(self._buttons.keys())
+
+    def set_invalid_tab(self, key: str, invalid: bool):
+        button = self._buttons.get(key)
+        if button is not None:
+            button.set_invalid(invalid)
+
+    def clear_invalid_tabs(self):
+        for button in self._buttons.values():
+            button.set_invalid(False)
 
     def set_active_tab(self, key: str):
         self._active_key = key
