@@ -3,13 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from PySide6.QtCore import QDate, Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QListWidget, QListWidgetItem
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import MenuPageTexts
 from ui.pages.common import make_standard_page_layout
-from ui.button_icon_utils import apply_glyph_icon
-from ui.widget_factory_buttons import make_icon_button
 from ui.theme import THEME
 from ui.widget_factory import apply_button_metrics, make_panel_frame, make_panel_title_label
 
@@ -28,13 +26,22 @@ class MenuPageRefs:
     btn_product_type_mgmt: QPushButton
     btn_material_mgmt: QPushButton
     btn_settings: QPushButton
-    btn_help: QPushButton
     metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
     recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
     recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
 
 
 class MenuPageBuilder:
+    @staticmethod
+    def _make_checklist(parent: QWidget) -> QListWidget:
+        lst = QListWidget(parent)
+        lst.setObjectName('menuChecklist')
+        lst.setMinimumHeight(220)
+        for text in ['☐ 원단 발주 확인','☐ 공장 연락','☐ 배송 확인']:
+            item = QListWidgetItem(text)
+            lst.addItem(item)
+        return lst
+
     _WEEKDAY_MAP = {
         1: '월요일',
         2: '화요일',
@@ -68,17 +75,9 @@ class MenuPageBuilder:
         return button
 
     @staticmethod
-    def _make_header_icon_button(glyph: str, tooltip: str, parent: QWidget) -> QPushButton:
-        button = make_icon_button(parent=parent, object_name='iconAction', tooltip=tooltip, font_px=THEME.icon_button_font_px + 1)
-        button.setFixedSize(THEME.icon_button_size + 10, THEME.icon_button_size + 10)
-        apply_glyph_icon(button, glyph, font_px=THEME.icon_button_font_px + 3, color=THEME.color_icon)
-        return button
-
-    @staticmethod
     def _make_metric_card(page: QWidget, title: str) -> tuple[QFrame, QLabel]:
         card = make_panel_frame(page, object_name='menuMetricCard')
         card.setMinimumHeight(THEME.dashboard_metric_card_min_height)
-        card.setMaximumHeight(THEME.dashboard_metric_card_min_height)
         layout = QVBoxLayout(card)
         layout.setContentsMargins(
             THEME.dashboard_metric_padding_x,
@@ -90,7 +89,7 @@ class MenuPageBuilder:
 
         title_label = QLabel(title, card)
         title_label.setObjectName('menuMetricTitle')
-        value_label = QLabel('--', card)
+        value_label = QLabel('0', card)
         value_label.setObjectName('menuMetricValue')
         value_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
@@ -137,7 +136,6 @@ class MenuPageBuilder:
     def _make_recent_panel(page: QWidget, title: str, empty_text: str) -> tuple[QFrame, list[tuple[QLabel, QLabel, QLabel]]]:
         panel = make_panel_frame(page, object_name='menuRecentPanel')
         panel.setMinimumHeight(THEME.dashboard_recent_panel_min_height)
-        panel.setMaximumHeight(THEME.dashboard_recent_panel_min_height)
 
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(
@@ -150,28 +148,13 @@ class MenuPageBuilder:
 
         layout.addWidget(make_panel_title_label(title, panel))
 
-        scroll = QScrollArea(panel)
-        scroll.setObjectName('menuRecentScroll')
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-
-        viewport = QWidget(scroll)
-        viewport.setObjectName('menuRecentViewport')
-        viewport_layout = QVBoxLayout(viewport)
-        viewport_layout.setContentsMargins(0, 0, 4, 0)
-        viewport_layout.setSpacing(THEME.dashboard_recent_spacing)
-
         rows: list[tuple[QLabel, QLabel, QLabel]] = []
         for _ in range(THEME.menu_recent_row_count):
-            row_widget, row_labels = MenuPageBuilder._make_recent_item(viewport, empty_text)
-            viewport_layout.addWidget(row_widget)
+            row_widget, row_labels = MenuPageBuilder._make_recent_item(panel, empty_text)
+            layout.addWidget(row_widget)
             rows.append(row_labels)
 
-        viewport_layout.addStretch(1)
-        scroll.setWidget(viewport)
-        layout.addWidget(scroll)
+        layout.addStretch(1)
         return panel, rows
 
     @staticmethod
@@ -211,32 +194,12 @@ class MenuPageBuilder:
         )
         hero_layout.setSpacing(THEME.menu_hero_spacing)
 
-        hero_top_row = QHBoxLayout()
-        hero_top_row.setContentsMargins(0, 0, 0, 0)
-        hero_top_row.setSpacing(THEME.section_gap)
-
         hero_title = QLabel(MenuPageTexts.TITLE, hero_panel)
         hero_title.setObjectName('menuHeroTitle')
         hero_date = QLabel(MenuPageBuilder._today_text(), hero_panel)
         hero_date.setObjectName('menuHeroDate')
-
-        hero_text_col = QVBoxLayout()
-        hero_text_col.setContentsMargins(0, 0, 0, 0)
-        hero_text_col.setSpacing(THEME.menu_hero_spacing)
-        hero_text_col.addWidget(hero_title)
-        hero_text_col.addWidget(hero_date)
-
-        hero_action_row = QHBoxLayout()
-        hero_action_row.setContentsMargins(0, 0, 0, 0)
-        hero_action_row.setSpacing(10)
-        btn_help = MenuPageBuilder._make_header_icon_button('?', '도움말', hero_panel)
-        btn_settings = MenuPageBuilder._make_header_icon_button('⚙', '환경설정', hero_panel)
-        hero_action_row.addWidget(btn_help)
-        hero_action_row.addWidget(btn_settings)
-
-        hero_top_row.addLayout(hero_text_col, 1)
-        hero_top_row.addLayout(hero_action_row, 0)
-        hero_layout.addLayout(hero_top_row)
+        hero_layout.addWidget(hero_title)
+        hero_layout.addWidget(hero_date)
         layout.addWidget(hero_panel)
 
         overview_row = QGridLayout()
@@ -279,7 +242,6 @@ class MenuPageBuilder:
         status_panel, status_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.STATUS_TITLE)
         metric_titles = ('총 작업지시서', '진행중 발주', '미검수 건수', '현재고 합계')
         metrics_grid = QGridLayout()
-        metrics_grid.setContentsMargins(0, 0, 0, 0)
         metrics_grid.setHorizontalSpacing(THEME.section_gap)
         metrics_grid.setVerticalSpacing(THEME.section_gap)
         metric_value_labels: dict[str, QLabel] = {}
@@ -287,13 +249,15 @@ class MenuPageBuilder:
             card, value_label = MenuPageBuilder._make_metric_card(page, title)
             metrics_grid.addWidget(card, index // 2, index % 2)
             metric_value_labels[title] = value_label
-        metrics_grid.setColumnStretch(0, 1)
-        metrics_grid.setColumnStretch(1, 1)
-        metrics_grid.setRowStretch(0, 1)
-        metrics_grid.setRowStretch(1, 1)
         status_layout.addLayout(metrics_grid)
 
-        overview_row.addWidget(flow_panel, 0, 0)
+        utility_panel, utility_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.UTILITIES_TITLE)
+        btn_settings = MenuPageBuilder._make_menu_card(MenuPageTexts.SETTINGS_TITLE, MenuPageTexts.SETTINGS_SUBTITLE, utility=True)
+        utility_layout.addWidget(btn_settings)
+        utility_layout.addStretch(1)
+        status_layout.addWidget(utility_panel)
+
+        overview_row.addWidget(flow_panel, 0, 0, 2, 1)
         overview_row.addWidget(status_panel, 0, 1)
         overview_row.setColumnStretch(0, 3)
         overview_row.setColumnStretch(1, 2)
@@ -324,7 +288,6 @@ class MenuPageBuilder:
             btn_product_type_mgmt=btn_product_type_mgmt,
             btn_material_mgmt=btn_material_mgmt,
             btn_settings=btn_settings,
-            btn_help=btn_help,
             metric_value_labels=metric_value_labels,
             recent_template_labels=recent_template_labels,
             recent_activity_labels=recent_activity_labels,

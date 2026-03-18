@@ -37,6 +37,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.resize(950, 1000)
+        self.setMinimumSize(900, 900)
         self.setWindowTitle(DialogTitles.APP)
         self.menuBar().hide()
         self.support_email = "support@example.com"
