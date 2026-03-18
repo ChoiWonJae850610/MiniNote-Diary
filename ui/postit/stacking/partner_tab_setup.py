@@ -8,7 +8,6 @@ def build_partner_tab_defs(owner):
         (owner.TAB_FABRIC, SectionTitles.FABRIC),
         (owner.TAB_TRIM, SectionTitles.TRIM),
         (owner.TAB_DYEING, SectionTitles.DYEING),
-        (owner.TAB_FINISHING, SectionTitles.FINISHING),
         (owner.TAB_OTHER, SectionTitles.OTHER),
     ]
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QLabel
 
 from ui.button_layout_utils import make_dialog_button_row
@@ -36,6 +37,11 @@ class ConfirmActionDialog(_BaseThemedDialog):
         self.confirm_button.setDefault(True)
 
         self.body.addLayout(make_dialog_button_row([self.cancel_button, self.confirm_button]))
+
+        self.shortcut_yes = QShortcut(QKeySequence("Y"), self)
+        self.shortcut_yes.activated.connect(self.accept)
+        self.shortcut_no = QShortcut(QKeySequence("N"), self)
+        self.shortcut_no.activated.connect(self.reject)
 
 
 __all__ = [

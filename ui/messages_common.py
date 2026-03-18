@@ -54,7 +54,7 @@ class Labels:
     LOSS = "로스"
     SALE_PRICE = "원가"
     VENDOR = "거래처"
-    FABRIC_VENDOR = "원단처"
+    FABRIC_VENDOR = "거래처"
     ITEM = "품목"
     QTY = "수량"
     UNIT = "단위"

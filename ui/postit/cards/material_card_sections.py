@@ -43,7 +43,7 @@ def build_vendor_rows(card, root) -> None:
     card.vendor.set_text_silent(card.data.get(MaterialKeys.VENDOR, ""))
     card.data[MaterialKeys.VENDOR_ID] = card.data.get(MaterialKeys.VENDOR_ID, "")
     card.item.set_text_silent(card.data.get(MaterialKeys.ITEM, ""))
-    vendor_label = Labels.FABRIC_VENDOR if card.kind == "fabric" else Labels.VENDOR
+    vendor_label = Labels.VENDOR
     vendor_row = make_form_row(make_field_label(vendor_label, card), (card.vendor, 1), card.btn_vendor_partner)
     vendor_row.setSpacing(POSTIT_ROW_ACTION_GAP)
     root.addLayout(vendor_row)
@@ -64,6 +64,7 @@ def configure_unit_controls(card) -> None:
     card.unit_btn.setIconSize(QSize(PostItLayout.UNIT_ICON_SIZE, PostItLayout.UNIT_ICON_SIZE))
     card.unit_btn.setCursor(Qt.PointingHandCursor)
     card.unit_btn.setFixedHeight(FIELD_H)
+    card.unit_btn.setMinimumWidth(THEME.postit_unit_button_min_width)
     card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
     card.unit_btn.setStyleSheet(unit_button_style())
     _apply_unit_button_text(card)
@@ -103,10 +104,11 @@ def build_amount_rows(card, root) -> None:
     card.total.set_edit_enabled(False)
     card.total.setFocusPolicy(Qt.NoFocus)
     card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
+    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width)
     root.addLayout(
         make_form_row(
             make_field_label(Labels.QTY, card),
-            (card.qty, 1),
+            card.qty,
             make_field_label(Labels.UNIT, card),
             (card.unit_btn, 1),
         )

@@ -102,6 +102,8 @@ class ThemeTokens:
     field_height: int = 26
     field_label_width: int = 44
     calendar_display_width: int = 110
+    postit_qty_field_max_width: int = 72
+    postit_unit_button_min_width: int = 116
     table_row_height: int = 30
     postit_index_button_min_size: int = 24
     section_badge_height: int = 28
