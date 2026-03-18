@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QPlainTextEdit, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QCheckBox, QDialog, QLabel, QLineEdit, QPlainTextEdit, QHBoxLayout, QSizePolicy, QVBoxLayout
 
 from services.partner.repository import PartnerRecord
 from ui.dialogs import show_warning
@@ -46,7 +46,8 @@ class PartnerEditDialog(QDialog):
         self.memo_edit = QPlainTextEdit(self)
         self.memo_edit.setPlaceholderText(Placeholders.SHORT_MEMO)
         self.memo_edit.setStyleSheet(plain_text_edit_style())
-        self.memo_edit.setFixedHeight(PartnerLayout.MEMO_HEIGHT)
+        self.memo_edit.setMinimumHeight(PartnerLayout.MEMO_HEIGHT)
+        self.memo_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         add_dialog_grid_row(form_layout, 0, self._make_label(Labels.PARTNER_NAME), self.name_edit)
         add_dialog_grid_row(form_layout, 1, self._make_label(Labels.OWNER_NAME), self.owner_edit)
@@ -87,7 +88,8 @@ class PartnerEditDialog(QDialog):
     def _make_line_edit(self, placeholder: str) -> QLineEdit:
         edit = configure_text_field(QLineEdit(self))
         edit.setPlaceholderText(placeholder)
-        edit.setFixedHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
+        edit.setMinimumHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
+        edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         return edit
 
     def _load_partner(self, partner: PartnerRecord) -> None:

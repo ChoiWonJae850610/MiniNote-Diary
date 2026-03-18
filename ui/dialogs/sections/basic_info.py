@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QLabel, QLineEdit, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QLineEdit, QSizePolicy, QWidget
 
 from ui.dialogs.forms.fields import configure_text_field
 from ui.dialogs.forms.value_widgets import MoneyLineEdit, build_partner_picker_row
@@ -14,7 +14,8 @@ def build_basic_text_fields(dialog, initial: dict):
     style_no = configure_text_field(QLineEdit(dialog))
     factory = configure_text_field(QLineEdit(dialog))
     for widget in (style_no, factory):
-        widget.setFixedHeight(THEME.dialog_field_height)
+        widget.setMinimumHeight(THEME.dialog_field_height)
+        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     style_no.setText(initial.get('style_no', ''))
     factory.setText(initial.get('factory', ''))
     factory.setProperty('factory_partner_id', initial.get('factory_partner_id', ''))

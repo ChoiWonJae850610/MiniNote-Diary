@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QListWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QListWidget, QSizePolicy, QVBoxLayout, QWidget
 
 from ui.dialogs.forms.fields import build_dialog_card, build_labeled_value_row, build_section_title, configure_text_field
 from ui.layout_metrics import PartnerLayout
@@ -35,7 +35,8 @@ def build_left_card(dialog):
     layout.addWidget(build_section_title(DialogTitles.PARTNER_LIST, card))
     dialog.search_edit = configure_text_field(QLineEdit(card))
     dialog.search_edit.setPlaceholderText(Placeholders.PARTNER_SEARCH)
-    dialog.search_edit.setFixedHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
+    dialog.search_edit.setMinimumHeight(THEME.field_height + PartnerLayout.FIELD_EXTRA_HEIGHT)
+    dialog.search_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     dialog.list_widget = QListWidget(card)
     dialog.list_widget.setObjectName('partnerList')
     dialog.list_widget.setStyleSheet(partner_list_style())
@@ -86,6 +87,7 @@ def make_detail_value_label(dialog, min_height: int = 34, wrap: bool = False, al
     label.setObjectName('partnerValue')
     label.setMinimumHeight(min_height)
     label.setWordWrap(wrap)
+    label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding if align_top else QSizePolicy.Policy.Minimum)
     label.setAlignment((Qt.AlignTop | Qt.AlignLeft) if align_top else (Qt.AlignVCenter | Qt.AlignLeft))
     return label
 

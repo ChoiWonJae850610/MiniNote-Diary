@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, QRegularExpression, QDate, QPoint, Signal, QSize, QEvent
 from PySide6.QtGui import QRegularExpressionValidator, QGuiApplication
-from PySide6.QtWidgets import QCalendarWidget, QComboBox, QDialog, QLineEdit, QLabel, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QCalendarWidget, QComboBox, QDialog, QLineEdit, QLabel, QSizePolicy, QToolButton, QVBoxLayout
 
 from services.common.formatters import digits_only, format_commas_from_digits
 from ui.dialogs.forms.layout_utils import make_dialog_inline_row
@@ -18,7 +18,8 @@ class MoneyLineEdit(QLineEdit):
         super().__init__(parent)
         self.setValidator(QRegularExpressionValidator(QRegularExpression(r"[0-9,]*"), self))
         self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.setFixedHeight(fixed_height or THEME.dialog_field_height)
+        self.setMinimumHeight(fixed_height or THEME.dialog_field_height)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setStyleSheet(input_line_edit_style())
         self._in_format = False
         self.textChanged.connect(self._on_text_changed)

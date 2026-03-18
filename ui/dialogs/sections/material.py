@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QLineEdit, QSizePolicy
 
 from services.unit.repository import load_units
 from ui.dialogs.forms.fields import configure_text_field
@@ -15,7 +15,8 @@ def build_material_fields(dialog):
     item = configure_text_field(QLineEdit(dialog))
     qty = MoneyLineEdit(dialog, fixed_height=DialogLayout.FIELD_HEIGHT)
     unit = ClearableComboBox(dialog)
-    unit.setFixedHeight(DialogLayout.FIELD_HEIGHT)
+    unit.setMinimumHeight(DialogLayout.FIELD_HEIGHT)
+    unit.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     unit.setMinimumWidth(DialogLayout.UNIT_COMBO_MIN_WIDTH)
     unit.addItem('', '')
     for value, label in load_units():
@@ -26,7 +27,8 @@ def build_material_fields(dialog):
     total.setReadOnly(True)
     total.setStyleSheet(read_only_line_edit_style())
     for widget in (vendor, item):
-        widget.setFixedHeight(DialogLayout.FIELD_HEIGHT)
+        widget.setMinimumHeight(DialogLayout.FIELD_HEIGHT)
+        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     vendor.textEdited.connect(lambda _text: vendor.setProperty('vendor_partner_id', ''))
     return vendor, item, qty, unit, unit_price, total
 

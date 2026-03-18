@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QCheckBox, QFormLayout, QLabel, QPlainTextEdit, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QFormLayout, QLabel, QPlainTextEdit, QSizePolicy, QSpinBox
 
 from ui.button_layout_utils import make_dialog_button_row
 from ui.dialogs.base import _BaseThemedDialog
@@ -49,7 +49,8 @@ class InboundInspectionDialog(_BaseThemedDialog):
 
         self.memo_edit = QPlainTextEdit(self.card)
         self.memo_edit.setPlaceholderText('검수 메모를 입력하세요')
-        self.memo_edit.setFixedHeight(110)
+        self.memo_edit.setMinimumHeight(110)
+        self.memo_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         form.addRow(Labels.MEMO, self.memo_edit)
 
         self.body.addLayout(form)
