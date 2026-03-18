@@ -124,7 +124,7 @@ class ThemeTokens:
     work_order_change_note_bottom_trim: int = 6
     work_order_change_note_visual_trim: int = 4
     work_order_change_note_min_width: int = 260
-    dashboard_metric_card_min_height: int = 116
+    dashboard_metric_card_min_height: int = 100
     dashboard_metric_padding_x: int = 20
     dashboard_metric_padding_y: int = 18
     dashboard_metric_spacing: int = 12
@@ -165,8 +165,8 @@ class ThemeTokens:
     unit_dialog_height: int = 420
     product_type_dialog_width: int = 560
     product_type_dialog_height: int = 520
-    window_min_width: int = 1080
-    window_min_height: int = 760
+    window_min_width: int = 950
+    window_min_height: int = 1000
     note_dialog_min_width: int = 520
     note_dialog_min_height: int = 360
 

@@ -22,7 +22,7 @@ class MainWindowPageCoordinator:
 
     @staticmethod
     def build_pages(window: "MainWindow") -> None:
-        menu_refs = MenuPageBuilder.build()
+        menu_refs = MenuPageBuilder.build(window.project_root)
         work_refs = WorkOrderPageBuilder.build(window)
         order_refs = OrderPageBuilder.build()
         inbound_refs = InboundPageBuilder.build()

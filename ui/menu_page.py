@@ -1,9 +1,22 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from PySide6.QtCore import QDate, Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import MenuPageTexts
@@ -11,7 +24,7 @@ from ui.pages.common import make_standard_page_layout
 from ui.button_icon_utils import apply_glyph_icon
 from ui.widget_factory_buttons import make_icon_button
 from ui.theme import THEME
-from ui.widget_factory import apply_button_metrics, make_panel_frame, make_panel_title_label
+from ui.widget_factory import apply_button_metrics, make_panel_frame
 
 
 @dataclass
@@ -29,9 +42,51 @@ class MenuPageRefs:
     btn_material_mgmt: QPushButton
     btn_settings: QPushButton
     btn_help: QPushButton
+    checklist_input: QLineEdit
+    checklist_list: QListWidget
     metric_value_labels: dict[str, QLabel] = field(default_factory=dict)
     recent_template_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
     recent_activity_labels: list[tuple[QLabel, QLabel, QLabel]] = field(default_factory=list)
+
+
+class MenuChecklistStore:
+    DEFAULT_ITEMS = (
+        '원단 발주 확인',
+        '공장 연락',
+        '배송 일정 체크',
+    )
+
+    @staticmethod
+    def path_for(project_root: str | None) -> Path:
+        base = Path(project_root) if project_root else Path.cwd()
+        return base / 'data' / 'memo' / 'checklist.json'
+
+    @staticmethod
+    def load(project_root: str | None) -> list[dict[str, object]]:
+        path = MenuChecklistStore.path_for(project_root)
+        if not path.exists():
+            return [{'text': text, 'checked': False} for text in MenuChecklistStore.DEFAULT_ITEMS]
+        try:
+            payload = json.loads(path.read_text(encoding='utf-8'))
+            items = payload.get('items', []) if isinstance(payload, dict) else []
+            normalized: list[dict[str, object]] = []
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                text = str(item.get('text', '')).strip()
+                if not text:
+                    continue
+                normalized.append({'text': text, 'checked': bool(item.get('checked', False))})
+            return normalized or [{'text': text, 'checked': False} for text in MenuChecklistStore.DEFAULT_ITEMS]
+        except Exception:
+            return [{'text': text, 'checked': False} for text in MenuChecklistStore.DEFAULT_ITEMS]
+
+    @staticmethod
+    def save(project_root: str | None, items: list[dict[str, object]]) -> None:
+        path = MenuChecklistStore.path_for(project_root)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {'items': items}
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
 class MenuPageBuilder:
@@ -56,16 +111,6 @@ class MenuPageBuilder:
         label = QLabel(text, parent)
         label.setObjectName('menuSectionLabel')
         return label
-
-    @staticmethod
-    def _make_menu_card(title: str, subtitle: str, *, utility: bool = False) -> QPushButton:
-        button_text = title if not subtitle else f'{title}\n{subtitle}'
-        button = QPushButton(button_text)
-        button.setObjectName('menuUtilityCard' if utility else 'menuActionCard')
-        button.setMinimumHeight(THEME.menu_action_card_min_height)
-        button.setCursor(Qt.PointingHandCursor)
-        apply_button_metrics(button, font_px=THEME.base_font_px + 1, bold=True)
-        return button
 
     @staticmethod
     def _make_header_icon_button(glyph: str, tooltip: str, parent: QWidget) -> QPushButton:
@@ -99,97 +144,93 @@ class MenuPageBuilder:
         return card, value_label
 
     @staticmethod
-    def _make_recent_item(panel: QWidget, empty_text: str) -> tuple[QFrame, tuple[QLabel, QLabel, QLabel]]:
-        row = QFrame(panel)
-        row.setObjectName('menuRecentItemCard')
-        row.setMinimumHeight(THEME.menu_recent_item_min_height)
-
-        row_layout = QVBoxLayout(row)
-        row_layout.setContentsMargins(
-            THEME.menu_recent_item_padding_x,
-            THEME.menu_recent_item_padding_y,
-            THEME.menu_recent_item_padding_x,
-            THEME.menu_recent_item_padding_y,
-        )
-        row_layout.setSpacing(THEME.menu_recent_item_spacing)
-
-        primary = QLabel('-', row)
-        primary.setObjectName('menuListPrimary')
-        primary.setWordWrap(False)
-        primary.setMinimumHeight(THEME.menu_recent_primary_height)
-
-        secondary = QLabel(empty_text, row)
-        secondary.setObjectName('menuListSecondary')
-        secondary.setWordWrap(False)
-        secondary.setMinimumHeight(THEME.menu_recent_secondary_height)
-
-        tertiary = QLabel('', row)
-        tertiary.setObjectName('menuListTertiary')
-        tertiary.setWordWrap(False)
-        tertiary.setMinimumHeight(THEME.menu_recent_tertiary_height)
-
-        row_layout.addWidget(primary)
-        row_layout.addWidget(secondary)
-        row_layout.addWidget(tertiary)
-        return row, (primary, secondary, tertiary)
-
-    @staticmethod
-    def _make_recent_panel(page: QWidget, title: str, empty_text: str) -> tuple[QFrame, list[tuple[QLabel, QLabel, QLabel]]]:
-        panel = make_panel_frame(page, object_name='menuRecentPanel')
-        panel.setMinimumHeight(THEME.dashboard_recent_panel_min_height)
-        panel.setMaximumHeight(THEME.dashboard_recent_panel_min_height)
-
+    def _make_checklist_panel(page: QWidget, project_root: str | None) -> tuple[QFrame, QLineEdit, QListWidget]:
+        panel = make_panel_frame(page, object_name='menuChecklistPanel')
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(
-            THEME.dashboard_recent_padding,
-            THEME.dashboard_recent_padding,
-            THEME.dashboard_recent_padding,
-            THEME.dashboard_recent_padding,
-        )
-        layout.setSpacing(THEME.dashboard_recent_spacing)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
 
-        layout.addWidget(make_panel_title_label(title, panel))
+        title = MenuPageBuilder._make_section_label('오늘 할 일', panel)
+        subtitle = QLabel('한 줄씩 입력하고 Enter를 누르면 체크리스트에 추가됩니다.', panel)
+        subtitle.setObjectName('menuSectionHint')
 
-        scroll = QScrollArea(panel)
-        scroll.setObjectName('menuRecentScroll')
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        input_row = QHBoxLayout()
+        input_row.setContentsMargins(0, 0, 0, 0)
+        input_row.setSpacing(10)
+        checklist_input = QLineEdit(panel)
+        checklist_input.setObjectName('menuChecklistInput')
+        checklist_input.setPlaceholderText('예: 원단 발주 확인')
+        apply_button_metrics(checklist_input, font_px=THEME.base_font_px + 1)
 
-        viewport = QWidget(scroll)
-        viewport.setObjectName('menuRecentViewport')
-        viewport_layout = QVBoxLayout(viewport)
-        viewport_layout.setContentsMargins(0, 0, 4, 0)
-        viewport_layout.setSpacing(THEME.dashboard_recent_spacing)
+        add_button = QPushButton('추가', panel)
+        add_button.setObjectName('primaryAction')
+        add_button.setMinimumHeight(44)
+        add_button.setMinimumWidth(84)
 
-        rows: list[tuple[QLabel, QLabel, QLabel]] = []
-        for _ in range(THEME.menu_recent_row_count):
-            row_widget, row_labels = MenuPageBuilder._make_recent_item(viewport, empty_text)
-            viewport_layout.addWidget(row_widget)
-            rows.append(row_labels)
+        checklist_list = QListWidget(panel)
+        checklist_list.setObjectName('menuChecklistList')
+        checklist_list.setAlternatingRowColors(False)
+        checklist_list.setSpacing(6)
 
-        viewport_layout.addStretch(1)
-        scroll.setWidget(viewport)
-        layout.addWidget(scroll)
-        return panel, rows
+        def snapshot_items() -> list[dict[str, object]]:
+            items: list[dict[str, object]] = []
+            for row in range(checklist_list.count()):
+                item = checklist_list.item(row)
+                if item is None:
+                    continue
+                text = item.text().strip()
+                if not text:
+                    continue
+                items.append({'text': text, 'checked': item.checkState() == Qt.Checked})
+            return items
+
+        def save_items() -> None:
+            MenuChecklistStore.save(project_root, snapshot_items())
+
+        def add_check_item(text: str, checked: bool = False) -> None:
+            normalized = text.strip()
+            if not normalized:
+                return
+            item = QListWidgetItem(normalized)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+            item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
+            checklist_list.addItem(item)
+
+        def commit_input() -> None:
+            text = checklist_input.text().strip()
+            if not text:
+                return
+            add_check_item(text)
+            checklist_input.clear()
+            save_items()
+
+        add_button.clicked.connect(commit_input)
+        checklist_input.returnPressed.connect(commit_input)
+        checklist_list.itemChanged.connect(lambda _item: save_items())
+
+        for entry in MenuChecklistStore.load(project_root):
+            add_check_item(str(entry.get('text', '')), bool(entry.get('checked', False)))
+
+        input_row.addWidget(checklist_input, 1)
+        input_row.addWidget(add_button, 0)
+        layout.addWidget(title)
+        layout.addWidget(subtitle)
+        layout.addLayout(input_row)
+        layout.addWidget(checklist_list, 1)
+        return panel, checklist_input, checklist_list
 
     @staticmethod
-    def _make_section_panel(page: QWidget, title: str) -> tuple[QFrame, QVBoxLayout]:
-        panel = make_panel_frame(page, object_name='menuSectionPanel')
-        layout = QVBoxLayout(panel)
-        layout.setContentsMargins(
-            THEME.menu_section_padding,
-            THEME.menu_section_padding,
-            THEME.menu_section_padding,
-            THEME.menu_section_padding,
-        )
-        layout.setSpacing(THEME.menu_section_spacing)
-        layout.addWidget(MenuPageBuilder._make_section_label(title, panel))
-        return panel, layout
+    def _make_menu_button(title: str, glyph: str, accent_name: str) -> QPushButton:
+        button = QPushButton(f'{glyph}\n{title}')
+        button.setObjectName('menuIconCard')
+        button.setProperty('accent', accent_name)
+        button.setCursor(Qt.PointingHandCursor)
+        button.setMinimumHeight(110)
+        apply_button_metrics(button, font_px=THEME.base_font_px + 1, bold=True)
+        return button
 
     @staticmethod
-    def build() -> MenuPageRefs:
+    def build(project_root: str | None = None) -> MenuPageRefs:
         page = QWidget()
         page.setObjectName('workOrderPage')
         layout = make_standard_page_layout(page)
@@ -222,7 +263,7 @@ class MenuPageBuilder:
 
         hero_text_col = QVBoxLayout()
         hero_text_col.setContentsMargins(0, 0, 0, 0)
-        hero_text_col.setSpacing(THEME.menu_hero_spacing)
+        hero_text_col.setSpacing(6)
         hero_text_col.addWidget(hero_title)
         hero_text_col.addWidget(hero_date)
 
@@ -239,25 +280,39 @@ class MenuPageBuilder:
         hero_layout.addLayout(hero_top_row)
         layout.addWidget(hero_panel)
 
-        overview_row = QGridLayout()
-        overview_row.setHorizontalSpacing(THEME.section_gap)
-        overview_row.setVerticalSpacing(THEME.section_gap)
+        content_row = QGridLayout()
+        content_row.setContentsMargins(0, 0, 0, 0)
+        content_row.setHorizontalSpacing(THEME.section_gap)
+        content_row.setVerticalSpacing(THEME.section_gap)
 
-        flow_panel, flow_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.FLOW_TITLE)
-        flow_grid = QGridLayout()
-        flow_grid.setHorizontalSpacing(THEME.section_gap)
-        flow_grid.setVerticalSpacing(THEME.section_gap)
+        left_col = QVBoxLayout()
+        left_col.setContentsMargins(0, 0, 0, 0)
+        left_col.setSpacing(THEME.section_gap)
 
-        btn_template = MenuPageBuilder._make_menu_card(MenuPageTexts.TEMPLATE_TITLE, MenuPageTexts.TEMPLATE_SUBTITLE)
-        btn_job_start = MenuPageBuilder._make_menu_card(MenuPageTexts.ORDER_TITLE, MenuPageTexts.ORDER_SUBTITLE)
-        btn_complete = MenuPageBuilder._make_menu_card(MenuPageTexts.COMPLETE_TITLE, MenuPageTexts.COMPLETE_SUBTITLE)
-        btn_sale = MenuPageBuilder._make_menu_card(MenuPageTexts.SALE_TITLE, MenuPageTexts.SALE_SUBTITLE)
-        btn_inventory = MenuPageBuilder._make_menu_card(MenuPageTexts.INVENTORY_TITLE, MenuPageTexts.INVENTORY_SUBTITLE)
-        btn_partner_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.PARTNER_TITLE, MenuPageTexts.PARTNER_SUBTITLE)
-        btn_unit_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.UNIT_TITLE, MenuPageTexts.UNIT_SUBTITLE)
-        btn_product_type_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.PRODUCT_TYPE_TITLE, MenuPageTexts.PRODUCT_TYPE_SUBTITLE)
-        btn_material_mgmt = MenuPageBuilder._make_menu_card(MenuPageTexts.MATERIAL_MGMT_TITLE, MenuPageTexts.MATERIAL_MGMT_SUBTITLE)
-        btn_receipt = MenuPageBuilder._make_menu_card(MenuPageTexts.RECEIPT_TITLE, MenuPageTexts.RECEIPT_SUBTITLE)
+        checklist_panel, checklist_input, checklist_list = MenuPageBuilder._make_checklist_panel(page, project_root)
+        left_col.addWidget(checklist_panel, 1)
+
+        menu_panel = make_panel_frame(page, object_name='menuActionPanel')
+        menu_layout = QVBoxLayout(menu_panel)
+        menu_layout.setContentsMargins(20, 20, 20, 20)
+        menu_layout.setSpacing(12)
+        menu_layout.addWidget(MenuPageBuilder._make_section_label(MenuPageTexts.FLOW_TITLE, menu_panel))
+
+        menu_grid = QGridLayout()
+        menu_grid.setContentsMargins(0, 0, 0, 0)
+        menu_grid.setHorizontalSpacing(12)
+        menu_grid.setVerticalSpacing(12)
+
+        btn_template = MenuPageBuilder._make_menu_button(MenuPageTexts.TEMPLATE_TITLE, '📝', 'peach')
+        btn_job_start = MenuPageBuilder._make_menu_button(MenuPageTexts.ORDER_TITLE, '📦', 'lavender')
+        btn_receipt = MenuPageBuilder._make_menu_button(MenuPageTexts.RECEIPT_TITLE, '🧵', 'mint')
+        btn_complete = MenuPageBuilder._make_menu_button(MenuPageTexts.COMPLETE_TITLE, '✅', 'sky')
+        btn_sale = MenuPageBuilder._make_menu_button(MenuPageTexts.SALE_TITLE, '🏷', 'peach')
+        btn_inventory = MenuPageBuilder._make_menu_button(MenuPageTexts.INVENTORY_TITLE, '📊', 'lavender')
+        btn_partner_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.PARTNER_TITLE, '🏭', 'sky')
+        btn_unit_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.UNIT_TITLE, '📏', 'mint')
+        btn_product_type_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.PRODUCT_TYPE_TITLE, '🪪', 'peach')
+        btn_material_mgmt = MenuPageBuilder._make_menu_button(MenuPageTexts.MATERIAL_MGMT_TITLE, '🧶', 'lavender')
 
         menu_buttons = (
             btn_template,
@@ -272,44 +327,38 @@ class MenuPageBuilder:
             btn_receipt,
         )
         for index, button in enumerate(menu_buttons):
-            flow_grid.addWidget(button, index // 5, index % 5)
-        flow_layout.addLayout(flow_grid)
-        flow_layout.addStretch(1)
+            menu_grid.addWidget(button, index // 3, index % 3)
+        for col in range(3):
+            menu_grid.setColumnStretch(col, 1)
 
-        status_panel, status_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.STATUS_TITLE)
+        menu_layout.addLayout(menu_grid)
+        left_col.addWidget(menu_panel, 0)
+
+        right_panel = make_panel_frame(page, object_name='menuStatusPanel')
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(18, 18, 18, 18)
+        right_layout.setSpacing(12)
+        right_layout.addWidget(MenuPageBuilder._make_section_label(MenuPageTexts.STATUS_TITLE, right_panel))
+
         metric_titles = ('총 작업지시서', '진행중 발주', '미검수 건수', '현재고 합계')
         metrics_grid = QGridLayout()
         metrics_grid.setContentsMargins(0, 0, 0, 0)
-        metrics_grid.setHorizontalSpacing(THEME.section_gap)
-        metrics_grid.setVerticalSpacing(THEME.section_gap)
+        metrics_grid.setHorizontalSpacing(12)
+        metrics_grid.setVerticalSpacing(12)
         metric_value_labels: dict[str, QLabel] = {}
         for index, title in enumerate(metric_titles):
             card, value_label = MenuPageBuilder._make_metric_card(page, title)
-            metrics_grid.addWidget(card, index // 2, index % 2)
+            metrics_grid.addWidget(card, index, 0)
             metric_value_labels[title] = value_label
         metrics_grid.setColumnStretch(0, 1)
-        metrics_grid.setColumnStretch(1, 1)
-        metrics_grid.setRowStretch(0, 1)
-        metrics_grid.setRowStretch(1, 1)
-        status_layout.addLayout(metrics_grid)
+        right_layout.addLayout(metrics_grid)
+        right_layout.addStretch(1)
 
-        overview_row.addWidget(flow_panel, 0, 0)
-        overview_row.addWidget(status_panel, 0, 1)
-        overview_row.setColumnStretch(0, 3)
-        overview_row.setColumnStretch(1, 2)
-        layout.addLayout(overview_row)
-
-        recent_row = QGridLayout()
-        recent_row.setHorizontalSpacing(THEME.section_gap)
-        recent_row.setVerticalSpacing(THEME.section_gap)
-        recent_templates_panel, recent_template_labels = MenuPageBuilder._make_recent_panel(page, MenuPageTexts.RECENT_TEMPLATE_TITLE, MenuPageTexts.RECENT_TEMPLATE_EMPTY)
-        recent_activity_panel, recent_activity_labels = MenuPageBuilder._make_recent_panel(page, MenuPageTexts.RECENT_ACTIVITY_TITLE, MenuPageTexts.RECENT_ACTIVITY_EMPTY)
-        recent_row.addWidget(recent_templates_panel, 0, 0)
-        recent_row.addWidget(recent_activity_panel, 0, 1)
-        recent_row.setColumnStretch(0, 1)
-        recent_row.setColumnStretch(1, 1)
-        layout.addLayout(recent_row)
-        layout.addStretch(1)
+        content_row.addLayout(left_col, 0, 0)
+        content_row.addWidget(right_panel, 0, 1)
+        content_row.setColumnStretch(0, 5)
+        content_row.setColumnStretch(1, 2)
+        layout.addLayout(content_row, 1)
 
         return MenuPageRefs(
             page=page,
@@ -325,7 +374,9 @@ class MenuPageBuilder:
             btn_material_mgmt=btn_material_mgmt,
             btn_settings=btn_settings,
             btn_help=btn_help,
+            checklist_input=checklist_input,
+            checklist_list=checklist_list,
             metric_value_labels=metric_value_labels,
-            recent_template_labels=recent_template_labels,
-            recent_activity_labels=recent_activity_labels,
+            recent_template_labels=[],
+            recent_activity_labels=[],
         )

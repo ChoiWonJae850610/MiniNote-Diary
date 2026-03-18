@@ -103,6 +103,12 @@ def build_global_widget_styles() -> str:
             background: transparent;
             padding-top: 2px;
         }}
+
+        QLabel#menuSectionHint {
+            color: {t.color_text_muted};
+            background: transparent;
+            font-size: 12px;
+        }
         QLabel#menuListPrimary {{
             font-size: 13px;
             font-weight: 800;
@@ -180,33 +186,59 @@ def build_button_styles() -> str:
             background: {t.color_primary_hover};
             border-color: {t.color_primary_hover};
         }}
-        QPushButton#menuActionCard, QPushButton#menuUtilityCard {{
+        QPushButton#menuActionCard, QPushButton#menuUtilityCard {
             text-align: left;
             padding: {t.menu_action_card_padding_y}px {t.menu_action_card_padding_x}px;
             border-radius: {t.panel_radius}px;
             font-weight: 800;
-        }}
-        QPushButton#menuActionCard {{
+        }
+        QPushButton#menuActionCard {
             background: #FFFFFF;
             color: {t.color_text};
             border: 1px solid #D9DEE7;
             border-left: 5px solid #C7D2E2;
-        }}
-        QPushButton#menuActionCard:hover {{
+        }
+        QPushButton#menuActionCard:hover {
             background: #F8FAFC;
             border-color: {t.color_border_hover};
             border-left: 5px solid {t.color_primary};
-        }}
-        QPushButton#menuUtilityCard {{
+        }
+        QPushButton#menuUtilityCard {
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FBF7FF, stop:1 #F2EAFE);
             color: {t.color_text};
             border: 1px solid #D8CAE9;
             border-left: 5px solid #C7B7EC;
-        }}
-        QPushButton#menuUtilityCard:hover {{
+        }
+        QPushButton#menuUtilityCard:hover {
             background: #FCFAFF;
             border-color: #C7B7EC;
-        }}
+        }
+        QPushButton#menuIconCard {
+            background: #FFFFFF;
+            color: {t.color_text};
+            border: 1px solid #E2E7EF;
+            border-radius: {t.panel_radius}px;
+            padding: 10px 8px 8px 8px;
+            text-align: center;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+        QPushButton#menuIconCard:hover {
+            background: #FFFCF6;
+            border-color: {t.color_border_hover};
+        }
+        QPushButton#menuIconCard[accent="peach"] {
+            border-top: 5px solid #E8D8B8;
+        }
+        QPushButton#menuIconCard[accent="lavender"] {
+            border-top: 5px solid #D9CCF2;
+        }
+        QPushButton#menuIconCard[accent="mint"] {
+            border-top: 5px solid #CBE8DD;
+        }
+        QPushButton#menuIconCard[accent="sky"] {
+            border-top: 5px solid #CFE0F6;
+        }
         QPushButton#dangerSoft {{
             background: {t.color_surface_muted};
             color: {t.color_text_muted};
