@@ -46,10 +46,7 @@ def build_partner_rows(card, root) -> None:
     card.factory.set_edit_enabled(False)
     card.factory.setFocusPolicy(Qt.NoFocus)
     card.style_no.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-    card._style_no_min = 140
-    card._style_no_max = 320
-    card.style_no.textChanged.connect(card._adjust_style_width)
-    card._adjust_style_width(card.style_no.text())
+    card.style_no.setMinimumWidth(0)
     root.addLayout(make_form_row(make_field_label(Labels.STYLE_NO, card), (card.style_no, 1)))
     root.addLayout(make_form_row(make_field_label(Labels.FACTORY, card), (card.factory, 1), card.btn_factory_partner))
 

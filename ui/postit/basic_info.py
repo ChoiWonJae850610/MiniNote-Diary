@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Dict
 
 from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
 from ui.postit.base import _PostItCardBase
@@ -81,10 +80,10 @@ class BasicInfoPostIt(_PostItCardBase):
         on_sale_price_changed(self, _text)
 
     def _adjust_style_width(self, text: str):
-        metrics = QFontMetrics(self.style_no.font())
-        width = metrics.horizontalAdvance(text or "") + 28
-        width = max(self._style_no_min, min(self._style_no_max, width))
-        self.style_no.setMinimumWidth(width)
+        # 제품명 입력칸은 카드 폭 안에서만 동작해야 하므로,
+        # 텍스트 길이에 따라 최소 폭을 키우지 않습니다.
+        # 긴 텍스트는 QLineEdit의 기본 동작대로 내부 스크롤/클리핑 처리됩니다.
+        self.style_no.setMinimumWidth(0)
 
     def _on_factory_committed(self, value: str):
         self.factory.setProperty("factory_partner_id", "")
