@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QHBoxLayout, QLabel
 
-from ui.button_layout_utils import make_dialog_button_row
 from ui.dialogs.base import _BaseThemedDialog
 from ui.widget_factory_buttons import make_dialog_button
 
@@ -29,14 +28,20 @@ class ConfirmActionDialog(_BaseThemedDialog):
         message_label.setWordWrap(True)
         self.body.addWidget(message_label)
 
-        self.cancel_button = make_dialog_button(cancel_text, self.card, role="cancel")
-        self.cancel_button.clicked.connect(self.reject)
-
         self.confirm_button = make_dialog_button(confirm_text, self.card, role="confirm")
         self.confirm_button.clicked.connect(self.accept)
         self.confirm_button.setDefault(True)
 
-        self.body.addLayout(make_dialog_button_row([self.cancel_button, self.confirm_button]))
+        self.cancel_button = make_dialog_button(cancel_text, self.card, role="cancel")
+        self.cancel_button.clicked.connect(self.reject)
+
+        button_row = QHBoxLayout()
+        button_row.setSpacing(self.body.spacing())
+        button_row.addStretch(1)
+        button_row.addWidget(self.confirm_button)
+        button_row.addWidget(self.cancel_button)
+        button_row.addStretch(1)
+        self.body.addLayout(button_row)
 
         self.shortcut_yes = QShortcut(QKeySequence("Y"), self)
         self.shortcut_yes.activated.connect(self.accept)

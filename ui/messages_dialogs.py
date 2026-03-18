@@ -53,7 +53,7 @@ class Warnings:
     PARTNER_DELETE_CONFIRM = "거래처를 삭제하시겠습니까?"
     WORK_ORDER_LOAD_FAILED = "선택한 작업지시서를 현재 화면으로 불러오지 못했습니다."
     DATA_RESET_CONFIRM = "DB 안의 모든 데이터를 완전 초기화하시겠습니까?\n\n작업지시서, 이미지, 거래처, 거래처 타입, 단위, 발주, 입고, 상품 데이터가 모두 삭제됩니다."
-    WORK_ORDER_SAVE_WITHOUT_MATERIAL_CONFIRM = "원단, 부자재, 염색 또는 기타 작업 내역이 입력되지 않았습니다.\n\n이 상태로 작업지시서를 생성하시겠습니까?"
+    WORK_ORDER_SAVE_WITHOUT_MATERIAL_CONFIRM = "추가 외주 작업 내용이 없습니다.\n\n이 상태로 작업지시서를 생성하시겠습니까?"
 
 
 class WarningMessages(Warnings):
