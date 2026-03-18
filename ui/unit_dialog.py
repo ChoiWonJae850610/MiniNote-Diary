@@ -13,6 +13,7 @@ from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_icon_button
 from ui.dialogs.forms.templates import wire_dialog_reject
 from ui.dialogs.forms.layout_utils import make_dialog_root_layout
+from ui.window_policy import lock_window_size
 
 
 class UnitDialog(QDialog):
@@ -57,6 +58,7 @@ class UnitDialog(QDialog):
 
         self._ensure_empty_row_count(UnitDialogLayout.MIN_ROWS)
         self.load_units()
+        lock_window_size(self, width=THEME.unit_dialog_width, height=THEME.unit_dialog_height)
 
     def load_units(self):
         units: List[Dict[str, str]] = self.unit_service.list_units()

@@ -12,6 +12,7 @@ from services.product.repository import ProductRepository
 from services.work_order.controller import WorkOrderController
 from services.work_order.state import WorkOrderState
 from ui.theme import THEME, build_app_stylesheet
+from ui.window_policy import lock_window_size
 
 if TYPE_CHECKING:
     from ui.main_window import MainWindow
@@ -44,8 +45,7 @@ class MainWindowBootstrap:
 
     @staticmethod
     def apply_defaults(window: "MainWindow") -> None:
-        window.setMinimumSize(THEME.window_min_width, THEME.window_min_height)
-        window.resize(THEME.window_min_width, THEME.window_min_height)
+        lock_window_size(window, width=THEME.window_min_width, height=THEME.window_min_height)
         window.setStyleSheet(build_app_stylesheet())
         app = QApplication.instance()
         if app is not None:

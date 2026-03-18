@@ -10,6 +10,7 @@ from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_icon_button
 from ui.dialogs.forms.layout_utils import make_dialog_root_layout
 from ui.layout_metrics import PartnerTypeDialogLayout
+from ui.window_policy import lock_window_size
 
 
 class PartnerTypeDialog(QDialog):
@@ -49,6 +50,7 @@ class PartnerTypeDialog(QDialog):
 
         self._ensure_rows(PartnerTypeDialogLayout.MIN_ROWS)
         self.load_types()
+        lock_window_size(self, width=PartnerTypeDialogLayout.WIDTH, height=PartnerTypeDialogLayout.HEIGHT)
 
     def _ensure_rows(self, target: int) -> None:
         while self.table.rowCount() < target:

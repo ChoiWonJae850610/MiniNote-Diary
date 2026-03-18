@@ -11,6 +11,7 @@ from ui.layout_metrics import DialogLayout
 from ui.messages import Tooltips
 from ui.theme import THEME, combo_box_style, compact_popup_margins, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import make_inline_icon_button, set_widget_tooltip
+from ui.window_policy import prepare_non_resizable_window
 
 
 class MoneyLineEdit(QLineEdit):
@@ -73,6 +74,7 @@ class CalendarPopup(QDialog):
         self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
         root.addWidget(self.calendar)
         self.calendar.activated.connect(self._on_activated)
+        prepare_non_resizable_window(self)
 
     def _on_activated(self, date: QDate):
         if date and date.isValid():

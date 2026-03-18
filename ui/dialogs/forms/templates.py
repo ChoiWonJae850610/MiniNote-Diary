@@ -6,12 +6,14 @@ from PySide6.QtWidgets import QDialog
 
 from ui.dialogs.forms.fields import build_dialog_actions
 from ui.dialogs.forms.layout_utils import make_dialog_form_layout, make_dialog_root_layout
+from ui.window_policy import prepare_non_resizable_window
 
 
 def setup_form_dialog(dialog: QDialog, *, title: str, min_width: int):
     dialog.setWindowTitle(title)
     dialog.setModal(True)
     dialog.setMinimumWidth(min_width)
+    prepare_non_resizable_window(dialog, width=min_width)
     return make_dialog_root_layout(dialog), make_dialog_form_layout()
 
 

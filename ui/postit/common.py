@@ -15,6 +15,7 @@ from ui.common import (
     prev_focusable_widget,
 )
 from ui.postit.layout_constants import POSTIT_POPUP_MARGIN
+from ui.window_policy import prepare_non_resizable_window
 
 
 class InlineCalendarPopup(QDialog):
@@ -32,6 +33,7 @@ class InlineCalendarPopup(QDialog):
             self.cal.setSelectedDate(initial)
         self.cal.activated.connect(self._on_activated)
         root.addWidget(self.cal)
+        prepare_non_resizable_window(self)
 
     def _on_activated(self, date: QDate):
         if date and date.isValid():

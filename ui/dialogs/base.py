@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QDialog, QFrame, QLabel, QVBoxLayout
 
 from ui.ui_metrics import CommonSymbolsLayout
 from ui.theme import THEME, dialog_inner_margins, dialog_layout_margins, hex_to_rgba
+from ui.window_policy import prepare_non_resizable_window
 
 
 def _dialog_stylesheet() -> str:
@@ -120,6 +121,7 @@ class BaseThemedDialog(QDialog):
         self.setStyleSheet(_dialog_stylesheet())
         self.card, self.body, self.title_label = build_dialog_shell(self, title)
         self.setMinimumWidth(CommonSymbolsLayout.DIALOG_MIN_WIDTH_LG)
+        prepare_non_resizable_window(self)
 
 
 # Backward-compatible alias used by some dialog modules.

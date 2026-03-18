@@ -12,6 +12,7 @@ from ui.layout_metrics import DialogLayout, PartnerLayout
 from ui.theme import THEME, dialog_layout_margins, plain_text_edit_style, title_label_style
 from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_icon_button
+from ui.window_policy import lock_window_size
 
 
 class PartnerEditDialog(QDialog):
@@ -79,6 +80,7 @@ class PartnerEditDialog(QDialog):
 
         if partner is not None:
             self._load_partner(partner)
+        lock_window_size(self, width=700, height=520)
 
     def _make_label(self, text: str) -> QLabel:
         label = QLabel(text, self)

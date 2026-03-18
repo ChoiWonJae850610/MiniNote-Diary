@@ -13,6 +13,7 @@ from ui.theme import dialog_layout_margins, title_label_style
 from ui.ui_metrics import CommonSymbolsLayout
 from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_icon_button
+from ui.window_policy import lock_window_size
 
 
 class PartnerBrowserDialog(QDialog):
@@ -50,6 +51,7 @@ class PartnerBrowserDialog(QDialog):
         self.btn_close.clicked.connect(self.accept)
 
         self.reload_all()
+        lock_window_size(self, width=PartnerLayout.BROWSER_WIDTH, height=PartnerLayout.BROWSER_HEIGHT)
 
     @staticmethod
     def dialog_margins() -> tuple[int, int, int, int]:

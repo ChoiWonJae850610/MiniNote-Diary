@@ -7,6 +7,7 @@ from ui.theme import THEME
 from ui.button_layout_utils import make_dialog_button_row
 from ui.widget_factory_buttons import make_dialog_button
 from ui.dialogs.forms.layout_utils import make_dialog_root_layout
+from ui.window_policy import lock_window_size
 
 
 class ChangeNoteDialog(QDialog):
@@ -25,6 +26,7 @@ class ChangeNoteDialog(QDialog):
         btn_cancel.clicked.connect(self.reject)
         btn_ok.clicked.connect(self.accept)
         layout.addLayout(make_dialog_button_row([btn_cancel, btn_ok]))
+        lock_window_size(self, width=THEME.note_dialog_min_width, height=THEME.note_dialog_min_height)
 
     def get_text(self) -> str:
         return self.edit.toPlainText().strip()
