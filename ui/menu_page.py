@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from PySide6.QtCore import QDate, Qt
-from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
 from ui.layout_metrics import MenuLayout
 from ui.messages import MenuPageTexts
@@ -68,6 +68,7 @@ class MenuPageBuilder:
     def _make_metric_card(page: QWidget, title: str) -> tuple[QFrame, QLabel]:
         card = make_panel_frame(page, object_name='menuMetricCard')
         card.setMinimumHeight(THEME.dashboard_metric_card_min_height)
+        card.setMaximumHeight(THEME.dashboard_metric_card_min_height)
         layout = QVBoxLayout(card)
         layout.setContentsMargins(
             THEME.dashboard_metric_padding_x,
@@ -79,7 +80,7 @@ class MenuPageBuilder:
 
         title_label = QLabel(title, card)
         title_label.setObjectName('menuMetricTitle')
-        value_label = QLabel('0', card)
+        value_label = QLabel('--', card)
         value_label.setObjectName('menuMetricValue')
         value_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
@@ -126,6 +127,7 @@ class MenuPageBuilder:
     def _make_recent_panel(page: QWidget, title: str, empty_text: str) -> tuple[QFrame, list[tuple[QLabel, QLabel, QLabel]]]:
         panel = make_panel_frame(page, object_name='menuRecentPanel')
         panel.setMinimumHeight(THEME.dashboard_recent_panel_min_height)
+        panel.setMaximumHeight(THEME.dashboard_recent_panel_min_height)
 
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(
@@ -138,13 +140,28 @@ class MenuPageBuilder:
 
         layout.addWidget(make_panel_title_label(title, panel))
 
+        scroll = QScrollArea(panel)
+        scroll.setObjectName('menuRecentScroll')
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        viewport = QWidget(scroll)
+        viewport.setObjectName('menuRecentViewport')
+        viewport_layout = QVBoxLayout(viewport)
+        viewport_layout.setContentsMargins(0, 0, 4, 0)
+        viewport_layout.setSpacing(THEME.dashboard_recent_spacing)
+
         rows: list[tuple[QLabel, QLabel, QLabel]] = []
         for _ in range(THEME.menu_recent_row_count):
-            row_widget, row_labels = MenuPageBuilder._make_recent_item(panel, empty_text)
-            layout.addWidget(row_widget)
+            row_widget, row_labels = MenuPageBuilder._make_recent_item(viewport, empty_text)
+            viewport_layout.addWidget(row_widget)
             rows.append(row_labels)
 
-        layout.addStretch(1)
+        viewport_layout.addStretch(1)
+        scroll.setWidget(viewport)
+        layout.addWidget(scroll)
         return panel, rows
 
     @staticmethod
@@ -241,13 +258,13 @@ class MenuPageBuilder:
             metric_value_labels[title] = value_label
         status_layout.addLayout(metrics_grid)
 
-        utility_panel, utility_layout = MenuPageBuilder._make_section_panel(page, MenuPageTexts.UTILITIES_TITLE)
         btn_settings = MenuPageBuilder._make_menu_card(MenuPageTexts.SETTINGS_TITLE, MenuPageTexts.SETTINGS_SUBTITLE, utility=True)
-        utility_layout.addWidget(btn_settings)
-        utility_layout.addStretch(1)
-        status_layout.addWidget(utility_panel)
+        btn_settings.setMinimumHeight(THEME.menu_utility_card_min_height)
+        btn_settings.setMaximumHeight(THEME.menu_utility_card_min_height)
+        status_layout.addWidget(btn_settings)
+        status_layout.addStretch(1)
 
-        overview_row.addWidget(flow_panel, 0, 0, 2, 1)
+        overview_row.addWidget(flow_panel, 0, 0)
         overview_row.addWidget(status_panel, 0, 1)
         overview_row.setColumnStretch(0, 3)
         overview_row.setColumnStretch(1, 2)
