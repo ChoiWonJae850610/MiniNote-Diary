@@ -51,8 +51,11 @@ def build_partner_rows(card, root) -> None:
     card.product_type_2 = _make_type_combo(card)
     card.product_type_3 = _make_type_combo(card)
     card.product_type_1.setMinimumWidth(THEME.basic_type_field_width)
-    card.product_type_2.setMinimumWidth(THEME.basic_type_field_width - 8)
-    card.product_type_3.setMinimumWidth(THEME.basic_type_field_width - 8)
+    card.product_type_2.setMinimumWidth(THEME.basic_type_field_width)
+    card.product_type_3.setMinimumWidth(THEME.basic_type_field_width)
+    card.product_type_1.setMaximumWidth(16777215)
+    card.product_type_2.setMaximumWidth(16777215)
+    card.product_type_3.setMaximumWidth(16777215)
     card.btn_product_type_manage = QToolButton(card)
     card.btn_product_type_manage.setText('≡')
     card.btn_product_type_manage.setFixedSize(THEME.basic_type_manage_button_width, FIELD_H)
@@ -83,7 +86,6 @@ def build_partner_rows(card, root) -> None:
         (card.product_type_1, 1),
         (card.product_type_2, 1),
         (card.product_type_3, 1),
-        card.btn_product_type_manage,
     )
     root.addLayout(style_row)
     root.addLayout(type_row)

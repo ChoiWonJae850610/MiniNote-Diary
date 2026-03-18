@@ -115,8 +115,8 @@ def make_page_text_header(
         object_name=subtitle_object_name or 'hintLabel',
     )
 
-    title_col.addWidget(title)
-    title_col.addWidget(subtitle)
+    title_col.addWidget(title, 0, Qt.AlignVCenter)
+    title_col.addWidget(subtitle, 0, Qt.AlignVCenter)
     _apply_standard_header_policy(title_col, title, subtitle, has_subtitle=has_subtitle)
     return PageTextHeaderRefs(layout=title_col, title_label=title, subtitle_label=subtitle)
 
@@ -163,6 +163,16 @@ def make_standard_page_header(
     title_wrap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     title_wrap.setLayout(title_refs.layout)
 
+    title_host = QWidget(page)
+    title_host.setContentsMargins(0, 0, 0, 0)
+    title_host.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+    title_host_layout = QHBoxLayout(title_host)
+    title_host_layout.setContentsMargins(0, 0, 0, 0)
+    title_host_layout.setSpacing(0)
+    title_host_layout.setAlignment(Qt.AlignVCenter)
+    title_host_layout.addWidget(title_wrap, 0, Qt.AlignVCenter)
+    title_host.setMinimumHeight(max(THEME.page_header_row_min_height, title_refs.title_label.minimumHeight(), btn_back.minimumHeight()))
+
     lead_wrap = QWidget(page)
     lead_wrap.setContentsMargins(0, 0, 0, 0)
     lead_wrap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -171,7 +181,7 @@ def make_standard_page_header(
     lead_layout.setSpacing(THEME.top_button_spacing)
     lead_layout.setAlignment(Qt.AlignVCenter)
     lead_layout.addWidget(btn_back, 0, Qt.AlignVCenter)
-    lead_layout.addWidget(title_wrap, 0, Qt.AlignVCenter)
+    lead_layout.addWidget(title_host, 0, Qt.AlignVCenter)
     lead_wrap.setMinimumHeight(max(THEME.page_header_row_min_height, btn_back.minimumHeight(), title_refs.title_label.minimumHeight()))
 
     row.addWidget(lead_wrap, 0, Qt.AlignVCenter)
