@@ -34,6 +34,8 @@ def _theme_qss_context() -> dict[str, object]:
         "__EDITOR_RADIUS__": t.editor_radius,
         "__ICON_BUTTON_SIZE__": t.icon_button_size,
         "__TOOLTIP_FONT_PX__": t.tooltip_font_px,
+        "__TOOLTIP_FONT_FAMILY__": t.tooltip_font_family,
+        "__TOOLTIP_FONT_WEIGHT__": t.tooltip_font_weight,
         "__TOOLTIP_PADDING_V__": t.tooltip_padding_v,
         "__TOOLTIP_PADDING_H__": t.tooltip_padding_h,
         "__TOOLTIP_RADIUS__": t.tooltip_radius,

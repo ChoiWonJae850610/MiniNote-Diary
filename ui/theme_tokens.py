@@ -180,10 +180,12 @@ class ThemeTokens:
     postit_index_row_height: int = 28
     postit_index_button_size: int = 24
     delete_button_size: int = 14
-    tooltip_font_px: int = 12
-    tooltip_padding_v: int = 3
-    tooltip_padding_h: int = 7
-    tooltip_radius: int = 6
+    tooltip_font_px: int = 11
+    tooltip_font_family: str = DEFAULT_FONT_PRESET.font_family
+    tooltip_font_weight: int = 600
+    tooltip_padding_v: int = 1
+    tooltip_padding_h: int = 5
+    tooltip_radius: int = 5
 
     page_padding: int = 12
     page_padding_x: int = 30

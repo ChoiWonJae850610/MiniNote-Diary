@@ -5,6 +5,7 @@ from typing import Dict
 from PySide6.QtCore import QDate, QPoint, QSize, Qt, Signal
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
+from ui.messages import PostItTexts
 from ui.postit.base import _PostItCardBase
 from ui.postit.basic_info_logic import (
     on_price_component_changed,
@@ -91,7 +92,7 @@ class BasicInfoPostIt(_PostItCardBase):
         blocker = QSignalBlocker(combo)
         try:
             combo.clear()
-            combo.addItem('(비움)', '')
+            combo.addItem(PostItTexts.CLEAR_UNIT, '')
             for value in values:
                 combo.addItem(value, value)
             idx = combo.findData(current)

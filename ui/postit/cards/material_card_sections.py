@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QMenu, QToolButton, QSizePolicy
+from PySide6.QtWidgets import QToolButton, QSizePolicy
 
 from services.common.field_keys import MaterialKeys
 from services.unit.repository import load_units, unit_label_for_value
@@ -17,11 +17,11 @@ from ui.partners.ui_utils import (
     PARTNER_PICKER_TYPE_TRIM,
     show_partner_picker,
 )
-from ui.postit.common import FIELD_H, make_down_icon
+from ui.postit.common import CheckedPopupSelector, FIELD_H
 from ui.postit.editor_fields import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import make_field_label, make_form_row
 from ui.postit.layout import POSTIT_ROW_ACTION_GAP, PostItLayout
-from ui.theme import delete_button_style, menu_style, tool_button_style, unit_button_style, THEME, input_line_edit_style
+from ui.theme import delete_button_style, tool_button_style, THEME, input_line_edit_style
 from ui.widget_factory import set_widget_tooltip
 from ui.work_order_validation_ui import set_invalid
 
@@ -59,46 +59,25 @@ def build_vendor_rows(card, root) -> None:
 
 
 def _apply_unit_button_text(card) -> None:
-    card.unit_btn.setText((card._unit_value or "").strip())
+    idx = card.unit_btn.findData(card._unit_value)
+    card.unit_btn.setCurrentIndex(idx if idx >= 0 else 0)
 
 
 def configure_unit_controls(card) -> None:
     card._units = load_units()
     card._unit_value = (card.data.get(MaterialKeys.UNIT) or "").strip()
     card._unit_label = unit_label_for_value(card._unit_value, card._units)
-    card.unit_btn = QToolButton(card)
-    card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-    card.unit_btn.setIcon(make_down_icon(PostItLayout.UNIT_ICON_SIZE))
-    card.unit_btn.setIconSize(QSize(PostItLayout.UNIT_ICON_SIZE, PostItLayout.UNIT_ICON_SIZE))
-    card.unit_btn.setCursor(Qt.PointingHandCursor)
-    card.unit_btn.setFixedHeight(FIELD_H)
+    card.unit_btn = CheckedPopupSelector(card, clear_text=PostItTexts.CLEAR_UNIT)
     card.unit_btn.setMinimumWidth(max(32, THEME.postit_unit_button_width))
     card.unit_btn.setMaximumWidth(max(32, THEME.postit_unit_button_width))
     card.unit_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-    card.unit_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
-    card.unit_btn.setStyleSheet(unit_button_style())
-    _apply_unit_button_text(card)
-    card._unit_menu = QMenu(card.unit_btn)
-    card._unit_menu.setStyleSheet(menu_style())
-    card._unit_actions = {}
-    card._act_clear_unit = card._unit_menu.addAction(PostItTexts.CLEAR_UNIT)
-    card._act_clear_unit.setCheckable(True)
-    card._act_clear_unit.triggered.connect(lambda: card._set_unit("", ""))
-    if card._units:
-        card._unit_menu.addSeparator()
-    else:
-        hint = card._unit_menu.addAction(PostItTexts.EMPTY_UNIT_LIST)
-        hint.setEnabled(False)
+    card.unit_btn.addItem(PostItTexts.CLEAR_UNIT, "")
     for unit, label in card._units:
-        action = card._unit_menu.addAction(label)
-        action.setCheckable(True)
-        action.triggered.connect(lambda _=False, u=unit, lb=label: card._set_unit(u, lb))
-        card._unit_actions[unit] = action
-    card._unit_menu.aboutToShow.connect(card._sync_unit_menu_checks)
-    card.unit_btn.setMenu(card._unit_menu)
-    card.unit_btn.setPopupMode(QToolButton.InstantPopup)
+        card.unit_btn.addItem(label, unit)
+    card.unit_btn.currentIndexChanged.connect(lambda _i: card._set_unit(str(card.unit_btn.currentData() or ""), unit_label_for_value(str(card.unit_btn.currentData() or ""), card._units)))
     card.unit_btn.installEventFilter(card)
     card._apply_unit_button_text = lambda: _apply_unit_button_text(card)
+    _apply_unit_button_text(card)
 
 
 def build_amount_rows(card, root) -> None:

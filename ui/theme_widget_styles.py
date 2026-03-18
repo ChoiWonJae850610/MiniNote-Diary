@@ -252,8 +252,9 @@ def tooltip_style_override() -> str:
         f"border:1px solid {t.color_tooltip_border};"
         f"border-radius:{t.tooltip_radius}px;"
         f"padding:{t.tooltip_padding_v}px {t.tooltip_padding_h}px;"
+        f"font-family:'{t.tooltip_font_family}';"
         f"font-size:{t.tooltip_font_px}px;"
-        "font-weight:600;"
+        f"font-weight:{t.tooltip_font_weight};"
         "min-height:0px;"
         "}"
     )

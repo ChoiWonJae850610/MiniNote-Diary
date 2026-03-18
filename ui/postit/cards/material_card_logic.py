@@ -8,10 +8,7 @@ from services.unit.repository import unit_label_for_value
 
 
 def sync_unit_menu_checks(card) -> None:
-    current = (card._unit_value or "").strip()
-    card._act_clear_unit.setChecked(not bool(current))
-    for unit, action in card._unit_actions.items():
-        action.setChecked(bool(current) and unit == current)
+    card.unit_btn._sync_menu_checks()
 
 
 def set_unit(card, unit: str, label: str) -> None:

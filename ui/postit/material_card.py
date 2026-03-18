@@ -9,7 +9,6 @@ from services.common.field_keys import MaterialKeys
 from services.unit.repository import unit_label_for_value
 from ui.messages import Labels
 from ui.postit.base import _PostItCardBase
-from ui.postit.common import FIELD_H, make_down_icon
 from ui.postit.editor_fields import _ClickToEditLineEdit, _MoneyLineEdit, _QtyClickToEditLineEdit
 from ui.postit.forms import PostItBodyLayout, make_field_label, make_form_row
 from ui.postit.layout import (
@@ -25,7 +24,6 @@ from ui.postit.material_card_logic import (
     on_qty_committed,
     recalc_material_total,
     set_unit,
-    sync_unit_menu_checks,
     update_material_card_data,
 )
 from ui.postit.material_card_sections import (
@@ -78,7 +76,7 @@ class PostItCard(_PostItCardBase):
         self.unit_btn.setText((self._unit_value or "").strip())
 
     def _sync_unit_menu_checks(self):
-        sync_unit_menu_checks(self)
+        self.unit_btn._sync_menu_checks()
 
     def _set_unit(self, unit: str, label: str):
         set_unit(self, unit, label)

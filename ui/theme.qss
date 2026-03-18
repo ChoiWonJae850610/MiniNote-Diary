@@ -111,7 +111,8 @@ QToolTip {
     border: 1px solid __TOOLTIP_BORDER__;
     border-radius: __TOOLTIP_RADIUS__px;
     padding: __TOOLTIP_PADDING_V__px __TOOLTIP_PADDING_H__px;
+    font-family: "__TOOLTIP_FONT_FAMILY__";
     font-size: __TOOLTIP_FONT_PX__px;
-    font-weight: 600;
+    font-weight: __TOOLTIP_FONT_WEIGHT__;
     min-height: 0px;
 }

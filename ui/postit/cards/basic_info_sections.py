@@ -2,27 +2,26 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QComboBox, QToolButton, QSizePolicy
+from PySide6.QtWidgets import QToolButton, QSizePolicy
 
 from ui.icon_factory import make_calendar_icon, make_partner_link_icon
 from services.product_type.service import ProductTypeService
-from ui.messages import Labels, Tooltips
+from ui.messages import Labels, PostItTexts, Tooltips
 from ui.partners.ui_utils import PARTNER_PICKER_TYPE_FACTORY, project_root_from_widget, show_partner_picker
-from ui.postit.common import FIELD_H
+from ui.postit.common import CheckedClearableComboBox, FIELD_H
 from ui.postit.editor_fields import _ClickToEditLineEdit, _MoneyLineEdit
 from ui.postit.forms import make_field_label, make_form_row
 from ui.postit.layout import PostItLayout
-from ui.theme import THEME, combo_box_style, display_field_style, input_line_edit_style, tool_button_style
+from ui.theme import THEME, display_field_style, input_line_edit_style, tool_button_style
 from ui.widget_factory import set_widget_tooltip
 from ui.work_order_validation_ui import set_invalid
 
 
 def _make_type_combo(card):
-    combo = QComboBox(card)
+    combo = CheckedClearableComboBox(card, clear_text=PostItTexts.CLEAR_UNIT)
     combo.setFixedHeight(FIELD_H)
-    combo.addItem('(비움)', '')
+    combo.addItem(PostItTexts.CLEAR_UNIT, '')
     combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-    combo.setStyleSheet(combo_box_style())
     return combo
 
 
