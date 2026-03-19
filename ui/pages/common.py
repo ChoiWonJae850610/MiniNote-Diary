@@ -190,8 +190,9 @@ def make_standard_page_header(
 
     subtitle_label = QLabel(subtitle_text or _today_record_text(), header_panel)
     subtitle_label.setObjectName(subtitle_object_name or 'menuHeroDate')
-    subtitle_label.setWordWrap(subtitle_word_wrap)
+    subtitle_label.setWordWrap(False)
     subtitle_label.setAlignment(subtitle_alignment)
+    subtitle_label.setMinimumWidth(260)
 
     title_col = QVBoxLayout()
     title_col.setContentsMargins(0, 0, 0, 0)

@@ -295,8 +295,8 @@ class WorkOrderPageBuilder:
 
         left_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         right_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        body_row.addWidget(left_column, 3)
-        body_row.addWidget(right_column, 2)
+        body_row.addWidget(left_column, 3, Qt.AlignTop)
+        body_row.addWidget(right_column, 2, Qt.AlignTop)
 
         root_layout.addLayout(body_row, 1)
         return info_page

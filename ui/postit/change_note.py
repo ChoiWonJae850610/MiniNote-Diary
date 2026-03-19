@@ -37,6 +37,9 @@ class ChangeNotePostIt(_PostItCardBase):
         self.editor.setStyleSheet(plain_text_edit_style())
         self.editor.installEventFilter(self)
         self.editor.setTabChangesFocus(True)
+        self.editor.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.editor.document().setDocumentMargin(8)
+        self.editor.setViewportMargins(0,0,20,0)
         root.addWidget(self.editor, 1)
         self.editor.textChanged.connect(self._on_text)
 

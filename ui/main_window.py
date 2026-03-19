@@ -312,7 +312,7 @@ class MainWindow(QMainWindow):
         total = stack.count()
         names = ['기본정보', '이미지']
         label = names[current] if 0 <= current < len(names) else f'페이지 {current + 1}'
-        indicator.setText(f'{current + 1} / {total}  ·  {label}')
+        indicator.setText(f'{current + 1} / {total}')
         if prev_btn is not None:
             prev_btn.setEnabled(current > 0)
         if next_btn is not None:
