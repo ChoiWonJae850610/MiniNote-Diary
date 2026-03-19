@@ -56,10 +56,10 @@ class PostItBar(QWidget):
             footer_widget=self.basic_footer,
             external_row_gap=POSTIT_EXTERNAL_ROW_GAP_TIGHT,
         )
-        self.basic_column.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.basic_column.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.partner = PartnerTabbedPostIt(self)
-        self.partner.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.partner.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self._connect_partner_signals()
         self._expose_partner_stacks()
 

@@ -252,12 +252,13 @@ class WorkOrderPageBuilder:
         change_note_postit.setMinimumHeight(0)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        change_note_card = WorkOrderPageBuilder._build_section_card(
-            SectionTitles.CHANGE_NOTE,
-            change_note_postit,
-            page,
-            stretch=1,
-        )
+        body_wrap = QWidget(page)
+        body_layout = QVBoxLayout(body_wrap)
+        body_layout.setContentsMargins(0, 0, 10, 0)
+        body_layout.setSpacing(0)
+        body_layout.addWidget(change_note_postit, 1)
+
+        change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, body_wrap, page, stretch=1)
         change_note_card.setMinimumWidth(300)
         change_note_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         return change_note_postit, change_note_card
@@ -271,6 +272,9 @@ class WorkOrderPageBuilder:
         root_layout = QVBoxLayout(info_page)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(8)
+
+        # compact the outsourced/postit column and give the memo card the full right height
+        postit_bar.partner.setFixedHeight(max(postit_bar.partner.sizeHint().height() + 44, 420))
 
         body = make_diary_two_column_body(info_page, left_stretch=3, right_stretch=2, spacing=12)
 
@@ -293,9 +297,17 @@ class WorkOrderPageBuilder:
 
         body.left_layout.addWidget(basic_card, 0)
         body.left_layout.addWidget(partner_card, 0)
+
+        change_note_wrap.setMinimumHeight(
+            max(
+                basic_card.sizeHint().height() + partner_card.sizeHint().height() + body.left_layout.spacing(),
+                0,
+            )
+        )
         body.right_layout.addWidget(change_note_wrap, 1)
 
-        root_layout.addWidget(body.panel, 1)
+        body_widget = body.panel if hasattr(body, "panel") else body.container
+        root_layout.addWidget(body_widget, 1)
         return info_page
 
 

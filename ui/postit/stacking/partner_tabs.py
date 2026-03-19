@@ -46,7 +46,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
     def __init__(self, parent=None):
         self._active_tab = self.TAB_FABRIC
         self.tab_header = FolderTabHeader(build_partner_tab_defs(self), active_key=self.TAB_FABRIC, interactive=True)
-        self.body_host, self.body_stack = make_postit_stack_host(height=POSTIT_BODY_HEIGHT)
+        self.body_host, self.body_stack = make_postit_stack_host(height=max(220, POSTIT_BODY_HEIGHT - 48))
         self.fabric = PostItStack(self.TAB_FABRIC)
         self.trim = PostItStack(self.TAB_TRIM)
         self.dyeing = PostItStack(self.TAB_DYEING)
@@ -76,7 +76,7 @@ class PartnerTabbedPostIt(PostItSectionColumn):
             external_row_widget=self.pager_host,
             layout_spec=layout_spec,
         )
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         connect_partner_stack_signals(self)
         for tab_key in self.tab_header.keys():

@@ -34,7 +34,7 @@ class PostItBodyLayout(QVBoxLayout):
             POSTIT_INNER_SIDE_PADDING,
             POSTIT_INNER_BOTTOM_PADDING,
         )
-        self.setSpacing(max(2, POSTIT_UNIFORM_ROW_SPACING - 2))
+        self.setSpacing(POSTIT_UNIFORM_ROW_SPACING)
 
 
 class PostItFormRow(QHBoxLayout):
