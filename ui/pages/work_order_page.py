@@ -3,19 +3,32 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QPushButton, QSizePolicy, QStyle, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QStackedWidget,
+    QStyle,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ui.icon_factory import make_image_upload_icon, make_save_icon, standard_icon
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
-from ui.pages.common import make_image_shell, make_standard_body_row, make_standard_page_header, make_standard_page_layout, make_standard_toolbar_strip
+from ui.pages.common import (
+    make_image_shell,
+    make_standard_body_row,
+    make_standard_page_header,
+    make_standard_page_layout,
+    make_standard_toolbar_strip,
+)
 from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
 from ui.postit.layout import SectionLayoutSpec
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import make_toolbar_icon_button
-
-
-
 
 
 @dataclass
@@ -27,6 +40,10 @@ class WorkOrderPageRefs:
     btn_load: QPushButton
     btn_upload: QPushButton
     btn_delete_image: QPushButton
+    btn_prev_page: QPushButton
+    btn_next_page: QPushButton
+    page_indicator: QLabel
+    page_stack: QStackedWidget
     feedback_label: QWidget | None
     image_preview: ImagePreview
     image_shell: QWidget
@@ -40,7 +57,7 @@ class WorkOrderPageBuilder:
         page = QWidget()
         page_layout = make_standard_page_layout(page)
         page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
-        page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 6))
+        page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 4))
 
         header_refs = make_standard_page_header(
             page,
@@ -50,23 +67,22 @@ class WorkOrderPageBuilder:
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
         postit_bar = PostItBar()
-        image_preview, image_shell, image_toolbar, left_stack = WorkOrderPageBuilder._build_image_column(page, toolbar_buttons)
-        change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(
-            page,
-            image_shell=image_shell,
-        )
+        image_preview, image_shell, image_toolbar = WorkOrderPageBuilder._build_image_page(page, toolbar_buttons)
+        change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(page)
+        info_page = WorkOrderPageBuilder._build_info_page(page, postit_bar, change_note_wrap)
 
-        right_stack = WorkOrderPageBuilder._build_postit_stack(postit_bar, change_note_wrap)
-        left_stack.setMinimumWidth(THEME.work_order_left_column_min_width)
-        left_stack.setMaximumWidth(THEME.work_order_left_column_max_width)
-        right_stack.setMinimumWidth(THEME.work_order_right_column_min_width)
+        page_stack = QStackedWidget(page)
+        page_stack.setObjectName('workOrderDiaryStack')
+        page_stack.addWidget(info_page)
+        page_stack.addWidget(image_shell.parentWidget())
+        page_stack.setCurrentIndex(0)
 
-        content_row = make_standard_body_row()
-        content_row.addWidget(left_stack, THEME.work_order_left_stretch)
-        content_row.addWidget(right_stack, THEME.work_order_right_stretch)
+        btn_prev_page, btn_next_page, page_indicator, pager_row = WorkOrderPageBuilder._build_pager(page)
+        WorkOrderPageBuilder._update_pager_ui(page_stack, btn_prev_page, btn_next_page, page_indicator)
 
         page_layout.addLayout(header_refs.row)
-        page_layout.addLayout(content_row, 1)
+        page_layout.addLayout(pager_row)
+        page_layout.addWidget(page_stack, 1)
 
         return WorkOrderPageRefs(
             page=page,
@@ -76,12 +92,38 @@ class WorkOrderPageBuilder:
             btn_load=toolbar_buttons['btn_load'],
             btn_upload=toolbar_buttons['btn_upload'],
             btn_delete_image=toolbar_buttons['btn_delete_image'],
+            btn_prev_page=btn_prev_page,
+            btn_next_page=btn_next_page,
+            page_indicator=page_indicator,
+            page_stack=page_stack,
             feedback_label=None,
             image_preview=image_preview,
             image_shell=image_shell,
             change_note_postit=change_note_postit,
             postit_bar=postit_bar,
         )
+
+    @staticmethod
+    def _build_pager(page: QWidget) -> tuple[QPushButton, QPushButton, QLabel, QHBoxLayout]:
+        btn_prev = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip='이전 페이지')
+        btn_prev.setIcon(page.style().standardIcon(QStyle.SP_ArrowBack))
+        btn_next = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip='다음 페이지')
+        btn_next.setIcon(page.style().standardIcon(QStyle.SP_ArrowForward))
+
+        indicator = QLabel('1 / 2  ·  기본정보', page)
+        indicator.setObjectName('workOrderDiaryIndicator')
+        indicator.setAlignment(Qt.AlignCenter)
+        indicator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(THEME.row_spacing)
+        row.addStretch(1)
+        row.addWidget(btn_prev, 0, Qt.AlignVCenter)
+        row.addWidget(indicator, 0, Qt.AlignVCenter)
+        row.addWidget(btn_next, 0, Qt.AlignVCenter)
+        row.addStretch(1)
+        return btn_prev, btn_next, indicator, row
 
     @staticmethod
     def _build_toolbar_buttons(parent: QWidget, page: QWidget) -> dict[str, QPushButton]:
@@ -132,29 +174,25 @@ class WorkOrderPageBuilder:
         return image_toolbar
 
     @staticmethod
-    def _build_image_column(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> tuple[ImagePreview, QWidget, QWidget, QWidget]:
+    def _build_image_page(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> tuple[ImagePreview, QWidget, QWidget]:
         image_toolbar = WorkOrderPageBuilder._build_image_toolbar(page, toolbar_buttons)
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.work_order_image_preview_min_height)
         image_preview.setStyleSheet(image_preview_style())
         image_shell = make_image_shell(page, image_preview, margin=THEME.image_shell_margin)
 
-        left_stack = QWidget(page)
-        left_stack.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        left_layout = QVBoxLayout(left_stack)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(THEME.work_order_toolbar_to_image_overlap)
-        left_layout.addWidget(image_toolbar, 0)
-        left_layout.addWidget(image_shell, 1)
-        return image_preview, image_shell, image_toolbar, left_stack
+        image_page = QWidget(page)
+        image_page.setObjectName('workOrderDiaryImagePage')
+        image_page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        layout = QVBoxLayout(image_page)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(THEME.section_gap)
+        layout.addWidget(image_toolbar, 0)
+        layout.addWidget(image_shell, 1)
+        return image_preview, image_shell, image_toolbar
 
     @staticmethod
-    def _build_change_note_column(
-        page: QWidget,
-        *,
-        image_shell: QWidget,
-    ) -> tuple[ChangeNotePostIt, QWidget]:
-        del image_shell
+    def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
         change_note_postit = ChangeNotePostIt()
         change_note_postit.setMinimumHeight(THEME.work_order_change_note_body_min_height)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -174,31 +212,41 @@ class WorkOrderPageBuilder:
         return change_note_postit, change_note_wrap
 
     @staticmethod
-    def _build_postit_stack(postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
-        right_stack = QWidget()
-        right_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        right_stack.setContentsMargins(0, 0, 0, 0)
-        right_layout = QVBoxLayout(right_stack)
-        right_layout.setContentsMargins(0, max(0, THEME.work_order_postit_top_offset - THEME.work_order_postit_top_margin_adjust), 0, 0)
-        right_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
+    def _build_info_page(page: QWidget, postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
+        info_page = QWidget(page)
+        info_page.setObjectName('workOrderDiaryInfoPage')
+        info_page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        top_region = QFrame(right_stack)
-        top_region.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        top_region_layout = QVBoxLayout(top_region)
-        top_region_layout.setContentsMargins(0, 0, 0, 0)
-        top_region_layout.setSpacing(0)
-        top_region_layout.addWidget(postit_bar, 0)
+        info_layout = QVBoxLayout(info_page)
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        info_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
 
-        note_region = QFrame(right_stack)
-        note_region.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        note_region_layout = QVBoxLayout(note_region)
-        note_region_layout.setContentsMargins(0, 0, 0, 0)
-        note_region_layout.setSpacing(0)
-        note_region_layout.addWidget(change_note_wrap, 1)
+        body_row = make_standard_body_row()
+        body_row.addStretch(1)
 
-        right_layout.addWidget(top_region, 0)
-        right_layout.addWidget(note_region, 1)
-        return right_stack
+        content_wrap = QWidget(info_page)
+        content_wrap.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        content_layout = QVBoxLayout(content_wrap)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
+        content_layout.addWidget(postit_bar, 0)
+        content_layout.addWidget(change_note_wrap, 1)
+        content_wrap.setMaximumWidth(700)
+
+        body_row.addWidget(content_wrap, 1)
+        body_row.addStretch(1)
+        info_layout.addLayout(body_row, 1)
+        return info_page
+
+    @staticmethod
+    def _update_pager_ui(page_stack: QStackedWidget, btn_prev: QPushButton, btn_next: QPushButton, indicator: QLabel) -> None:
+        current = page_stack.currentIndex()
+        total = page_stack.count()
+        labels = ['기본정보', '이미지']
+        label = labels[current] if 0 <= current < len(labels) else f'페이지 {current + 1}'
+        indicator.setText(f'{current + 1} / {total}  ·  {label}')
+        btn_prev.setEnabled(current > 0)
+        btn_next.setEnabled(current < total - 1)
 
 
 __all__ = ['WorkOrderPageBuilder', 'WorkOrderPageRefs']

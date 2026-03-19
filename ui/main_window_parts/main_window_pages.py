@@ -72,6 +72,10 @@ class MainWindowPageCoordinator:
         window.image_preview = refs.image_preview
         window.change_note_postit = refs.change_note_postit
         window.postit_bar = refs.postit_bar
+        window.work_order_btn_prev_page = refs.btn_prev_page
+        window.work_order_btn_next_page = refs.btn_next_page
+        window.work_order_page_indicator = refs.page_indicator
+        window.work_order_page_stack = refs.page_stack
 
     @staticmethod
     def _build_page_map(window: "MainWindow", menu_refs, order_refs, inbound_refs, product_refs, stats_refs, feature_pages: dict[str, object]) -> dict[str, QWidget]:

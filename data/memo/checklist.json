@@ -1,8 +1,12 @@
 {
   "items": [
     {
-      "text": "dafsd",
+      "text": "d",
       "checked": false
+    },
+    {
+      "text": "테스트",
+      "checked": true
     }
   ]
 }

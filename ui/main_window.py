@@ -293,6 +293,58 @@ class MainWindow(QMainWindow):
     def build_save_success_message(result) -> str:
         return MainWindowFeedback.build_save_success_message(result)
 
+    def _set_work_order_page_index(self, index: int) -> None:
+        stack = getattr(self, 'work_order_page_stack', None)
+        if stack is None:
+            return
+        index = max(0, min(index, stack.count() - 1))
+        stack.setCurrentIndex(index)
+        self._update_work_order_page_indicator()
+
+    def _update_work_order_page_indicator(self) -> None:
+        stack = getattr(self, 'work_order_page_stack', None)
+        indicator = getattr(self, 'work_order_page_indicator', None)
+        prev_btn = getattr(self, 'work_order_btn_prev_page', None)
+        next_btn = getattr(self, 'work_order_btn_next_page', None)
+        if stack is None or indicator is None:
+            return
+        current = stack.currentIndex()
+        total = stack.count()
+        names = ['기본정보', '이미지']
+        label = names[current] if 0 <= current < len(names) else f'페이지 {current + 1}'
+        indicator.setText(f'{current + 1} / {total}  ·  {label}')
+        if prev_btn is not None:
+            prev_btn.setEnabled(current > 0)
+        if next_btn is not None:
+            next_btn.setEnabled(current < total - 1)
+
+    def set_work_order_diary_page(self, index: int) -> None:
+        self._set_work_order_page_index(index)
+
+    def show_previous_work_order_page(self) -> None:
+        stack = getattr(self, 'work_order_page_stack', None)
+        if stack is None:
+            return
+        self._set_work_order_page_index(stack.currentIndex() - 1)
+
+    def show_next_work_order_page(self) -> None:
+        stack = getattr(self, 'work_order_page_stack', None)
+        if stack is None:
+            return
+        self._set_work_order_page_index(stack.currentIndex() + 1)
+
+    def keyPressEvent(self, event):
+        if QApplication.activeModalWidget() is None and self.stack.currentIndex() == self.PAGE_WORK_ORDER:
+            if event.key() == Qt.Key_Left:
+                self.show_previous_work_order_page()
+                event.accept()
+                return
+            if event.key() == Qt.Key_Right:
+                self.show_next_work_order_page()
+                event.accept()
+                return
+        super().keyPressEvent(event)
+
     def on_back_clicked(self):
         MainWindowSaveLogic.handle_back(self)
 

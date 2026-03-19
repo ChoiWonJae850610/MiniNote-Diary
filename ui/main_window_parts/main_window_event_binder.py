@@ -95,6 +95,8 @@ class MainWindowEventBinder:
         window.btn_load.clicked.connect(window.on_load_clicked)
         window.btn_upload.clicked.connect(window.upload_image)
         window.btn_delete_image.clicked.connect(window.delete_image)
+        window.work_order_btn_prev_page.clicked.connect(window.show_previous_work_order_page)
+        window.work_order_btn_next_page.clicked.connect(window.show_next_work_order_page)
 
         window.change_note_postit.text_changed.connect(window.on_change_note_changed)
         bar = window.postit_bar

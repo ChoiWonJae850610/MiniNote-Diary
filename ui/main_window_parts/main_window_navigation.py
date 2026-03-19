@@ -27,6 +27,8 @@ class MainWindowNavigationLogic:
     @staticmethod
     def go_work_order(window: "MainWindow") -> None:
         window._refresh_postits(force_rebuild=True)
+        if hasattr(window, 'set_work_order_diary_page'):
+            window.set_work_order_diary_page(0)
         window.stack.setCurrentIndex(window.PAGE_WORK_ORDER)
         MainWindowNavigationLogic.focus_style_input(window)
 
