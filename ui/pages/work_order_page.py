@@ -56,7 +56,7 @@ class WorkOrderPageBuilder:
     def build(parent: QWidget) -> WorkOrderPageRefs:
         page = QWidget()
         page_layout = make_standard_page_layout(page)
-        page_layout.setContentsMargins(THEME.page_padding_x, THEME.page_header_top_margin, THEME.page_padding_x, THEME.page_top_bottom)
+        page_layout.setContentsMargins(12, THEME.page_header_top_margin, 12, 8)
         page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 4))
 
         header_refs = make_standard_page_header(
@@ -194,7 +194,7 @@ class WorkOrderPageBuilder:
     @staticmethod
     def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
         change_note_postit = ChangeNotePostIt()
-        change_note_postit.setMinimumHeight(THEME.work_order_change_note_body_min_height)
+        change_note_postit.setMinimumHeight(120)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         change_note_wrap = SectionContainer(
@@ -212,30 +212,33 @@ class WorkOrderPageBuilder:
         return change_note_postit, change_note_wrap
 
     @staticmethod
+    @staticmethod
     def _build_info_page(page: QWidget, postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
         info_page = QWidget(page)
         info_page.setObjectName('workOrderDiaryInfoPage')
         info_page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        info_layout = QVBoxLayout(info_page)
-        info_layout.setContentsMargins(0, 0, 0, 0)
-        info_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
+        root_layout = QVBoxLayout(info_page)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(12)
 
         body_row = make_standard_body_row()
-        body_row.addStretch(1)
 
-        content_wrap = QWidget(info_page)
-        content_wrap.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        content_layout = QVBoxLayout(content_wrap)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(THEME.work_order_postit_to_note_spacing)
-        content_layout.addWidget(postit_bar, 0)
-        content_layout.addWidget(change_note_wrap, 1)
-        content_wrap.setMaximumWidth(700)
+        content = QWidget(info_page)
+        content_layout = QHBoxLayout(content)
+        content_layout.setContentsMargins(0,0,0,0)
+        content_layout.setSpacing(16)
 
-        body_row.addWidget(content_wrap, 1)
-        body_row.addStretch(1)
-        info_layout.addLayout(body_row, 1)
+        postit_bar.setMaximumWidth(420)
+        change_note_wrap.setMaximumWidth(320)
+
+        content_layout.addWidget(postit_bar, 1)
+        content_layout.addWidget(change_note_wrap, 0)
+
+        body_row.addWidget(content,1)
+
+        root_layout.addLayout(body_row,1)
+
         return info_page
 
     @staticmethod
