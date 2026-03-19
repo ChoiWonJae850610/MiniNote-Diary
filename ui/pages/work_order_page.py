@@ -25,8 +25,7 @@ from ui.pages.common import (
     make_standard_page_layout,
     make_standard_toolbar_strip,
 )
-from ui.postit import ChangeNotePostIt, FolderTabHeader, PostItBar, SectionContainer
-from ui.postit.layout import SectionLayoutSpec
+from ui.postit import ChangeNotePostIt, PostItBar
 from ui.theme import THEME, image_preview_style
 from ui.widget_factory import make_toolbar_icon_button
 
@@ -52,6 +51,22 @@ class WorkOrderPageRefs:
 
 
 class WorkOrderPageBuilder:
+    @staticmethod
+    def _build_section_card(title: str, body: QWidget, parent: QWidget, *, stretch: int = 0) -> QFrame:
+        card = QFrame(parent)
+        card.setObjectName('featureCard')
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding if stretch else QSizePolicy.Policy.Fixed)
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 14, 16, 16)
+        layout.setSpacing(10)
+
+        title_label = QLabel(title, card)
+        title_label.setObjectName('featureSectionTitle')
+        layout.addWidget(title_label)
+        layout.addWidget(body, 1 if stretch else 0)
+        return card
+
     @staticmethod
     def build(parent: QWidget) -> WorkOrderPageRefs:
         page = QWidget()
@@ -194,24 +209,15 @@ class WorkOrderPageBuilder:
     @staticmethod
     def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
         change_note_postit = ChangeNotePostIt()
-        change_note_postit.setMinimumHeight(120)
+        change_note_postit.setMinimumHeight(150)
+        change_note_postit.setMaximumHeight(260)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        change_note_wrap = SectionContainer(
-            FolderTabHeader(SectionTitles.CHANGE_NOTE, page),
-            change_note_postit,
-            parent=page,
-            layout_spec=SectionLayoutSpec(tab_overlap=THEME.work_order_change_note_tab_overlap),
-            header_alignment=None,
-            footer_widget=None,
-            body_height=None,
-            lock_height_to_body=False,
-        )
-        change_note_wrap.setMinimumWidth(THEME.work_order_change_note_min_width)
-        change_note_wrap.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        return change_note_postit, change_note_wrap
+        change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, change_note_postit, page, stretch=1)
+        change_note_card.setMinimumWidth(280)
+        change_note_card.setMaximumWidth(340)
+        return change_note_postit, change_note_card
 
-    @staticmethod
     @staticmethod
     def _build_info_page(page: QWidget, postit_bar: PostItBar, change_note_wrap: QWidget) -> QWidget:
         info_page = QWidget(page)
@@ -220,25 +226,28 @@ class WorkOrderPageBuilder:
 
         root_layout = QVBoxLayout(info_page)
         root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(12)
+        root_layout.setSpacing(10)
 
         body_row = make_standard_body_row()
+        body_row.setSpacing(14)
 
-        content = QWidget(info_page)
-        content_layout = QHBoxLayout(content)
-        content_layout.setContentsMargins(0,0,0,0)
-        content_layout.setSpacing(16)
+        left_column = QWidget(info_page)
+        left_layout = QVBoxLayout(left_column)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(12)
 
-        postit_bar.setMaximumWidth(420)
-        change_note_wrap.setMaximumWidth(320)
+        basic_card = WorkOrderPageBuilder._build_section_card(SectionTitles.BASIC_INFO, postit_bar.basic, left_column)
+        partner_title = getattr(SectionTitles, 'OUTSOURCE_INFO', '외주정보')
+        partner_card = WorkOrderPageBuilder._build_section_card(partner_title, postit_bar.partner, left_column)
 
-        content_layout.addWidget(postit_bar, 1)
-        content_layout.addWidget(change_note_wrap, 0)
+        left_layout.addWidget(basic_card, 0)
+        left_layout.addWidget(partner_card, 0)
+        left_layout.addStretch(1)
 
-        body_row.addWidget(content,1)
+        body_row.addWidget(left_column, 3)
+        body_row.addWidget(change_note_wrap, 2)
 
-        root_layout.addLayout(body_row,1)
-
+        root_layout.addLayout(body_row, 1)
         return info_page
 
     @staticmethod
