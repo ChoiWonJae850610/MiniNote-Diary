@@ -62,7 +62,7 @@ class SectionContainer(QWidget):
                 external_row_gap=0,
                 external_row_height=0,
             )
-            self.setFixedHeight(metrics.section_height)
+            self.setMinimumHeight(metrics.section_height)
 
 
 class FooterSpacer(QWidget):

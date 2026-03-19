@@ -130,51 +130,6 @@ def make_diary_two_column_body(
 
 
 
-@dataclass(frozen=True)
-class DiaryTwoColumnBodyRefs:
-    container: QWidget
-    layout: QHBoxLayout
-    left_column: QWidget
-    left_layout: QVBoxLayout
-    right_column: QWidget
-    right_layout: QVBoxLayout
-
-
-def make_diary_two_column_body(
-    parent: QWidget,
-    *,
-    left_stretch: int = 1,
-    right_stretch: int = 1,
-    spacing: int = 12,
-) -> DiaryTwoColumnBodyRefs:
-    container = QWidget(parent)
-    layout = QHBoxLayout(container)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(spacing)
-
-    left_column = QWidget(container)
-    left_layout = QVBoxLayout(left_column)
-    left_layout.setContentsMargins(0, 0, 0, 0)
-    left_layout.setSpacing(spacing)
-
-    right_column = QWidget(container)
-    right_layout = QVBoxLayout(right_column)
-    right_layout.setContentsMargins(0, 0, 0, 0)
-    right_layout.setSpacing(spacing)
-
-    layout.addWidget(left_column, left_stretch)
-    layout.addWidget(right_column, right_stretch)
-
-    return DiaryTwoColumnBodyRefs(
-        container=container,
-        layout=layout,
-        left_column=left_column,
-        left_layout=left_layout,
-        right_column=right_column,
-        right_layout=right_layout,
-    )
-
-
 def make_diary_section_card(
     parent: QWidget,
     *,

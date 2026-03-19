@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtWidgets import QFrame, QPlainTextEdit, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import QPlainTextEdit, QSizePolicy, QVBoxLayout
 
 from ui.postit.base import _PostItCardBase
 from ui.postit.layout import (
@@ -34,7 +34,6 @@ class ChangeNotePostIt(_PostItCardBase):
         self.editor = QPlainTextEdit(self)
         self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())
-        self.editor.setFrameShape(QFrame.NoFrame)
         self.editor.installEventFilter(self)
         self.editor.setTabChangesFocus(True)
         root.addWidget(self.editor, 1)
@@ -50,7 +49,7 @@ class ChangeNotePostIt(_PostItCardBase):
         if embedded:
             self._root.setContentsMargins(0, 0, 0, 0)
             self.editor.setPlaceholderText("메모를 입력하세요")
-            self.editor.document().setDocumentMargin(12)
+            self.editor.document().setDocumentMargin(6)
             self.editor.setViewportMargins(0, 0, 0, 0)
         else:
             uniform_padding = min(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
