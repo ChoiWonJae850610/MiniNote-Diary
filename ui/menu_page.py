@@ -276,8 +276,8 @@ class MenuPageBuilder:
         hero_action_row.setSpacing(10)
         btn_help = MenuPageBuilder._make_header_icon_button('?', '도움말', hero_panel)
         btn_settings = MenuPageBuilder._make_header_icon_button('⚙', '환경설정', hero_panel)
-        hero_action_row.addWidget(btn_help)
-        hero_action_row.addWidget(btn_settings)
+        hero_action_row.addWidget(btn_help, 0, Qt.AlignTop)
+        hero_action_row.addWidget(btn_settings, 0, Qt.AlignTop)
 
         hero_top_row.addLayout(hero_text_col, 1)
         hero_top_row.addLayout(hero_action_row, 0)

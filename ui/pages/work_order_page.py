@@ -82,7 +82,7 @@ class WorkOrderPageBuilder:
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
-        WorkOrderPageBuilder._install_header_actions(header_refs, toolbar_buttons, page)
+        upload_proxy, delete_proxy = WorkOrderPageBuilder._install_header_actions(header_refs, toolbar_buttons, page)
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar = WorkOrderPageBuilder._build_image_page(page, toolbar_buttons)
         change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(page)
@@ -96,6 +96,8 @@ class WorkOrderPageBuilder:
 
         btn_prev_page, btn_next_page, page_indicator, pager_row = WorkOrderPageBuilder._build_pager(page)
         WorkOrderPageBuilder._update_pager_ui(page_stack, btn_prev_page, btn_next_page, page_indicator)
+        page_stack.currentChanged.connect(lambda _i: WorkOrderPageBuilder._sync_header_page_actions(page_stack, upload_proxy, delete_proxy))
+        WorkOrderPageBuilder._sync_header_page_actions(page_stack, upload_proxy, delete_proxy)
 
         page_layout.addLayout(header_refs.row)
         page_layout.addWidget(page_stack, 1)
@@ -134,7 +136,7 @@ class WorkOrderPageBuilder:
         indicator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         row = QHBoxLayout()
-        row.setContentsMargins(0, 8, 0, 0)
+        row.setContentsMargins(0, 4, 0, 0)
         row.setSpacing(THEME.row_spacing)
         row.addStretch(1)
         row.addWidget(btn_prev, 0, Qt.AlignVCenter)
@@ -169,10 +171,10 @@ class WorkOrderPageBuilder:
         }
 
     @staticmethod
-    def _install_header_actions(header_refs: object, toolbar_buttons: dict[str, QPushButton], page: QWidget) -> None:
+    def _install_header_actions(header_refs: object, toolbar_buttons: dict[str, QPushButton], page: QWidget) -> tuple[QPushButton, QPushButton]:
         action_layout = header_refs.action_layout
         if action_layout is None:
-            return
+            return None, None
 
         def _proxy_button(source: QPushButton, tooltip: str) -> QPushButton:
             proxy = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=tooltip)
@@ -187,8 +189,16 @@ class WorkOrderPageBuilder:
         ):
             action_layout.addWidget(_proxy_button(toolbar_buttons[key], tip), 0, Qt.AlignTop)
 
+        upload_proxy = _proxy_button(toolbar_buttons['btn_upload'], Tooltips.IMAGE_UPLOAD)
+        delete_proxy = _proxy_button(toolbar_buttons['btn_delete_image'], Tooltips.IMAGE_DELETE)
+        upload_proxy.hide()
+        delete_proxy.hide()
+        action_layout.addWidget(upload_proxy, 0, Qt.AlignTop)
+        action_layout.addWidget(delete_proxy, 0, Qt.AlignTop)
+
         if header_refs.help_button is not None:
             action_layout.addWidget(header_refs.help_button, 0, Qt.AlignTop)
+        return upload_proxy, delete_proxy
 
     @staticmethod
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
@@ -226,8 +236,7 @@ class WorkOrderPageBuilder:
         image_page.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         layout = QVBoxLayout(image_page)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(THEME.section_gap)
-        layout.addWidget(image_toolbar, 0)
+        layout.setSpacing(0)
         layout.addWidget(image_shell, 1)
         return image_preview, image_shell, image_toolbar
 
@@ -239,8 +248,7 @@ class WorkOrderPageBuilder:
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, change_note_postit, page, stretch=1)
-        change_note_card.setMinimumWidth(280)
-        change_note_card.setMaximumWidth(360)
+        change_note_card.setMinimumWidth(300)
         change_note_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         return change_note_postit, change_note_card
 
@@ -255,7 +263,7 @@ class WorkOrderPageBuilder:
         root_layout.setSpacing(10)
 
         body_row = make_standard_body_row()
-        body_row.setSpacing(14)
+        body_row.setSpacing(12)
 
         left_column = QWidget(info_page)
         left_layout = QVBoxLayout(left_column)
@@ -265,6 +273,7 @@ class WorkOrderPageBuilder:
         basic_card = WorkOrderPageBuilder._build_section_card(SectionTitles.BASIC_INFO, postit_bar.basic, left_column)
         partner_title = getattr(SectionTitles, 'OUTSOURCE_INFO', '외주정보')
         partner_card = WorkOrderPageBuilder._build_section_card(partner_title, postit_bar.partner, left_column)
+        partner_card.setMaximumHeight(350)
 
         left_layout.addWidget(basic_card, 0)
         left_layout.addWidget(partner_card, 0)
@@ -282,6 +291,14 @@ class WorkOrderPageBuilder:
 
         root_layout.addLayout(body_row, 1)
         return info_page
+
+    @staticmethod
+    def _sync_header_page_actions(page_stack: QStackedWidget, upload_proxy: QPushButton | None, delete_proxy: QPushButton | None) -> None:
+        is_image_page = page_stack.currentIndex() == 1
+        if upload_proxy is not None:
+            upload_proxy.setVisible(is_image_page)
+        if delete_proxy is not None:
+            delete_proxy.setVisible(is_image_page)
 
     @staticmethod
     def _update_pager_ui(page_stack: QStackedWidget, btn_prev: QPushButton, btn_next: QPushButton, indicator: QLabel) -> None:
