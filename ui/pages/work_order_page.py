@@ -209,8 +209,7 @@ class WorkOrderPageBuilder:
     @staticmethod
     def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
         change_note_postit = ChangeNotePostIt()
-        change_note_postit.setMinimumHeight(150)
-        change_note_postit.setMaximumHeight(260)
+        change_note_postit.setMinimumHeight(220)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, change_note_postit, page, stretch=1)
@@ -244,8 +243,14 @@ class WorkOrderPageBuilder:
         left_layout.addWidget(partner_card, 0)
         left_layout.addStretch(1)
 
+        right_column = QWidget(info_page)
+        right_layout = QVBoxLayout(right_column)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+        right_layout.addWidget(change_note_wrap, 1)
+
         body_row.addWidget(left_column, 3)
-        body_row.addWidget(change_note_wrap, 2)
+        body_row.addWidget(right_column, 2)
 
         root_layout.addLayout(body_row, 1)
         return info_page
