@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -21,6 +20,7 @@ from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import (
     make_diary_section_card,
+    make_diary_two_column_body,
     make_image_shell,
     make_standard_body_row,
     make_standard_page_header,
@@ -54,6 +54,21 @@ class WorkOrderPageRefs:
 
 
 class WorkOrderPageBuilder:
+    @staticmethod
+    def _build_section_card(title: str, body: QWidget, parent: QWidget, *, stretch: int = 0) -> QFrame:
+        card = QFrame(parent)
+        card.setObjectName('featureCard')
+        card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding if stretch else QSizePolicy.Policy.Fixed)
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
+
+        title_label = QLabel(title, card)
+        title_label.setObjectName('featureSectionTitle')
+        layout.addWidget(title_label, 0, Qt.AlignTop)
+        layout.addWidget(body, 1 if stretch else 0)
+        return card
 
     @staticmethod
     def build(parent: QWidget) -> WorkOrderPageRefs:
@@ -62,14 +77,10 @@ class WorkOrderPageBuilder:
         page_layout.setContentsMargins(12, THEME.page_header_top_margin, 12, 8)
         page_layout.setSpacing(max(THEME.row_spacing, THEME.section_gap - 4))
 
-        weekdays = ['월', '화', '수', '목', '금', '토', '일']
-        now = datetime.now()
-        subtitle_text = f"기록 기준 · {now:%Y.%m.%d} {weekdays[now.weekday()]}요일"
-
         header_refs = make_standard_page_header(
             page,
             title_text=PageTitles.WORK_ORDER,
-            subtitle_text=subtitle_text,
+            subtitle_text='',
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
@@ -127,7 +138,7 @@ class WorkOrderPageBuilder:
         indicator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         row = QHBoxLayout()
-        row.setContentsMargins(0, 6, 0, 0)
+        row.setContentsMargins(0, 4, 0, 0)
         row.setSpacing(THEME.row_spacing)
         row.addStretch(1)
         row.addWidget(btn_prev, 0, Qt.AlignVCenter)
@@ -241,14 +252,13 @@ class WorkOrderPageBuilder:
         change_note_postit.setMinimumHeight(0)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        change_note_card = make_diary_section_card(
-            page,
-            title_text=SectionTitles.CHANGE_NOTE,
-            body=change_note_postit,
-            stretch=True,
-            contents_margins=(12, 12, 12, 12),
-            spacing=8,
-        )
+        body_wrap = QWidget(page)
+        body_layout = QVBoxLayout(body_wrap)
+        body_layout.setContentsMargins(0, 0, 10, 0)
+        body_layout.setSpacing(0)
+        body_layout.addWidget(change_note_postit, 1)
+
+        change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, body_wrap, page, stretch=1)
         change_note_card.setMinimumWidth(300)
         change_note_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         return change_note_postit, change_note_card
@@ -263,17 +273,13 @@ class WorkOrderPageBuilder:
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(8)
 
-        body_row = make_standard_body_row()
-        body_row.setSpacing(12)
-        body_row.setContentsMargins(0, 0, 0, 0)
+        # compact the outsourced/postit column and give the memo card the full right height
+        postit_bar.partner.setFixedHeight(max(postit_bar.partner.sizeHint().height() + 44, 420))
 
-        left_column = QWidget(info_page)
-        left_layout = QVBoxLayout(left_column)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(6)
+        body = make_diary_two_column_body(info_page, left_stretch=3, right_stretch=2, spacing=12)
 
         basic_card = make_diary_section_card(
-            left_column,
+            body.left_column,
             title_text=SectionTitles.BASIC_INFO,
             body=postit_bar.basic,
             contents_margins=(12, 12, 12, 12),
@@ -281,28 +287,28 @@ class WorkOrderPageBuilder:
         )
         partner_title = getattr(SectionTitles, 'OUTSOURCE_INFO', '외주정보')
         partner_card = make_diary_section_card(
-            left_column,
+            body.left_column,
             title_text=partner_title,
             body=postit_bar.partner,
             contents_margins=(12, 10, 12, 6),
-            spacing=8,
+            spacing=6,
         )
+        partner_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        left_layout.addWidget(basic_card, 0, Qt.AlignTop)
-        left_layout.addWidget(partner_card, 0, Qt.AlignTop)
+        body.left_layout.addWidget(basic_card, 0)
+        body.left_layout.addWidget(partner_card, 0)
 
-        right_column = QWidget(info_page)
-        right_layout = QVBoxLayout(right_column)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(0)
-        right_layout.addWidget(change_note_wrap, 1)
-        right_layout.setStretch(0, 1)
+        change_note_wrap.setMinimumHeight(
+            max(
+                basic_card.sizeHint().height() + partner_card.sizeHint().height() + body.left_layout.spacing(),
+                0,
+            )
+        )
+        body.right_layout.addWidget(change_note_wrap, 1)
 
-        body_row.addWidget(left_column, 3, Qt.AlignTop)
-        body_row.addWidget(right_column, 2, Qt.AlignTop)
-
-        root_layout.addLayout(body_row, 1)
+        root_layout.addWidget(getattr(body, "panel", getattr(body, "container")), 1)
         return info_page
+
 
     @staticmethod
     def _sync_header_page_actions(page_stack: QStackedWidget, upload_proxy: QPushButton | None, delete_proxy: QPushButton | None) -> None:

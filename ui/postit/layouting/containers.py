@@ -93,7 +93,7 @@ class PostItSectionColumn(QWidget):
             footer_widget=footer_widget,
             body_height=body_height,
         )
-        self.section_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.section_wrap.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.external_row_widget = external_row_widget or FooterSpacer(self)
         self.external_row_widget.setParent(self)
@@ -112,7 +112,8 @@ class PostItSectionColumn(QWidget):
             external_row_gap=layout_spec.external_row_gap,
             external_row_height=layout_spec.footer_height,
         )
-        self.setFixedHeight(metrics.column_height)
+        self.setMinimumHeight(metrics.column_height)
+        self.setMaximumHeight(16777215)
 
 
 __all__ = [

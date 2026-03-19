@@ -40,6 +40,16 @@ class PageActionBarRefs:
 
 
 @dataclass(frozen=True)
+class TwoColumnPageBodyRefs:
+    panel: QWidget
+    layout: QHBoxLayout
+    left_column: QWidget
+    left_layout: QVBoxLayout
+    right_column: QWidget
+    right_layout: QVBoxLayout
+
+
+@dataclass(frozen=True)
 class PageTextHeaderRefs:
     layout: QVBoxLayout
     title_label: QLabel
@@ -81,6 +91,88 @@ def make_diary_action_bar(parent: QWidget) -> PageActionBarRefs:
     layout.setSpacing(8)
     return PageActionBarRefs(panel=panel, layout=layout)
 
+
+
+def make_diary_two_column_body(
+    parent: QWidget,
+    *,
+    left_stretch: int = 3,
+    right_stretch: int = 2,
+    spacing: int = 12,
+) -> TwoColumnPageBodyRefs:
+    panel = QWidget(parent)
+    layout = QHBoxLayout(panel)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(spacing)
+
+    left_column = QWidget(panel)
+    left_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+    left_layout = QVBoxLayout(left_column)
+    left_layout.setContentsMargins(0, 0, 0, 0)
+    left_layout.setSpacing(spacing)
+
+    right_column = QWidget(panel)
+    right_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+    right_layout = QVBoxLayout(right_column)
+    right_layout.setContentsMargins(0, 0, 0, 0)
+    right_layout.setSpacing(0)
+
+    layout.addWidget(left_column, left_stretch)
+    layout.addWidget(right_column, right_stretch)
+    return TwoColumnPageBodyRefs(
+        panel=panel,
+        layout=layout,
+        left_column=left_column,
+        left_layout=left_layout,
+        right_column=right_column,
+        right_layout=right_layout,
+    )
+
+
+
+@dataclass(frozen=True)
+class DiaryTwoColumnBodyRefs:
+    container: QWidget
+    layout: QHBoxLayout
+    left_column: QWidget
+    left_layout: QVBoxLayout
+    right_column: QWidget
+    right_layout: QVBoxLayout
+
+
+def make_diary_two_column_body(
+    parent: QWidget,
+    *,
+    left_stretch: int = 1,
+    right_stretch: int = 1,
+    spacing: int = 12,
+) -> DiaryTwoColumnBodyRefs:
+    container = QWidget(parent)
+    layout = QHBoxLayout(container)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(spacing)
+
+    left_column = QWidget(container)
+    left_layout = QVBoxLayout(left_column)
+    left_layout.setContentsMargins(0, 0, 0, 0)
+    left_layout.setSpacing(spacing)
+
+    right_column = QWidget(container)
+    right_layout = QVBoxLayout(right_column)
+    right_layout.setContentsMargins(0, 0, 0, 0)
+    right_layout.setSpacing(spacing)
+
+    layout.addWidget(left_column, left_stretch)
+    layout.addWidget(right_column, right_stretch)
+
+    return DiaryTwoColumnBodyRefs(
+        container=container,
+        layout=layout,
+        left_column=left_column,
+        left_layout=left_layout,
+        right_column=right_column,
+        right_layout=right_layout,
+    )
 
 
 def make_diary_section_card(
@@ -134,10 +226,10 @@ def _apply_standard_header_policy(title_col: QVBoxLayout, title: QLabel, subtitl
     )
     title.setMinimumHeight(title_min_height)
     title.setContentsMargins(0, 0, 0, 0)
-    title.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+    title.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
     subtitle.setVisible(has_subtitle)
     subtitle.setContentsMargins(0, 0, 0, 0)
-    subtitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+    subtitle.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
 
 def make_page_text_header(
@@ -219,10 +311,8 @@ def make_standard_page_header(
 
     subtitle_label = QLabel(subtitle_text or _today_record_text(), header_panel)
     subtitle_label.setObjectName(subtitle_object_name or 'menuHeroDate')
-    subtitle_label.setWordWrap(False)
+    subtitle_label.setWordWrap(subtitle_word_wrap)
     subtitle_label.setAlignment(subtitle_alignment)
-    subtitle_label.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
-    subtitle_label.setMinimumWidth(300)
 
     title_col = QVBoxLayout()
     title_col.setContentsMargins(0, 0, 0, 0)

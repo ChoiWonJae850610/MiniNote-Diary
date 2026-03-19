@@ -20,7 +20,8 @@ def make_postit_footer_spacer(parent=None) -> FooterSpacer:
 
 def make_postit_stack_host(*, parent=None, height: int = POSTIT_BODY_HEIGHT) -> tuple[QWidget, QStackedLayout]:
     host = QWidget(parent)
-    host.setFixedHeight(height)
+    host.setMinimumHeight(height)
+    host.setMaximumHeight(16777215)
     stack = QStackedLayout(host)
     stack.setContentsMargins(POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN, POSTIT_ZERO_MARGIN)
     stack.setSpacing(POSTIT_ZERO_SPACING)
