@@ -82,6 +82,35 @@ def make_diary_action_bar(parent: QWidget) -> PageActionBarRefs:
     return PageActionBarRefs(panel=panel, layout=layout)
 
 
+
+def make_diary_section_card(
+    parent: QWidget,
+    *,
+    title_text: str,
+    body: QWidget,
+    stretch: bool = False,
+    contents_margins: tuple[int, int, int, int] = (12, 12, 12, 12),
+    spacing: int = 8,
+) -> QFrame:
+    card = make_panel_frame(parent, object_name='featureCard')
+    card.setSizePolicy(
+        QSizePolicy.Policy.Expanding,
+        QSizePolicy.Policy.Expanding if stretch else QSizePolicy.Policy.Minimum,
+    )
+    layout = QVBoxLayout(card)
+    layout.setContentsMargins(*contents_margins)
+    layout.setSpacing(spacing)
+
+    title_label = QLabel(title_text, card)
+    title_label.setObjectName('featureSectionTitle')
+    title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    title_label.setMinimumHeight(24)
+
+    layout.addWidget(title_label, 0, Qt.AlignTop)
+    layout.addWidget(body, 1 if stretch else 0)
+    return card
+
+
 def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
     layout = QVBoxLayout(page)
     layout.setContentsMargins(
@@ -192,7 +221,8 @@ def make_standard_page_header(
     subtitle_label.setObjectName(subtitle_object_name or 'menuHeroDate')
     subtitle_label.setWordWrap(False)
     subtitle_label.setAlignment(subtitle_alignment)
-    subtitle_label.setMinimumWidth(260)
+    subtitle_label.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+    subtitle_label.setMinimumWidth(300)
 
     title_col = QVBoxLayout()
     title_col.setContentsMargins(0, 0, 0, 0)

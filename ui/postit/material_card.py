@@ -52,8 +52,8 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = False
 
         root = PostItBodyLayout(self)
-        root.setSpacing(2)
-        root.setContentsMargins(8, 6, 8, 4)
+        root.setSpacing(1)
+        root.setContentsMargins(8, 4, 8, 2)
         configure_delete_button(self)
         build_vendor_rows(self, root)
         build_amount_rows(self, root)

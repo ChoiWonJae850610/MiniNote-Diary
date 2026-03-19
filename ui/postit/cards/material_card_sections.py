@@ -53,7 +53,7 @@ def build_vendor_rows(card, root) -> None:
     card.item.set_text_silent(card.data.get(MaterialKeys.ITEM, ""))
     vendor_label = Labels.VENDOR
     vendor_row = make_form_row(make_field_label(vendor_label, card), (card.vendor, 1), card.btn_vendor_partner)
-    vendor_row.setSpacing(max(4, POSTIT_ROW_ACTION_GAP - 4))
+    vendor_row.setSpacing(2)
     root.addLayout(vendor_row)
     root.addLayout(make_form_row(make_field_label(Labels.ITEM, card), (card.item, 1)))
 
