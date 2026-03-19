@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QScrollArea, QSizePolicy, QSpinBox, QTableWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QAbstractItemView, QComboBox, QDateEdit, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QScrollArea, QSizePolicy, QSpinBox, QTableWidget, QVBoxLayout, QWidget, QPushButton
 
 from ui.layout_metrics import OrderPageLayout
 from ui.theme import THEME, input_line_edit_style
 from ui.widget_factory import (
     apply_button_metrics,
     make_field_label,
+    apply_glyph_icon,
+    make_action_button,
     make_hint_label,
+    make_icon_button,
     make_nav_button,
     make_page_title_label,
     make_panel_frame,
@@ -20,11 +24,18 @@ from ui.widget_factory import (
 
 @dataclass(frozen=True)
 class PageHeaderRefs:
-    row: QHBoxLayout
+    row: QVBoxLayout
     back_button: QWidget
     title_layout: QVBoxLayout
     title_label: QLabel
     subtitle_label: QLabel
+    help_button: QWidget | None = None
+
+
+@dataclass(frozen=True)
+class PageActionBarRefs:
+    panel: QFrame
+    layout: QHBoxLayout
 
 
 @dataclass(frozen=True)
@@ -53,6 +64,21 @@ class LabeledFieldRow:
 class StatFieldRow:
     label_text: str
     field: QWidget
+
+
+def _today_record_text() -> str:
+    weekdays = ['월', '화', '수', '목', '금', '토', '일']
+    now = datetime.now()
+    return f"기록 기준 · {now:%Y.%m.%d} {weekdays[now.weekday()]}요일"
+
+
+def make_diary_action_bar(parent: QWidget) -> PageActionBarRefs:
+    panel = make_panel_frame(parent, object_name='featureCard')
+    panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+    layout = QHBoxLayout(panel)
+    layout.setContentsMargins(14, 10, 14, 10)
+    layout.setSpacing(8)
+    return PageActionBarRefs(panel=panel, layout=layout)
 
 
 def make_standard_page_layout(page: QWidget) -> QVBoxLayout:
@@ -135,7 +161,57 @@ def make_standard_page_header(
     subtitle_alignment: Qt.AlignmentFlag | Qt.Alignment = Qt.AlignLeft | Qt.AlignVCenter,
     title_min_height: int | None = None,
 ) -> PageHeaderRefs:
-    row = QHBoxLayout()
+    header_panel = make_panel_frame(page, object_name='menuHeroPanel')
+    header_layout = QVBoxLayout(header_panel)
+    header_layout.setContentsMargins(
+        THEME.menu_hero_padding_x,
+        THEME.menu_hero_padding_y,
+        THEME.menu_hero_padding_x,
+        THEME.menu_hero_padding_y,
+    )
+    header_layout.setSpacing(THEME.menu_hero_spacing)
+
+    top_row = QHBoxLayout()
+    top_row.setContentsMargins(0, 0, 0, 0)
+    top_row.setSpacing(THEME.section_gap)
+
+    btn_back = make_nav_button(parent=page, tooltip='뒤로가기')
+
+    title_label = QLabel(title_text, header_panel)
+    title_label.setObjectName(title_object_name or 'menuHeroTitle')
+    if title_min_height is not None:
+        title_label.setMinimumHeight(title_min_height)
+    title_label.setAlignment(title_alignment)
+
+    subtitle_label = QLabel(subtitle_text or _today_record_text(), header_panel)
+    subtitle_label.setObjectName(subtitle_object_name or 'menuHeroDate')
+    subtitle_label.setWordWrap(subtitle_word_wrap)
+    subtitle_label.setAlignment(subtitle_alignment)
+
+    title_col = QVBoxLayout()
+    title_col.setContentsMargins(0, 0, 0, 0)
+    title_col.setSpacing(6)
+
+    title_row = QHBoxLayout()
+    title_row.setContentsMargins(0, 0, 0, 0)
+    title_row.setSpacing(10)
+    title_row.addWidget(btn_back, 0, Qt.AlignVCenter)
+    title_row.addWidget(title_label, 0, Qt.AlignVCenter)
+    title_row.addStretch(1)
+
+    title_col.addLayout(title_row)
+    title_col.addWidget(subtitle_label, 0, Qt.AlignLeft | Qt.AlignVCenter)
+
+    help_button = make_icon_button(parent=header_panel, object_name='iconAction', tooltip='도움말', font_px=THEME.icon_button_font_px + 1)
+    help_button.setFixedSize(THEME.icon_button_size + 10, THEME.icon_button_size + 10)
+    apply_glyph_icon(help_button, '?', font_px=THEME.icon_button_font_px + 3, color=THEME.color_icon)
+
+    top_row.addLayout(title_col, 1)
+    if add_trailing_stretch:
+        top_row.addWidget(help_button, 0, Qt.AlignTop)
+    header_layout.addLayout(top_row)
+
+    row = QVBoxLayout()
     row.setContentsMargins(
         0,
         THEME.page_header_safe_padding_top + THEME.page_header_row_margin_adjust,
@@ -143,59 +219,15 @@ def make_standard_page_header(
         THEME.page_header_safe_padding_bottom,
     )
     row.setSpacing(0)
-    row.setAlignment(Qt.AlignVCenter)
-
-    btn_back = make_nav_button(parent=page)
-    title_refs = make_page_text_header(
-        page,
-        title_text=title_text,
-        subtitle_text=subtitle_text,
-        title_object_name=title_object_name,
-        subtitle_object_name=subtitle_object_name,
-        title_alignment=title_alignment,
-        subtitle_alignment=subtitle_alignment,
-        subtitle_word_wrap=subtitle_word_wrap,
-        title_min_height=title_min_height,
-    )
-
-    title_wrap = QWidget(page)
-    title_wrap.setContentsMargins(0, 0, 0, 0)
-    title_wrap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-    title_wrap.setLayout(title_refs.layout)
-
-    title_host = QWidget(page)
-    title_host.setContentsMargins(0, 0, 0, 0)
-    title_host.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-    title_host_layout = QHBoxLayout(title_host)
-    title_host_layout.setContentsMargins(0, 0, 0, 0)
-    title_host_layout.setSpacing(0)
-    title_host_layout.setAlignment(Qt.AlignVCenter)
-    title_host_layout.addWidget(title_wrap, 0, Qt.AlignVCenter)
-    title_host.setMinimumHeight(max(THEME.page_header_row_min_height, title_refs.title_label.minimumHeight(), btn_back.minimumHeight()))
-
-    lead_wrap = QWidget(page)
-    lead_wrap.setContentsMargins(0, 0, 0, 0)
-    lead_wrap.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-    lead_layout = QHBoxLayout(lead_wrap)
-    lead_layout.setContentsMargins(0, 0, 0, 0)
-    lead_layout.setSpacing(THEME.top_button_spacing)
-    lead_layout.setAlignment(Qt.AlignVCenter)
-    lead_layout.addWidget(btn_back, 0, Qt.AlignVCenter)
-    lead_layout.addWidget(title_host, 0, Qt.AlignVCenter)
-    lead_wrap.setMinimumHeight(max(THEME.page_header_row_min_height, btn_back.minimumHeight(), title_refs.title_label.minimumHeight()))
-
-    row.addWidget(lead_wrap, 0, Qt.AlignVCenter)
-    row.setStretch(0, 0)
-    row.setSizeConstraint(QHBoxLayout.SetMinimumSize)
-    if add_trailing_stretch:
-        row.addStretch(1)
+    row.addWidget(header_panel)
 
     return PageHeaderRefs(
         row=row,
         back_button=btn_back,
-        title_layout=title_refs.layout,
-        title_label=title_refs.title_label,
-        subtitle_label=title_refs.subtitle_label,
+        title_layout=title_col,
+        title_label=title_label,
+        subtitle_label=subtitle_label,
+        help_button=help_button,
     )
 
 

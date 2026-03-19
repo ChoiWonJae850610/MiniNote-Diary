@@ -93,15 +93,26 @@ def build_amount_rows(card, root) -> None:
     card.total.set_edit_enabled(False)
     card.total.setFocusPolicy(Qt.NoFocus)
     card.total.setText(card.data.get(MaterialKeys.TOTAL, ""))
-    card.qty.setMinimumWidth(THEME.postit_qty_field_max_width)
-    card.qty.setMaximumWidth(THEME.postit_qty_field_max_width)
-    card.qty.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+    card.qty.setMinimumWidth(0)
+    card.qty.setMaximumWidth(16777215)
+    card.qty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+    card.unit_btn.setMinimumWidth(0)
+    card.unit_btn.setMaximumWidth(16777215)
+    card.unit_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+    qty_label = make_field_label(Labels.QTY, card)
+    qty_label.setMinimumWidth(0)
+    qty_label.setMaximumWidth(16777215)
+    qty_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+    unit_label = make_field_label(Labels.UNIT, card)
+    unit_label.setMinimumWidth(0)
+    unit_label.setMaximumWidth(16777215)
+    unit_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
     root.addLayout(
         make_form_row(
-            make_field_label(Labels.QTY, card),
-            card.qty,
-            make_field_label(Labels.UNIT, card),
-            card.unit_btn,
+            (qty_label, 1),
+            (card.qty, 1),
+            (unit_label, 1),
+            (card.unit_btn, 1),
         )
     )
     root.addLayout(make_form_row(make_field_label(Labels.UNIT_PRICE, card), (card.price, 1)))

@@ -24,8 +24,10 @@ class ChangeNotePostIt(_PostItCardBase):
         super().__init__("change", parent=parent)
         self.setMinimumSize(QSize(POSTIT_CHANGE_NOTE_MIN_WIDTH, POSTIT_MEMO_BODY_HEIGHT))
         self._block = False
+        self._embedded_mode = False
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         root = QVBoxLayout(self)
+        self._root = root
         uniform_padding = min(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
         root.setContentsMargins(uniform_padding, uniform_padding, uniform_padding, uniform_padding)
         root.setSpacing(POSTIT_ZERO_SPACING)
@@ -41,6 +43,17 @@ class ChangeNotePostIt(_PostItCardBase):
         if not self._block:
             self.text_changed.emit(self.text())
 
+
+    def set_embedded_mode(self, embedded: bool) -> None:
+        self._embedded_mode = embedded
+        if embedded:
+            self._root.setContentsMargins(0, 0, 0, 0)
+            self.editor.setPlaceholderText("메모를 입력하세요")
+        else:
+            uniform_padding = min(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
+            self._root.setContentsMargins(uniform_padding, uniform_padding, uniform_padding, uniform_padding)
+        self.update()
+
     def set_text(self, text: str):
         self._block = True
         try:
@@ -51,6 +64,11 @@ class ChangeNotePostIt(_PostItCardBase):
 
     def text(self) -> str:
         return self.editor.toPlainText().rstrip()
+
+    def paintEvent(self, event):
+        if self._embedded_mode:
+            return
+        super().paintEvent(event)
 
     def eventFilter(self, obj, event):
         if obj is self.editor and event.type() == QEvent.KeyPress:
