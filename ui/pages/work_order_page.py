@@ -59,8 +59,8 @@ class WorkOrderPageBuilder:
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding if stretch else QSizePolicy.Policy.Fixed)
 
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(6)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(4)
 
         title_label = QLabel(title, card)
         title_label.setObjectName('featureSectionTitle')
@@ -252,7 +252,7 @@ class WorkOrderPageBuilder:
 
         body_wrap = QWidget(page)
         body_layout = QVBoxLayout(body_wrap)
-        body_layout.setContentsMargins(0, 0, 10, 0)
+        body_layout.setContentsMargins(0, 8, 14, 0)
         body_layout.setSpacing(0)
         body_layout.addWidget(change_note_postit, 1)
 
@@ -269,7 +269,7 @@ class WorkOrderPageBuilder:
 
         root_layout = QVBoxLayout(info_page)
         root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(6)
+        root_layout.setSpacing(4)
 
         body_row = make_standard_body_row()
         body_row.setSpacing(10)
@@ -277,12 +277,12 @@ class WorkOrderPageBuilder:
         left_column = QWidget(info_page)
         left_layout = QVBoxLayout(left_column)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(6)
+        left_layout.setSpacing(4)
 
         basic_card = WorkOrderPageBuilder._build_section_card(SectionTitles.BASIC_INFO, postit_bar.basic, left_column)
         partner_title = getattr(SectionTitles, 'OUTSOURCE_INFO', '외주정보')
         partner_card = WorkOrderPageBuilder._build_section_card(partner_title, postit_bar.partner, left_column)
-        partner_card.setMaximumHeight(370)
+        partner_card.setMaximumHeight(338)
 
         left_layout.addWidget(basic_card, 0)
         left_layout.addWidget(partner_card, 0)

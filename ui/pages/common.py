@@ -105,10 +105,10 @@ def _apply_standard_header_policy(title_col: QVBoxLayout, title: QLabel, subtitl
     )
     title.setMinimumHeight(title_min_height)
     title.setContentsMargins(0, 0, 0, 0)
-    title.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+    title.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     subtitle.setVisible(has_subtitle)
     subtitle.setContentsMargins(0, 0, 0, 0)
-    subtitle.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
+    subtitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
 
 def make_page_text_header(

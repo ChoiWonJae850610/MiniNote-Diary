@@ -32,6 +32,7 @@ class ChangeNotePostIt(_PostItCardBase):
         root.setContentsMargins(uniform_padding, uniform_padding, uniform_padding, uniform_padding)
         root.setSpacing(POSTIT_ZERO_SPACING)
         self.editor = QPlainTextEdit(self)
+        self.editor.setLineWrapMode(QPlainTextEdit.WidgetWidth)
         self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())
         self.editor.installEventFilter(self)
@@ -49,13 +50,13 @@ class ChangeNotePostIt(_PostItCardBase):
         if embedded:
             self._root.setContentsMargins(0, 0, 0, 0)
             self.editor.setPlaceholderText("메모를 입력하세요")
-            self.editor.document().setDocumentMargin(12)
-            self.editor.setViewportMargins(0, 0, 0, 0)
+            self.editor.document().setDocumentMargin(10)
+            self.editor.setViewportMargins(0, 0, 14, 0)
         else:
             uniform_padding = min(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
             self._root.setContentsMargins(uniform_padding, uniform_padding, uniform_padding, uniform_padding)
             self.editor.document().setDocumentMargin(8)
-            self.editor.setViewportMargins(0, 0, 0, 0)
+            self.editor.setViewportMargins(0, 0, 8, 0)
         self.update()
 
     def set_text(self, text: str):
