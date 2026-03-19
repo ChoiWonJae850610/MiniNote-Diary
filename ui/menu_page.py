@@ -243,12 +243,7 @@ class MenuPageBuilder:
         page = QWidget()
         page.setObjectName('workOrderPage')
         layout = make_standard_page_layout(page)
-        layout.setContentsMargins(
-            THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET,
-            MenuLayout.PAGE_MARGIN_TOP,
-            THEME.page_padding_x + MenuLayout.PAGE_MARGIN_X_OFFSET,
-            MenuLayout.PAGE_MARGIN_BOTTOM,
-        )
+        layout.setContentsMargins(12, THEME.page_header_top_margin, 12, 8)
         layout.setSpacing(THEME.section_gap)
 
         hero_panel = make_panel_frame(page, object_name='menuHeroPanel')

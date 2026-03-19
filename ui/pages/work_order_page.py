@@ -19,7 +19,6 @@ from ui.icon_factory import make_image_upload_icon, make_save_icon, standard_ico
 from ui.image_preview import ImagePreview
 from ui.messages import PageTitles, SectionTitles, Tooltips
 from ui.pages.common import (
-    make_diary_action_bar,
     make_image_shell,
     make_standard_body_row,
     make_standard_page_header,
@@ -28,7 +27,7 @@ from ui.pages.common import (
 )
 from ui.postit import ChangeNotePostIt, PostItBar
 from ui.theme import THEME, image_preview_style
-from ui.widget_factory import make_action_button, make_toolbar_icon_button
+from ui.widget_factory import make_toolbar_icon_button
 
 
 @dataclass
@@ -83,7 +82,7 @@ class WorkOrderPageBuilder:
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
-        action_bar = WorkOrderPageBuilder._build_action_bar(page, toolbar_buttons)
+        WorkOrderPageBuilder._install_header_actions(header_refs, toolbar_buttons)
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar = WorkOrderPageBuilder._build_image_page(page, toolbar_buttons)
         change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(page)
@@ -99,9 +98,8 @@ class WorkOrderPageBuilder:
         WorkOrderPageBuilder._update_pager_ui(page_stack, btn_prev_page, btn_next_page, page_indicator)
 
         page_layout.addLayout(header_refs.row)
-        page_layout.addWidget(action_bar, 0)
-        page_layout.addLayout(pager_row)
         page_layout.addWidget(page_stack, 1)
+        page_layout.addLayout(pager_row)
 
         return WorkOrderPageRefs(
             page=page,
@@ -136,7 +134,7 @@ class WorkOrderPageBuilder:
         indicator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         row = QHBoxLayout()
-        row.setContentsMargins(0, 0, 0, 0)
+        row.setContentsMargins(0, 8, 0, 0)
         row.setSpacing(THEME.row_spacing)
         row.addStretch(1)
         row.addWidget(btn_prev, 0, Qt.AlignVCenter)
@@ -171,22 +169,16 @@ class WorkOrderPageBuilder:
         }
 
     @staticmethod
-    def _build_action_bar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
-        refs = make_diary_action_bar(page)
-
-        btn_save_text = make_action_button('저장', page, height=THEME.field_height)
-        btn_load_text = make_action_button('불러오기', page, height=THEME.field_height)
-        btn_reset_text = make_action_button('새로고침', page, height=THEME.field_height)
-
-        btn_save_text.clicked.connect(toolbar_buttons['btn_save'].click)
-        btn_load_text.clicked.connect(toolbar_buttons['btn_load'].click)
-        btn_reset_text.clicked.connect(toolbar_buttons['btn_reset'].click)
-
-        refs.layout.addWidget(btn_save_text, 0)
-        refs.layout.addWidget(btn_load_text, 0)
-        refs.layout.addWidget(btn_reset_text, 0)
-        refs.layout.addStretch(1)
-        return refs.panel
+    def _install_header_actions(header_refs: object, toolbar_buttons: dict[str, QPushButton]) -> None:
+        action_layout = header_refs.action_layout
+        if action_layout is None:
+            return
+        help_button = header_refs.help_button
+        for key in ('btn_save', 'btn_load', 'btn_reset'):
+            action_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignTop)
+        if help_button is not None:
+            action_layout.removeWidget(help_button)
+            action_layout.addWidget(help_button, 0, Qt.AlignTop)
 
     @staticmethod
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
@@ -238,7 +230,7 @@ class WorkOrderPageBuilder:
 
         change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, change_note_postit, page, stretch=1)
         change_note_card.setMinimumWidth(280)
-        change_note_card.setMaximumWidth(340)
+        change_note_card.setMaximumWidth(360)
         change_note_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         return change_note_postit, change_note_card
 
@@ -272,8 +264,10 @@ class WorkOrderPageBuilder:
         right_layout = QVBoxLayout(right_column)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(0)
-        right_layout.addWidget(change_note_wrap, 1, Qt.AlignTop)
+        right_layout.addWidget(change_note_wrap, 1)
 
+        left_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        right_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         body_row.addWidget(left_column, 3)
         body_row.addWidget(right_column, 2)
 

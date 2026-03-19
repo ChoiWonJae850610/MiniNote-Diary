@@ -29,6 +29,7 @@ class PageHeaderRefs:
     title_layout: QVBoxLayout
     title_label: QLabel
     subtitle_label: QLabel
+    action_layout: QHBoxLayout
     help_button: QWidget | None = None
 
 
@@ -175,6 +176,10 @@ def make_standard_page_header(
     top_row.setContentsMargins(0, 0, 0, 0)
     top_row.setSpacing(THEME.section_gap)
 
+    action_layout = QHBoxLayout()
+    action_layout.setContentsMargins(0, 0, 0, 0)
+    action_layout.setSpacing(10)
+
     btn_back = make_nav_button(parent=page, tooltip='뒤로가기')
 
     title_label = QLabel(title_text, header_panel)
@@ -208,7 +213,8 @@ def make_standard_page_header(
 
     top_row.addLayout(title_col, 1)
     if add_trailing_stretch:
-        top_row.addWidget(help_button, 0, Qt.AlignTop)
+        action_layout.addWidget(help_button, 0, Qt.AlignTop)
+    top_row.addLayout(action_layout, 0)
     header_layout.addLayout(top_row)
 
     row = QVBoxLayout()
@@ -227,6 +233,7 @@ def make_standard_page_header(
         title_layout=title_col,
         title_label=title_label,
         subtitle_label=subtitle_label,
+        action_layout=action_layout,
         help_button=help_button,
     )
 

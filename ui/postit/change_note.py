@@ -47,7 +47,7 @@ class ChangeNotePostIt(_PostItCardBase):
     def set_embedded_mode(self, embedded: bool) -> None:
         self._embedded_mode = embedded
         if embedded:
-            self._root.setContentsMargins(0, 0, 0, 0)
+            self._root.setContentsMargins(8, 8, 8, 8)
             self.editor.setPlaceholderText("메모를 입력하세요")
         else:
             uniform_padding = min(POSTIT_INNER_SIDE_PADDING, POSTIT_INNER_TOP_PADDING, POSTIT_INNER_BOTTOM_PADDING)
