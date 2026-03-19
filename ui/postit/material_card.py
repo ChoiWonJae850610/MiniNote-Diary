@@ -52,8 +52,8 @@ class PostItCard(_PostItCardBase):
         self._suppress_unit_menu_once = False
 
         root = PostItBodyLayout(self)
-        root.setSpacing(1)
-        root.setContentsMargins(8, 4, 8, 2)
+        root.setSpacing(0)
+        root.setContentsMargins(8, 4, 8, 0)
         configure_delete_button(self)
         build_vendor_rows(self, root)
         build_amount_rows(self, root)
@@ -61,7 +61,7 @@ class PostItCard(_PostItCardBase):
         configure_material_tab_order(self)
 
         self.setMinimumSize(QSize(POSTIT_MATERIAL_CARD_MIN_WIDTH, POSTIT_CARD_HEIGHT))
-        self.setMaximumHeight(max(270, POSTIT_CARD_HEIGHT - 42))
+        self.setMaximumHeight(16777215)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def _partner_type_for_picker(self) -> str:

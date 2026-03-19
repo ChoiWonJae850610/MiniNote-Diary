@@ -241,18 +241,12 @@ class WorkOrderPageBuilder:
         change_note_postit.setMinimumHeight(0)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        body_wrap = QWidget(page)
-        body_layout = QVBoxLayout(body_wrap)
-        body_layout.setContentsMargins(0, 2, 18, 0)
-        body_layout.setSpacing(0)
-        body_layout.addWidget(change_note_postit, 1)
-
         change_note_card = make_diary_section_card(
             page,
             title_text=SectionTitles.CHANGE_NOTE,
-            body=body_wrap,
+            body=change_note_postit,
             stretch=True,
-            contents_margins=(12, 12, 10, 12),
+            contents_margins=(12, 12, 12, 12),
             spacing=8,
         )
         change_note_card.setMinimumWidth(300)
@@ -276,7 +270,7 @@ class WorkOrderPageBuilder:
         left_column = QWidget(info_page)
         left_layout = QVBoxLayout(left_column)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(8)
+        left_layout.setSpacing(6)
 
         basic_card = make_diary_section_card(
             left_column,
@@ -290,20 +284,19 @@ class WorkOrderPageBuilder:
             left_column,
             title_text=partner_title,
             body=postit_bar.partner,
-            contents_margins=(12, 12, 12, 8),
+            contents_margins=(12, 10, 12, 6),
             spacing=8,
         )
-        partner_card.setMinimumHeight(370)
 
         left_layout.addWidget(basic_card, 0, Qt.AlignTop)
         left_layout.addWidget(partner_card, 0, Qt.AlignTop)
-        left_layout.addStretch(1)
 
         right_column = QWidget(info_page)
         right_layout = QVBoxLayout(right_column)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(0)
         right_layout.addWidget(change_note_wrap, 1)
+        right_layout.setStretch(0, 1)
 
         body_row.addWidget(left_column, 3, Qt.AlignTop)
         body_row.addWidget(right_column, 2, Qt.AlignTop)

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
-from PySide6.QtGui import QTextOption
 from PySide6.QtWidgets import QPlainTextEdit, QSizePolicy, QVBoxLayout
 
 from ui.postit.base import _PostItCardBase
@@ -34,7 +33,6 @@ class ChangeNotePostIt(_PostItCardBase):
         root.setSpacing(POSTIT_ZERO_SPACING)
         self.editor = QPlainTextEdit(self)
         self.editor.setLineWrapMode(QPlainTextEdit.WidgetWidth)
-        self.editor.setWordWrapMode(QTextOption.WrapAnywhere)
         self.editor.setPlaceholderText("")
         self.editor.setStyleSheet(plain_text_edit_style())
         self.editor.installEventFilter(self)
