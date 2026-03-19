@@ -59,8 +59,8 @@ class WorkOrderPageBuilder:
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding if stretch else QSizePolicy.Policy.Fixed)
 
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(16, 14, 16, 16)
-        layout.setSpacing(10)
+        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setSpacing(8)
 
         title_label = QLabel(title, card)
         title_label.setObjectName('featureSectionTitle')
@@ -82,7 +82,7 @@ class WorkOrderPageBuilder:
         )
 
         toolbar_buttons = WorkOrderPageBuilder._build_toolbar_buttons(parent, page)
-        WorkOrderPageBuilder._install_header_actions(header_refs, toolbar_buttons)
+        WorkOrderPageBuilder._install_header_actions(header_refs, toolbar_buttons, page)
         postit_bar = PostItBar()
         image_preview, image_shell, image_toolbar = WorkOrderPageBuilder._build_image_page(page, toolbar_buttons)
         change_note_postit, change_note_wrap = WorkOrderPageBuilder._build_change_note_column(page)
@@ -128,7 +128,7 @@ class WorkOrderPageBuilder:
         btn_next = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip='다음 페이지')
         btn_next.setIcon(page.style().standardIcon(QStyle.SP_ArrowForward))
 
-        indicator = QLabel('1 / 2  ·  기본정보', page)
+        indicator = QLabel('1 / 2', page)
         indicator.setObjectName('workOrderDiaryIndicator')
         indicator.setAlignment(Qt.AlignCenter)
         indicator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -169,16 +169,26 @@ class WorkOrderPageBuilder:
         }
 
     @staticmethod
-    def _install_header_actions(header_refs: object, toolbar_buttons: dict[str, QPushButton]) -> None:
+    def _install_header_actions(header_refs: object, toolbar_buttons: dict[str, QPushButton], page: QWidget) -> None:
         action_layout = header_refs.action_layout
         if action_layout is None:
             return
-        help_button = header_refs.help_button
-        for key in ('btn_save', 'btn_load', 'btn_reset'):
-            action_layout.addWidget(toolbar_buttons[key], 0, Qt.AlignTop)
-        if help_button is not None:
-            action_layout.removeWidget(help_button)
-            action_layout.addWidget(help_button, 0, Qt.AlignTop)
+
+        def _proxy_button(source: QPushButton, tooltip: str) -> QPushButton:
+            proxy = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=tooltip)
+            proxy.setIcon(source.icon())
+            proxy.clicked.connect(source.click)
+            return proxy
+
+        for key, tip in (
+            ('btn_save', Tooltips.SAVE),
+            ('btn_load', Tooltips.LOAD),
+            ('btn_reset', Tooltips.RELOAD),
+        ):
+            action_layout.addWidget(_proxy_button(toolbar_buttons[key], tip), 0, Qt.AlignTop)
+
+        if header_refs.help_button is not None:
+            action_layout.addWidget(header_refs.help_button, 0, Qt.AlignTop)
 
     @staticmethod
     def _build_image_toolbar(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> QWidget:
@@ -250,7 +260,7 @@ class WorkOrderPageBuilder:
         left_column = QWidget(info_page)
         left_layout = QVBoxLayout(left_column)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(12)
+        left_layout.setSpacing(10)
 
         basic_card = WorkOrderPageBuilder._build_section_card(SectionTitles.BASIC_INFO, postit_bar.basic, left_column)
         partner_title = getattr(SectionTitles, 'OUTSOURCE_INFO', '외주정보')
@@ -258,7 +268,6 @@ class WorkOrderPageBuilder:
 
         left_layout.addWidget(basic_card, 0)
         left_layout.addWidget(partner_card, 0)
-        left_layout.addStretch(1)
 
         right_column = QWidget(info_page)
         right_layout = QVBoxLayout(right_column)
@@ -278,9 +287,7 @@ class WorkOrderPageBuilder:
     def _update_pager_ui(page_stack: QStackedWidget, btn_prev: QPushButton, btn_next: QPushButton, indicator: QLabel) -> None:
         current = page_stack.currentIndex()
         total = page_stack.count()
-        labels = ['기본정보', '이미지']
-        label = labels[current] if 0 <= current < len(labels) else f'페이지 {current + 1}'
-        indicator.setText(f'{current + 1} / {total}  ·  {label}')
+        indicator.setText(f'{current + 1} / {total}')
         btn_prev.setEnabled(current > 0)
         btn_next.setEnabled(current < total - 1)
 
