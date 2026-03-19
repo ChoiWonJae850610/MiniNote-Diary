@@ -178,7 +178,7 @@ def make_standard_page_header(
 
     action_layout = QHBoxLayout()
     action_layout.setContentsMargins(0, 0, 0, 0)
-    action_layout.setSpacing(10)
+    action_layout.setSpacing(8)
 
     btn_back = make_nav_button(parent=page, tooltip='뒤로가기')
 

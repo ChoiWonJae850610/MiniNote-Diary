@@ -59,8 +59,8 @@ class WorkOrderPageBuilder:
         card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding if stretch else QSizePolicy.Policy.Fixed)
 
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(14, 12, 14, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(6)
 
         title_label = QLabel(title, card)
         title_label.setObjectName('featureSectionTitle')
@@ -162,6 +162,9 @@ class WorkOrderPageBuilder:
         btn_delete_image = make_toolbar_icon_button(parent=page, object_name='iconAction', tooltip=Tooltips.IMAGE_DELETE)
         btn_delete_image.setIcon(parent.style().standardIcon(QStyle.SP_TrashIcon))
 
+        for _btn in (btn_reset, btn_save, btn_load, btn_upload, btn_delete_image):
+            _btn.hide()
+
         return {
             'btn_reset': btn_reset,
             'btn_save': btn_save,
@@ -182,6 +185,8 @@ class WorkOrderPageBuilder:
             proxy.clicked.connect(source.click)
             return proxy
 
+        # keep action area visually anchored to the right
+        action_layout.setSpacing(8)
         for key, tip in (
             ('btn_save', Tooltips.SAVE),
             ('btn_load', Tooltips.LOAD),
@@ -191,13 +196,12 @@ class WorkOrderPageBuilder:
 
         upload_proxy = _proxy_button(toolbar_buttons['btn_upload'], Tooltips.IMAGE_UPLOAD)
         delete_proxy = _proxy_button(toolbar_buttons['btn_delete_image'], Tooltips.IMAGE_DELETE)
-        upload_proxy.hide()
-        delete_proxy.hide()
         action_layout.addWidget(upload_proxy, 0, Qt.AlignTop)
         action_layout.addWidget(delete_proxy, 0, Qt.AlignTop)
 
         if header_refs.help_button is not None:
             action_layout.addWidget(header_refs.help_button, 0, Qt.AlignTop)
+
         return upload_proxy, delete_proxy
 
     @staticmethod
@@ -224,8 +228,7 @@ class WorkOrderPageBuilder:
         return image_toolbar
 
     @staticmethod
-    def _build_image_page(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> tuple[ImagePreview, QWidget, QWidget]:
-        image_toolbar = WorkOrderPageBuilder._build_image_toolbar(page, toolbar_buttons)
+    def _build_image_page(page: QWidget, toolbar_buttons: dict[str, QPushButton]) -> tuple[ImagePreview, QWidget, QWidget | None]:
         image_preview = ImagePreview()
         image_preview.setMinimumHeight(THEME.work_order_image_preview_min_height)
         image_preview.setStyleSheet(image_preview_style())
@@ -238,7 +241,7 @@ class WorkOrderPageBuilder:
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(image_shell, 1)
-        return image_preview, image_shell, image_toolbar
+        return image_preview, image_shell, None
 
     @staticmethod
     def _build_change_note_column(page: QWidget) -> tuple[ChangeNotePostIt, QWidget]:
@@ -247,7 +250,13 @@ class WorkOrderPageBuilder:
         change_note_postit.setMinimumHeight(0)
         change_note_postit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, change_note_postit, page, stretch=1)
+        body_wrap = QWidget(page)
+        body_layout = QVBoxLayout(body_wrap)
+        body_layout.setContentsMargins(0, 0, 10, 0)
+        body_layout.setSpacing(0)
+        body_layout.addWidget(change_note_postit, 1)
+
+        change_note_card = WorkOrderPageBuilder._build_section_card(SectionTitles.CHANGE_NOTE, body_wrap, page, stretch=1)
         change_note_card.setMinimumWidth(300)
         change_note_card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         return change_note_postit, change_note_card
@@ -260,20 +269,20 @@ class WorkOrderPageBuilder:
 
         root_layout = QVBoxLayout(info_page)
         root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(10)
+        root_layout.setSpacing(6)
 
         body_row = make_standard_body_row()
-        body_row.setSpacing(12)
+        body_row.setSpacing(10)
 
         left_column = QWidget(info_page)
         left_layout = QVBoxLayout(left_column)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(10)
+        left_layout.setSpacing(6)
 
         basic_card = WorkOrderPageBuilder._build_section_card(SectionTitles.BASIC_INFO, postit_bar.basic, left_column)
         partner_title = getattr(SectionTitles, 'OUTSOURCE_INFO', '외주정보')
         partner_card = WorkOrderPageBuilder._build_section_card(partner_title, postit_bar.partner, left_column)
-        partner_card.setMaximumHeight(350)
+        partner_card.setMaximumHeight(370)
 
         left_layout.addWidget(basic_card, 0)
         left_layout.addWidget(partner_card, 0)
